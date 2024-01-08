@@ -1,0 +1,10 @@
+@media all and (max-width: 285px) {
+    .navbar {
+        flex-wrap: wrap;
+    }
+
+    .search {
+        order: 1;
+        min-width: 75%;
+    }
+}

@@ -1,0 +1,61 @@
+.plus-button,
+.minus-button {
+    height: 1.8em;
+    width: 1.8em;
+    position: relative;
+    border-radius: 10px;
+}
+
+.minus-button {
+    background-color: #e53e3e;
+}
+
+.plus-button {
+    background-color: #38a169;
+}
+
+.plus-button:after,
+.plus-button:before,
+.minus-button:after,
+.minus-button:before {
+    content: '';
+    display: block;
+    background-color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.plus-button:before {
+    height: 15px;
+    width: 2px;
+}
+
+.plus-button:after {
+    height: 2px;
+    width: 15px;
+}
+
+.minus-button:after {
+    height: 2px;
+    width: 15px;
+}
+
+.plus-button:hover {
+    background-color: #2f855a;
+}
+
+.plus-button:active {
+    background-color: #276749;
+    transition: ease-out 250ms;
+}
+
+.minus-button:hover {
+    background-color: #c53030;
+}
+
+.minus-button:active {
+    background-color: #9b2c2c;
+    transition: ease-out 250ms;
+}

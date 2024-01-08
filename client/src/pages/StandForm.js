@@ -1,0 +1,1652 @@
+import { useMutation, useQuery } from '@apollo/client';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
+import {
+    AlertDialog,
+    AlertDialogBody,
+    AlertDialogContent,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogOverlay,
+    Box,
+    Button,
+    Center,
+    Checkbox,
+    Flex,
+    HStack,
+    IconButton,
+    Spinner,
+    Text,
+    Textarea,
+    useDisclosure,
+    useToast,
+} from '@chakra-ui/react';
+import { GET_EVENT, GET_STANDFORM } from '../graphql/queries';
+import RedFieldNonAllowable from '../images/RedFieldNonAllowable.png';
+import BlueFieldNonAllowable from '../images/BlueFieldNonAllowable.png';
+import RedFieldAllowable from '../images/RedFieldAllowable.png';
+import BlueFieldAllowable from '../images/BlueFieldAllowable.png';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation } from 'swiper';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import { UPDATE_STANDFORM } from '../graphql/mutations';
+import { AiOutlineRotateRight } from 'react-icons/ai';
+import { ChevronLeftIcon, ChevronRightIcon, StarIcon } from '@chakra-ui/icons';
+import { MdOutlineDoNotDisturbAlt } from 'react-icons/md';
+import { deepEqual } from '../util/helperFunctions';
+import { createCommandManager, INCREMENT, ZERO } from '../util/commandManager';
+import '../stylesheets/standformstyle.css';
+import { matchFormStatus } from '../util/helperConstants';
+
+let tabs = {
+    preAuto: 'Pre-Auto',
+    auto: 'Auto',
+    teleop: 'Teleop',
+    endGame: 'End Game',
+    closing: 'Closing',
+};
+let rotations = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
+let preLoadedPieces = [
+    { label: 'None', id: uuidv4() },
+    { label: 'Cone', id: uuidv4() },
+    { label: 'Cube', id: uuidv4() },
+];
+let chargeTypesTele = [
+    { label: 'No Attempt', id: uuidv4() },
+    { label: 'Dock', id: uuidv4() },
+    { label: 'Engage', id: uuidv4() },
+    { label: 'Fail', id: uuidv4() },
+];
+let chargeTypesAuto = [
+    { label: 'No Attempt', id: uuidv4() },
+    { label: 'Dock', id: uuidv4() },
+    { label: 'Engage', id: uuidv4() },
+    { label: 'Fail', id: uuidv4() },
+];
+let doResize;
+let imageWidth = 438;
+let imageHeight = 438;
+let zeroScore;
+let wasHeldDown = false;
+let touchIsInside = false;
+let doShake;
+
+function StandForm() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const toast = useToast();
+    const { eventKey: eventKeyParam, matchNumber: matchNumberParam, station: stationParam, teamNumber: teamNumberParam } = useParams();
+
+    const [mobileFlag] = useState('ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0);
+    const mainCanvas = useRef(null);
+    const secondCanvas = useRef(null);
+    const offSideCanvas = useRef(null);
+    const image = useRef(null);
+    const allowableImage = useRef(null);
+    const [imageLoaded, setImageLoaded] = useState(false);
+    const [allowableImageLoaded, setAllowableImageLoaded] = useState(false);
+    const swiper = useRef(null);
+    const cancelRef = useRef(null);
+    const prevWidth = useRef(window.innerWidth);
+
+    const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
+    const cancelAlertRef = useRef();
+
+    const [activeTab, setActiveTab] = useState(null);
+    const [teamNumber, setTeamNumber] = useState(null);
+    const [teamName, setTeamName] = useState(null);
+    const [eventName, setEventName] = useState(null);
+    const [validMatch, setValidMatch] = useState(false); //Used to check if the eventKeyParam and matchNumberParam leads to an actual match by using TBA API
+    const [submitAttempted, setSubmitAttempted] = useState(false);
+    const [standFormDialog, setStandFormDialog] = useState(false);
+    const [fieldRotationIndex, setFieldRotationIndex] = useState(0);
+    const [loadResponse, setLoadResponse] = useState(null);
+    const [initialDrawn, setInitialDrawn] = useState(false);
+    const prevStandFormData = useRef(null);
+    const [standFormData, setStandFormData] = useState({
+        startingPosition: { x: null, y: null },
+        preLoadedPiece: null,
+        bottomAuto: {
+            coneScored: 0,
+            coneMissed: 0,
+            cubeScored: 0,
+            cubeMissed: 0,
+        },
+        middleAuto: {
+            coneScored: 0,
+            coneMissed: 0,
+            cubeScored: 0,
+            cubeMissed: 0,
+        },
+        topAuto: {
+            coneScored: 0,
+            coneMissed: 0,
+            cubeScored: 0,
+            cubeMissed: 0,
+        },
+        crossCommunity: null,
+        chargeAuto: null,
+        autoChargeComment: '',
+        standAutoComment: '',
+        bottomTele: {
+            coneScored: 0,
+            coneMissed: 0,
+            cubeScored: 0,
+            cubeMissed: 0,
+        },
+        middleTele: {
+            coneScored: 0,
+            coneMissed: 0,
+            cubeScored: 0,
+            cubeMissed: 0,
+        },
+        topTele: {
+            coneScored: 0,
+            coneMissed: 0,
+            cubeScored: 0,
+            cubeMissed: 0,
+        },
+        chargeTele: null,
+        chargeComment: '',
+        chargeRobotCount: null,
+        impairedCharge: null,
+        impairedComment: '',
+        defendedBy: null,
+        loseCommunication: null,
+        robotBreak: null,
+        yellowCard: null,
+        redCard: null,
+        standEndComment: '',
+        standStatus: null,
+        standStatusComment: '',
+        loading: true,
+    });
+    const [error, setError] = useState(null);
+    const [futureAlly, setFutureAlly] = useState(null);
+    const [opposingAlliance, setOpposingAlliance] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [standFormAutoManager] = useState(createCommandManager());
+    const [standFormTeleManager] = useState(createCommandManager());
+    const [shakeElement, setShakeElement] = useState(null);
+
+    const { loading: loadingEvent, error: eventError } = useQuery(GET_EVENT, {
+        fetchPolicy: 'network-only',
+        variables: {
+            key: eventKeyParam,
+        },
+        onError(err) {
+            console.log(JSON.stringify(err, null, 2));
+            setError('Apollo error, could not retrieve data on current event');
+        },
+        onCompleted({ getEvent: event }) {
+            setEventName(event.name);
+        },
+    });
+
+    useEffect(() => {
+        if (stationParam.length !== 2 || !/[rb][123]/.test(stationParam)) {
+            setError('Invalid station in the url');
+            return;
+        }
+        if (!/[0-9]+$/.test(teamNumberParam)) {
+            setError('Invalid team number in the url');
+            return;
+        } else {
+            setTeamNumber(teamNumberParam);
+            setValidMatch(true);
+        }
+        fetch(`/blueAlliance/isFutureAlly/${eventKeyParam}/${teamNumberParam}/${matchNumberParam}/${false}`)
+            .then((response) => response.json())
+            .then((data) => {
+                setFutureAlly(data);
+            })
+            .catch((error) => {
+                console.log(error);
+                setFutureAlly(false);
+            });
+        fetch(`/blueAlliance/match/${eventKeyParam}_${matchNumberParam}/simple`)
+            .then((response) => response.json())
+            .then((data) => {
+                let opposingAlliance = data.alliances[stationParam.charAt(0) === 'r' ? 'blue' : 'red'].team_keys.map((team) => team.substring(3));
+                setOpposingAlliance(opposingAlliance);
+            })
+            .catch((error) => {
+                console.log(error);
+                if (stationParam.charAt(0) === 'r') {
+                    setOpposingAlliance(['Blue 1', 'Blue 2', 'Blue 3']);
+                } else {
+                    setOpposingAlliance(['Red 1', 'Red 2', 'Red 3']);
+                }
+            });
+    }, [eventKeyParam, matchNumberParam, stationParam, teamNumberParam]);
+
+    useEffect(() => {
+        if (localStorage.getItem('StandFormData')) {
+            let standForm = JSON.parse(localStorage.getItem('StandFormData'));
+            if (standForm.eventKeyParam === eventKeyParam && standForm.matchNumberParam === matchNumberParam && standForm.stationParam === stationParam) {
+                setLoadResponse('Required');
+                setStandFormDialog(true);
+            } else {
+                setLoadResponse(false);
+            }
+        } else {
+            setLoadResponse(false);
+        }
+        if (localStorage.getItem('Field Rotation')) {
+            let obj = JSON.parse(localStorage.getItem('Field Rotation'));
+            if (stationParam.charAt(0) === 'r' && obj.red) {
+                setFieldRotationIndex(obj.red);
+            } else if (obj.blue) {
+                setFieldRotationIndex(obj.blue);
+            }
+        }
+    }, [eventKeyParam, matchNumberParam, stationParam]);
+
+    useEffect(() => {
+        if (validMatch && teamNumber) {
+            fetch(`/blueAlliance/team/frc${teamNumber}/simple`)
+                .then((response) => response.json())
+                .then((data) => {
+                    if (!data.Error) {
+                        setTeamName(data.nickname);
+                    } else {
+                        setError(data.Error);
+                    }
+                })
+                .catch((error) => {
+                    setError(error);
+                });
+        }
+    }, [validMatch, teamNumber, eventKeyParam]);
+
+    const { loading: loadingStandData, error: standDataError } = useQuery(GET_STANDFORM, {
+        skip: !validMatch || loadResponse === null || loadResponse,
+        fetchPolicy: 'network-only',
+        variables: {
+            eventKey: eventKeyParam,
+            matchNumber: matchNumberParam,
+            station: [stationParam],
+            standStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp],
+        },
+        onError(err) {
+            console.log(JSON.stringify(err, null, 2));
+            setError(`Apollo error, could not retrieve match form`);
+        },
+        onCompleted({ getMatchForm: matchForm }) {
+            if (!matchForm) {
+                let copy = JSON.parse(JSON.stringify(standFormData));
+                copy.loading = false;
+                prevStandFormData.current = copy;
+                setStandFormData({ ...standFormData, loading: false });
+                setActiveTab(tabs.preAuto);
+                return;
+            }
+            let data = matchForm;
+            data.loading = false;
+            prevStandFormData.current = JSON.parse(JSON.stringify(data));
+            setStandFormData(data);
+            setActiveTab(tabs.preAuto);
+        },
+    });
+
+    function calculateImageScale(imageSize) {
+        let scale;
+        let screenWidth = window.innerWidth;
+        if (screenWidth < 768) {
+            scale = 0.7;
+        } else if (screenWidth < 992) {
+            scale = 0.5;
+        } else {
+            scale = 0.2;
+        }
+        return (screenWidth / imageSize) * scale;
+    }
+
+    function calculateCircleRadius() {
+        let scale;
+        let screenWidth = window.innerWidth;
+        if (screenWidth < 768) {
+            scale = 0.8;
+        } else if (screenWidth < 992) {
+            scale = 0.5;
+        } else {
+            scale = 0.2;
+        }
+        return (screenWidth / 10) * scale;
+    }
+
+    function getCanvasDimensions(rotation) {
+        if (rotation === 0 || rotation === Math.PI) {
+            return { width: imageWidth, height: imageHeight };
+        } else {
+            return { width: imageHeight, height: imageWidth };
+        }
+    }
+
+    const drawImage = useCallback(
+        (point, rotation) => {
+            const mainCanvasElement = mainCanvas.current;
+            const secondCanvasElement = secondCanvas.current;
+            if (mainCanvasElement !== null && secondCanvasElement !== null) {
+                const mainCtx = mainCanvasElement.getContext('2d');
+                const secondCtx = secondCanvasElement.getContext('2d');
+                let scale = calculateImageScale(imageWidth);
+                let dimensions = getCanvasDimensions(rotation);
+                let width = dimensions.width;
+                let height = dimensions.height;
+                mainCanvasElement.width = width * scale;
+                mainCanvasElement.height = height * scale;
+                secondCanvasElement.width = width * scale;
+                secondCanvasElement.height = height * scale;
+                mainCtx.filter = 'brightness(0.65)';
+                mainCtx.translate((width / 2) * scale, (height / 2) * scale);
+                secondCtx.translate((width / 2) * scale, (height / 2) * scale);
+                // mainCtx.setTransform(scale, 0, 0, scale, 207 * scale, 207 * scale); // sets scale and origin
+                mainCtx.rotate(rotation);
+                secondCtx.rotate(rotation);
+                mainCtx.translate((-imageWidth / 2) * scale, (-imageHeight / 2) * scale);
+                secondCtx.translate((-imageWidth / 2) * scale, (-imageHeight / 2) * scale);
+                // mainCtx.drawImage(img, -207, -207);
+                mainCtx.drawImage(allowableImage.current, 0, 0, imageWidth * scale, imageHeight * scale);
+                secondCtx.drawImage(image.current, 0, 0, imageWidth * scale, imageHeight * scale);
+                if (point.x && point.y) {
+                    mainCtx.filter = 'brightness(1.00)';
+                    mainCtx.lineWidth = '4';
+                    mainCtx.strokeStyle = 'green';
+                    mainCtx.beginPath();
+                    // let pointX = (point.x - 207) * Math.cos(rotation) - (point.y - 207) * Math.sin(rotation) + 207;
+                    // let pointY = (point.x - 207) * Math.sin(rotation) + (point.y - 207) * Math.cos(rotation) + 207;
+                    mainCtx.arc(point.x * scale, point.y * scale, calculateCircleRadius(), 0, 2 * Math.PI);
+                    mainCtx.stroke();
+                    mainCtx.closePath();
+                }
+                if (swiper.current) {
+                    swiper.current.swiper.update();
+                }
+                if (!initialDrawn) {
+                    setInitialDrawn(true);
+                }
+            }
+        },
+        [initialDrawn]
+    );
+
+    const resizeCanvas = useCallback(() => {
+        if (initialDrawn) {
+            clearTimeout(doResize);
+            if (window.innerWidth !== prevWidth.current) {
+                prevWidth.current = window.innerWidth;
+                doResize = setTimeout(() => drawImage(standFormData.startingPosition, rotations[fieldRotationIndex]), 250);
+            }
+        }
+    }, [drawImage, standFormData.startingPosition, fieldRotationIndex, initialDrawn]);
+
+    useEffect(() => {
+        window.addEventListener('resize', resizeCanvas);
+
+        return () => window.removeEventListener('resize', resizeCanvas);
+    }, [resizeCanvas]);
+
+    useEffect(() => {
+        if (!standFormData.loading && futureAlly !== null && opposingAlliance !== null && imageLoaded && allowableImageLoaded && activeTab === tabs.preAuto && eventName && teamName) {
+            prevWidth.current = window.innerWidth;
+            drawImage(standFormData.startingPosition, rotations[fieldRotationIndex]);
+        }
+        if (localStorage.getItem('Field Rotation')) {
+            let oldObj = JSON.parse(localStorage.getItem('Field Rotation'));
+            let obj = { red: stationParam.charAt(0) === 'r' ? fieldRotationIndex : oldObj.red, blue: stationParam.charAt(0) === 'b' ? fieldRotationIndex : oldObj.blue };
+            localStorage.setItem('Field Rotation', JSON.stringify(obj));
+        } else {
+            let obj = { red: stationParam.charAt(0) === 'r' ? fieldRotationIndex : null, blue: stationParam.charAt(0) === 'b' ? fieldRotationIndex : null };
+            localStorage.setItem('Field Rotation', JSON.stringify(obj));
+        }
+    }, [
+        standFormData.loading,
+        activeTab,
+        drawImage,
+        standFormData.startingPosition,
+        imageLoaded,
+        allowableImageLoaded,
+        standFormData.preLoadedPiece,
+        eventName,
+        teamName,
+        stationParam,
+        fieldRotationIndex,
+        futureAlly,
+        opposingAlliance,
+    ]);
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (prevStandFormData.current !== null) {
+            if (!deepEqual(prevStandFormData.current, standFormData)) {
+                localStorage.setItem('StandFormData', JSON.stringify({ ...standFormData, eventKeyParam, matchNumberParam, stationParam }));
+            }
+        }
+        prevStandFormData.current = JSON.parse(JSON.stringify(standFormData));
+    }, [standFormData, eventKeyParam, matchNumberParam, stationParam]);
+
+    useEffect(() => {
+        let img = new Image();
+        let allowableImg = new Image();
+        img.src = stationParam.charAt(0) === 'r' ? RedFieldNonAllowable : BlueFieldNonAllowable;
+        allowableImg.src = stationParam.charAt(0) === 'r' ? RedFieldAllowable : BlueFieldAllowable;
+        img.onload = () => {
+            image.current = img;
+            setImageLoaded(true);
+        };
+        allowableImg.onload = () => {
+            allowableImage.current = allowableImg;
+            let canvas = document.createElement('canvas');
+            canvas.width = imageWidth;
+            canvas.height = imageHeight;
+            canvas.getContext('2d').drawImage(allowableImg, 0, 0, imageWidth, imageHeight);
+            offSideCanvas.current = canvas;
+            setAllowableImageLoaded(true);
+        };
+
+        //Dont know if this is necessary but just in case
+        return () => {
+            clearTimeout(doResize);
+            clearTimeout(zeroScore);
+            clearTimeout(doShake);
+            wasHeldDown = false;
+            touchIsInside = false;
+        };
+    }, [stationParam]);
+
+    useEffect(() => {
+        if (swiper.current) {
+            if (standFormData.standStatus === matchFormStatus.noShow) {
+                setActiveTab(tabs.closing);
+                swiper.current.swiper.slideTo(Object.values(tabs).indexOf(tabs.closing));
+            }
+            swiper.current.swiper.update();
+        }
+    }, [standFormData.standStatus]);
+
+    useEffect(() => {
+        if (swiper.current) {
+            swiper.current.swiper.update();
+        }
+    }, [standFormData.chargeTele, standFormData.impairedCharge, standFormData.chargeAuto]);
+
+    function isFollowOrNoShow() {
+        return [matchFormStatus.followUp, matchFormStatus.noShow].includes(standFormData.standStatus);
+    }
+
+    function validPreAuto() {
+        return standFormData.startingPosition.x !== null && standFormData.startingPosition.y !== null && standFormData.preLoadedPiece !== null;
+    }
+
+    function validAuto() {
+        return standFormData.crossCommunity !== null && standFormData.chargeAuto !== null && (!['Dock', 'Fail'].includes(standFormData.chargeAuto) || standFormData.autoChargeComment.trim() !== '');
+    }
+
+    function validTele() {
+        return true;
+    }
+
+    function validEndGame() {
+        if (standFormData.chargeTele !== null && standFormData.impairedCharge !== null) {
+            if (['Dock', 'Engage'].includes(standFormData.chargeTele) && standFormData.chargeRobotCount === null) {
+                return false;
+            }
+            if (['Dock', 'Impaired', 'Fail'].includes(standFormData.chargeTele) && standFormData.chargeComment.trim() === '') {
+                return false;
+            }
+            if (standFormData.impairedCharge && standFormData.impairedComment.trim() === '') {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function validClosing() {
+        return (
+            standFormData.defendedBy !== null && standFormData.loseCommunication !== null && standFormData.robotBreak !== null && standFormData.yellowCard !== null && standFormData.redCard !== null
+        );
+    }
+
+    function validateTab(tab) {
+        if (tab === tabs.preAuto) {
+            return validPreAuto();
+        } else if (tab === tabs.auto) {
+            return validAuto();
+        } else if (tab === tabs.teleop) {
+            return validTele();
+        } else if (tab === tabs.endGame) {
+            return validEndGame();
+        } else if (tab === tabs.closing) {
+            return validClosing();
+        } else {
+            return true;
+        }
+    }
+
+    const [updateStandForm] = useMutation(UPDATE_STANDFORM, {
+        onCompleted() {
+            toast({
+                title: 'Match Form Updated',
+                status: 'success',
+                duration: 3000,
+                isClosable: true,
+            });
+            if (location.state && location.state.previousRoute) {
+                if (location.state.previousRoute === 'matches') {
+                    navigate('/matches', { state: { scoutingError: location.state.scoutingError } });
+                } else if (location.state.previousRoute === 'team') {
+                    navigate(`/team/${teamNumber}/stand`);
+                }
+            } else {
+                navigate('/');
+            }
+            setSubmitting(false);
+            localStorage.removeItem('StandFormData');
+        },
+        onError(err) {
+            console.log(JSON.stringify(err, null, 2));
+            toast({
+                title: 'Apollo Error',
+                description: 'Match form could not be updated',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+            });
+            setSubmitting(false);
+        },
+    });
+
+    function submit() {
+        setSubmitAttempted(true);
+        if (!isFollowOrNoShow()) {
+            let toastText = [];
+            if (!validPreAuto()) {
+                toastText.push('Pre-Auto');
+            }
+            if (!validAuto()) {
+                toastText.push('Auto');
+            }
+            if (!validTele()) {
+                toastText.push('Teleop');
+            }
+            if (!validEndGame()) {
+                toastText.push('End Game');
+            }
+            if (!validClosing()) {
+                toastText.push('Closing');
+            }
+            if (toastText.length !== 0) {
+                toast({
+                    title: 'Missing fields at:',
+                    description: toastText.join(', '),
+                    status: 'error',
+                    duration: 2000,
+                    isClosable: true,
+                });
+                return;
+            }
+        } else if (standFormData.standStatusComment.trim() === '') {
+            toast({
+                title: 'Missing fields',
+                description: `Leave a ${standFormData.standStatus.toLowerCase()} comment`,
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+        setSubmitting(true);
+        updateStandForm({
+            variables: {
+                matchFormInput: {
+                    eventKey: eventKeyParam,
+                    eventName: eventName,
+                    station: stationParam,
+                    matchNumber: matchNumberParam,
+                    teamNumber: parseInt(teamNumber),
+                    teamName: teamName,
+                    startingPosition: standFormData.startingPosition,
+                    preLoadedPiece: standFormData.preLoadedPiece,
+                    bottomAuto: standFormData.bottomAuto,
+                    middleAuto: standFormData.middleAuto,
+                    topAuto: standFormData.topAuto,
+                    crossCommunity: standFormData.crossCommunity,
+                    chargeAuto: standFormData.chargeAuto,
+                    autoChargeComment: standFormData.autoChargeComment,
+                    standAutoComment: standFormData.standAutoComment.trim(),
+                    bottomTele: standFormData.bottomTele,
+                    middleTele: standFormData.middleTele,
+                    topTele: standFormData.topTele,
+                    chargeTele: standFormData.chargeTele,
+                    chargeComment: ['Dock', 'Impaired', 'Fail'].includes(standFormData.chargeTele) ? standFormData.chargeComment.trim() : '',
+                    chargeRobotCount: standFormData.chargeTele === 'Dock' || standFormData.chargeTele === 'Engage' ? standFormData.chargeRobotCount : null,
+                    impairedCharge: standFormData.impairedCharge,
+                    impairedComment: standFormData.impairedCharge ? standFormData.impairedComment.trim() : '',
+                    defendedBy: standFormData.defendedBy,
+                    loseCommunication: standFormData.loseCommunication,
+                    robotBreak: standFormData.robotBreak,
+                    yellowCard: standFormData.yellowCard,
+                    redCard: standFormData.redCard,
+                    standEndComment: standFormData.standStatus === matchFormStatus.noShow ? '' : standFormData.standEndComment.trim(),
+                    standStatus: standFormData.standStatus || matchFormStatus.complete,
+                    standStatusComment: isFollowOrNoShow() ? standFormData.standStatusComment.trim() : '',
+                },
+            },
+        });
+    }
+
+    function renderTab(tab) {
+        switch (tab) {
+            case tabs.preAuto:
+                return (
+                    <Box minH={'calc(100vh - 200px)'}>
+                        <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 30px 10px'}>
+                            <HStack marginBottom={'10px'} spacing={'auto'}>
+                                <Text fontWeight={'bold'} fontSize={'110%'}>
+                                    Starting Position:
+                                </Text>
+                                <IconButton
+                                    _focus={{ outline: 'none' }}
+                                    onClick={() => setFieldRotationIndex(fieldRotationIndex === 3 ? 0 : fieldRotationIndex + 1)}
+                                    icon={<AiOutlineRotateRight />}
+                                    size='sm'
+                                ></IconButton>
+                            </HStack>
+                            <Center marginBottom={'25px'}>
+                                {!initialDrawn && <Spinner pos={'absolute'} zIndex={-1}></Spinner>}
+                                <canvas
+                                    width={imageWidth * calculateImageScale(imageWidth)}
+                                    height={imageHeight * calculateImageScale(imageWidth)}
+                                    style={{
+                                        zIndex: 2,
+                                        outline: standFormData.startingPosition.x === null && submitAttempted && !isFollowOrNoShow() ? '4px solid red' : 'none',
+                                        cursor: 'pointer',
+                                    }}
+                                    onClick={(event) => {
+                                        let dimensions = getCanvasDimensions(rotations[fieldRotationIndex]);
+                                        let width = dimensions.width;
+                                        let height = dimensions.height;
+                                        let bounds = event.target.getBoundingClientRect();
+                                        let x = event.clientX - bounds.left;
+                                        let y = event.clientY - bounds.top;
+                                        let scale = calculateImageScale(imageWidth);
+                                        let pointX =
+                                            (x - (width / 2) * scale) * Math.cos(2 * Math.PI - rotations[fieldRotationIndex]) -
+                                            (y - (height / 2) * scale) * Math.sin(2 * Math.PI - rotations[fieldRotationIndex]) +
+                                            (imageWidth / 2) * scale;
+                                        let pointY =
+                                            (x - (width / 2) * scale) * Math.sin(2 * Math.PI - rotations[fieldRotationIndex]) +
+                                            (y - (height / 2) * scale) * Math.cos(2 * Math.PI - rotations[fieldRotationIndex]) +
+                                            (imageHeight / 2) * scale;
+                                        let ctx = offSideCanvas.current.getContext('2d');
+                                        let p = ctx.getImageData(pointX / scale, pointY / scale, 1, 1).data;
+                                        if (p[3] !== 0) {
+                                            //transparent pixel
+                                            setStandFormData({
+                                                ...standFormData,
+                                                startingPosition: { x: pointX / scale, y: pointY / scale },
+                                            });
+                                        }
+                                    }}
+                                    ref={mainCanvas}
+                                ></canvas>
+                                <canvas
+                                    style={{ position: 'absolute', zIndex: 1 }}
+                                    width={imageWidth * calculateImageScale(imageWidth)}
+                                    height={imageHeight * calculateImageScale(imageWidth)}
+                                    ref={secondCanvas}
+                                ></canvas>
+                            </Center>
+                            <Text marginBottom={'2px'} fontWeight={'bold'} fontSize={'110%'}>
+                                Pre-Loaded Piece:
+                            </Text>
+                            <Center>
+                                <Flex flexWrap={'wrap'} justifyContent={'center'}>
+                                    {preLoadedPieces.map((type) => (
+                                        <Button
+                                            outline={standFormData.preLoadedPiece === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                            maxW={'100px'}
+                                            minW={'100px'}
+                                            margin={'8px'}
+                                            key={type.id}
+                                            _focus={{ outline: 'none' }}
+                                            colorScheme={standFormData.preLoadedPiece === type.label ? 'green' : 'gray'}
+                                            onClick={() => setStandFormData({ ...standFormData, preLoadedPiece: type.label })}
+                                        >
+                                            {type.label}
+                                        </Button>
+                                    ))}
+                                </Flex>
+                            </Center>
+                        </Box>
+                    </Box>
+                );
+            case tabs.auto:
+                return (
+                    <Box minH={'calc(100vh - 200px)'}>
+                        <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 30px 10px'}>
+                            <Center marginTop={'10px'} marginBottom={'10px'}>
+                                <HStack spacing={'50px'}>
+                                    <Button
+                                        outline={'none'}
+                                        _focus={{ outline: 'none' }}
+                                        colorScheme={'gray'}
+                                        onClick={() => standFormAutoManager.undo(standFormData)}
+                                        isDisabled={standFormAutoManager.getPosition() === 0}
+                                    >
+                                        Undo
+                                    </Button>
+                                    <Button
+                                        outline={'none'}
+                                        _focus={{ outline: 'none' }}
+                                        colorScheme={'gray'}
+                                        onClick={() => standFormAutoManager.redo(standFormData)}
+                                        isDisabled={standFormAutoManager.getPosition() === standFormAutoManager.getHistoryLength() - 1}
+                                    >
+                                        Redo
+                                    </Button>
+                                </HStack>
+                            </Center>
+
+                            {['top', 'middle', 'bottom'].map((row) => (
+                                <React.Fragment key={'auto' + row}>
+                                    <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                        {row.charAt(0).toUpperCase() + row.slice(1)} Row:
+                                    </Text>
+                                    <Center marginBottom={'20px'}>
+                                        <HStack spacing={'0px'} columnGap={'20px'} position={'relative'}>
+                                            <Box position={'absolute'} left={'-33%'} top={0}>
+                                                <MissedButton
+                                                    standFormData={standFormData}
+                                                    setStandFormData={setStandFormData}
+                                                    dataField={{ row: row, phase: 'Auto', field: 'coneMissed' }}
+                                                    manager={standFormAutoManager}
+                                                    max={Infinity}
+                                                    shakeElement={shakeElement}
+                                                    setShakeElement={setShakeElement}
+                                                    mobileFlag={mobileFlag}
+                                                    toast={toast}
+                                                />
+                                            </Box>
+                                            <ScoringButton
+                                                type={'Cone'}
+                                                standFormData={standFormData}
+                                                setStandFormData={setStandFormData}
+                                                dataField={{ row: row, phase: 'Auto', field: 'coneScored' }}
+                                                manager={standFormAutoManager}
+                                                max={row === 'bottom' ? 9 : 6}
+                                                shakeElement={shakeElement}
+                                                setShakeElement={setShakeElement}
+                                                mobileFlag={mobileFlag}
+                                                toast={toast}
+                                            />
+                                            <ScoringButton
+                                                type={'Cube'}
+                                                standFormData={standFormData}
+                                                setStandFormData={setStandFormData}
+                                                dataField={{ row: row, phase: 'Auto', field: 'cubeScored' }}
+                                                manager={standFormAutoManager}
+                                                max={row === 'bottom' ? 9 : 3}
+                                                shakeElement={shakeElement}
+                                                setShakeElement={setShakeElement}
+                                                mobileFlag={mobileFlag}
+                                                toast={toast}
+                                            />
+                                            <Box position={'absolute'} right={'-33%'} top={0}>
+                                                <MissedButton
+                                                    standFormData={standFormData}
+                                                    setStandFormData={setStandFormData}
+                                                    dataField={{ row: row, phase: 'Auto', field: 'cubeMissed' }}
+                                                    manager={standFormAutoManager}
+                                                    max={Infinity}
+                                                    shakeElement={shakeElement}
+                                                    setShakeElement={setShakeElement}
+                                                    mobileFlag={mobileFlag}
+                                                    toast={toast}
+                                                />
+                                            </Box>
+                                        </HStack>
+                                    </Center>
+                                </React.Fragment>
+                            ))}
+                            <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                Mobility (Cross Community):
+                            </Text>
+                            <HStack marginBottom={'20px'} marginLeft={'25px'} spacing={'30px'}>
+                                <Button
+                                    outline={standFormData.crossCommunity === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    _focus={{ outline: 'none' }}
+                                    colorScheme={standFormData.crossCommunity === true ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, crossCommunity: true })}
+                                >
+                                    Yes
+                                </Button>
+                                <Button
+                                    outline={standFormData.crossCommunity === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    _focus={{ outline: 'none' }}
+                                    colorScheme={standFormData.crossCommunity === false ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, crossCommunity: false })}
+                                >
+                                    No
+                                </Button>
+                            </HStack>
+                            <Text marginBottom={'2px'} fontWeight={'bold'} fontSize={'110%'}>
+                                Charge:
+                            </Text>
+                            <Center>
+                                <Flex flexWrap={'wrap'} justifyContent={'center'} marginBottom={['Dock', 'Fail'].includes(standFormData.chargeAuto) ? 'calc(25px - 8px)' : '0px'}>
+                                    {chargeTypesAuto.map((type) => (
+                                        <Button
+                                            outline={standFormData.chargeAuto === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                            maxW={'100px'}
+                                            minW={'100px'}
+                                            margin={'8px'}
+                                            key={type.id}
+                                            _focus={{ outline: 'none' }}
+                                            colorScheme={standFormData.chargeAuto === type.label ? 'green' : 'gray'}
+                                            onClick={() => setStandFormData({ ...standFormData, chargeAuto: type.label })}
+                                        >
+                                            {type.label}
+                                        </Button>
+                                    ))}
+                                </Flex>
+                            </Center>
+                            {['Dock', 'Fail'].includes(standFormData.chargeAuto) && (
+                                <React.Fragment>
+                                    <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                        Charge Comment:
+                                    </Text>
+                                    <Center marginBottom={'8px'}>
+                                        <Textarea
+                                            isInvalid={submitAttempted && standFormData.autoChargeComment.trim() === ''}
+                                            _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
+                                            onChange={(event) => setStandFormData({ ...standFormData, autoChargeComment: event.target.value })}
+                                            value={standFormData.autoChargeComment}
+                                            placeholder={(() => {
+                                                switch (standFormData.chargeAuto) {
+                                                    case 'Dock':
+                                                        return 'Why was the robot not able to engage?';
+                                                    case 'Fail':
+                                                    default:
+                                                        return 'How did the robot fail?';
+                                                }
+                                            })()}
+                                            w={'85%'}
+                                        ></Textarea>
+                                    </Center>
+                                </React.Fragment>
+                            )}
+                        </Box>
+                    </Box>
+                );
+            case tabs.teleop:
+                return (
+                    <Box minH={'calc(100vh - 200px)'}>
+                        <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 30px 10px'}>
+                            <Center marginTop={'10px'} marginBottom={'10px'}>
+                                <HStack spacing={'50px'}>
+                                    <Button
+                                        outline={'none'}
+                                        _focus={{ outline: 'none' }}
+                                        colorScheme={'gray'}
+                                        onClick={() => standFormTeleManager.undo(standFormData)}
+                                        isDisabled={standFormTeleManager.getPosition() === 0}
+                                    >
+                                        Undo
+                                    </Button>
+                                    <Button
+                                        outline={'none'}
+                                        _focus={{ outline: 'none' }}
+                                        colorScheme={'gray'}
+                                        onClick={() => standFormTeleManager.redo(standFormData)}
+                                        isDisabled={standFormTeleManager.getPosition() === standFormTeleManager.getHistoryLength() - 1}
+                                    >
+                                        Redo
+                                    </Button>
+                                </HStack>
+                            </Center>
+
+                            {['top', 'middle', 'bottom'].map((row) => (
+                                <React.Fragment key={'tele' + row}>
+                                    <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                        {row.charAt(0).toUpperCase() + row.slice(1)} Row:
+                                    </Text>
+                                    <Center marginBottom={row === 'bottom' ? '8px' : '20px'}>
+                                        <HStack spacing={'0px'} columnGap={'20px'} position={'relative'}>
+                                            <Box position={'absolute'} left={'-33%'} top={0}>
+                                                <MissedButton
+                                                    standFormData={standFormData}
+                                                    setStandFormData={setStandFormData}
+                                                    dataField={{ row: row, phase: 'Tele', field: 'coneMissed' }}
+                                                    manager={standFormTeleManager}
+                                                    max={Infinity}
+                                                    shakeElement={shakeElement}
+                                                    setShakeElement={setShakeElement}
+                                                    mobileFlag={mobileFlag}
+                                                    toast={toast}
+                                                />
+                                            </Box>
+                                            <ScoringButton
+                                                type={'Cone'}
+                                                standFormData={standFormData}
+                                                setStandFormData={setStandFormData}
+                                                dataField={{ row: row, phase: 'Tele', field: 'coneScored' }}
+                                                manager={standFormTeleManager}
+                                                max={row === 'bottom' ? 9 : 6}
+                                                shakeElement={shakeElement}
+                                                setShakeElement={setShakeElement}
+                                                mobileFlag={mobileFlag}
+                                                toast={toast}
+                                            />
+                                            <ScoringButton
+                                                type={'Cube'}
+                                                standFormData={standFormData}
+                                                setStandFormData={setStandFormData}
+                                                dataField={{ row: row, phase: 'Tele', field: 'cubeScored' }}
+                                                manager={standFormTeleManager}
+                                                max={row === 'bottom' ? 9 : 3}
+                                                shakeElement={shakeElement}
+                                                setShakeElement={setShakeElement}
+                                                mobileFlag={mobileFlag}
+                                                toast={toast}
+                                            />
+                                            <Box position={'absolute'} right={'-33%'} top={0}>
+                                                <MissedButton
+                                                    standFormData={standFormData}
+                                                    setStandFormData={setStandFormData}
+                                                    dataField={{ row: row, phase: 'Tele', field: 'cubeMissed' }}
+                                                    manager={standFormTeleManager}
+                                                    max={Infinity}
+                                                    shakeElement={shakeElement}
+                                                    setShakeElement={setShakeElement}
+                                                    mobileFlag={mobileFlag}
+                                                    toast={toast}
+                                                />
+                                            </Box>
+                                        </HStack>
+                                    </Center>
+                                </React.Fragment>
+                            ))}
+                        </Box>
+                    </Box>
+                );
+            case tabs.endGame:
+                return (
+                    <Box minH={'calc(100vh - 200px)'}>
+                        <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 30px 10px'}>
+                            <Text marginBottom={'2px'} fontWeight={'bold'} fontSize={'110%'}>
+                                Charge:
+                            </Text>
+                            <Center>
+                                <Flex flexWrap={'wrap'} marginBottom={'calc(25px - 8px)'} justifyContent={'center'}>
+                                    {chargeTypesTele.map((type) => (
+                                        <Button
+                                            outline={standFormData.chargeTele === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                            maxW={'100px'}
+                                            minW={'100px'}
+                                            margin={'8px'}
+                                            key={type.id}
+                                            _focus={{ outline: 'none' }}
+                                            colorScheme={standFormData.chargeTele === type.label ? 'green' : 'gray'}
+                                            onClick={() => setStandFormData({ ...standFormData, chargeTele: type.label })}
+                                        >
+                                            {type.label}
+                                        </Button>
+                                    ))}
+                                </Flex>
+                            </Center>
+                            {(standFormData.chargeTele === 'Dock' || standFormData.chargeTele === 'Engage') && (
+                                <React.Fragment>
+                                    <Text marginBottom={'2px'} fontWeight={'bold'} fontSize={'110%'}>
+                                        # on Charge Station:
+                                    </Text>
+                                    <Center>
+                                        <Flex flexWrap={'wrap'} marginBottom={'calc(25px - 8px)'} justifyContent={'center'}>
+                                            {[1, 2, 3].map((count) => (
+                                                <Button
+                                                    outline={standFormData.chargeRobotCount === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                                    maxW={'60px'}
+                                                    minW={'60px'}
+                                                    margin={'8px'}
+                                                    key={count}
+                                                    _focus={{ outline: 'none' }}
+                                                    colorScheme={standFormData.chargeRobotCount === count ? 'green' : 'gray'}
+                                                    onClick={() => setStandFormData({ ...standFormData, chargeRobotCount: count })}
+                                                >
+                                                    {count}
+                                                </Button>
+                                            ))}
+                                        </Flex>
+                                    </Center>
+                                </React.Fragment>
+                            )}
+                            {['Dock', 'Impaired', 'Fail'].includes(standFormData.chargeTele) && (
+                                <React.Fragment>
+                                    <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                        Charge Comment:
+                                    </Text>
+                                    <Center marginBottom={'25px'}>
+                                        <Textarea
+                                            isInvalid={submitAttempted && standFormData.chargeComment.trim() === ''}
+                                            _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
+                                            onChange={(event) => setStandFormData({ ...standFormData, chargeComment: event.target.value })}
+                                            value={standFormData.chargeComment}
+                                            placeholder={(() => {
+                                                switch (standFormData.chargeTele) {
+                                                    case 'Dock':
+                                                        return 'Why was the robot not able to engage?';
+                                                    case 'Impaired':
+                                                        return 'How did the robot get impaired?';
+                                                    case 'Fail':
+                                                    default:
+                                                        return 'How did the robot fail?';
+                                                }
+                                            })()}
+                                            w={'85%'}
+                                        ></Textarea>
+                                    </Center>
+                                </React.Fragment>
+                            )}
+                            <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                Disrupted Partner's Charge:
+                            </Text>
+                            <HStack marginBottom={standFormData.impairedCharge ? '25px' : '8px'} marginLeft={'25px'} spacing={'30px'}>
+                                <Button
+                                    outline={standFormData.impairedCharge === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    _focus={{ outline: 'none' }}
+                                    colorScheme={standFormData.impairedCharge === true ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, impairedCharge: true })}
+                                >
+                                    Yes
+                                </Button>
+                                <Button
+                                    outline={standFormData.impairedCharge === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    _focus={{ outline: 'none' }}
+                                    colorScheme={standFormData.impairedCharge === false ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, impairedCharge: false })}
+                                >
+                                    No
+                                </Button>
+                            </HStack>
+                            {standFormData.impairedCharge && (
+                                <React.Fragment>
+                                    <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                        Disrupted Comment:
+                                    </Text>
+                                    <Center marginBottom={'8px'}>
+                                        <Textarea
+                                            isInvalid={submitAttempted && standFormData.impairedComment.trim() === ''}
+                                            _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
+                                            onChange={(event) => setStandFormData({ ...standFormData, impairedComment: event.target.value })}
+                                            value={standFormData.impairedComment}
+                                            placeholder={'How did the robot disrupt their alliance partners?'}
+                                            w={'85%'}
+                                        ></Textarea>
+                                    </Center>
+                                </React.Fragment>
+                            )}
+                        </Box>
+                    </Box>
+                );
+            case tabs.closing:
+                return (
+                    <Box minH={'calc(100vh - 200px)'}>
+                        <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 10px 10px'}>
+                            <Text marginBottom={'2px'} fontWeight={'bold'} fontSize={'110%'}>
+                                Defended By:
+                            </Text>
+                            <Center>
+                                <Flex flexWrap={'wrap'} justifyContent={'center'} marginBottom={`${25 - 8}px`}>
+                                    {['None'].concat(opposingAlliance).map((team) => (
+                                        <Button
+                                            outline={standFormData.defendedBy === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                            maxW={'100px'}
+                                            minW={'100px'}
+                                            margin={'8px'}
+                                            key={team}
+                                            _focus={{ outline: 'none' }}
+                                            colorScheme={standFormData.defendedBy === team ? 'green' : 'gray'}
+                                            onClick={() => setStandFormData({ ...standFormData, defendedBy: team })}
+                                        >
+                                            {team}
+                                        </Button>
+                                    ))}
+                                </Flex>
+                            </Center>
+                            <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                Lose Communication:
+                            </Text>
+                            <HStack marginBottom={'20px'} marginLeft={'25px'} spacing={'30px'}>
+                                <Button
+                                    _focus={{ outline: 'none' }}
+                                    outline={standFormData.loseCommunication === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    colorScheme={standFormData.loseCommunication === true ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, loseCommunication: true })}
+                                >
+                                    Yes
+                                </Button>
+                                <Button
+                                    _focus={{ outline: 'none' }}
+                                    outline={standFormData.loseCommunication === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    colorScheme={standFormData.loseCommunication === false ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, loseCommunication: false })}
+                                >
+                                    No
+                                </Button>
+                            </HStack>
+                            <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                Robot Broke:
+                            </Text>
+                            <HStack marginBottom={'20px'} marginLeft={'25px'} spacing={'30px'}>
+                                <Button
+                                    _focus={{ outline: 'none' }}
+                                    outline={standFormData.robotBreak === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    colorScheme={standFormData.robotBreak === true ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, robotBreak: true })}
+                                >
+                                    Yes
+                                </Button>
+                                <Button
+                                    _focus={{ outline: 'none' }}
+                                    outline={standFormData.robotBreak === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    colorScheme={standFormData.robotBreak === false ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, robotBreak: false })}
+                                >
+                                    No
+                                </Button>
+                            </HStack>
+                            <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                Yellow Card:
+                            </Text>
+                            <HStack marginBottom={'20px'} marginLeft={'25px'} spacing={'30px'}>
+                                <Button
+                                    _focus={{ outline: 'none' }}
+                                    outline={standFormData.yellowCard === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    colorScheme={standFormData.yellowCard === true ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, yellowCard: true })}
+                                >
+                                    Yes
+                                </Button>
+                                <Button
+                                    _focus={{ outline: 'none' }}
+                                    outline={standFormData.yellowCard === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    colorScheme={standFormData.yellowCard === false ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, yellowCard: false })}
+                                >
+                                    No
+                                </Button>
+                            </HStack>
+                            <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                Red Card:
+                            </Text>
+                            <HStack marginBottom={'20px'} marginLeft={'25px'} spacing={'30px'}>
+                                <Button
+                                    _focus={{ outline: 'none' }}
+                                    outline={standFormData.redCard === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    colorScheme={standFormData.redCard === true ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, redCard: true })}
+                                >
+                                    Yes
+                                </Button>
+                                <Button
+                                    _focus={{ outline: 'none' }}
+                                    outline={standFormData.redCard === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    colorScheme={standFormData.redCard === false ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, redCard: false })}
+                                >
+                                    No
+                                </Button>
+                            </HStack>
+                            <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                Auto Comment:
+                            </Text>
+                            <Center marginBottom={'25px'}>
+                                <Textarea
+                                    _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
+                                    onChange={(event) => setStandFormData({ ...standFormData, standAutoComment: event.target.value })}
+                                    value={standFormData.standAutoComment}
+                                    placeholder='Any comments about auto'
+                                    w={'85%'}
+                                ></Textarea>
+                            </Center>
+                            {standFormData.standStatus !== matchFormStatus.noShow && (
+                                <React.Fragment>
+                                    <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
+                                        Ending Comment:
+                                    </Text>
+                                    <Center marginBottom={'25px'}>
+                                        <Textarea
+                                            _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
+                                            onChange={(event) => setStandFormData({ ...standFormData, standEndComment: event.target.value })}
+                                            value={standFormData.standEndComment}
+                                            placeholder='Any ending comments'
+                                            w={'85%'}
+                                        ></Textarea>
+                                    </Center>
+                                </React.Fragment>
+                            )}
+                            {standFormData.standStatus !== matchFormStatus.noShow && (
+                                <Center marginBottom={'10px'}>
+                                    <Checkbox
+                                        //removes the blue outline on focus
+                                        css={`
+                                            > span:first-of-type {
+                                                box-shadow: unset;
+                                            }
+                                        `}
+                                        colorScheme={'green'}
+                                        isChecked={standFormData.standStatus === matchFormStatus.followUp}
+                                        onChange={() => setStandFormData({ ...standFormData, standStatus: standFormData.standStatus === matchFormStatus.followUp ? null : matchFormStatus.followUp })}
+                                    >
+                                        Mark For Follow Up
+                                    </Checkbox>
+                                </Center>
+                            )}
+                            {isFollowOrNoShow() ? (
+                                <Center marginBottom={'8px'}>
+                                    <Textarea
+                                        isInvalid={submitAttempted && standFormData.standStatusComment.trim() === ''}
+                                        _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
+                                        onChange={(event) => setStandFormData({ ...standFormData, standStatusComment: event.target.value })}
+                                        value={standFormData.standStatusComment}
+                                        placeholder={`What is the reason for the ${standFormData.standStatus.toLowerCase()}?`}
+                                        w={'85%'}
+                                    ></Textarea>
+                                </Center>
+                            ) : null}
+                        </Box>
+                        <Center>
+                            <Button isDisabled={submitting} _focus={{ outline: 'none' }} marginBottom={'20px'} marginTop={'20px'} onClick={() => submit()}>
+                                Submit
+                            </Button>
+                        </Center>
+                    </Box>
+                );
+            default:
+                return null;
+        }
+    }
+
+    if (error) {
+        return (
+            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+                {error}
+            </Box>
+        );
+    }
+
+    if (loadResponse === 'Required') {
+        return (
+            <AlertDialog
+                closeOnEsc={false}
+                closeOnOverlayClick={false}
+                isOpen={standFormDialog}
+                leastDestructiveRef={cancelRef}
+                onClose={() => {
+                    setStandFormDialog(false);
+                }}
+            >
+                <AlertDialogOverlay>
+                    <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
+                        <AlertDialogHeader color='black' fontSize='lg' fontWeight='bold'>
+                            Unsaved Data
+                        </AlertDialogHeader>
+                        <AlertDialogBody>You have unsaved data for this stand form. Would you like to load it, delete it, or pull data from the cloud?</AlertDialogBody>
+                        <AlertDialogFooter>
+                            <Button
+                                onClick={() => {
+                                    setStandFormDialog(false);
+                                    setLoadResponse(false);
+                                    localStorage.removeItem('StandFormData');
+                                }}
+                                _focus={{ outline: 'none', boxShadow: 'none' }}
+                                colorScheme='red'
+                            >
+                                Delete
+                            </Button>
+                            <Button
+                                colorScheme='yellow'
+                                ml={3}
+                                _focus={{ outline: 'none', boxShadow: 'none' }}
+                                onClick={() => {
+                                    setStandFormDialog(false);
+                                    setLoadResponse(false);
+                                }}
+                            >
+                                Cloud
+                            </Button>
+                            <Button
+                                colorScheme='blue'
+                                ml={3}
+                                _focus={{ outline: 'none', boxShadow: 'none' }}
+                                onClick={() => {
+                                    setStandFormDialog(false);
+                                    setLoadResponse(true);
+
+                                    let matchForm = JSON.parse(localStorage.getItem('StandFormData'));
+                                    matchForm.loading = false;
+                                    setStandFormData(matchForm);
+                                    setActiveTab(tabs.preAuto);
+                                }}
+                            >
+                                Load
+                            </Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialogOverlay>
+            </AlertDialog>
+        );
+    }
+
+    if (
+        standFormData.loading ||
+        !validMatch ||
+        loadingStandData ||
+        loadingEvent ||
+        futureAlly === null ||
+        opposingAlliance === null ||
+        (standDataError && eventError && error !== false) ||
+        teamName === null ||
+        eventName === null
+    ) {
+        return (
+            <Center>
+                <Spinner></Spinner>
+            </Center>
+        );
+    }
+
+    return (
+        <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <IconButton
+                position={'absolute'}
+                right={'10px'}
+                top={'95px'}
+                onClick={onAlertOpen}
+                icon={<MdOutlineDoNotDisturbAlt />}
+                colorScheme={standFormData.standStatus === matchFormStatus.noShow ? 'red' : 'black'}
+                variant={standFormData.standStatus === matchFormStatus.noShow ? 'solid' : 'outline'}
+                _focus={{ outline: 'none' }}
+                size='sm'
+            />
+            {futureAlly ? <StarIcon position={'absolute'} left={'10px'} top={'95px'} stroke={'black'} viewBox={'-1 -1 26 26'} fontSize={'30px'} color={'yellow.300'} /> : null}
+            <AlertDialog isOpen={isAlertOpen} leastDestructiveRef={cancelAlertRef} onClose={onAlertClose} closeOnEsc={false}>
+                <AlertDialogOverlay>
+                    <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
+                        <AlertDialogHeader color='black' fontSize='lg' fontWeight='bold'>
+                            {(standFormData.standStatus === matchFormStatus.noShow ? 'Unmark' : 'Mark') + ' this team as a no show'}
+                        </AlertDialogHeader>
+                        <AlertDialogBody>{`Make sure the team is ${standFormData.standStatus === matchFormStatus.noShow ? 'on' : 'not on'} the field`}</AlertDialogBody>
+                        <AlertDialogFooter>
+                            <Button ref={cancelAlertRef} onClick={onAlertClose} _focus={{ outline: 'none' }}>
+                                Cancel
+                            </Button>
+                            <Button
+                                _focus={{ outline: 'none' }}
+                                colorScheme={standFormData.standStatus === matchFormStatus.noShow ? 'green' : 'red'}
+                                onClick={() => {
+                                    setStandFormData({ ...standFormData, standStatus: standFormData.standStatus === matchFormStatus.noShow ? null : matchFormStatus.noShow });
+                                    onAlertClose();
+                                }}
+                                ml={3}
+                            >
+                                {standFormData.standStatus === matchFormStatus.noShow ? 'Unmark' : 'Mark'}
+                            </Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialogOverlay>
+            </AlertDialog>
+            <Center>
+                <HStack marginBottom={'25px'} spacing={'10px'}>
+                    <IconButton icon={<ChevronLeftIcon />} isDisabled={activeTab === tabs.preAuto || activeTab === null} className='slider-button-prev' _focus={{ outline: 'none' }} />
+                    <Text textAlign={'center'} color={submitAttempted && !isFollowOrNoShow() && !validateTab(activeTab) ? 'red' : 'black'} minW={'130px'} fontWeight={'bold'} fontSize={'110%'}>
+                        {activeTab} • {teamNumber}
+                    </Text>
+                    <IconButton icon={<ChevronRightIcon />} className='slider-button-next' _focus={{ outline: 'none' }} />
+                </HStack>
+            </Center>
+            <Swiper
+                // install Swiper modules
+                ref={swiper}
+                autoHeight={true}
+                modules={[Navigation]}
+                spaceBetween={50}
+                centeredSlides={true}
+                slidesPerView={'auto'}
+                simulateTouch={false}
+                noSwiping={true}
+                navigation={{ prevEl: '.slider-button-prev', nextEl: '.slider-button-next' }}
+                onSlideChange={(swiper) => {
+                    setActiveTab(Object.values(tabs)[swiper.activeIndex]);
+                }}
+            >
+                <SwiperSlide> {renderTab(tabs.preAuto)}</SwiperSlide>
+                <SwiperSlide> {renderTab(tabs.auto)}</SwiperSlide>
+                <SwiperSlide> {renderTab(tabs.teleop)}</SwiperSlide>
+                <SwiperSlide> {renderTab(tabs.endGame)}</SwiperSlide>
+                <SwiperSlide> {renderTab(tabs.closing)}</SwiperSlide>
+            </Swiper>
+        </Box>
+    );
+}
+
+function ScoringButton({ type, standFormData, setStandFormData, dataField, manager, max, shakeElement, setShakeElement, mobileFlag, toast }) {
+    return (
+        <Center
+            className={shakeElement === JSON.stringify(dataField) && 'shake'}
+            userSelect={'none'}
+            cursor={'pointer'}
+            fontSize={'45px'}
+            backgroundColor={type === 'Cone' ? '#F7F03E' : '#BE4FB8'}
+            _hover={{ backgroundColor: type === 'Cone' ? '#EBE40A' : '#B342AD' }}
+            _active={{ backgroundColor: type === 'Cone' ? '#C5C340' : '#953790' }}
+            minW={{ base: '75px', md: '85px', lg: '106px' }}
+            minH={{ base: '75px', md: '90px', lg: '100px' }}
+            borderRadius={'10px'}
+            onMouseDown={() => {
+                setShakeElement(null);
+                clearTimeout(doShake);
+                clearTimeout(zeroScore);
+                wasHeldDown = false;
+                touchIsInside = false;
+                if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
+                    doShake = setTimeout(() => {
+                        setShakeElement(JSON.stringify(dataField));
+                        wasHeldDown = true;
+                    }, 500);
+                    zeroScore = setTimeout(() => {
+                        manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
+                        wasHeldDown = true;
+                        toast({
+                            title: `Reset`,
+                            status: 'info',
+                            duration: 1000,
+                            isClosable: true,
+                        });
+                    }, 2000);
+                }
+            }}
+            onMouseOut={(event) => {
+                if (mobileFlag) {
+                    event.preventDefault();
+                } else {
+                    setShakeElement(null);
+                    clearTimeout(doShake);
+                    clearTimeout(zeroScore);
+                    wasHeldDown = false;
+                    touchIsInside = false;
+                }
+            }}
+            onMouseUp={() => {
+                if (!wasHeldDown) {
+                    manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
+                }
+                setShakeElement(null);
+                clearTimeout(doShake);
+                clearTimeout(zeroScore);
+                wasHeldDown = false;
+                touchIsInside = false;
+            }}
+            onTouchStart={(event) => {
+                event.preventDefault();
+                setShakeElement(null);
+                clearTimeout(doShake);
+                clearTimeout(zeroScore);
+                wasHeldDown = false;
+                touchIsInside = true;
+                if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
+                    doShake = setTimeout(() => {
+                        setShakeElement(JSON.stringify(dataField));
+                        wasHeldDown = true;
+                    }, 500);
+                    zeroScore = setTimeout(() => {
+                        manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
+                        wasHeldDown = true;
+                        toast({
+                            title: `Reset`,
+                            status: 'info',
+                            duration: 1000,
+                            isClosable: true,
+                        });
+                    }, 2000);
+                }
+            }}
+            onTouchMove={(event) => {
+                event.preventDefault();
+                setShakeElement(null);
+                clearTimeout(doShake);
+                clearTimeout(zeroScore);
+                wasHeldDown = false;
+                touchIsInside = false;
+            }}
+            onTouchEnd={(event) => {
+                event.preventDefault();
+                if (!wasHeldDown && touchIsInside) {
+                    manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
+                }
+                setShakeElement(null);
+                clearTimeout(doShake);
+                clearTimeout(zeroScore);
+                wasHeldDown = false;
+                touchIsInside = false;
+            }}
+        >
+            {standFormData[`${dataField.row}${dataField.phase}`][dataField.field]}
+        </Center>
+    );
+}
+
+function MissedButton({ standFormData, setStandFormData, dataField, manager, max, shakeElement, setShakeElement, mobileFlag, toast }) {
+    return (
+        <Center
+            className={shakeElement === JSON.stringify(dataField) && 'shake'}
+            userSelect={'none'}
+            cursor={'pointer'}
+            fontSize={'25px'}
+            backgroundColor={'red.400'}
+            _hover={{ backgroundColor: 'red.500' }}
+            _active={{ backgroundColor: 'red.600' }}
+            minW={{ base: '45px', md: '50px', lg: '60px' }}
+            minH={{ base: '35px', md: '40px', lg: '45px' }}
+            borderRadius={'10px'}
+            onMouseDown={() => {
+                setShakeElement(null);
+                clearTimeout(doShake);
+                clearTimeout(zeroScore);
+                wasHeldDown = false;
+                touchIsInside = false;
+                if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
+                    doShake = setTimeout(() => {
+                        setShakeElement(JSON.stringify(dataField));
+                        wasHeldDown = true;
+                    }, 500);
+                    zeroScore = setTimeout(() => {
+                        manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
+                        wasHeldDown = true;
+                        toast({
+                            title: `Reset`,
+                            status: 'info',
+                            duration: 1000,
+                            isClosable: true,
+                        });
+                    }, 2000);
+                }
+            }}
+            onMouseOut={(event) => {
+                if (mobileFlag) {
+                    event.preventDefault();
+                } else {
+                    setShakeElement(null);
+                    clearTimeout(doShake);
+                    clearTimeout(zeroScore);
+                    wasHeldDown = false;
+                    touchIsInside = false;
+                }
+            }}
+            onMouseUp={() => {
+                if (!wasHeldDown) {
+                    manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
+                }
+                setShakeElement(null);
+                clearTimeout(doShake);
+                clearTimeout(zeroScore);
+                wasHeldDown = false;
+                touchIsInside = false;
+            }}
+            onTouchStart={(event) => {
+                event.preventDefault();
+                setShakeElement(null);
+                clearTimeout(doShake);
+                clearTimeout(zeroScore);
+                wasHeldDown = false;
+                touchIsInside = true;
+                if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
+                    doShake = setTimeout(() => {
+                        setShakeElement(JSON.stringify(dataField));
+                        wasHeldDown = true;
+                    }, 500);
+                    zeroScore = setTimeout(() => {
+                        manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
+                        wasHeldDown = true;
+                        toast({
+                            title: `Reset`,
+                            status: 'info',
+                            duration: 1000,
+                            isClosable: true,
+                        });
+                    }, 2000);
+                }
+            }}
+            onTouchMove={(event) => {
+                event.preventDefault();
+                setShakeElement(null);
+                clearTimeout(doShake);
+                clearTimeout(zeroScore);
+                wasHeldDown = false;
+                touchIsInside = false;
+            }}
+            onTouchEnd={(event) => {
+                event.preventDefault();
+                if (!wasHeldDown && touchIsInside) {
+                    manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
+                }
+                setShakeElement(null);
+                clearTimeout(doShake);
+                clearTimeout(zeroScore);
+                wasHeldDown = false;
+                touchIsInside = false;
+            }}
+        >
+            {standFormData[`${dataField.row}${dataField.phase}`][dataField.field]}
+        </Center>
+    );
+}
+
+export default StandForm;
