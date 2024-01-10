@@ -51,7 +51,7 @@ function HomePage() {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 650);
     const [openPitMap, setOpenPitMap] = useState(false);
 
-    const { loading: loadingCurrentEvent, error: currentEventError } = useQuery(GET_CURRENT_EVENT, {
+    const { error: currentEventError } = useQuery(GET_CURRENT_EVENT, {
         fetchPolicy: 'network-only',
         skip: user === 'NoUser',
         onError(err) {
@@ -232,7 +232,7 @@ function HomePage() {
         );
     }
 
-    if (loadingCurrentEvent || currentEvent === null || (currentEventError && error !== false)) {
+    if ((currentEvent === null || (currentEventError && error !== false)) && user !== 'NoUser') {
         return (
             <Center>
                 <Spinner></Spinner>
