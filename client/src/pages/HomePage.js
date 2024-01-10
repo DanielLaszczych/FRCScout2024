@@ -19,7 +19,7 @@ import {
     Spinner,
     Text,
     Tooltip,
-    VStack,
+    VStack
 } from '@chakra-ui/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
@@ -64,7 +64,7 @@ function HomePage() {
         },
         onCompleted({ getCurrentEvent: currentEventData }) {
             setCurrentEvent(currentEventData);
-        },
+        }
     });
 
     const fetchTeamInfoWrapper = useCallback(
@@ -92,17 +92,17 @@ function HomePage() {
                                                 redScore: {
                                                     score: match.alliances.red.score,
                                                     linkRP: match.score_breakdown?.red.sustainabilityBonusAchieved,
-                                                    chargeRP: match.score_breakdown?.red.activationBonusAchieved,
+                                                    chargeRP: match.score_breakdown?.red.activationBonusAchieved
                                                 },
                                                 blueScore: {
                                                     score: match.alliances.blue.score,
                                                     linkRP: match.score_breakdown?.blue.sustainabilityBonusAchieved,
-                                                    chargeRP: match.score_breakdown?.blue.activationBonusAchieved,
+                                                    chargeRP: match.score_breakdown?.blue.activationBonusAchieved
                                                 },
                                                 winner: match.winning_alliance,
                                                 predictedTime: match.predicted_time,
                                                 scheduledTime: match.time,
-                                                actualTime: match.actual_time,
+                                                actualTime: match.actual_time
                                             });
                                         }
                                     }
@@ -204,14 +204,14 @@ function HomePage() {
                                               hour: 'numeric',
                                               minute: 'numeric',
                                               hour12: true,
-                                              timeZone: timeZone,
+                                              timeZone: timeZone
                                           })}`
                                         : match.scheduledTime
                                         ? `${weekday[new Date(match.scheduledTime * 1000).getDay()]} ${new Date(match.scheduledTime * 1000).toLocaleString('en-US', {
                                               hour: 'numeric',
                                               minute: 'numeric',
                                               hour12: true,
-                                              timeZone: timeZone,
+                                              timeZone: timeZone
                                           })}`
                                         : 'No time available'
                                 }`;
@@ -232,7 +232,7 @@ function HomePage() {
         );
     }
 
-    if (loadingCurrentEvent || (currentEventError && error !== false)) {
+    if (loadingCurrentEvent || currentEvent === null || (currentEventError && error !== false)) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -650,7 +650,7 @@ function HomePage() {
                                                                                       hour: 'numeric',
                                                                                       minute: 'numeric',
                                                                                       hour12: true,
-                                                                                      timeZone: timeZone,
+                                                                                      timeZone: timeZone
                                                                                   })}`
                                                                         }
                                                                     >
@@ -662,7 +662,7 @@ function HomePage() {
                                                                                           hour: 'numeric',
                                                                                           minute: 'numeric',
                                                                                           hour12: true,
-                                                                                          timeZone: timeZone,
+                                                                                          timeZone: timeZone
                                                                                       }
                                                                                   )}*`
                                                                                 : match.scheduledTime
@@ -672,7 +672,7 @@ function HomePage() {
                                                                                           hour: 'numeric',
                                                                                           minute: 'numeric',
                                                                                           hour12: true,
-                                                                                          timeZone: timeZone,
+                                                                                          timeZone: timeZone
                                                                                       }
                                                                                   )}`
                                                                                 : '?'}

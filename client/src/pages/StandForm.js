@@ -20,7 +20,7 @@ import {
     Text,
     Textarea,
     useDisclosure,
-    useToast,
+    useToast
 } from '@chakra-ui/react';
 import { GET_EVENT, GET_STANDFORM } from '../graphql/queries';
 import RedFieldNonAllowable from '../images/RedFieldNonAllowable.png';
@@ -28,7 +28,7 @@ import BlueFieldNonAllowable from '../images/BlueFieldNonAllowable.png';
 import RedFieldAllowable from '../images/RedFieldAllowable.png';
 import BlueFieldAllowable from '../images/BlueFieldAllowable.png';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper';
+import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { UPDATE_STANDFORM } from '../graphql/mutations';
@@ -45,25 +45,25 @@ let tabs = {
     auto: 'Auto',
     teleop: 'Teleop',
     endGame: 'End Game',
-    closing: 'Closing',
+    closing: 'Closing'
 };
 let rotations = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
 let preLoadedPieces = [
     { label: 'None', id: uuidv4() },
     { label: 'Cone', id: uuidv4() },
-    { label: 'Cube', id: uuidv4() },
+    { label: 'Cube', id: uuidv4() }
 ];
 let chargeTypesTele = [
     { label: 'No Attempt', id: uuidv4() },
     { label: 'Dock', id: uuidv4() },
     { label: 'Engage', id: uuidv4() },
-    { label: 'Fail', id: uuidv4() },
+    { label: 'Fail', id: uuidv4() }
 ];
 let chargeTypesAuto = [
     { label: 'No Attempt', id: uuidv4() },
     { label: 'Dock', id: uuidv4() },
     { label: 'Engage', id: uuidv4() },
-    { label: 'Fail', id: uuidv4() },
+    { label: 'Fail', id: uuidv4() }
 ];
 let doResize;
 let imageWidth = 438;
@@ -112,19 +112,19 @@ function StandForm() {
             coneScored: 0,
             coneMissed: 0,
             cubeScored: 0,
-            cubeMissed: 0,
+            cubeMissed: 0
         },
         middleAuto: {
             coneScored: 0,
             coneMissed: 0,
             cubeScored: 0,
-            cubeMissed: 0,
+            cubeMissed: 0
         },
         topAuto: {
             coneScored: 0,
             coneMissed: 0,
             cubeScored: 0,
-            cubeMissed: 0,
+            cubeMissed: 0
         },
         crossCommunity: null,
         chargeAuto: null,
@@ -134,19 +134,19 @@ function StandForm() {
             coneScored: 0,
             coneMissed: 0,
             cubeScored: 0,
-            cubeMissed: 0,
+            cubeMissed: 0
         },
         middleTele: {
             coneScored: 0,
             coneMissed: 0,
             cubeScored: 0,
-            cubeMissed: 0,
+            cubeMissed: 0
         },
         topTele: {
             coneScored: 0,
             coneMissed: 0,
             cubeScored: 0,
-            cubeMissed: 0,
+            cubeMissed: 0
         },
         chargeTele: null,
         chargeComment: '',
@@ -161,7 +161,7 @@ function StandForm() {
         standEndComment: '',
         standStatus: null,
         standStatusComment: '',
-        loading: true,
+        loading: true
     });
     const [error, setError] = useState(null);
     const [futureAlly, setFutureAlly] = useState(null);
@@ -174,7 +174,7 @@ function StandForm() {
     const { loading: loadingEvent, error: eventError } = useQuery(GET_EVENT, {
         fetchPolicy: 'network-only',
         variables: {
-            key: eventKeyParam,
+            key: eventKeyParam
         },
         onError(err) {
             console.log(JSON.stringify(err, null, 2));
@@ -182,7 +182,7 @@ function StandForm() {
         },
         onCompleted({ getEvent: event }) {
             setEventName(event.name);
-        },
+        }
     });
 
     useEffect(() => {
@@ -268,7 +268,7 @@ function StandForm() {
             eventKey: eventKeyParam,
             matchNumber: matchNumberParam,
             station: [stationParam],
-            standStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp],
+            standStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp]
         },
         onError(err) {
             console.log(JSON.stringify(err, null, 2));
@@ -288,7 +288,7 @@ function StandForm() {
             prevStandFormData.current = JSON.parse(JSON.stringify(data));
             setStandFormData(data);
             setActiveTab(tabs.preAuto);
-        },
+        }
     });
 
     function calculateImageScale(imageSize) {
@@ -415,7 +415,7 @@ function StandForm() {
         stationParam,
         fieldRotationIndex,
         futureAlly,
-        opposingAlliance,
+        opposingAlliance
     ]);
 
     useEffect(() => {
@@ -536,7 +536,7 @@ function StandForm() {
                 title: 'Match Form Updated',
                 status: 'success',
                 duration: 3000,
-                isClosable: true,
+                isClosable: true
             });
             if (location.state && location.state.previousRoute) {
                 if (location.state.previousRoute === 'matches') {
@@ -557,10 +557,10 @@ function StandForm() {
                 description: 'Match form could not be updated',
                 status: 'error',
                 duration: 3000,
-                isClosable: true,
+                isClosable: true
             });
             setSubmitting(false);
-        },
+        }
     });
 
     function submit() {
@@ -588,7 +588,7 @@ function StandForm() {
                     description: toastText.join(', '),
                     status: 'error',
                     duration: 2000,
-                    isClosable: true,
+                    isClosable: true
                 });
                 return;
             }
@@ -598,7 +598,7 @@ function StandForm() {
                 description: `Leave a ${standFormData.standStatus.toLowerCase()} comment`,
                 status: 'error',
                 duration: 3000,
-                isClosable: true,
+                isClosable: true
             });
             return;
         }
@@ -636,9 +636,9 @@ function StandForm() {
                     redCard: standFormData.redCard,
                     standEndComment: standFormData.standStatus === matchFormStatus.noShow ? '' : standFormData.standEndComment.trim(),
                     standStatus: standFormData.standStatus || matchFormStatus.complete,
-                    standStatusComment: isFollowOrNoShow() ? standFormData.standStatusComment.trim() : '',
-                },
-            },
+                    standStatusComment: isFollowOrNoShow() ? standFormData.standStatusComment.trim() : ''
+                }
+            }
         });
     }
 
@@ -667,7 +667,7 @@ function StandForm() {
                                     style={{
                                         zIndex: 2,
                                         outline: standFormData.startingPosition.x === null && submitAttempted && !isFollowOrNoShow() ? '4px solid red' : 'none',
-                                        cursor: 'pointer',
+                                        cursor: 'pointer'
                                     }}
                                     onClick={(event) => {
                                         let dimensions = getCanvasDimensions(rotations[fieldRotationIndex]);
@@ -691,7 +691,7 @@ function StandForm() {
                                             //transparent pixel
                                             setStandFormData({
                                                 ...standFormData,
-                                                startingPosition: { x: pointX / scale, y: pointY / scale },
+                                                startingPosition: { x: pointX / scale, y: pointY / scale }
                                             });
                                         }
                                     }}
@@ -1468,7 +1468,7 @@ function ScoringButton({ type, standFormData, setStandFormData, dataField, manag
                             title: `Reset`,
                             status: 'info',
                             duration: 1000,
-                            isClosable: true,
+                            isClosable: true
                         });
                     }, 2000);
                 }
@@ -1513,7 +1513,7 @@ function ScoringButton({ type, standFormData, setStandFormData, dataField, manag
                             title: `Reset`,
                             status: 'info',
                             duration: 1000,
-                            isClosable: true,
+                            isClosable: true
                         });
                     }, 2000);
                 }
@@ -1574,7 +1574,7 @@ function MissedButton({ standFormData, setStandFormData, dataField, manager, max
                             title: `Reset`,
                             status: 'info',
                             duration: 1000,
-                            isClosable: true,
+                            isClosable: true
                         });
                     }, 2000);
                 }
@@ -1619,7 +1619,7 @@ function MissedButton({ standFormData, setStandFormData, dataField, manager, max
                             title: `Reset`,
                             status: 'info',
                             duration: 1000,
-                            isClosable: true,
+                            isClosable: true
                         });
                     }, 2000);
                 }

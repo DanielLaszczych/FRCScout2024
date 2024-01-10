@@ -1,4 +1,4 @@
-const { gql } = require('apollo-server-express');
+const { gql } = require('graphql-tag');
 
 const users = require('./users-def');
 const pitForms = require('./pitForm-def');

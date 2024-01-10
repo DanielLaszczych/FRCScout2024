@@ -18,7 +18,7 @@ function PitPage() {
     const {
         loading: loadingEvents,
         error: eventsError,
-        data: { getEvents: events } = {},
+        data: { getEvents: events } = {}
     } = useQuery(GET_EVENTS_KEYS_NAMES, {
         fetchPolicy: 'network-only',
         onError(err) {
@@ -39,39 +39,39 @@ function PitPage() {
             } else {
                 setError('No events registered in the database');
             }
-        },
+        }
     });
 
     const {
         loading: loadingPitForms,
         error: pitFormsError,
-        data: { getPitForms: pitForms } = {},
+        data: { getPitForms: pitForms } = {}
     } = useQuery(GET_PITFORMS_BY_EVENT, {
         skip: currentEvent.key === '',
         fetchPolicy: 'network-only',
         variables: {
-            eventKey: currentEvent.key,
+            eventKey: currentEvent.key
         },
         onError(err) {
             console.log(JSON.stringify(err, null, 2));
             setError('Apollo error, could not retrieve pit forms');
-        },
+        }
     });
 
     const {
         loading: loadingEvent,
         error: eventError,
-        data: { getEvent: event } = {},
+        data: { getEvent: event } = {}
     } = useQuery(GET_EVENT, {
         skip: currentEvent.key === '',
         fetchPolicy: 'network-only',
         variables: {
-            key: currentEvent.key,
+            key: currentEvent.key
         },
         onError(err) {
             console.log(JSON.stringify(err, null, 2));
             setError('Apollo error, could not retrieve data on current event');
-        },
+        }
     });
 
     const getPitFormStatusColor = useCallback(
@@ -97,7 +97,7 @@ function PitPage() {
     useEffect(() => {
         let newPitList = [];
         if (!loadingEvent && !loadingPitForms && event && pitForms) {
-            newPitList = (followUpFilter ? event.teams.filter((team) => getPitFormStatusColor(team.number) !== 'green') : event.teams).sort((a, b) => a.number - b.number);
+            newPitList = (followUpFilter ? [...event.teams].filter((team) => getPitFormStatusColor(team.number) !== 'green') : [...event.teams]).sort((a, b) => a.number - b.number);
             setFilteredPitList(newPitList);
         } else {
             setFilteredPitList(null);

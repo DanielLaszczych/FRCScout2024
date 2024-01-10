@@ -1,5 +1,6 @@
 const express = require('express');
-const { ApolloServer } = require('apollo-server-express');
+const { ApolloServer } = require('@apollo/server');
+const { expressMiddleware } = require('@apollo/server/express4');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const passport = require('passport');
@@ -20,8 +21,7 @@ const { getHomePageData, getRTESSIssuesPageData } = require('./util/helperFuncti
 
 const server = new ApolloServer({
     typeDefs: typeDefs,
-    resolvers: resolvers,
-    context: ({ req, res }) => ({ req, res })
+    resolvers: resolvers
 });
 
 const app = express();
@@ -110,7 +110,12 @@ async function startServer() {
     // can be false; passing the same options as defined on the express instance
     // works as well
     await server.start();
-    server.applyMiddleware({ app, path: '/graphql', cors: true });
+    app.use(
+        '/graphql',
+        expressMiddleware(server, {
+            context: ({ req, res }) => ({ req, res })
+        })
+    );
 
     if (process.env.NODE_ENV === 'production') {
         app.use(express.static('../client/build'));
@@ -126,9 +131,7 @@ async function startServer() {
     mongoose.set('strictQuery', false);
 
     mongoose
-        .connect(process.env.DATABASE_URL, {
-            useNewUrlParser: true
-        })
+        .connect(process.env.DATABASE_URL)
         .then(() => {
             console.log('MongoDB Connected');
             const http = app.listen({ port: PORT });

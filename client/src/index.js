@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { ApolloProvider, ApolloClient, InMemoryCache } from '@apollo/client';
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
 // import { ColorModeScript } from '@chakra-ui/react';
 // import theme from './theme';
@@ -17,33 +18,33 @@ const cache = new InMemoryCache({
                 getPitForms: {
                     merge(existing, incoming) {
                         return incoming;
-                    },
+                    }
                 },
                 getMatchForms: {
                     merge(existing, incoming) {
                         return incoming;
-                    },
+                    }
                 },
                 getEvents: {
                     merge(existing, incoming) {
                         return incoming;
-                    },
+                    }
                 },
                 getRTESSIssues: {
                     merge(existing, incoming) {
                         return incoming;
-                    },
-                },
-            },
-        },
-    },
+                    }
+                }
+            }
+        }
+    }
 });
 
 const client = new ApolloClient({
     uri: '/graphql',
     // Credentials: include is necessary to pass along the auth cookies with each server request
     credentials: 'include',
-    cache: cache,
+    cache: cache
 });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -57,3 +58,5 @@ root.render(
         </ApolloProvider>
     </React.StrictMode>
 );
+
+serviceWorkerRegistration.register();

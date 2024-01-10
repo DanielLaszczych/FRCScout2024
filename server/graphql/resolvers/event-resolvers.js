@@ -51,7 +51,7 @@ module.exports = {
             } catch (err) {
                 throw new Error(err);
             }
-        },
+        }
     },
     Mutation: {
         async createEvent(_, { eventInput }, context) {
@@ -164,6 +164,6 @@ module.exports = {
             } catch (err) {
                 throw new Error(err);
             }
-        },
-    },
+        }
+    }
 };

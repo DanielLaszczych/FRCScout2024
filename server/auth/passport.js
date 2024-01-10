@@ -8,7 +8,7 @@ passport.use(
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
             callbackURL: '/auth/google/callback',
-            proxy: true,
+            proxy: true
         },
         async (accessToken, refreshToken, profile, done) => {
             if (!(profile._json.hd && profile._json.hd === 'robotigers1796.com')) {
@@ -22,7 +22,7 @@ passport.use(
                 lastName: profile.name.familyName,
                 email: profile.emails[0].value,
                 displayName: profile.displayName,
-                iconImage: profile.photos[0].value,
+                iconImage: profile.photos[0].value
             };
 
             try {
@@ -41,5 +41,11 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((id, done) => {
-    User.findById(id, (err, user) => done(err, user));
+    User.findById(id)
+        .then((user) => {
+            done(null, user);
+        })
+        .catch((err) => {
+            done(err, null);
+        });
 });

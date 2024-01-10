@@ -1,7 +1,8 @@
 import { mode, mean, sum } from 'mathjs';
 
 export function sortRegisteredEvents(events) {
-    return events.sort((a, b) => {
+    let modifiedEvents = [...events];
+    return modifiedEvents.sort((a, b) => {
         let delta = new Date(a.startDate) - new Date(b.startDate);
         if (delta === 0) {
             delta = new Date(a.endDate) - new Date(b.endDate);
@@ -124,7 +125,7 @@ export function getStartingPoints(arr, scale, redOffset, blueOffset) {
             topConeAuto: e.topAuto.coneScored,
             topCubeAuto: e.topAuto.cubeScored,
             chargePoints: e.chargeAuto === 'Dock' ? 8 : e.chargeAuto === 'Engage' ? 12 : 0,
-            crossCommunity: e.crossCommunity ? 3 : 0,
+            crossCommunity: e.crossCommunity ? 3 : 0
         });
     });
     return data;
