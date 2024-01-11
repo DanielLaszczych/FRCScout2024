@@ -1,7 +1,7 @@
 import { Center, Spinner } from '@chakra-ui/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Field from '../images/Field.png';
-import { getStartingPoints } from '../util/helperFunctions';
+import { getStartingPoints } from '../util/gameSpecificHelpers';
 import { median } from 'mathjs';
 
 let defaultGradient = {
@@ -9,7 +9,7 @@ let defaultGradient = {
     0.6: 'cyan',
     0.7: 'lime',
     0.8: 'yellow',
-    1.0: 'red',
+    1.0: 'red'
 };
 
 let imageWidth = 1300;
@@ -210,7 +210,7 @@ function HeatMap({ data, maxOccurances, smallScale, mediumScale, largeScale }) {
                         topConeAuto: [p.topConeAuto],
                         topCubeAuto: [p.topCubeAuto],
                         chargePoints: [p.chargePoints],
-                        crossCommunity: [p.crossCommunity],
+                        crossCommunity: [p.crossCommunity]
                     });
                 }
                 ctx.globalAlpha = Math.min(Math.max(1 / maxOccurances, opacity), 1);

@@ -1,14 +1,15 @@
 import React, { useReducer, useEffect, createContext } from 'react';
+import { fetchDataAndCache } from '../util/helperFunctions';
 
 const initialState = {
-    user: null,
+    user: null
 };
 
 const AuthContext = createContext({
     user: null,
     login: (userData) => {},
     logout: () => {},
-    refreshUserData: () => {},
+    refreshUserData: () => {}
 });
 
 function authReducer(state, action) {
@@ -16,12 +17,12 @@ function authReducer(state, action) {
         case 'LOGIN':
             return {
                 ...state,
-                user: action.payload,
+                user: action.payload
             };
         case 'LOGOUT':
             return {
                 ...state,
-                user: null,
+                user: null
             };
         default:
             return state;
@@ -32,21 +33,41 @@ function AuthProvider(props) {
     const [state, dispatch] = useReducer(authReducer, initialState);
 
     useEffect(() => {
-        console.log('getting user data');
-        fetch('/getuser')
-            .then((res) => res.json())
-            .then((data) => {
+        async function fetchData() {
+            console.log('getting user data');
+            // caches.open('scouting').then((cache) => {
+            //     fetch('/getuser')
+            //         .then((res) => res.json())
+            //         .then((data) => {
+            //             login(data);
+            //             cache.add('/getuser');
+            //         })
+            //         .catch(() => {
+            //             cache
+            //                 .match('/getuser')
+            //                 .then((res) => res.json())
+            //                 .then((data) => {
+            //                     login(data);
+            //                 })
+            //                 .catch(() => login('NoUser'));
+            //         });
+            // });
+            try {
+                let response = await fetchDataAndCache('/getuser');
+                let data = await response.json();
                 login(data);
-            })
-            .catch((data) => {
+            } catch {
                 login('NoUser');
-            });
+            }
+        }
+
+        fetchData();
     }, []);
 
     function login(userData) {
         dispatch({
             type: 'LOGIN',
-            payload: userData,
+            payload: userData
         });
     }
 

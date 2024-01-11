@@ -18,7 +18,7 @@ import {
     Tag,
     Text,
     UnorderedList,
-    VStack,
+    VStack
 } from '@chakra-ui/react';
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
@@ -27,20 +27,16 @@ import {
     convertMatchKeyToString,
     convertStationKeyToString,
     countOccurencesForTFField,
-    getAccuarcy,
-    getAutoContribution,
     getDeepFields,
     getDefenseAllocation,
     getDefenseRatings,
     getFields,
     getPercentageForTFField,
-    getTeleContribution,
-    getTotalAccuarcy,
     joinStandAndSuperForms,
     medianArr,
     roundToHundredth,
     roundToWhole,
-    sortMatches,
+    sortMatches
 } from '../util/helperFunctions';
 import '../stylesheets/teamstyle.css';
 import { GrMap } from 'react-icons/gr';
@@ -54,6 +50,7 @@ import { Link } from 'react-router-dom';
 import { matchFormStatus } from '../util/helperConstants';
 import { BsCone } from 'react-icons/bs';
 import { IoCube } from 'react-icons/io5';
+import { getAccuarcy, getAutoContribution, getTeleContribution, getTotalAccuarcy } from '../util/gameSpecificHelpers';
 
 let doResize;
 let imageWidth = 438;
@@ -62,11 +59,11 @@ let imageHeight = 438;
 let abilityTypes = {
     ranking: 'ranking',
     checkbox: 'checkbox',
-    radio: 'radio',
+    radio: 'radio'
 };
 let subAbilityTypes = {
     radio: 'radio',
-    comment: 'comment',
+    comment: 'comment'
 };
 
 function TeamPageTabs({ tab, pitForm, superForms, filteredSuperForms, standForms, filteredStandForms, blueAllianceImage, dataMedian, teamNumberParam, teamName, currentEvent }) {
