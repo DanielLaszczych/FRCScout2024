@@ -112,7 +112,7 @@ function PreStandForm() {
                             .catch((error) => {
                                 if (error?.name !== 'AbortError') {
                                     console.log(error);
-                                    setError(error);
+                                    setError(error.message);
                                 }
                             });
                         fetch(`/blueAlliance/team/frc${teamNumber}/simple`, { signal: abort.current.signal })
@@ -130,7 +130,7 @@ function PreStandForm() {
                             .catch((error) => {
                                 if (error?.name !== 'AbortError') {
                                     console.log(error);
-                                    setError(error);
+                                    setError(error.message);
                                 }
                             });
                     } else {
@@ -141,10 +141,9 @@ function PreStandForm() {
                     }
                 })
                 .catch((error) => {
-                    console.log(error);
                     if (error?.name !== 'AbortError') {
                         console.log(error);
-                        setError(error);
+                        setError(error.message);
                     }
                 });
         }

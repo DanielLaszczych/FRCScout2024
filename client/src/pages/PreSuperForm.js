@@ -102,7 +102,7 @@ function PreSuperForm() {
                 .catch((error) => {
                     if (error?.name !== 'AbortError') {
                         console.log(error);
-                        setError(error);
+                        setError(error.message);
                     }
                 });
         }

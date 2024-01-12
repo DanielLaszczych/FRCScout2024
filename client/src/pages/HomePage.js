@@ -120,7 +120,7 @@ function HomePage() {
                                 setEventInfo({ inEvent: true, matchTable: sortMatches(matches), teamStatus: status });
                             })
                             .catch((error) => {
-                                setError(error);
+                                setError(error.message);
                             });
                     } else {
                         setEventInfo({ inEvent: false });
@@ -130,7 +130,7 @@ function HomePage() {
                 }
             })
             .catch((error) => {
-                setError(error);
+                setError(error.message);
             });
     }
 
@@ -161,7 +161,7 @@ function HomePage() {
                 }
             })
             .catch((error) => {
-                setPitPopoverError(error);
+                setPitPopoverError(error.message);
                 setFetchingConfirmation(false);
             });
     }
