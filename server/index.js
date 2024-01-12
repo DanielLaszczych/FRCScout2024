@@ -1,6 +1,4 @@
 const express = require('express');
-const { ApolloServer } = require('@apollo/server');
-const { expressMiddleware } = require('@apollo/server/express4');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const passport = require('passport');
@@ -10,19 +8,8 @@ const MongoStore = require('connect-mongo');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const cloudinary = require('cloudinary').v2;
-const socketIo = require('socket.io');
 require('dotenv').config();
 require('./auth/passport');
-
-const typeDefs = require('./graphql/typeDefs');
-const resolvers = require('./graphql/resolvers');
-const PickList = require('./util/pickList');
-const { getHomePageData, getRTESSIssuesPageData } = require('./util/helperFunctions');
-
-const server = new ApolloServer({
-    typeDefs: typeDefs,
-    resolvers: resolvers
-});
 
 const app = express();
 
@@ -40,13 +27,13 @@ const corsPolicy = async (req, res, next) => {
 app.options('*', cors());
 app.use(corsPolicy);
 
-function requireHTTPS(req, res, next) {
+const requireHTTPS = (req, res, next) => {
     // The 'x-forwarded-proto' check is for Heroku
     if (!req.secure && req.get('x-forwarded-proto') !== 'https' && process.env.NODE_ENV !== 'development') {
         return res.redirect('https://' + req.get('host') + req.url);
     }
     next();
-}
+};
 
 app.use(requireHTTPS);
 
@@ -78,6 +65,7 @@ serverOptions(app);
 
 //routes
 app.use('/auth', require('./routes/auth'));
+app.use('/event', require('./routes/event'));
 app.use('/blueAlliance', require('./routes/blueAlliance').router);
 app.use('/matchData', require('./routes/matchData'));
 app.use('/checkTableauPass/:password', async (req, res) => {
@@ -90,7 +78,6 @@ app.use('/checkTableauPass/:password', async (req, res) => {
             res.send('Invalid');
         });
 });
-app.use('/pickList', require('./routes/pickList'));
 app.use('/getuser', (req, res) => {
     res.send(req.user);
 });
@@ -106,17 +93,6 @@ cloudinary.config({
 startServer();
 
 async function startServer() {
-    // since the express server has cors configured, cors on the apollo server
-    // can be false; passing the same options as defined on the express instance
-    // works as well
-    await server.start();
-    app.use(
-        '/graphql',
-        expressMiddleware(server, {
-            context: ({ req, res }) => ({ req, res })
-        })
-    );
-
     if (process.env.NODE_ENV === 'production') {
         app.use(express.static('../client/build'));
         app.get('*', (request, response) => {
@@ -135,48 +111,6 @@ async function startServer() {
         .then(() => {
             console.log('MongoDB Connected');
             const http = app.listen({ port: PORT });
-
-            const io = socketIo(http, {
-                cors: {
-                    origin: process.env.CLIENT_URL
-                }
-            }); //in case server and client run on different urls
-            app.set('socketio', io);
-
-            let homePageInterval = null;
-            let rtessIssuesInterval = null;
-            io.on('connection', (socket) => {
-                console.log(`A user connected: ${socket.id}`);
-                if (io.engine.clientsCount >= 1) {
-                    if (!homePageInterval) {
-                        homePageInterval = setInterval(async () => {
-                            let data = await getHomePageData();
-                            if (data) {
-                                io.sockets.emit('homePageUpdate', data);
-                            }
-                        }, 30 * 1000);
-                    }
-
-                    if (!rtessIssuesInterval) {
-                        rtessIssuesInterval = setInterval(async () => {
-                            let data = await getRTESSIssuesPageData();
-                            if (data) {
-                                io.sockets.emit('rtessIssuesPageUpdate', data);
-                            }
-                        }, 30 * 1000);
-                    }
-                }
-
-                //Whenever someone disconnects this piece of code executed
-                socket.on('disconnect', () => {
-                    if (io.engine.clientsCount === 0) {
-                        homePageInterval = clearInterval(homePageInterval);
-                        rtessIssuesInterval = clearInterval(rtessIssuesInterval);
-                    }
-                });
-            });
-
-            PickList.initialize();
         })
         .then((res) => {
             console.log(`Server running at http://localhost:${PORT}`);

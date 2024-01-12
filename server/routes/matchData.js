@@ -13,10 +13,9 @@ const {
     getDefenseRatings,
     sortMatches,
     getDeepFields,
-    getFields,
     roundToWhole,
     convertMatchKeyToString,
-    roundToHundredth,
+    roundToHundredth
 } = require('../util/helperFunctions');
 const { matchFormStatus } = require('../util/helperConstants');
 const { sum, median, mean } = require('mathjs');
@@ -180,7 +179,7 @@ router.use('/getMedianMatches/:eventKey', async (req, res) => {
             teamNumber: medianStandForm.teamNumber,
             matchNumber: convertMatchKeyToString(medianStandForm.matchNumber),
             medianScore: medianScore,
-            matchScores: allMatchScores,
+            matchScores: allMatchScores
         });
     }
     res.send(medianScores);
@@ -210,7 +209,7 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
     for (let blueAllianceForm of blueAllianceForms) {
         let object = {
             matchNumber: convertMatchKeyToString(blueAllianceForm.key.split('_')[1]),
-            matchKey: blueAllianceForm.key.split('_')[1],
+            matchKey: blueAllianceForm.key.split('_')[1]
         };
         let filteredStandForms = standForms.filter((standForm) => standForm.matchNumber === object.matchKey);
 
@@ -303,7 +302,7 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
                 actualScore: actualScore,
                 scoutedScore: scoutedScore,
                 accuarcy: `${roundToHundredth(accuarcy)}%`,
-                errors: errorsObject,
+                errors: errorsObject
             };
         }
 
@@ -396,7 +395,7 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
                 actualScore: actualScore,
                 scoutedScore: scoutedScore,
                 accuarcy: `${roundToHundredth(accuarcy)}%`,
-                errors: errorsObject,
+                errors: errorsObject
             };
         }
 
@@ -417,7 +416,7 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
         averageAccuracy: accuracies.length > 0 ? roundToHundredth(mean(accuracies)) : 'N/A',
         medianAccuracy: accuracies.length > 0 ? roundToHundredth(median(accuracies)) : 'N/A',
         averageScoreDiff: scoreDifferences.length > 0 ? roundToHundredth(mean(scoreDifferences)) : 'N/A',
-        medianScoreDiff: scoreDifferences.length > 0 ? roundToHundredth(median(scoreDifferences)) : 'N/A',
+        medianScoreDiff: scoreDifferences.length > 0 ? roundToHundredth(median(scoreDifferences)) : 'N/A'
     };
     accuracyData.push(object);
     res.send(accuracyData);

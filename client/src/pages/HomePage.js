@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
     AlertDialog,
     AlertDialogBody,
@@ -24,22 +24,15 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
 import { config, teamNumber, year, timeZone } from '../util/helperConstants';
-import { useQuery } from '@apollo/client';
-import { GET_CURRENT_EVENT } from '../graphql/queries';
-import { convertMatchKeyToString, sortMatches } from '../util/helperFunctions';
+import { convertMatchKeyToString, fetchAndCache, sortMatches } from '../util/helperFunctions';
 import { ConditionalWrapper } from '../components/ConditionalWrapper';
-import { SocketContext } from '../context/socket';
 import { GrMapLocation } from 'react-icons/gr';
 
 const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function HomePage() {
-    const socket = useContext(SocketContext);
     let navigate = useNavigate();
     const { user } = useContext(AuthContext);
-
-    const cancelRef = useRef();
-    const inputElement = useRef();
 
     const [error, setError] = useState(null);
     const [currentEvent, setCurrentEvent] = useState(null);
@@ -51,96 +44,27 @@ function HomePage() {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 650);
     const [openPitMap, setOpenPitMap] = useState(false);
 
-    const { error: currentEventError } = useQuery(GET_CURRENT_EVENT, {
-        fetchPolicy: 'network-only',
-        skip: user === 'NoUser',
-        onError(err) {
-            if (err.message === 'Error: There is no current event') {
-                setError('There is no event to scout 😔');
-            } else {
-                console.log(JSON.stringify(err, null, 2));
-                setError('Apollo error, could not retrieve current event data');
-            }
-        },
-        onCompleted({ getCurrentEvent: currentEventData }) {
-            setCurrentEvent(currentEventData);
-        }
-    });
-
-    const fetchTeamInfoWrapper = useCallback(
-        (currentEventParam) => {
-            fetch(`/blueAlliance/team/frc${teamNumber}/events/${year}/keys`)
-                .then((response) => response.json())
-                .then((data) => {
-                    if (!data.Error) {
-                        if (data.includes(currentEventParam.key)) {
-                            let matchDataPromise = fetch(`/blueAlliance/team/frc${teamNumber}/event/${currentEventParam.key}/matches`);
-
-                            let teamStatusPromise = fetch(`/blueAlliance/team/frc${teamNumber}/event/${currentEventParam.key}/status`);
-
-                            Promise.all([matchDataPromise, teamStatusPromise])
-                                .then((responses) => Promise.all(responses.map((response) => response.json())))
-                                .then((data) => {
-                                    let matchData = data[0];
-                                    let matches = [];
-                                    if (matchData && !matchData.Error) {
-                                        for (let match of matchData) {
-                                            matches.push({
-                                                matchNumber: match.key.split('_')[1],
-                                                redAlliance: match.alliances.red.team_keys,
-                                                blueAlliance: match.alliances.blue.team_keys,
-                                                redScore: {
-                                                    score: match.alliances.red.score,
-                                                    linkRP: match.score_breakdown?.red.sustainabilityBonusAchieved,
-                                                    chargeRP: match.score_breakdown?.red.activationBonusAchieved
-                                                },
-                                                blueScore: {
-                                                    score: match.alliances.blue.score,
-                                                    linkRP: match.score_breakdown?.blue.sustainabilityBonusAchieved,
-                                                    chargeRP: match.score_breakdown?.blue.activationBonusAchieved
-                                                },
-                                                winner: match.winning_alliance,
-                                                predictedTime: match.predicted_time,
-                                                scheduledTime: match.time,
-                                                actualTime: match.actual_time
-                                            });
-                                        }
-                                    }
-
-                                    let statusData = data[1];
-                                    let status = {};
-                                    if (statusData && Object.keys(statusData).length > 0 && statusData.qual !== null && !statusData.Error) {
-                                        status.qual = statusData.qual.ranking;
-                                        status.playoff = statusData.playoff;
-                                    }
-                                    setEventInfo({ ...eventInfo, inEvent: true, matchTable: sortMatches(matches), teamStatus: status });
-                                })
-                                .catch((error) => {
-                                    setError(error);
-                                });
-                        } else {
-                            setEventInfo({ ...eventInfo, inEvent: false });
-                        }
-                    } else {
-                        setError(data.Error);
-                    }
-                })
-                .catch((error) => {
-                    setError(error);
-                });
-        },
-        [eventInfo]
-    );
+    const cancelRef = useRef();
+    const inputElement = useRef();
 
     useEffect(() => {
-        if (currentEvent && eventInfo.inEvent === null) {
-            fetchTeamInfoWrapper(currentEvent);
+        if (user !== 'NoUser') {
+            fetchAndCache('/event/getCurrentEvent')
+                .then((response) => {
+                    if (response.status === 204) {
+                        throw new Error('There is no event to scout 😔');
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    setCurrentEvent(data);
+                    fetchTeamInfo(data);
+                })
+                .catch((error) => {
+                    setError(error.message);
+                });
         }
-    }, [currentEvent, eventInfo, fetchTeamInfoWrapper]);
-
-    const updateSizes = () => {
-        setIsMobile(window.innerWidth < 650);
-    };
+    }, [user]);
 
     useEffect(() => {
         window.addEventListener('resize', updateSizes);
@@ -148,24 +72,71 @@ function HomePage() {
         return () => window.removeEventListener('resize', updateSizes);
     }, []);
 
-    useEffect(() => {
-        if (socket) {
-            socket.on('connect', () => {
-                if (currentEvent) {
-                    fetchTeamInfoWrapper(currentEvent);
+    function fetchTeamInfo(currentEventParam) {
+        fetchAndCache(`/blueAlliance/team/frc${teamNumber}/events/${year}/keys`)
+            .then((response) => response.json())
+            .then((data) => {
+                if (!data.Error) {
+                    if (data.includes(currentEventParam.key)) {
+                        let matchDataPromise = fetchAndCache(`/blueAlliance/team/frc${teamNumber}/event/${currentEventParam.key}/matches`);
+
+                        let teamStatusPromise = fetchAndCache(`/blueAlliance/team/frc${teamNumber}/event/${currentEventParam.key}/status`);
+
+                        Promise.all([matchDataPromise, teamStatusPromise])
+                            .then((responses) => Promise.all(responses.map((response) => response.json())))
+                            .then((data) => {
+                                let matchData = data[0];
+                                let matches = [];
+                                if (matchData && !matchData.Error) {
+                                    for (let match of matchData) {
+                                        matches.push({
+                                            matchNumber: match.key.split('_')[1],
+                                            redAlliance: match.alliances.red.team_keys,
+                                            blueAlliance: match.alliances.blue.team_keys,
+                                            redScore: {
+                                                score: match.alliances.red.score,
+                                                linkRP: match.score_breakdown?.red.sustainabilityBonusAchieved,
+                                                chargeRP: match.score_breakdown?.red.activationBonusAchieved
+                                            },
+                                            blueScore: {
+                                                score: match.alliances.blue.score,
+                                                linkRP: match.score_breakdown?.blue.sustainabilityBonusAchieved,
+                                                chargeRP: match.score_breakdown?.blue.activationBonusAchieved
+                                            },
+                                            winner: match.winning_alliance,
+                                            predictedTime: match.predicted_time,
+                                            scheduledTime: match.time,
+                                            actualTime: match.actual_time
+                                        });
+                                    }
+                                }
+
+                                let statusData = data[1];
+                                let status = {};
+                                if (statusData && Object.keys(statusData).length > 0 && statusData.qual !== null && !statusData.Error) {
+                                    status.qual = statusData.qual.ranking;
+                                    status.playoff = statusData.playoff;
+                                }
+                                setEventInfo({ inEvent: true, matchTable: sortMatches(matches), teamStatus: status });
+                            })
+                            .catch((error) => {
+                                setError(error);
+                            });
+                    } else {
+                        setEventInfo({ inEvent: false });
+                    }
+                } else {
+                    setError(data.Error);
                 }
+            })
+            .catch((error) => {
+                setError(error);
             });
-            socket.on('homePageUpdate', (data) => {
-                setCurrentEvent({ ...data.currentEvent });
-                setEventInfo({ ...eventInfo, inEvent: data.inEvent, matchTable: data.matchTable, teamStatus: data.teamStatus });
-            });
-            // clean up
-            return () => {
-                socket.off('connect');
-                socket.off('homePageUpdate');
-            };
-        }
-    }, [socket, currentEvent, eventInfo, fetchTeamInfoWrapper]);
+    }
+
+    function updateSizes() {
+        setIsMobile(window.innerWidth < 650);
+    }
 
     function handlePitFormConfirm() {
         if (currentEvent.custom) {
@@ -232,7 +203,7 @@ function HomePage() {
         );
     }
 
-    if ((currentEvent === null || (currentEventError && error !== false)) && user !== 'NoUser') {
+    if (currentEvent === null && user !== 'NoUser') {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -295,6 +266,7 @@ function HomePage() {
                                 setPitPopoverError(null);
                                 setFetchingConfirmation(false);
                             }}
+                            motionPreset='slideInBottom'
                         >
                             <AlertDialogOverlay
                                 onFocus={() => {
@@ -308,7 +280,7 @@ function HomePage() {
                                     }
                                 }}
                             >
-                                <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
+                                <AlertDialogContent w={{ base: '75%', md: '40%', lg: '30%' }}>
                                     <AlertDialogHeader color='black' fontSize='lg' fontWeight='bold'>
                                         Enter a team number
                                     </AlertDialogHeader>
@@ -368,7 +340,7 @@ function HomePage() {
                                 </Center>
                             );
                         } else if (eventInfo.inEvent === false) {
-                            return <Box></Box>;
+                            return null;
                         } else if (eventInfo.matchTable === null || eventInfo.teamStatus === null) {
                             return (
                                 <Center marginTop={'50px'}>

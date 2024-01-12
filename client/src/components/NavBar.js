@@ -13,13 +13,12 @@ let titleMap = [
     { path: '/pits', title: 'Pits' },
     { path: '/matches', title: 'Matches' },
     { path: '/rtessIssues', title: 'RTESS Issues' },
-    { path: '/pickList', title: 'Pick List' },
     { path: '/pitForm', title: 'Pit Form' },
     { path: '/preStandForm', title: 'Pre Stand Form' },
     { path: '/standForm', title: 'Stand Form' },
     { path: '/team', title: 'Team' },
     { path: '/admin', title: 'Admin' },
-    { path: '/tableau', title: 'Tableau' },
+    { path: '/tableau', title: 'Tableau' }
 ];
 
 function NavBar() {
@@ -64,7 +63,7 @@ function NavBar() {
                         minW={{ base: '70px', sm: '80px', md: '80px', lg: '100px' }}
                         src={logo}
                         _hover={{
-                            cursor: 'pointer',
+                            cursor: 'pointer'
                         }}
                         position={'relative'}
                         top='50%'

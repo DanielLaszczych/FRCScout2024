@@ -75,7 +75,7 @@ export function convertStationKeyToString(stationKey) {
     }
 }
 
-export async function fetchDataAndCache(url) {
+export async function fetchAndCache(url) {
     try {
         if (!navigator.onLine) throw Error;
         // Try fetching from the network

@@ -5,11 +5,11 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 router.use('/sendMessage', async (req, res) => {
     const body = {
         bot_id: process.env.GROUPME_BOT_ID,
-        text: req.body.text,
+        text: req.body.text
     };
     const response = await fetch('https://api.groupme.com/v3/bots/post', {
         method: 'POST',
-        body: JSON.stringify(body),
+        body: JSON.stringify(body)
     });
     res.sendStatus(response.status);
 });
@@ -19,14 +19,14 @@ router.use('/receivedMessage', async (req, res) => {
     res.sendStatus(202);
 });
 
-const internalSendMessage = function (message) {
+const internalSendMessage = (message) => {
     const body = {
         bot_id: process.env.GROUPME_BOT_ID,
-        text: message,
+        text: message
     };
     const response = fetch('https://api.groupme.com/v3/bots/post', {
         method: 'POST',
-        body: JSON.stringify(body),
+        body: JSON.stringify(body)
     });
 };
 

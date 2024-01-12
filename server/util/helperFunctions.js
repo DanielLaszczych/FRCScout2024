@@ -76,7 +76,7 @@ class HelperFunction {
                 middleConeAuto: e.middleConeAuto,
                 middleCubeAuto: e.middleCubeAuto,
                 topConeAuto: e.topConeAuto,
-                topCubeAuto: e.topCubeAuto,
+                topCubeAuto: e.topCubeAuto
             });
         });
         return data;
@@ -154,130 +154,6 @@ class HelperFunction {
 
     static getDefenseRatings(arr) {
         return arr.filter((a) => a.defenseRating > 0).map((a) => a['defenseRating']);
-    }
-
-    static async getRTESSIssuesPageData() {
-        const { internalBlueCall } = require('../routes/blueAlliance');
-        let currentEvent;
-        try {
-            const event = await Event.findOne({ currentEvent: true }).exec();
-            if (!event) {
-                return null;
-            }
-            currentEvent = event;
-        } catch (err) {
-            return null;
-        }
-
-        let isEventCall = internalBlueCall(`/team/frc${teamNumber}/events/${process.env.YEAR}/keys`);
-
-        return isEventCall.then((value) => {
-            let matchTable = [];
-            let atLeastOneMatch = false;
-            if (!value.includes(currentEvent.key)) {
-                return { currentEvent, inEvent: false, eventDone: false, matchTable };
-            } else {
-                let matchTableCall = internalBlueCall(`/team/frc${teamNumber}/event/${currentEvent.key}/matches`);
-                return matchTableCall
-                    .then((value) => {
-                        let matchData = value;
-                        if (matchData?.Error) {
-                            return null;
-                        } else if (matchData) {
-                            let matches = [];
-                            for (let match of matchData) {
-                                if (match.actual_time === null) {
-                                    matches.push({
-                                        matchNumber: match.key.split('_')[1],
-                                        alliance: match.alliances.red.team_keys.includes(`frc${teamNumber}`) ? match.alliances.red.team_keys : match.alliances.blue.team_keys,
-                                        predictedTime: match.predicted_time,
-                                        scheduledTime: match.time,
-                                    });
-                                } else {
-                                    atLeastOneMatch = true;
-                                }
-                            }
-                            matchTable = HelperFunction.sortMatches(matches, 'matchNumber', false);
-                        }
-
-                        return { currentEvent, inEvent: true, eventDone: atLeastOneMatch && matchTable.length === 0, matchTable };
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                        return null;
-                    });
-            }
-        });
-    }
-
-    static async getHomePageData() {
-        const { internalBlueCall } = require('../routes/blueAlliance');
-        let currentEvent;
-        try {
-            const event = await Event.findOne({ currentEvent: true }).exec();
-            if (!event) {
-                return null;
-            }
-            currentEvent = event;
-        } catch (err) {
-            return null;
-        }
-
-        let isEventCall = internalBlueCall(`/team/frc${teamNumber}/events/${process.env.YEAR}/keys`);
-
-        return isEventCall.then((value) => {
-            let matchTable = [];
-            let teamStatus = {};
-            if (!value.includes(currentEvent.key)) {
-                return { currentEvent, inEvent: false, matchTable, teamStatus };
-            } else {
-                let matchTableCall = internalBlueCall(`/team/frc${teamNumber}/event/${currentEvent.key}/matches`);
-                let teamStatsuCall = internalBlueCall(`/team/frc${teamNumber}/event/${currentEvent.key}/status`);
-                return Promise.all([matchTableCall, teamStatsuCall])
-                    .then((values) => {
-                        let matchData = values[0];
-                        if (matchData?.Error) {
-                            return null;
-                        } else if (matchData) {
-                            let matches = [];
-                            for (let match of matchData) {
-                                matches.push({
-                                    matchNumber: match.key.split('_')[1],
-                                    redAlliance: match.alliances.red.team_keys,
-                                    blueAlliance: match.alliances.blue.team_keys,
-                                    redScore: {
-                                        score: match.alliances.red.score,
-                                        linkRP: match.score_breakdown?.red.sustainabilityBonusAchieved,
-                                        chargeRP: match.score_breakdown?.red.activationBonusAchieved,
-                                    },
-                                    blueScore: {
-                                        score: match.alliances.blue.score,
-                                        linkRP: match.score_breakdown?.blue.sustainabilityBonusAchieved,
-                                        chargeRP: match.score_breakdown?.blue.activationBonusAchieved,
-                                    },
-                                    winner: match.winning_alliance,
-                                    predictedTime: match.predicted_time,
-                                    scheduledTime: match.time,
-                                    actualTime: match.actual_time,
-                                });
-                            }
-                            matchTable = HelperFunction.sortMatches(matches, 'matchNumber', false);
-                        }
-
-                        let teamStatusData = values[1];
-                        if (teamStatusData?.Error) {
-                            return null;
-                        } else if (teamStatusData && Object.keys(teamStatusData).length > 0) {
-                            teamStatus.qual = teamStatusData.qual.ranking;
-                            teamStatus.playoff = teamStatusData.playoff;
-                        }
-                        return { currentEvent, inEvent: true, matchTable, teamStatus };
-                    })
-                    .catch((err) => {
-                        return null;
-                    });
-            }
-        });
     }
 }
 

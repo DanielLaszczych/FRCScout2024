@@ -1,10 +1,9 @@
-import { useQuery } from '@apollo/client';
 import { ChevronDownIcon, LockIcon, StarIcon, UnlockIcon } from '@chakra-ui/icons';
 import { Box, Button, Center, Flex, HStack, IconButton, Menu, MenuButton, MenuItem, MenuList, NumberInput, NumberInputField, Spinner, Text } from '@chakra-ui/react';
 import { React, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GET_CURRENT_EVENT } from '../graphql/queries';
 import { v4 as uuidv4 } from 'uuid';
+import { fetchAndCache } from '../util/helperFunctions';
 
 let stations = [
     { label: 'Red Station 1', value: 'r1', id: uuidv4() },
@@ -12,19 +11,19 @@ let stations = [
     { label: 'Red Station 3', value: 'r3', id: uuidv4() },
     { label: 'Blue Station 1', value: 'b1', id: uuidv4() },
     { label: 'Blue Station 2', value: 'b2', id: uuidv4() },
-    { label: 'Blue Station 3', value: 'b3', id: uuidv4() },
+    { label: 'Blue Station 3', value: 'b3', id: uuidv4() }
 ];
 let matchTypes = [
     { label: 'Quals', value: 'q', id: uuidv4() },
     { label: 'Playoffs', value: 'sf', id: uuidv4() },
-    { label: 'Finals', value: 'f', id: uuidv4() },
+    { label: 'Finals', value: 'f', id: uuidv4() }
 ];
 
 function PreStandForm() {
     let navigate = useNavigate();
 
     const [error, setError] = useState(null);
-    const abort = useRef(new AbortController());
+    const [currentEvent, setCurrentEvent] = useState(null);
     const [station, setStation] = useState('');
     const [focusedStation, setFocusedStation] = useState('');
     const [matchType, setMatchType] = useState('');
@@ -34,7 +33,9 @@ function PreStandForm() {
     const [teamName, setTeamName] = useState(null);
     const [futureAlly, setFutureAlly] = useState(null);
     const [teamNumberError, setTeamNumberError] = useState('');
-    const [manualMode, setManualMode] = useState('');
+    const [manualMode, setManualMode] = useState(null);
+
+    const abort = useRef(new AbortController());
 
     useEffect(() => {
         if (localStorage.getItem('PreStandFormData')) {
@@ -47,20 +48,19 @@ function PreStandForm() {
         }
     }, []);
 
-    const {
-        loading: loadingCurrentEvent,
-        error: currentEventError,
-        data: { getCurrentEvent: currentEvent } = {},
-    } = useQuery(GET_CURRENT_EVENT, {
-        onError(err) {
-            if (err.message === 'Error: There is no current event') {
-                setError('There is no current event');
-            } else {
-                console.log(JSON.stringify(err, null, 2));
-                setError('Apollo error, could not retrieve current event data');
-            }
-        },
-    });
+    useEffect(() => {
+        fetchAndCache('/event/getCurrentEvent')
+            .then((response) => {
+                if (response.status === 204) {
+                    throw new Error('There is no event to scout 😔');
+                }
+                return response.json();
+            })
+            .then((data) => setCurrentEvent(data))
+            .catch((error) => {
+                setError(error.message);
+            });
+    }, []);
 
     const getMatchKey = useCallback(() => {
         let matchKey;
@@ -176,7 +176,7 @@ function PreStandForm() {
         );
     }
 
-    if (loadingCurrentEvent || manualMode === '' || (currentEventError && error !== false)) {
+    if (currentEvent === null || manualMode === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -188,7 +188,7 @@ function PreStandForm() {
         <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
             <Box>
                 <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'}>
-                    <HStack spacing={'auto'} marginBottom={'20px'}>
+                    <HStack justify={'space-between'} marginBottom={'20px'}>
                         <Text fontWeight={'bold'} fontSize={'110%'}>
                             Competition: {currentEvent.name}
                         </Text>
@@ -252,7 +252,7 @@ function PreStandForm() {
                                 width={{
                                     base: matchType === 'Quals' ? '75%' : '62%',
                                     md: '66%',
-                                    lg: '50%',
+                                    lg: '50%'
                                 }}
                             >
                                 <NumberInputField
@@ -264,7 +264,7 @@ function PreStandForm() {
                                     enterKeyHint='done'
                                     _focus={{
                                         outline: 'none',
-                                        boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px',
+                                        boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px'
                                     }}
                                     textAlign={'center'}
                                     placeholder='Enter Match #'
@@ -307,7 +307,7 @@ function PreStandForm() {
                             width={{
                                 base: '75%',
                                 md: '66%',
-                                lg: '50%',
+                                lg: '50%'
                             }}
                         >
                             <NumberInputField
@@ -319,7 +319,7 @@ function PreStandForm() {
                                 enterKeyHint='done'
                                 _focus={{
                                     outline: 'none',
-                                    boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px',
+                                    boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px'
                                 }}
                                 textAlign={'center'}
                                 placeholder='Enter Team #'

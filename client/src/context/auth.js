@@ -1,5 +1,5 @@
 import React, { useReducer, useEffect, createContext } from 'react';
-import { fetchDataAndCache } from '../util/helperFunctions';
+import { fetchAndCache } from '../util/helperFunctions';
 
 const initialState = {
     user: null
@@ -35,25 +35,8 @@ function AuthProvider(props) {
     useEffect(() => {
         async function fetchData() {
             console.log('getting user data');
-            // caches.open('scouting').then((cache) => {
-            //     fetch('/getuser')
-            //         .then((res) => res.json())
-            //         .then((data) => {
-            //             login(data);
-            //             cache.add('/getuser');
-            //         })
-            //         .catch(() => {
-            //             cache
-            //                 .match('/getuser')
-            //                 .then((res) => res.json())
-            //                 .then((data) => {
-            //                     login(data);
-            //                 })
-            //                 .catch(() => login('NoUser'));
-            //         });
-            // });
             try {
-                let response = await fetchDataAndCache('/getuser');
+                let response = await fetchAndCache('/getuser');
                 let data = await response.json();
                 login(data);
             } catch {
