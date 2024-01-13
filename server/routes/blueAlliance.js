@@ -20,7 +20,7 @@ router.use('/getEventsCustom/:year', (req, res) => {
                     event_type_string: event.event_type_string,
                     start_date: event.start_date,
                     end_date: event.end_date,
-                    year: event.year,
+                    year: event.year
                 }));
                 res.send(optimizedData);
             } else {

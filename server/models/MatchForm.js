@@ -1,169 +1,110 @@
 const { model, Schema } = require('mongoose');
 const { matchFormStatus } = require('../util/helperConstants');
 
-const startingPositionSchema = new Schema({
-    x: {
-        type: Number,
-        required: true,
-    },
-    y: {
-        type: Number,
-        required: true,
-    },
-});
-
-const gamePieceScoring = new Schema({
-    coneScored: {
-        type: Number,
-    },
-    coneMissed: {
-        type: Number,
-    },
-    cubeScored: {
-        type: Number,
-    },
-    cubeMissed: {
-        type: Number,
-    },
-});
-
 const matchFormSchema = new Schema({
     eventKey: {
         type: String,
-        required: true,
-    },
-    eventName: {
-        type: String,
-        required: true,
+        required: true
     },
     station: {
         type: String,
-        required: true,
+        required: true
     },
     matchNumber: {
         type: String,
-        required: true,
+        required: true
     },
     teamNumber: {
         type: Number,
-        required: true,
-    },
-    teamName: {
-        type: String,
-        required: true,
+        required: true
     },
     standScouter: {
-        type: String,
+        type: String
     },
     startingPosition: {
-        type: startingPositionSchema,
+        type: Number
     },
     preLoadedPiece: {
         type: String,
-        required: true,
+        required: true
     },
-    bottomAuto: {
-        type: gamePieceScoring,
+    leaveStart: {
+        type: Boolean
     },
-    middleAuto: {
-        type: gamePieceScoring,
+    ampAuto: {
+        type: Number
     },
-    topAuto: {
-        type: gamePieceScoring,
+    speakerAuto: {
+        type: Number
     },
-    crossCommunity: {
-        type: Boolean,
+    autoTimeline: {
+        type: [String]
     },
-    chargeAuto: {
-        type: String,
+    ampTele: {
+        type: Number
     },
-    autoChargeComment: {
-        type: String,
-        default: '', // necessary because this field was added after our first event
+    speakerTele: {
+        type: Number
     },
-    standAutoComment: {
-        type: String,
+    trap: {
+        type: Number
     },
-    bottomTele: {
-        type: gamePieceScoring,
-    },
-    middleTele: {
-        type: gamePieceScoring,
-    },
-    topTele: {
-        type: gamePieceScoring,
-    },
-    chargeTele: {
-        type: String,
-    },
-    chargeComment: {
-        type: String,
-    },
-    chargeRobotCount: {
-        type: Number,
-    },
-    impairedCharge: {
-        type: Boolean,
-    },
-    impairedComment: {
-        type: String,
-    },
-    defendedBy: {
-        type: String,
+    stage: {
+        type: String
     },
     loseCommunication: {
-        type: Boolean,
+        type: Boolean
     },
     robotBreak: {
-        type: Boolean,
+        type: Boolean
     },
     yellowCard: {
-        type: Boolean,
+        type: Boolean
     },
     redCard: {
-        type: Boolean,
+        type: Boolean
     },
-    standEndComment: {
-        type: String,
+    standComment: {
+        type: String
     },
     standStatus: {
         type: String,
         required: true,
-        default: matchFormStatus.missing,
+        default: matchFormStatus.missing
     },
     standStatusComment: {
-        type: String,
+        type: String
     },
     superScouter: {
-        type: String,
+        type: String
     },
     allianceNumbers: {
         type: [Number],
-        default: [0, 0, 0],
+        default: [0, 0, 0]
     },
     defenseRating: {
-        type: Number,
+        type: Number
     },
     defenseAllocation: {
-        type: Number,
+        type: Number
     },
     quickness: {
-        type: Number,
+        type: Number
     },
     driverAwareness: {
-        type: Number,
+        type: Number
     },
     superEndComment: {
-        type: String,
+        type: String
     },
     superStatus: {
         type: String,
         required: true,
-        default: matchFormStatus.missing,
+        default: matchFormStatus.missing
     },
     superStatusComment: {
-        type: String,
-    },
+        type: String
+    }
 });
 
 const MatchForm = model('MatchForm', matchFormSchema);

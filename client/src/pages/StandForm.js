@@ -1,4 +1,3 @@
-import { useMutation, useQuery } from '@apollo/client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,22 +15,13 @@ import {
     Flex,
     HStack,
     IconButton,
+    Image,
     Spinner,
     Text,
     Textarea,
     useDisclosure,
     useToast
 } from '@chakra-ui/react';
-import { GET_EVENT, GET_STANDFORM } from '../graphql/queries';
-import RedFieldNonAllowable from '../images/RedFieldNonAllowable.png';
-import BlueFieldNonAllowable from '../images/BlueFieldNonAllowable.png';
-import RedFieldAllowable from '../images/RedFieldAllowable.png';
-import BlueFieldAllowable from '../images/BlueFieldAllowable.png';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import { UPDATE_STANDFORM } from '../graphql/mutations';
 import { AiOutlineRotateRight } from 'react-icons/ai';
 import { ChevronLeftIcon, ChevronRightIcon, StarIcon } from '@chakra-ui/icons';
 import { MdOutlineDoNotDisturbAlt } from 'react-icons/md';
@@ -39,15 +29,21 @@ import { deepEqual } from '../util/helperFunctions';
 import { createCommandManager, INCREMENT, ZERO } from '../util/commandManager';
 import '../stylesheets/standformstyle.css';
 import { matchFormStatus } from '../util/helperConstants';
+import BlueField from '../images/BlueFieldStart.png';
 
-let tabs = {
+let sections = {
     preAuto: 'Pre-Auto',
     auto: 'Auto',
     teleop: 'Teleop',
     endGame: 'End Game',
     closing: 'Closing'
 };
-let rotations = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
+let startingPositions = [
+    [210, 330],
+    [228, 180],
+    [228, 20],
+    [80, 20]
+]; // based on 438 x 438 image
 let preLoadedPieces = [
     { label: 'None', id: uuidv4() },
     { label: 'Cone', id: uuidv4() },
@@ -59,19 +55,9 @@ let chargeTypesTele = [
     { label: 'Engage', id: uuidv4() },
     { label: 'Fail', id: uuidv4() }
 ];
-let chargeTypesAuto = [
-    { label: 'No Attempt', id: uuidv4() },
-    { label: 'Dock', id: uuidv4() },
-    { label: 'Engage', id: uuidv4() },
-    { label: 'Fail', id: uuidv4() }
-];
 let doResize;
 let imageWidth = 438;
 let imageHeight = 438;
-let zeroScore;
-let wasHeldDown = false;
-let touchIsInside = false;
-let doShake;
 
 function StandForm() {
     const location = useLocation();
@@ -79,110 +65,68 @@ function StandForm() {
     const toast = useToast();
     const { eventKey: eventKeyParam, matchNumber: matchNumberParam, station: stationParam, teamNumber: teamNumberParam } = useParams();
 
-    const [mobileFlag] = useState('ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0);
-    const mainCanvas = useRef(null);
-    const secondCanvas = useRef(null);
-    const offSideCanvas = useRef(null);
-    const image = useRef(null);
-    const allowableImage = useRef(null);
-    const [imageLoaded, setImageLoaded] = useState(false);
-    const [allowableImageLoaded, setAllowableImageLoaded] = useState(false);
-    const swiper = useRef(null);
     const cancelRef = useRef(null);
     const prevWidth = useRef(window.innerWidth);
 
     const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
     const cancelAlertRef = useRef();
 
-    const [activeTab, setActiveTab] = useState(null);
-    const [teamNumber, setTeamNumber] = useState(null);
-    const [teamName, setTeamName] = useState(null);
-    const [eventName, setEventName] = useState(null);
-    const [validMatch, setValidMatch] = useState(false); //Used to check if the eventKeyParam and matchNumberParam leads to an actual match by using TBA API
+    const [activeSection, setActiveSection] = useState(sections.preAuto);
     const [submitAttempted, setSubmitAttempted] = useState(false);
     const [standFormDialog, setStandFormDialog] = useState(false);
-    const [fieldRotationIndex, setFieldRotationIndex] = useState(0);
+    const [fieldRotation, setFieldRotation] = useState(0);
     const [loadResponse, setLoadResponse] = useState(null);
-    const [initialDrawn, setInitialDrawn] = useState(false);
     const prevStandFormData = useRef(null);
     const [standFormData, setStandFormData] = useState({
-        startingPosition: { x: null, y: null },
+        startingPosition: null,
         preLoadedPiece: null,
-        bottomAuto: {
-            coneScored: 0,
-            coneMissed: 0,
-            cubeScored: 0,
-            cubeMissed: 0
-        },
-        middleAuto: {
-            coneScored: 0,
-            coneMissed: 0,
-            cubeScored: 0,
-            cubeMissed: 0
-        },
-        topAuto: {
-            coneScored: 0,
-            coneMissed: 0,
-            cubeScored: 0,
-            cubeMissed: 0
-        },
-        crossCommunity: null,
-        chargeAuto: null,
-        autoChargeComment: '',
-        standAutoComment: '',
-        bottomTele: {
-            coneScored: 0,
-            coneMissed: 0,
-            cubeScored: 0,
-            cubeMissed: 0
-        },
-        middleTele: {
-            coneScored: 0,
-            coneMissed: 0,
-            cubeScored: 0,
-            cubeMissed: 0
-        },
-        topTele: {
-            coneScored: 0,
-            coneMissed: 0,
-            cubeScored: 0,
-            cubeMissed: 0
-        },
-        chargeTele: null,
-        chargeComment: '',
-        chargeRobotCount: null,
-        impairedCharge: null,
-        impairedComment: '',
-        defendedBy: null,
+        leaveStart: null,
+        ampAuto: 0,
+        speakerAuto: 0,
+        autoTimeline: [],
+        ampTele: 0,
+        speakerTele: 0,
+        trap: 0,
+        stage: null,
         loseCommunication: null,
         robotBreak: null,
         yellowCard: null,
         redCard: null,
-        standEndComment: '',
+        standComment: '',
         standStatus: null,
         standStatusComment: '',
         loading: true
     });
     const [error, setError] = useState(null);
     const [futureAlly, setFutureAlly] = useState(null);
-    const [opposingAlliance, setOpposingAlliance] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [standFormAutoManager] = useState(createCommandManager());
     const [standFormTeleManager] = useState(createCommandManager());
-    const [shakeElement, setShakeElement] = useState(null);
+    const [dimensions, setDimensions] = useState(() => {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
-    const { loading: loadingEvent, error: eventError } = useQuery(GET_EVENT, {
-        fetchPolicy: 'network-only',
-        variables: {
-            key: eventKeyParam
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve data on current event');
-        },
-        onCompleted({ getEvent: event }) {
-            setEventName(event.name);
+        // Calculate image dimensions based on screen size
+        const maxWidth = viewportWidth * 0.85; // Adjust the multiplier as needed
+        const maxHeight = viewportHeight * 0.85; // Adjust the multiplier as needed
+
+        // Calculate dimensions maintaining aspect ratio
+        let newWidth = 704;
+        let newHeight = 704;
+
+        if (newWidth > maxWidth) {
+            const ratio = maxWidth / newWidth;
+            newWidth = maxWidth;
+            newHeight *= ratio;
         }
+
+        if (newHeight > maxHeight) {
+            const ratio = maxHeight / newHeight;
+            newHeight = maxHeight;
+            newWidth *= ratio;
+        }
+        console.log({ width: newWidth, height: newHeight });
+        return { width: newWidth, height: newHeight };
     });
 
     useEffect(() => {
@@ -193,9 +137,6 @@ function StandForm() {
         if (!/[0-9]+$/.test(teamNumberParam)) {
             setError('Invalid team number in the url');
             return;
-        } else {
-            setTeamNumber(teamNumberParam);
-            setValidMatch(true);
         }
         fetch(`/blueAlliance/isFutureAlly/${eventKeyParam}/${teamNumberParam}/${matchNumberParam}/${false}`)
             .then((response) => response.json())
@@ -203,22 +144,8 @@ function StandForm() {
                 setFutureAlly(data);
             })
             .catch((error) => {
-                console.log(error);
+                console.log(error.message);
                 setFutureAlly(false);
-            });
-        fetch(`/blueAlliance/match/${eventKeyParam}_${matchNumberParam}/simple`)
-            .then((response) => response.json())
-            .then((data) => {
-                let opposingAlliance = data.alliances[stationParam.charAt(0) === 'r' ? 'blue' : 'red'].team_keys.map((team) => team.substring(3));
-                setOpposingAlliance(opposingAlliance);
-            })
-            .catch((error) => {
-                console.log(error);
-                if (stationParam.charAt(0) === 'r') {
-                    setOpposingAlliance(['Blue 1', 'Blue 2', 'Blue 3']);
-                } else {
-                    setOpposingAlliance(['Red 1', 'Red 2', 'Red 3']);
-                }
             });
     }, [eventKeyParam, matchNumberParam, stationParam, teamNumberParam]);
 
@@ -237,190 +164,158 @@ function StandForm() {
         if (localStorage.getItem('Field Rotation')) {
             let obj = JSON.parse(localStorage.getItem('Field Rotation'));
             if (stationParam.charAt(0) === 'r' && obj.red) {
-                setFieldRotationIndex(obj.red);
+                setFieldRotation(obj.red);
             } else if (obj.blue) {
-                setFieldRotationIndex(obj.blue);
+                setFieldRotation(obj.blue);
             }
         }
     }, [eventKeyParam, matchNumberParam, stationParam]);
 
     useEffect(() => {
-        if (validMatch && teamNumber) {
-            fetch(`/blueAlliance/team/frc${teamNumber}/simple`)
+        // Only fetch stand form data if load response was false
+        if (loadResponse === null || loadResponse) {
+            const headers = {
+                filters: JSON.stringify({
+                    eventKey: eventKeyParam,
+                    matchNumber: matchNumberParam,
+                    station: stationParam,
+                    standStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp]
+                })
+            };
+
+            fetch(`/matchForm/getStandForm`, {
+                headers: headers
+            })
                 .then((response) => response.json())
                 .then((data) => {
-                    if (!data.Error) {
-                        setTeamName(data.nickname);
+                    console.log(data);
+                    if (!data) {
+                        let modified = JSON.parse(JSON.stringify(standFormData));
+                        modified.loading = false;
+                        prevStandFormData.current = modified;
+                        setStandFormData(modified);
                     } else {
-                        setError(data.Error);
+                        data.loading = false;
+                        prevStandFormData.current = JSON.parse(JSON.stringify(data));
+                        setStandFormData(data);
                     }
                 })
-                .catch((error) => {
-                    setError(error);
-                });
+                .catch((error) => setError(error));
         }
-    }, [validMatch, teamNumber, eventKeyParam]);
+    }, [loadResponse, eventKeyParam, matchNumberParam, stationParam, standFormData]);
 
-    const { loading: loadingStandData, error: standDataError } = useQuery(GET_STANDFORM, {
-        skip: !validMatch || loadResponse === null || loadResponse,
-        fetchPolicy: 'network-only',
-        variables: {
-            eventKey: eventKeyParam,
-            matchNumber: matchNumberParam,
-            station: [stationParam],
-            standStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp]
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError(`Apollo error, could not retrieve match form`);
-        },
-        onCompleted({ getMatchForm: matchForm }) {
-            if (!matchForm) {
-                let copy = JSON.parse(JSON.stringify(standFormData));
-                copy.loading = false;
-                prevStandFormData.current = copy;
-                setStandFormData({ ...standFormData, loading: false });
-                setActiveTab(tabs.preAuto);
-                return;
-            }
-            let data = matchForm;
-            data.loading = false;
-            prevStandFormData.current = JSON.parse(JSON.stringify(data));
-            setStandFormData(data);
-            setActiveTab(tabs.preAuto);
-        }
-    });
+    // function calculateImageScale(imageSize) {
+    //     let scale;
+    //     let screenWidth = window.innerWidth;
+    //     if (screenWidth < 768) {
+    //         scale = 0.7;
+    //     } else if (screenWidth < 992) {
+    //         scale = 0.5;
+    //     } else {
+    //         scale = 0.2;
+    //     }
+    //     return (screenWidth / imageSize) * scale;
+    // }
 
-    function calculateImageScale(imageSize) {
-        let scale;
-        let screenWidth = window.innerWidth;
-        if (screenWidth < 768) {
-            scale = 0.7;
-        } else if (screenWidth < 992) {
-            scale = 0.5;
-        } else {
-            scale = 0.2;
-        }
-        return (screenWidth / imageSize) * scale;
-    }
+    // function calculateCircleRadius() {
+    //     let scale;
+    //     let screenWidth = window.innerWidth;
+    //     if (screenWidth < 768) {
+    //         scale = 0.8;
+    //     } else if (screenWidth < 992) {
+    //         scale = 0.5;
+    //     } else {
+    //         scale = 0.2;
+    //     }
+    //     return (screenWidth / 10) * scale;
+    // }
 
-    function calculateCircleRadius() {
-        let scale;
-        let screenWidth = window.innerWidth;
-        if (screenWidth < 768) {
-            scale = 0.8;
-        } else if (screenWidth < 992) {
-            scale = 0.5;
-        } else {
-            scale = 0.2;
-        }
-        return (screenWidth / 10) * scale;
-    }
+    // function getCanvasDimensions(rotation) {
+    //     if (rotation === 0 || rotation === Math.PI) {
+    //         return { width: imageWidth, height: imageHeight };
+    //     } else {
+    //         return { width: imageHeight, height: imageWidth };
+    //     }
+    // }
 
-    function getCanvasDimensions(rotation) {
-        if (rotation === 0 || rotation === Math.PI) {
-            return { width: imageWidth, height: imageHeight };
-        } else {
-            return { width: imageHeight, height: imageWidth };
-        }
-    }
+    // const drawImage = useCallback(
+    //     (point, rotation) => {
+    //         const mainCanvasElement = mainCanvas.current;
+    //         const secondCanvasElement = secondCanvas.current;
+    //         if (mainCanvasElement !== null && secondCanvasElement !== null) {
+    //             const mainCtx = mainCanvasElement.getContext('2d');
+    //             const secondCtx = secondCanvasElement.getContext('2d');
+    //             let scale = calculateImageScale(imageWidth);
+    //             let dimensions = getCanvasDimensions(rotation);
+    //             let width = dimensions.width;
+    //             let height = dimensions.height;
+    //             mainCanvasElement.width = width * scale;
+    //             mainCanvasElement.height = height * scale;
+    //             secondCanvasElement.width = width * scale;
+    //             secondCanvasElement.height = height * scale;
+    //             mainCtx.filter = 'brightness(0.65)';
+    //             mainCtx.translate((width / 2) * scale, (height / 2) * scale);
+    //             secondCtx.translate((width / 2) * scale, (height / 2) * scale);
+    //             // mainCtx.setTransform(scale, 0, 0, scale, 207 * scale, 207 * scale); // sets scale and origin
+    //             mainCtx.rotate(rotation);
+    //             secondCtx.rotate(rotation);
+    //             mainCtx.translate((-imageWidth / 2) * scale, (-imageHeight / 2) * scale);
+    //             secondCtx.translate((-imageWidth / 2) * scale, (-imageHeight / 2) * scale);
+    //             // mainCtx.drawImage(img, -207, -207);
+    //             mainCtx.drawImage(allowableImage.current, 0, 0, imageWidth * scale, imageHeight * scale);
+    //             secondCtx.drawImage(image.current, 0, 0, imageWidth * scale, imageHeight * scale);
+    //             if (point.x && point.y) {
+    //                 mainCtx.filter = 'brightness(1.00)';
+    //                 mainCtx.lineWidth = '4';
+    //                 mainCtx.strokeStyle = 'green';
+    //                 mainCtx.beginPath();
+    //                 // let pointX = (point.x - 207) * Math.cos(rotation) - (point.y - 207) * Math.sin(rotation) + 207;
+    //                 // let pointY = (point.x - 207) * Math.sin(rotation) + (point.y - 207) * Math.cos(rotation) + 207;
+    //                 mainCtx.arc(point.x * scale, point.y * scale, calculateCircleRadius(), 0, 2 * Math.PI);
+    //                 mainCtx.stroke();
+    //                 mainCtx.closePath();
+    //             }
+    //             if (swiper.current) {
+    //                 swiper.current.swiper.update();
+    //             }
+    //             if (!initialDrawn) {
+    //                 setInitialDrawn(true);
+    //             }
+    //         }
+    //     },
+    //     [initialDrawn]
+    // );
 
-    const drawImage = useCallback(
-        (point, rotation) => {
-            const mainCanvasElement = mainCanvas.current;
-            const secondCanvasElement = secondCanvas.current;
-            if (mainCanvasElement !== null && secondCanvasElement !== null) {
-                const mainCtx = mainCanvasElement.getContext('2d');
-                const secondCtx = secondCanvasElement.getContext('2d');
-                let scale = calculateImageScale(imageWidth);
-                let dimensions = getCanvasDimensions(rotation);
-                let width = dimensions.width;
-                let height = dimensions.height;
-                mainCanvasElement.width = width * scale;
-                mainCanvasElement.height = height * scale;
-                secondCanvasElement.width = width * scale;
-                secondCanvasElement.height = height * scale;
-                mainCtx.filter = 'brightness(0.65)';
-                mainCtx.translate((width / 2) * scale, (height / 2) * scale);
-                secondCtx.translate((width / 2) * scale, (height / 2) * scale);
-                // mainCtx.setTransform(scale, 0, 0, scale, 207 * scale, 207 * scale); // sets scale and origin
-                mainCtx.rotate(rotation);
-                secondCtx.rotate(rotation);
-                mainCtx.translate((-imageWidth / 2) * scale, (-imageHeight / 2) * scale);
-                secondCtx.translate((-imageWidth / 2) * scale, (-imageHeight / 2) * scale);
-                // mainCtx.drawImage(img, -207, -207);
-                mainCtx.drawImage(allowableImage.current, 0, 0, imageWidth * scale, imageHeight * scale);
-                secondCtx.drawImage(image.current, 0, 0, imageWidth * scale, imageHeight * scale);
-                if (point.x && point.y) {
-                    mainCtx.filter = 'brightness(1.00)';
-                    mainCtx.lineWidth = '4';
-                    mainCtx.strokeStyle = 'green';
-                    mainCtx.beginPath();
-                    // let pointX = (point.x - 207) * Math.cos(rotation) - (point.y - 207) * Math.sin(rotation) + 207;
-                    // let pointY = (point.x - 207) * Math.sin(rotation) + (point.y - 207) * Math.cos(rotation) + 207;
-                    mainCtx.arc(point.x * scale, point.y * scale, calculateCircleRadius(), 0, 2 * Math.PI);
-                    mainCtx.stroke();
-                    mainCtx.closePath();
-                }
-                if (swiper.current) {
-                    swiper.current.swiper.update();
-                }
-                if (!initialDrawn) {
-                    setInitialDrawn(true);
-                }
-            }
-        },
-        [initialDrawn]
-    );
+    // const resizeCanvas = useCallback(() => {
+    //     if (initialDrawn) {
+    //         clearTimeout(doResize);
+    //         if (window.innerWidth !== prevWidth.current) {
+    //             prevWidth.current = window.innerWidth;
+    //             doResize = setTimeout(() => drawImage(standFormData.startingPosition, rotations[fieldRotationIndex]), 250);
+    //         }
+    //     }
+    // }, [drawImage, standFormData.startingPosition, fieldRotationIndex, initialDrawn]);
 
-    const resizeCanvas = useCallback(() => {
-        if (initialDrawn) {
-            clearTimeout(doResize);
-            if (window.innerWidth !== prevWidth.current) {
-                prevWidth.current = window.innerWidth;
-                doResize = setTimeout(() => drawImage(standFormData.startingPosition, rotations[fieldRotationIndex]), 250);
-            }
-        }
-    }, [drawImage, standFormData.startingPosition, fieldRotationIndex, initialDrawn]);
+    // useEffect(() => {
+    //     window.addEventListener('resize', resizeCanvas);
+
+    //     return () => window.removeEventListener('resize', resizeCanvas);
+    // }, [resizeCanvas]);
 
     useEffect(() => {
-        window.addEventListener('resize', resizeCanvas);
-
-        return () => window.removeEventListener('resize', resizeCanvas);
-    }, [resizeCanvas]);
-
-    useEffect(() => {
-        if (!standFormData.loading && futureAlly !== null && opposingAlliance !== null && imageLoaded && allowableImageLoaded && activeTab === tabs.preAuto && eventName && teamName) {
-            prevWidth.current = window.innerWidth;
-            drawImage(standFormData.startingPosition, rotations[fieldRotationIndex]);
-        }
+        // if (!standFormData.loading && futureAlly !== null && opposingAlliance !== null && imageLoaded && allowableImageLoaded && activeTab === sections.preAuto && eventName && teamName) {
+        //     prevWidth.current = window.innerWidth;
+        //     drawImage(standFormData.startingPosition, rotations[fieldRotationIndex]);
+        // }
         if (localStorage.getItem('Field Rotation')) {
             let oldObj = JSON.parse(localStorage.getItem('Field Rotation'));
-            let obj = { red: stationParam.charAt(0) === 'r' ? fieldRotationIndex : oldObj.red, blue: stationParam.charAt(0) === 'b' ? fieldRotationIndex : oldObj.blue };
+            let obj = { red: stationParam.charAt(0) === 'r' ? fieldRotation : oldObj.red, blue: stationParam.charAt(0) === 'b' ? fieldRotation : oldObj.blue };
             localStorage.setItem('Field Rotation', JSON.stringify(obj));
         } else {
-            let obj = { red: stationParam.charAt(0) === 'r' ? fieldRotationIndex : null, blue: stationParam.charAt(0) === 'b' ? fieldRotationIndex : null };
+            let obj = { red: stationParam.charAt(0) === 'r' ? fieldRotation : null, blue: stationParam.charAt(0) === 'b' ? fieldRotation : null };
             localStorage.setItem('Field Rotation', JSON.stringify(obj));
         }
-    }, [
-        standFormData.loading,
-        activeTab,
-        drawImage,
-        standFormData.startingPosition,
-        imageLoaded,
-        allowableImageLoaded,
-        standFormData.preLoadedPiece,
-        eventName,
-        teamName,
-        stationParam,
-        fieldRotationIndex,
-        futureAlly,
-        opposingAlliance
-    ]);
-
-    useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'auto' });
-    }, [activeTab]);
+    }, [stationParam, fieldRotation]);
 
     useEffect(() => {
         if (prevStandFormData.current !== null) {
@@ -431,61 +326,61 @@ function StandForm() {
         prevStandFormData.current = JSON.parse(JSON.stringify(standFormData));
     }, [standFormData, eventKeyParam, matchNumberParam, stationParam]);
 
-    useEffect(() => {
-        let img = new Image();
-        let allowableImg = new Image();
-        img.src = stationParam.charAt(0) === 'r' ? RedFieldNonAllowable : BlueFieldNonAllowable;
-        allowableImg.src = stationParam.charAt(0) === 'r' ? RedFieldAllowable : BlueFieldAllowable;
-        img.onload = () => {
-            image.current = img;
-            setImageLoaded(true);
-        };
-        allowableImg.onload = () => {
-            allowableImage.current = allowableImg;
-            let canvas = document.createElement('canvas');
-            canvas.width = imageWidth;
-            canvas.height = imageHeight;
-            canvas.getContext('2d').drawImage(allowableImg, 0, 0, imageWidth, imageHeight);
-            offSideCanvas.current = canvas;
-            setAllowableImageLoaded(true);
-        };
+    // useEffect(() => {
+    //     let img = new Image();
+    //     let allowableImg = new Image();
+    //     img.src = stationParam.charAt(0) === 'r' ? RedFieldNonAllowable : BlueFieldNonAllowable;
+    //     allowableImg.src = stationParam.charAt(0) === 'r' ? RedFieldAllowable : BlueFieldAllowable;
+    //     img.onload = () => {
+    //         image.current = img;
+    //         setImageLoaded(true);
+    //     };
+    //     allowableImg.onload = () => {
+    //         allowableImage.current = allowableImg;
+    //         let canvas = document.createElement('canvas');
+    //         canvas.width = imageWidth;
+    //         canvas.height = imageHeight;
+    //         canvas.getContext('2d').drawImage(allowableImg, 0, 0, imageWidth, imageHeight);
+    //         offSideCanvas.current = canvas;
+    //         setAllowableImageLoaded(true);
+    //     };
 
-        //Dont know if this is necessary but just in case
-        return () => {
-            clearTimeout(doResize);
-            clearTimeout(zeroScore);
-            clearTimeout(doShake);
-            wasHeldDown = false;
-            touchIsInside = false;
-        };
-    }, [stationParam]);
+    //     //Dont know if this is necessary but just in case
+    //     return () => {
+    //         clearTimeout(doResize);
+    //         clearTimeout(zeroScore);
+    //         clearTimeout(doShake);
+    //         wasHeldDown = false;
+    //         touchIsInside = false;
+    //     };
+    // }, [stationParam]);
 
-    useEffect(() => {
-        if (swiper.current) {
-            if (standFormData.standStatus === matchFormStatus.noShow) {
-                setActiveTab(tabs.closing);
-                swiper.current.swiper.slideTo(Object.values(tabs).indexOf(tabs.closing));
-            }
-            swiper.current.swiper.update();
-        }
-    }, [standFormData.standStatus]);
+    // useEffect(() => {
+    //     if (swiper.current) {
+    //         if (standFormData.standStatus === matchFormStatus.noShow) {
+    //             setActiveTab(tabs.closing);
+    //             swiper.current.swiper.slideTo(Object.values(tabs).indexOf(tabs.closing));
+    //         }
+    //         swiper.current.swiper.update();
+    //     }
+    // }, [standFormData.standStatus]);
 
-    useEffect(() => {
-        if (swiper.current) {
-            swiper.current.swiper.update();
-        }
-    }, [standFormData.chargeTele, standFormData.impairedCharge, standFormData.chargeAuto]);
+    // useEffect(() => {
+    //     if (swiper.current) {
+    //         swiper.current.swiper.update();
+    //     }
+    // }, [standFormData.chargeTele, standFormData.impairedCharge, standFormData.chargeAuto]);
 
     function isFollowOrNoShow() {
         return [matchFormStatus.followUp, matchFormStatus.noShow].includes(standFormData.standStatus);
     }
 
     function validPreAuto() {
-        return standFormData.startingPosition.x !== null && standFormData.startingPosition.y !== null && standFormData.preLoadedPiece !== null;
+        return standFormData.startingPosition !== null && standFormData.preLoadedPiece !== null;
     }
 
     function validAuto() {
-        return standFormData.crossCommunity !== null && standFormData.chargeAuto !== null && (!['Dock', 'Fail'].includes(standFormData.chargeAuto) || standFormData.autoChargeComment.trim() !== '');
+        return standFormData.leaveStart !== null;
     }
 
     function validTele() {
@@ -493,161 +388,153 @@ function StandForm() {
     }
 
     function validEndGame() {
-        if (standFormData.chargeTele !== null && standFormData.impairedCharge !== null) {
-            if (['Dock', 'Engage'].includes(standFormData.chargeTele) && standFormData.chargeRobotCount === null) {
-                return false;
-            }
-            if (['Dock', 'Impaired', 'Fail'].includes(standFormData.chargeTele) && standFormData.chargeComment.trim() === '') {
-                return false;
-            }
-            if (standFormData.impairedCharge && standFormData.impairedComment.trim() === '') {
-                return false;
-            }
-            return true;
-        }
-        return false;
+        return standFormData.stage !== null;
     }
 
     function validClosing() {
-        return (
-            standFormData.defendedBy !== null && standFormData.loseCommunication !== null && standFormData.robotBreak !== null && standFormData.yellowCard !== null && standFormData.redCard !== null
-        );
+        return standFormData.loseCommunication !== null && standFormData.robotBreak !== null && standFormData.yellowCard !== null && standFormData.redCard !== null;
     }
 
-    function validateTab(tab) {
-        if (tab === tabs.preAuto) {
+    function validateSections(section) {
+        if (section === sections.preAuto) {
             return validPreAuto();
-        } else if (tab === tabs.auto) {
+        } else if (section === sections.auto) {
             return validAuto();
-        } else if (tab === tabs.teleop) {
+        } else if (section === sections.teleop) {
             return validTele();
-        } else if (tab === tabs.endGame) {
+        } else if (section === sections.endGame) {
             return validEndGame();
-        } else if (tab === tabs.closing) {
+        } else if (section === sections.closing) {
             return validClosing();
         } else {
             return true;
         }
     }
 
-    const [updateStandForm] = useMutation(UPDATE_STANDFORM, {
-        onCompleted() {
-            toast({
-                title: 'Match Form Updated',
-                status: 'success',
-                duration: 3000,
-                isClosable: true
-            });
-            if (location.state && location.state.previousRoute) {
-                if (location.state.previousRoute === 'matches') {
-                    navigate('/matches', { state: { scoutingError: location.state.scoutingError } });
-                } else if (location.state.previousRoute === 'team') {
-                    navigate(`/team/${teamNumber}/stand`);
-                }
-            } else {
-                navigate('/');
-            }
-            setSubmitting(false);
-            localStorage.removeItem('StandFormData');
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            toast({
-                title: 'Apollo Error',
-                description: 'Match form could not be updated',
-                status: 'error',
-                duration: 3000,
-                isClosable: true
-            });
-            setSubmitting(false);
-        }
-    });
+    // const [updateStandForm] = useMutation(UPDATE_STANDFORM, {
+    //     onCompleted() {
+    //         toast({
+    //             title: 'Match Form Updated',
+    //             status: 'success',
+    //             duration: 3000,
+    //             isClosable: true
+    //         });
+    //         if (location.state && location.state.previousRoute) {
+    //             if (location.state.previousRoute === 'matches') {
+    //                 navigate('/matches', { state: { scoutingError: location.state.scoutingError } });
+    //             } else if (location.state.previousRoute === 'team') {
+    //                 navigate(`/team/${teamNumber}/stand`);
+    //             }
+    //         } else {
+    //             navigate('/');
+    //         }
+    //         setSubmitting(false);
+    //         localStorage.removeItem('StandFormData');
+    //     },
+    //     onError(err) {
+    //         console.log(JSON.stringify(err, null, 2));
+    //         toast({
+    //             title: 'Apollo Error',
+    //             description: 'Match form could not be updated',
+    //             status: 'error',
+    //             duration: 3000,
+    //             isClosable: true
+    //         });
+    //         setSubmitting(false);
+    //     }
+    // });
 
-    function submit() {
-        setSubmitAttempted(true);
-        if (!isFollowOrNoShow()) {
-            let toastText = [];
-            if (!validPreAuto()) {
-                toastText.push('Pre-Auto');
-            }
-            if (!validAuto()) {
-                toastText.push('Auto');
-            }
-            if (!validTele()) {
-                toastText.push('Teleop');
-            }
-            if (!validEndGame()) {
-                toastText.push('End Game');
-            }
-            if (!validClosing()) {
-                toastText.push('Closing');
-            }
-            if (toastText.length !== 0) {
-                toast({
-                    title: 'Missing fields at:',
-                    description: toastText.join(', '),
-                    status: 'error',
-                    duration: 2000,
-                    isClosable: true
-                });
-                return;
-            }
-        } else if (standFormData.standStatusComment.trim() === '') {
-            toast({
-                title: 'Missing fields',
-                description: `Leave a ${standFormData.standStatus.toLowerCase()} comment`,
-                status: 'error',
-                duration: 3000,
-                isClosable: true
-            });
-            return;
-        }
-        setSubmitting(true);
-        updateStandForm({
-            variables: {
-                matchFormInput: {
-                    eventKey: eventKeyParam,
-                    eventName: eventName,
-                    station: stationParam,
-                    matchNumber: matchNumberParam,
-                    teamNumber: parseInt(teamNumber),
-                    teamName: teamName,
-                    startingPosition: standFormData.startingPosition,
-                    preLoadedPiece: standFormData.preLoadedPiece,
-                    bottomAuto: standFormData.bottomAuto,
-                    middleAuto: standFormData.middleAuto,
-                    topAuto: standFormData.topAuto,
-                    crossCommunity: standFormData.crossCommunity,
-                    chargeAuto: standFormData.chargeAuto,
-                    autoChargeComment: standFormData.autoChargeComment,
-                    standAutoComment: standFormData.standAutoComment.trim(),
-                    bottomTele: standFormData.bottomTele,
-                    middleTele: standFormData.middleTele,
-                    topTele: standFormData.topTele,
-                    chargeTele: standFormData.chargeTele,
-                    chargeComment: ['Dock', 'Impaired', 'Fail'].includes(standFormData.chargeTele) ? standFormData.chargeComment.trim() : '',
-                    chargeRobotCount: standFormData.chargeTele === 'Dock' || standFormData.chargeTele === 'Engage' ? standFormData.chargeRobotCount : null,
-                    impairedCharge: standFormData.impairedCharge,
-                    impairedComment: standFormData.impairedCharge ? standFormData.impairedComment.trim() : '',
-                    defendedBy: standFormData.defendedBy,
-                    loseCommunication: standFormData.loseCommunication,
-                    robotBreak: standFormData.robotBreak,
-                    yellowCard: standFormData.yellowCard,
-                    redCard: standFormData.redCard,
-                    standEndComment: standFormData.standStatus === matchFormStatus.noShow ? '' : standFormData.standEndComment.trim(),
-                    standStatus: standFormData.standStatus || matchFormStatus.complete,
-                    standStatusComment: isFollowOrNoShow() ? standFormData.standStatusComment.trim() : ''
-                }
-            }
-        });
-    }
+    // function submit() {
+    //     setSubmitAttempted(true);
+    //     if (!isFollowOrNoShow()) {
+    //         let toastText = [];
+    //         if (!validPreAuto()) {
+    //             toastText.push('Pre-Auto');
+    //         }
+    //         if (!validAuto()) {
+    //             toastText.push('Auto');
+    //         }
+    //         if (!validTele()) {
+    //             toastText.push('Teleop');
+    //         }
+    //         if (!validEndGame()) {
+    //             toastText.push('End Game');
+    //         }
+    //         if (!validClosing()) {
+    //             toastText.push('Closing');
+    //         }
+    //         if (toastText.length !== 0) {
+    //             toast({
+    //                 title: 'Missing fields at:',
+    //                 description: toastText.join(', '),
+    //                 status: 'error',
+    //                 duration: 2000,
+    //                 isClosable: true
+    //             });
+    //             return;
+    //         }
+    //     } else if (standFormData.standStatusComment.trim() === '') {
+    //         toast({
+    //             title: 'Missing fields',
+    //             description: `Leave a ${standFormData.standStatus.toLowerCase()} comment`,
+    //             status: 'error',
+    //             duration: 3000,
+    //             isClosable: true
+    //         });
+    //         return;
+    //     }
+    //     setSubmitting(true);
+    //     updateStandForm({
+    //         variables: {
+    //             matchFormInput: {
+    //                 eventKey: eventKeyParam,
+    //                 eventName: eventName,
+    //                 station: stationParam,
+    //                 matchNumber: matchNumberParam,
+    //                 teamNumber: parseInt(teamNumber),
+    //                 teamName: teamName,
+    //                 startingPosition: standFormData.startingPosition,
+    //                 preLoadedPiece: standFormData.preLoadedPiece,
+    //                 bottomAuto: standFormData.bottomAuto,
+    //                 middleAuto: standFormData.middleAuto,
+    //                 topAuto: standFormData.topAuto,
+    //                 crossCommunity: standFormData.crossCommunity,
+    //                 chargeAuto: standFormData.chargeAuto,
+    //                 autoChargeComment: standFormData.autoChargeComment,
+    //                 standAutoComment: standFormData.standAutoComment.trim(),
+    //                 bottomTele: standFormData.bottomTele,
+    //                 middleTele: standFormData.middleTele,
+    //                 topTele: standFormData.topTele,
+    //                 chargeTele: standFormData.chargeTele,
+    //                 chargeComment: ['Dock', 'Impaired', 'Fail'].includes(standFormData.chargeTele) ? standFormData.chargeComment.trim() : '',
+    //                 chargeRobotCount: standFormData.chargeTele === 'Dock' || standFormData.chargeTele === 'Engage' ? standFormData.chargeRobotCount : null,
+    //                 impairedCharge: standFormData.impairedCharge,
+    //                 impairedComment: standFormData.impairedCharge ? standFormData.impairedComment.trim() : '',
+    //                 defendedBy: standFormData.defendedBy,
+    //                 loseCommunication: standFormData.loseCommunication,
+    //                 robotBreak: standFormData.robotBreak,
+    //                 yellowCard: standFormData.yellowCard,
+    //                 redCard: standFormData.redCard,
+    //                 standEndComment: standFormData.standStatus === matchFormStatus.noShow ? '' : standFormData.standEndComment.trim(),
+    //                 standStatus: standFormData.standStatus || matchFormStatus.complete,
+    //                 standStatusComment: isFollowOrNoShow() ? standFormData.standStatusComment.trim() : ''
+    //             }
+    //         }
+    //     });
+    // }
 
-    function renderTab(tab) {
-        switch (tab) {
-            case tabs.preAuto:
+    function renderSection(section) {
+        switch (section) {
+            case sections.preAuto:
                 return (
-                    <Box minH={'calc(100vh - 200px)'}>
-                        <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 30px 10px'}>
+                    <Box>
+                        <Box border={'0px solid black'} margin={'0 auto'} position={'relative'}>
+                            {['1', '2', '3'].map((position) => (
+                                <Button position={'absolute'}>{position}</Button>
+                            ))}
+                            <Image src={BlueField} />
+                        </Box>
+                        {/* <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 30px 10px'}>
                             <HStack marginBottom={'10px'} spacing={'auto'}>
                                 <Text fontWeight={'bold'} fontSize={'110%'}>
                                     Starting Position:
@@ -725,10 +612,10 @@ function StandForm() {
                                     ))}
                                 </Flex>
                             </Center>
-                        </Box>
+                        </Box> */}
                     </Box>
                 );
-            case tabs.auto:
+            case sections.auto:
                 return (
                     <Box minH={'calc(100vh - 200px)'}>
                         <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 30px 10px'}>
@@ -755,7 +642,7 @@ function StandForm() {
                                 </HStack>
                             </Center>
 
-                            {['top', 'middle', 'bottom'].map((row) => (
+                            {/* {['top', 'middle', 'bottom'].map((row) => (
                                 <React.Fragment key={'auto' + row}>
                                     <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
                                         {row.charAt(0).toUpperCase() + row.slice(1)} Row:
@@ -815,7 +702,7 @@ function StandForm() {
                                         </HStack>
                                     </Center>
                                 </React.Fragment>
-                            ))}
+                            ))} */}
                             <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
                                 Mobility (Cross Community):
                             </Text>
@@ -840,7 +727,7 @@ function StandForm() {
                             <Text marginBottom={'2px'} fontWeight={'bold'} fontSize={'110%'}>
                                 Charge:
                             </Text>
-                            <Center>
+                            {/* <Center>
                                 <Flex flexWrap={'wrap'} justifyContent={'center'} marginBottom={['Dock', 'Fail'].includes(standFormData.chargeAuto) ? 'calc(25px - 8px)' : '0px'}>
                                     {chargeTypesAuto.map((type) => (
                                         <Button
@@ -857,7 +744,7 @@ function StandForm() {
                                         </Button>
                                     ))}
                                 </Flex>
-                            </Center>
+                            </Center> */}
                             {['Dock', 'Fail'].includes(standFormData.chargeAuto) && (
                                 <React.Fragment>
                                     <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
@@ -886,7 +773,7 @@ function StandForm() {
                         </Box>
                     </Box>
                 );
-            case tabs.teleop:
+            case sections.teleop:
                 return (
                     <Box minH={'calc(100vh - 200px)'}>
                         <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 30px 10px'}>
@@ -913,7 +800,7 @@ function StandForm() {
                                 </HStack>
                             </Center>
 
-                            {['top', 'middle', 'bottom'].map((row) => (
+                            {/* {['top', 'middle', 'bottom'].map((row) => (
                                 <React.Fragment key={'tele' + row}>
                                     <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
                                         {row.charAt(0).toUpperCase() + row.slice(1)} Row:
@@ -973,11 +860,11 @@ function StandForm() {
                                         </HStack>
                                     </Center>
                                 </React.Fragment>
-                            ))}
+                            ))} */}
                         </Box>
                     </Box>
                 );
-            case tabs.endGame:
+            case sections.endGame:
                 return (
                     <Box minH={'calc(100vh - 200px)'}>
                         <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 30px 10px'}>
@@ -1095,14 +982,14 @@ function StandForm() {
                         </Box>
                     </Box>
                 );
-            case tabs.closing:
+            case sections.closing:
                 return (
                     <Box minH={'calc(100vh - 200px)'}>
                         <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 10px 10px'}>
                             <Text marginBottom={'2px'} fontWeight={'bold'} fontSize={'110%'}>
                                 Defended By:
                             </Text>
-                            <Center>
+                            {/* <Center>
                                 <Flex flexWrap={'wrap'} justifyContent={'center'} marginBottom={`${25 - 8}px`}>
                                     {['None'].concat(opposingAlliance).map((team) => (
                                         <Button
@@ -1119,7 +1006,7 @@ function StandForm() {
                                         </Button>
                                     ))}
                                 </Flex>
-                            </Center>
+                            </Center> */}
                             <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
                                 Lose Communication:
                             </Text>
@@ -1263,7 +1150,7 @@ function StandForm() {
                             ) : null}
                         </Box>
                         <Center>
-                            <Button isDisabled={submitting} _focus={{ outline: 'none' }} marginBottom={'20px'} marginTop={'20px'} onClick={() => submit()}>
+                            <Button isDisabled={submitting} _focus={{ outline: 'none' }} marginBottom={'20px'} marginTop={'20px'} onClick={() => console.log('submit')}>
                                 Submit
                             </Button>
                         </Center>
@@ -1333,7 +1220,6 @@ function StandForm() {
                                     let matchForm = JSON.parse(localStorage.getItem('StandFormData'));
                                     matchForm.loading = false;
                                     setStandFormData(matchForm);
-                                    setActiveTab(tabs.preAuto);
                                 }}
                             >
                                 Load
@@ -1345,17 +1231,7 @@ function StandForm() {
         );
     }
 
-    if (
-        standFormData.loading ||
-        !validMatch ||
-        loadingStandData ||
-        loadingEvent ||
-        futureAlly === null ||
-        opposingAlliance === null ||
-        (standDataError && eventError && error !== false) ||
-        teamName === null ||
-        eventName === null
-    ) {
+    if (standFormData.loading || futureAlly === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -1403,16 +1279,16 @@ function StandForm() {
                     </AlertDialogContent>
                 </AlertDialogOverlay>
             </AlertDialog>
-            <Center>
+            {/* <Center>
                 <HStack marginBottom={'25px'} spacing={'10px'}>
-                    <IconButton icon={<ChevronLeftIcon />} isDisabled={activeTab === tabs.preAuto || activeTab === null} className='slider-button-prev' _focus={{ outline: 'none' }} />
-                    <Text textAlign={'center'} color={submitAttempted && !isFollowOrNoShow() && !validateTab(activeTab) ? 'red' : 'black'} minW={'130px'} fontWeight={'bold'} fontSize={'110%'}>
+                    <IconButton icon={<ChevronLeftIcon />} isDisabled={activeTab === sections.preAuto || activeTab === null} className='slider-button-prev' _focus={{ outline: 'none' }} />
+                    <Text textAlign={'center'} color={submitAttempted && !isFollowOrNoShow() && !validateSections(activeTab) ? 'red' : 'black'} minW={'130px'} fontWeight={'bold'} fontSize={'110%'}>
                         {activeTab} • {teamNumber}
                     </Text>
                     <IconButton icon={<ChevronRightIcon />} className='slider-button-next' _focus={{ outline: 'none' }} />
                 </HStack>
-            </Center>
-            <Swiper
+            </Center> */}
+            {/* <Swiper
                 // install Swiper modules
                 ref={swiper}
                 autoHeight={true}
@@ -1424,229 +1300,230 @@ function StandForm() {
                 noSwiping={true}
                 navigation={{ prevEl: '.slider-button-prev', nextEl: '.slider-button-next' }}
                 onSlideChange={(swiper) => {
-                    setActiveTab(Object.values(tabs)[swiper.activeIndex]);
+                    setActiveTab(Object.values(sections)[swiper.activeIndex]);
                 }}
             >
-                <SwiperSlide> {renderTab(tabs.preAuto)}</SwiperSlide>
-                <SwiperSlide> {renderTab(tabs.auto)}</SwiperSlide>
-                <SwiperSlide> {renderTab(tabs.teleop)}</SwiperSlide>
-                <SwiperSlide> {renderTab(tabs.endGame)}</SwiperSlide>
-                <SwiperSlide> {renderTab(tabs.closing)}</SwiperSlide>
-            </Swiper>
+                <SwiperSlide> {renderSection(sections.preAuto)}</SwiperSlide>
+                <SwiperSlide> {renderSection(sections.auto)}</SwiperSlide>
+                <SwiperSlide> {renderSection(sections.teleop)}</SwiperSlide>
+                <SwiperSlide> {renderSection(sections.endGame)}</SwiperSlide>
+                <SwiperSlide> {renderSection(sections.closing)}</SwiperSlide>
+            </Swiper> */}
+            {renderSection(activeSection)}
         </Box>
     );
 }
 
-function ScoringButton({ type, standFormData, setStandFormData, dataField, manager, max, shakeElement, setShakeElement, mobileFlag, toast }) {
-    return (
-        <Center
-            className={shakeElement === JSON.stringify(dataField) && 'shake'}
-            userSelect={'none'}
-            cursor={'pointer'}
-            fontSize={'45px'}
-            backgroundColor={type === 'Cone' ? '#F7F03E' : '#BE4FB8'}
-            _hover={{ backgroundColor: type === 'Cone' ? '#EBE40A' : '#B342AD' }}
-            _active={{ backgroundColor: type === 'Cone' ? '#C5C340' : '#953790' }}
-            minW={{ base: '75px', md: '85px', lg: '106px' }}
-            minH={{ base: '75px', md: '90px', lg: '100px' }}
-            borderRadius={'10px'}
-            onMouseDown={() => {
-                setShakeElement(null);
-                clearTimeout(doShake);
-                clearTimeout(zeroScore);
-                wasHeldDown = false;
-                touchIsInside = false;
-                if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
-                    doShake = setTimeout(() => {
-                        setShakeElement(JSON.stringify(dataField));
-                        wasHeldDown = true;
-                    }, 500);
-                    zeroScore = setTimeout(() => {
-                        manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
-                        wasHeldDown = true;
-                        toast({
-                            title: `Reset`,
-                            status: 'info',
-                            duration: 1000,
-                            isClosable: true
-                        });
-                    }, 2000);
-                }
-            }}
-            onMouseOut={(event) => {
-                if (mobileFlag) {
-                    event.preventDefault();
-                } else {
-                    setShakeElement(null);
-                    clearTimeout(doShake);
-                    clearTimeout(zeroScore);
-                    wasHeldDown = false;
-                    touchIsInside = false;
-                }
-            }}
-            onMouseUp={() => {
-                if (!wasHeldDown) {
-                    manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
-                }
-                setShakeElement(null);
-                clearTimeout(doShake);
-                clearTimeout(zeroScore);
-                wasHeldDown = false;
-                touchIsInside = false;
-            }}
-            onTouchStart={(event) => {
-                event.preventDefault();
-                setShakeElement(null);
-                clearTimeout(doShake);
-                clearTimeout(zeroScore);
-                wasHeldDown = false;
-                touchIsInside = true;
-                if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
-                    doShake = setTimeout(() => {
-                        setShakeElement(JSON.stringify(dataField));
-                        wasHeldDown = true;
-                    }, 500);
-                    zeroScore = setTimeout(() => {
-                        manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
-                        wasHeldDown = true;
-                        toast({
-                            title: `Reset`,
-                            status: 'info',
-                            duration: 1000,
-                            isClosable: true
-                        });
-                    }, 2000);
-                }
-            }}
-            onTouchMove={(event) => {
-                event.preventDefault();
-                setShakeElement(null);
-                clearTimeout(doShake);
-                clearTimeout(zeroScore);
-                wasHeldDown = false;
-                touchIsInside = false;
-            }}
-            onTouchEnd={(event) => {
-                event.preventDefault();
-                if (!wasHeldDown && touchIsInside) {
-                    manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
-                }
-                setShakeElement(null);
-                clearTimeout(doShake);
-                clearTimeout(zeroScore);
-                wasHeldDown = false;
-                touchIsInside = false;
-            }}
-        >
-            {standFormData[`${dataField.row}${dataField.phase}`][dataField.field]}
-        </Center>
-    );
-}
+// function ScoringButton({ type, standFormData, setStandFormData, dataField, manager, max, shakeElement, setShakeElement, mobileFlag, toast }) {
+//     return (
+//         <Center
+//             className={shakeElement === JSON.stringify(dataField) && 'shake'}
+//             userSelect={'none'}
+//             cursor={'pointer'}
+//             fontSize={'45px'}
+//             backgroundColor={type === 'Cone' ? '#F7F03E' : '#BE4FB8'}
+//             _hover={{ backgroundColor: type === 'Cone' ? '#EBE40A' : '#B342AD' }}
+//             _active={{ backgroundColor: type === 'Cone' ? '#C5C340' : '#953790' }}
+//             minW={{ base: '75px', md: '85px', lg: '106px' }}
+//             minH={{ base: '75px', md: '90px', lg: '100px' }}
+//             borderRadius={'10px'}
+//             onMouseDown={() => {
+//                 setShakeElement(null);
+//                 clearTimeout(doShake);
+//                 clearTimeout(zeroScore);
+//                 wasHeldDown = false;
+//                 touchIsInside = false;
+//                 if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
+//                     doShake = setTimeout(() => {
+//                         setShakeElement(JSON.stringify(dataField));
+//                         wasHeldDown = true;
+//                     }, 500);
+//                     zeroScore = setTimeout(() => {
+//                         manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
+//                         wasHeldDown = true;
+//                         toast({
+//                             title: `Reset`,
+//                             status: 'info',
+//                             duration: 1000,
+//                             isClosable: true
+//                         });
+//                     }, 2000);
+//                 }
+//             }}
+//             onMouseOut={(event) => {
+//                 if (mobileFlag) {
+//                     event.preventDefault();
+//                 } else {
+//                     setShakeElement(null);
+//                     clearTimeout(doShake);
+//                     clearTimeout(zeroScore);
+//                     wasHeldDown = false;
+//                     touchIsInside = false;
+//                 }
+//             }}
+//             onMouseUp={() => {
+//                 if (!wasHeldDown) {
+//                     manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
+//                 }
+//                 setShakeElement(null);
+//                 clearTimeout(doShake);
+//                 clearTimeout(zeroScore);
+//                 wasHeldDown = false;
+//                 touchIsInside = false;
+//             }}
+//             onTouchStart={(event) => {
+//                 event.preventDefault();
+//                 setShakeElement(null);
+//                 clearTimeout(doShake);
+//                 clearTimeout(zeroScore);
+//                 wasHeldDown = false;
+//                 touchIsInside = true;
+//                 if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
+//                     doShake = setTimeout(() => {
+//                         setShakeElement(JSON.stringify(dataField));
+//                         wasHeldDown = true;
+//                     }, 500);
+//                     zeroScore = setTimeout(() => {
+//                         manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
+//                         wasHeldDown = true;
+//                         toast({
+//                             title: `Reset`,
+//                             status: 'info',
+//                             duration: 1000,
+//                             isClosable: true
+//                         });
+//                     }, 2000);
+//                 }
+//             }}
+//             onTouchMove={(event) => {
+//                 event.preventDefault();
+//                 setShakeElement(null);
+//                 clearTimeout(doShake);
+//                 clearTimeout(zeroScore);
+//                 wasHeldDown = false;
+//                 touchIsInside = false;
+//             }}
+//             onTouchEnd={(event) => {
+//                 event.preventDefault();
+//                 if (!wasHeldDown && touchIsInside) {
+//                     manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
+//                 }
+//                 setShakeElement(null);
+//                 clearTimeout(doShake);
+//                 clearTimeout(zeroScore);
+//                 wasHeldDown = false;
+//                 touchIsInside = false;
+//             }}
+//         >
+//             {standFormData[`${dataField.row}${dataField.phase}`][dataField.field]}
+//         </Center>
+//     );
+// }
 
-function MissedButton({ standFormData, setStandFormData, dataField, manager, max, shakeElement, setShakeElement, mobileFlag, toast }) {
-    return (
-        <Center
-            className={shakeElement === JSON.stringify(dataField) && 'shake'}
-            userSelect={'none'}
-            cursor={'pointer'}
-            fontSize={'25px'}
-            backgroundColor={'red.400'}
-            _hover={{ backgroundColor: 'red.500' }}
-            _active={{ backgroundColor: 'red.600' }}
-            minW={{ base: '45px', md: '50px', lg: '60px' }}
-            minH={{ base: '35px', md: '40px', lg: '45px' }}
-            borderRadius={'10px'}
-            onMouseDown={() => {
-                setShakeElement(null);
-                clearTimeout(doShake);
-                clearTimeout(zeroScore);
-                wasHeldDown = false;
-                touchIsInside = false;
-                if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
-                    doShake = setTimeout(() => {
-                        setShakeElement(JSON.stringify(dataField));
-                        wasHeldDown = true;
-                    }, 500);
-                    zeroScore = setTimeout(() => {
-                        manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
-                        wasHeldDown = true;
-                        toast({
-                            title: `Reset`,
-                            status: 'info',
-                            duration: 1000,
-                            isClosable: true
-                        });
-                    }, 2000);
-                }
-            }}
-            onMouseOut={(event) => {
-                if (mobileFlag) {
-                    event.preventDefault();
-                } else {
-                    setShakeElement(null);
-                    clearTimeout(doShake);
-                    clearTimeout(zeroScore);
-                    wasHeldDown = false;
-                    touchIsInside = false;
-                }
-            }}
-            onMouseUp={() => {
-                if (!wasHeldDown) {
-                    manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
-                }
-                setShakeElement(null);
-                clearTimeout(doShake);
-                clearTimeout(zeroScore);
-                wasHeldDown = false;
-                touchIsInside = false;
-            }}
-            onTouchStart={(event) => {
-                event.preventDefault();
-                setShakeElement(null);
-                clearTimeout(doShake);
-                clearTimeout(zeroScore);
-                wasHeldDown = false;
-                touchIsInside = true;
-                if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
-                    doShake = setTimeout(() => {
-                        setShakeElement(JSON.stringify(dataField));
-                        wasHeldDown = true;
-                    }, 500);
-                    zeroScore = setTimeout(() => {
-                        manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
-                        wasHeldDown = true;
-                        toast({
-                            title: `Reset`,
-                            status: 'info',
-                            duration: 1000,
-                            isClosable: true
-                        });
-                    }, 2000);
-                }
-            }}
-            onTouchMove={(event) => {
-                event.preventDefault();
-                setShakeElement(null);
-                clearTimeout(doShake);
-                clearTimeout(zeroScore);
-                wasHeldDown = false;
-                touchIsInside = false;
-            }}
-            onTouchEnd={(event) => {
-                event.preventDefault();
-                if (!wasHeldDown && touchIsInside) {
-                    manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
-                }
-                setShakeElement(null);
-                clearTimeout(doShake);
-                clearTimeout(zeroScore);
-                wasHeldDown = false;
-                touchIsInside = false;
-            }}
-        >
-            {standFormData[`${dataField.row}${dataField.phase}`][dataField.field]}
-        </Center>
-    );
-}
+// function MissedButton({ standFormData, setStandFormData, dataField, manager, max, shakeElement, setShakeElement, mobileFlag, toast }) {
+//     return (
+//         <Center
+//             className={shakeElement === JSON.stringify(dataField) && 'shake'}
+//             userSelect={'none'}
+//             cursor={'pointer'}
+//             fontSize={'25px'}
+//             backgroundColor={'red.400'}
+//             _hover={{ backgroundColor: 'red.500' }}
+//             _active={{ backgroundColor: 'red.600' }}
+//             minW={{ base: '45px', md: '50px', lg: '60px' }}
+//             minH={{ base: '35px', md: '40px', lg: '45px' }}
+//             borderRadius={'10px'}
+//             onMouseDown={() => {
+//                 setShakeElement(null);
+//                 clearTimeout(doShake);
+//                 clearTimeout(zeroScore);
+//                 wasHeldDown = false;
+//                 touchIsInside = false;
+//                 if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
+//                     doShake = setTimeout(() => {
+//                         setShakeElement(JSON.stringify(dataField));
+//                         wasHeldDown = true;
+//                     }, 500);
+//                     zeroScore = setTimeout(() => {
+//                         manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
+//                         wasHeldDown = true;
+//                         toast({
+//                             title: `Reset`,
+//                             status: 'info',
+//                             duration: 1000,
+//                             isClosable: true
+//                         });
+//                     }, 2000);
+//                 }
+//             }}
+//             onMouseOut={(event) => {
+//                 if (mobileFlag) {
+//                     event.preventDefault();
+//                 } else {
+//                     setShakeElement(null);
+//                     clearTimeout(doShake);
+//                     clearTimeout(zeroScore);
+//                     wasHeldDown = false;
+//                     touchIsInside = false;
+//                 }
+//             }}
+//             onMouseUp={() => {
+//                 if (!wasHeldDown) {
+//                     manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
+//                 }
+//                 setShakeElement(null);
+//                 clearTimeout(doShake);
+//                 clearTimeout(zeroScore);
+//                 wasHeldDown = false;
+//                 touchIsInside = false;
+//             }}
+//             onTouchStart={(event) => {
+//                 event.preventDefault();
+//                 setShakeElement(null);
+//                 clearTimeout(doShake);
+//                 clearTimeout(zeroScore);
+//                 wasHeldDown = false;
+//                 touchIsInside = true;
+//                 if (standFormData[`${dataField.row}${dataField.phase}`][dataField.field] > 0) {
+//                     doShake = setTimeout(() => {
+//                         setShakeElement(JSON.stringify(dataField));
+//                         wasHeldDown = true;
+//                     }, 500);
+//                     zeroScore = setTimeout(() => {
+//                         manager.doCommand(ZERO, standFormData, setStandFormData, dataField);
+//                         wasHeldDown = true;
+//                         toast({
+//                             title: `Reset`,
+//                             status: 'info',
+//                             duration: 1000,
+//                             isClosable: true
+//                         });
+//                     }, 2000);
+//                 }
+//             }}
+//             onTouchMove={(event) => {
+//                 event.preventDefault();
+//                 setShakeElement(null);
+//                 clearTimeout(doShake);
+//                 clearTimeout(zeroScore);
+//                 wasHeldDown = false;
+//                 touchIsInside = false;
+//             }}
+//             onTouchEnd={(event) => {
+//                 event.preventDefault();
+//                 if (!wasHeldDown && touchIsInside) {
+//                     manager.doCommand(INCREMENT, standFormData, setStandFormData, dataField, max);
+//                 }
+//                 setShakeElement(null);
+//                 clearTimeout(doShake);
+//                 clearTimeout(zeroScore);
+//                 wasHeldDown = false;
+//                 touchIsInside = false;
+//             }}
+//         >
+//             {standFormData[`${dataField.row}${dataField.phase}`][dataField.field]}
+//         </Center>
+//     );
+// }
 
 export default StandForm;

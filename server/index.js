@@ -66,6 +66,7 @@ serverOptions(app);
 //routes
 app.use('/auth', require('./routes/auth'));
 app.use('/event', require('./routes/event'));
+app.use('/matchForm', require('./routes/matchForm'));
 app.use('/blueAlliance', require('./routes/blueAlliance').router);
 app.use('/matchData', require('./routes/matchData'));
 app.use('/checkTableauPass/:password', async (req, res) => {
