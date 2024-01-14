@@ -9,11 +9,7 @@ router.get('/getCurrentEvent', async (req, res) => {
     }
     try {
         const event = await Event.findOne({ currentEvent: true }).exec();
-        if (!event) {
-            res.sendStatus(204);
-            return;
-        }
-        res.status(200).send(event);
+        res.status(200).json(event);
     } catch (err) {
         res.status(500).send(err);
     }

@@ -50,15 +50,15 @@ function HomePage() {
     useEffect(() => {
         if (user !== 'NoUser') {
             fetchAndCache('/event/getCurrentEvent')
-                .then((response) => {
-                    if (response.status === 204) {
+                .then((response) => response.json())
+                .then((data) => {
+                    if (!data) {
                         throw new Error('There is no event to scout 😔');
                     }
-                    return response.json();
-                })
-                .then((data) => {
-                    setCurrentEvent(data);
-                    fetchTeamInfo(data);
+                    else {
+                        setCurrentEvent(data);
+                        fetchTeamInfo(data)
+                    }
                 })
                 .catch((error) => {
                     setError(error.message);

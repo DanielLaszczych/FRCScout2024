@@ -50,13 +50,15 @@ function PreStandForm() {
 
     useEffect(() => {
         fetchAndCache('/event/getCurrentEvent')
-            .then((response) => {
-                if (response.status === 204) {
+            .then((response) => response.json())
+            .then((data) => {
+                if (!data) {
                     throw new Error('There is no event to scout 😔');
                 }
-                return response.json();
+                else {
+                    setCurrentEvent(data);
+                }
             })
-            .then((data) => setCurrentEvent(data))
             .catch((error) => {
                 setError(error.message);
             });

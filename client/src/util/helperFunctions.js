@@ -102,12 +102,28 @@ export async function fetchAndCache(url) {
     }
 }
 
+export function getValueByRange(inputValue) {
+    // Define your ranges and associated values
+    const ranges = [
+        { min: 0, max: 767, value: 0.85 },
+        { min: 768, max: 991, value: 0.66 },
+        { min: 992, max: 1920, value: 0.5 },
+    ];
+
+    // Find the range for the given input value
+    inputValue = Math.round(inputValue);
+    const selectedRange = ranges.find(range => inputValue >= range.min && inputValue <= range.max);
+
+    // Return the associated value or a default value if no range is found
+    return selectedRange ? selectedRange.value : 0.5;
+}
+
 export function joinStandAndSuperForms(standForms, superForms) {
     let combinedForms = [];
-    for (let i = 0; i < standForms.length; ) {
+    for (let i = 0; i < standForms.length;) {
         let standForm = standForms[i];
         let found = false;
-        for (let j = 0; j < superForms.length; ) {
+        for (let j = 0; j < superForms.length;) {
             let superForm = superForms[j];
             if (standForm.eventKey === superForm.eventKey && standForm.matchNumber === superForm.matchNumber && standForm.station === superForm.station) {
                 let combined = { ...standForm, ...superForm };

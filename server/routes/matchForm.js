@@ -9,7 +9,7 @@ router.get('/getStandForm', async (req, res) => {
     }
     try {
         const matchForm = await MatchForm.findOne(JSON.parse(req.headers.filters)).exec();
-        res.status(200).send(matchForm);
+        res.status(200).json(matchForm);
     } catch (err) {
         res.status(500).send(err);
     }

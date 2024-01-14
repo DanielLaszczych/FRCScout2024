@@ -15,17 +15,17 @@ import {
     Flex,
     HStack,
     IconButton,
-    Image,
     Spinner,
     Text,
     Textarea,
+    VStack,
     useDisclosure,
     useToast
 } from '@chakra-ui/react';
 import { AiOutlineRotateRight } from 'react-icons/ai';
 import { ChevronLeftIcon, ChevronRightIcon, StarIcon } from '@chakra-ui/icons';
 import { MdOutlineDoNotDisturbAlt } from 'react-icons/md';
-import { deepEqual } from '../util/helperFunctions';
+import { deepEqual, getValueByRange } from '../util/helperFunctions';
 import { createCommandManager, INCREMENT, ZERO } from '../util/commandManager';
 import '../stylesheets/standformstyle.css';
 import { matchFormStatus } from '../util/helperConstants';
@@ -39,15 +39,14 @@ let sections = {
     closing: 'Closing'
 };
 let startingPositions = [
-    [210, 330],
-    [228, 180],
-    [228, 20],
-    [80, 20]
+    [65, 50],
+    [110, 190],
+    [65, 330],
+    [65, 500]
 ]; // based on 438 x 438 image
 let preLoadedPieces = [
     { label: 'None', id: uuidv4() },
-    { label: 'Cone', id: uuidv4() },
-    { label: 'Cube', id: uuidv4() }
+    { label: 'Note', id: uuidv4() },
 ];
 let chargeTypesTele = [
     { label: 'No Attempt', id: uuidv4() },
@@ -102,32 +101,8 @@ function StandForm() {
     const [submitting, setSubmitting] = useState(false);
     const [standFormAutoManager] = useState(createCommandManager());
     const [standFormTeleManager] = useState(createCommandManager());
-    const [dimensions, setDimensions] = useState(() => {
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-
-        // Calculate image dimensions based on screen size
-        const maxWidth = viewportWidth * 0.85; // Adjust the multiplier as needed
-        const maxHeight = viewportHeight * 0.85; // Adjust the multiplier as needed
-
-        // Calculate dimensions maintaining aspect ratio
-        let newWidth = 704;
-        let newHeight = 704;
-
-        if (newWidth > maxWidth) {
-            const ratio = maxWidth / newWidth;
-            newWidth = maxWidth;
-            newHeight *= ratio;
-        }
-
-        if (newHeight > maxHeight) {
-            const ratio = maxHeight / newHeight;
-            newHeight = maxHeight;
-            newWidth *= ratio;
-        }
-        console.log({ width: newWidth, height: newHeight });
-        return { width: newWidth, height: newHeight };
-    });
+    const [dimensionRatios, setDimensionRatios] = useState(null);
+    const [fieldImageSrc, setFieldImageSrc] = useState(null);
 
     useEffect(() => {
         if (stationParam.length !== 2 || !/[rb][123]/.test(stationParam)) {
@@ -144,7 +119,6 @@ function StandForm() {
                 setFutureAlly(data);
             })
             .catch((error) => {
-                console.log(error.message);
                 setFutureAlly(false);
             });
     }, [eventKeyParam, matchNumberParam, stationParam, teamNumberParam]);
@@ -173,7 +147,7 @@ function StandForm() {
 
     useEffect(() => {
         // Only fetch stand form data if load response was false
-        if (loadResponse === null || loadResponse) {
+        if (loadResponse === false && standFormData.loading) {
             const headers = {
                 filters: JSON.stringify({
                     eventKey: eventKeyParam,
@@ -188,7 +162,6 @@ function StandForm() {
             })
                 .then((response) => response.json())
                 .then((data) => {
-                    console.log(data);
                     if (!data) {
                         let modified = JSON.parse(JSON.stringify(standFormData));
                         modified.loading = false;
@@ -200,7 +173,7 @@ function StandForm() {
                         setStandFormData(data);
                     }
                 })
-                .catch((error) => setError(error));
+                .catch((error) => setError(error.message));
         }
     }, [loadResponse, eventKeyParam, matchNumberParam, stationParam, standFormData]);
 
@@ -325,6 +298,42 @@ function StandForm() {
         }
         prevStandFormData.current = JSON.parse(JSON.stringify(standFormData));
     }, [standFormData, eventKeyParam, matchNumberParam, stationParam]);
+
+    useEffect(() => {
+        const img = new Image();
+        img.src = BlueField;
+
+        img.onload = () => {
+            setFieldImageSrc(img.src);
+        }
+
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const imgWidth = 704;
+        const imgHeight = 704;
+
+        // Calculate image dimensions based on screen size
+        const maxWidth = viewportWidth * getValueByRange(viewportWidth); // Adjust the multiplier as needed
+        const maxHeight = viewportHeight; // Adjust the multiplier as needed
+
+        // Calculate dimensions maintaining aspect ratio
+        let newWidth = imgWidth;
+        let newHeight = imgHeight;
+
+        if (newWidth > maxWidth) {
+            const ratio = maxWidth / newWidth;
+            newWidth = maxWidth;
+            newHeight *= ratio;
+        }
+
+        if (newHeight > maxHeight) {
+            const ratio = maxHeight / newHeight;
+            newHeight = maxHeight;
+            newWidth *= ratio;
+        }
+
+        setDimensionRatios({ width: newWidth / imgWidth, height: newHeight / imgHeight });
+    }, [])
 
     // useEffect(() => {
     //     let img = new Image();
@@ -528,91 +537,31 @@ function StandForm() {
             case sections.preAuto:
                 return (
                     <Box>
-                        <Box border={'0px solid black'} margin={'0 auto'} position={'relative'}>
-                            {['1', '2', '3'].map((position) => (
-                                <Button position={'absolute'}>{position}</Button>
+                        <Box margin={'0 auto'} width={'fit-content'} position={'relative'} style={{ transform: `rotate(${fieldRotation}deg)`, }}>
+                            {!fieldImageSrc && <Center width={`${704 * dimensionRatios.width}px`} height={`${704 * dimensionRatios.height}px`} pos={'relative'} backgroundColor={'white'} zIndex={2}>
+                                <Spinner />
+                            </Center>}
+                            {['1', '2', '3', '4'].map((position, index) => (
+                                <Button zIndex={1} key={position} position={'absolute'} left={`${startingPositions[index][0] * dimensionRatios.width}px`} top={`${startingPositions[index][1] * dimensionRatios.height}px`} width={`${100 * dimensionRatios.width}px`} height={`${100 * dimensionRatios.height}px`} style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }} onClick={() => setStandFormData({ ...standFormData, startingPosition: position })} colorScheme={standFormData.startingPosition === position ? 'green' : 'gray'}>{position}</Button>
                             ))}
-                            <Image src={BlueField} />
+                            {fieldImageSrc && <img src={fieldImageSrc} style={{ zIndex: 0 }} alt={'Field Map'} />}
                         </Box>
-                        {/* <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 30px 10px'}>
-                            <HStack marginBottom={'10px'} spacing={'auto'}>
-                                <Text fontWeight={'bold'} fontSize={'110%'}>
-                                    Starting Position:
-                                </Text>
-                                <IconButton
-                                    _focus={{ outline: 'none' }}
-                                    onClick={() => setFieldRotationIndex(fieldRotationIndex === 3 ? 0 : fieldRotationIndex + 1)}
-                                    icon={<AiOutlineRotateRight />}
-                                    size='sm'
-                                ></IconButton>
+                        <Center marginTop={'15px'} >
+                            <Button width={'75%'} onClick={() => setStandFormData({ ...standFormData, standStatus: standFormData.standStatus === matchFormStatus.noShow ? null : matchFormStatus.noShow })} colorScheme={standFormData.standStatus === matchFormStatus.noShow ? 'red' : 'gray'}>No Show</Button>
+                        </Center>
+                        <HStack marginTop={'15px'}>
+                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 2}>Preloaded:</Text>
+                            <HStack flex={1 / 2} justifyContent={'center'}>
+                                {preLoadedPieces.map((piece) => (
+                                    <Button key={piece.id} onClick={() => setStandFormData({ ...standFormData, preLoadedPiece: piece.label })} colorScheme={standFormData.preLoadedPiece === piece.label ? 'green' : 'gray'}>{piece.label}</Button>
+                                ))}
                             </HStack>
-                            <Center marginBottom={'25px'}>
-                                {!initialDrawn && <Spinner pos={'absolute'} zIndex={-1}></Spinner>}
-                                <canvas
-                                    width={imageWidth * calculateImageScale(imageWidth)}
-                                    height={imageHeight * calculateImageScale(imageWidth)}
-                                    style={{
-                                        zIndex: 2,
-                                        outline: standFormData.startingPosition.x === null && submitAttempted && !isFollowOrNoShow() ? '4px solid red' : 'none',
-                                        cursor: 'pointer'
-                                    }}
-                                    onClick={(event) => {
-                                        let dimensions = getCanvasDimensions(rotations[fieldRotationIndex]);
-                                        let width = dimensions.width;
-                                        let height = dimensions.height;
-                                        let bounds = event.target.getBoundingClientRect();
-                                        let x = event.clientX - bounds.left;
-                                        let y = event.clientY - bounds.top;
-                                        let scale = calculateImageScale(imageWidth);
-                                        let pointX =
-                                            (x - (width / 2) * scale) * Math.cos(2 * Math.PI - rotations[fieldRotationIndex]) -
-                                            (y - (height / 2) * scale) * Math.sin(2 * Math.PI - rotations[fieldRotationIndex]) +
-                                            (imageWidth / 2) * scale;
-                                        let pointY =
-                                            (x - (width / 2) * scale) * Math.sin(2 * Math.PI - rotations[fieldRotationIndex]) +
-                                            (y - (height / 2) * scale) * Math.cos(2 * Math.PI - rotations[fieldRotationIndex]) +
-                                            (imageHeight / 2) * scale;
-                                        let ctx = offSideCanvas.current.getContext('2d');
-                                        let p = ctx.getImageData(pointX / scale, pointY / scale, 1, 1).data;
-                                        if (p[3] !== 0) {
-                                            //transparent pixel
-                                            setStandFormData({
-                                                ...standFormData,
-                                                startingPosition: { x: pointX / scale, y: pointY / scale }
-                                            });
-                                        }
-                                    }}
-                                    ref={mainCanvas}
-                                ></canvas>
-                                <canvas
-                                    style={{ position: 'absolute', zIndex: 1 }}
-                                    width={imageWidth * calculateImageScale(imageWidth)}
-                                    height={imageHeight * calculateImageScale(imageWidth)}
-                                    ref={secondCanvas}
-                                ></canvas>
-                            </Center>
-                            <Text marginBottom={'2px'} fontWeight={'bold'} fontSize={'110%'}>
-                                Pre-Loaded Piece:
-                            </Text>
-                            <Center>
-                                <Flex flexWrap={'wrap'} justifyContent={'center'}>
-                                    {preLoadedPieces.map((type) => (
-                                        <Button
-                                            outline={standFormData.preLoadedPiece === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
-                                            maxW={'100px'}
-                                            minW={'100px'}
-                                            margin={'8px'}
-                                            key={type.id}
-                                            _focus={{ outline: 'none' }}
-                                            colorScheme={standFormData.preLoadedPiece === type.label ? 'green' : 'gray'}
-                                            onClick={() => setStandFormData({ ...standFormData, preLoadedPiece: type.label })}
-                                        >
-                                            {type.label}
-                                        </Button>
-                                    ))}
-                                </Flex>
-                            </Center>
-                        </Box> */}
+                        </HStack>
+                        <HStack marginTop={'15px'}>
+                            <Button flex={2 / 3} wordBreak={'break-word'} whiteSpace={'none'} onClick={() => setFieldRotation((fieldRotation + 90) % 360)}>Switch Orientation</Button>
+                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>{teamNumberParam}</Text>
+                            <Button flex={2 / 3}>Proceed</Button>
+                        </HStack>
                     </Box>
                 );
             case sections.auto:
@@ -1216,7 +1165,6 @@ function StandForm() {
                                 onClick={() => {
                                     setStandFormDialog(false);
                                     setLoadResponse(true);
-
                                     let matchForm = JSON.parse(localStorage.getItem('StandFormData'));
                                     matchForm.loading = false;
                                     setStandFormData(matchForm);
@@ -1231,7 +1179,7 @@ function StandForm() {
         );
     }
 
-    if (standFormData.loading || futureAlly === null) {
+    if (standFormData.loading || dimensionRatios === null || futureAlly === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -1241,74 +1189,7 @@ function StandForm() {
 
     return (
         <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-            <IconButton
-                position={'absolute'}
-                right={'10px'}
-                top={'95px'}
-                onClick={onAlertOpen}
-                icon={<MdOutlineDoNotDisturbAlt />}
-                colorScheme={standFormData.standStatus === matchFormStatus.noShow ? 'red' : 'black'}
-                variant={standFormData.standStatus === matchFormStatus.noShow ? 'solid' : 'outline'}
-                _focus={{ outline: 'none' }}
-                size='sm'
-            />
             {futureAlly ? <StarIcon position={'absolute'} left={'10px'} top={'95px'} stroke={'black'} viewBox={'-1 -1 26 26'} fontSize={'30px'} color={'yellow.300'} /> : null}
-            <AlertDialog isOpen={isAlertOpen} leastDestructiveRef={cancelAlertRef} onClose={onAlertClose} closeOnEsc={false}>
-                <AlertDialogOverlay>
-                    <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
-                        <AlertDialogHeader color='black' fontSize='lg' fontWeight='bold'>
-                            {(standFormData.standStatus === matchFormStatus.noShow ? 'Unmark' : 'Mark') + ' this team as a no show'}
-                        </AlertDialogHeader>
-                        <AlertDialogBody>{`Make sure the team is ${standFormData.standStatus === matchFormStatus.noShow ? 'on' : 'not on'} the field`}</AlertDialogBody>
-                        <AlertDialogFooter>
-                            <Button ref={cancelAlertRef} onClick={onAlertClose} _focus={{ outline: 'none' }}>
-                                Cancel
-                            </Button>
-                            <Button
-                                _focus={{ outline: 'none' }}
-                                colorScheme={standFormData.standStatus === matchFormStatus.noShow ? 'green' : 'red'}
-                                onClick={() => {
-                                    setStandFormData({ ...standFormData, standStatus: standFormData.standStatus === matchFormStatus.noShow ? null : matchFormStatus.noShow });
-                                    onAlertClose();
-                                }}
-                                ml={3}
-                            >
-                                {standFormData.standStatus === matchFormStatus.noShow ? 'Unmark' : 'Mark'}
-                            </Button>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialogOverlay>
-            </AlertDialog>
-            {/* <Center>
-                <HStack marginBottom={'25px'} spacing={'10px'}>
-                    <IconButton icon={<ChevronLeftIcon />} isDisabled={activeTab === sections.preAuto || activeTab === null} className='slider-button-prev' _focus={{ outline: 'none' }} />
-                    <Text textAlign={'center'} color={submitAttempted && !isFollowOrNoShow() && !validateSections(activeTab) ? 'red' : 'black'} minW={'130px'} fontWeight={'bold'} fontSize={'110%'}>
-                        {activeTab} • {teamNumber}
-                    </Text>
-                    <IconButton icon={<ChevronRightIcon />} className='slider-button-next' _focus={{ outline: 'none' }} />
-                </HStack>
-            </Center> */}
-            {/* <Swiper
-                // install Swiper modules
-                ref={swiper}
-                autoHeight={true}
-                modules={[Navigation]}
-                spaceBetween={50}
-                centeredSlides={true}
-                slidesPerView={'auto'}
-                simulateTouch={false}
-                noSwiping={true}
-                navigation={{ prevEl: '.slider-button-prev', nextEl: '.slider-button-next' }}
-                onSlideChange={(swiper) => {
-                    setActiveTab(Object.values(sections)[swiper.activeIndex]);
-                }}
-            >
-                <SwiperSlide> {renderSection(sections.preAuto)}</SwiperSlide>
-                <SwiperSlide> {renderSection(sections.auto)}</SwiperSlide>
-                <SwiperSlide> {renderSection(sections.teleop)}</SwiperSlide>
-                <SwiperSlide> {renderSection(sections.endGame)}</SwiperSlide>
-                <SwiperSlide> {renderSection(sections.closing)}</SwiperSlide>
-            </Swiper> */}
             {renderSection(activeSection)}
         </Box>
     );
