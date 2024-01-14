@@ -46,7 +46,7 @@ let startingPositions = [
 ]; // based on 438 x 438 image
 let preLoadedPieces = [
     { label: 'None', id: uuidv4() },
-    { label: 'Note', id: uuidv4() },
+    { label: 'Note', id: uuidv4() }
 ];
 let chargeTypesTele = [
     { label: 'No Attempt', id: uuidv4() },
@@ -305,7 +305,7 @@ function StandForm() {
 
         img.onload = () => {
             setFieldImageSrc(img.src);
-        }
+        };
 
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
@@ -333,7 +333,7 @@ function StandForm() {
         }
 
         setDimensionRatios({ width: newWidth / imgWidth, height: newHeight / imgHeight });
-    }, [])
+    }, []);
 
     // useEffect(() => {
     //     let img = new Image();
@@ -537,29 +537,62 @@ function StandForm() {
             case sections.preAuto:
                 return (
                     <Box>
-                        <Box margin={'0 auto'} width={'fit-content'} position={'relative'} style={{ transform: `rotate(${fieldRotation}deg)`, }}>
-                            {!fieldImageSrc && <Center width={`${704 * dimensionRatios.width}px`} height={`${704 * dimensionRatios.height}px`} pos={'relative'} backgroundColor={'white'} zIndex={2}>
-                                <Spinner />
-                            </Center>}
+                        <Box margin={'0 auto'} width={'fit-content'} position={'relative'} style={{ transform: `rotate(${fieldRotation}deg)` }}>
+                            {!fieldImageSrc && (
+                                <Center width={`${704 * dimensionRatios.width}px`} height={`${704 * dimensionRatios.height}px`} pos={'relative'} backgroundColor={'white'} zIndex={2}>
+                                    <Spinner />
+                                </Center>
+                            )}
                             {['1', '2', '3', '4'].map((position, index) => (
-                                <Button zIndex={1} key={position} position={'absolute'} left={`${startingPositions[index][0] * dimensionRatios.width}px`} top={`${startingPositions[index][1] * dimensionRatios.height}px`} width={`${100 * dimensionRatios.width}px`} height={`${100 * dimensionRatios.height}px`} style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }} onClick={() => setStandFormData({ ...standFormData, startingPosition: position })} colorScheme={standFormData.startingPosition === position ? 'green' : 'gray'}>{position}</Button>
+                                <Button
+                                    zIndex={1}
+                                    key={position}
+                                    position={'absolute'}
+                                    left={`${startingPositions[index][0] * dimensionRatios.width}px`}
+                                    top={`${startingPositions[index][1] * dimensionRatios.height}px`}
+                                    width={`${100 * dimensionRatios.width}px`}
+                                    height={`${100 * dimensionRatios.height}px`}
+                                    style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }}
+                                    onClick={() => setStandFormData({ ...standFormData, startingPosition: position })}
+                                    colorScheme={standFormData.startingPosition === position ? 'green' : 'gray'}
+                                >
+                                    {position}
+                                </Button>
                             ))}
                             {fieldImageSrc && <img src={fieldImageSrc} style={{ zIndex: 0 }} alt={'Field Map'} />}
                         </Box>
-                        <Center marginTop={'15px'} >
-                            <Button width={'75%'} onClick={() => setStandFormData({ ...standFormData, standStatus: standFormData.standStatus === matchFormStatus.noShow ? null : matchFormStatus.noShow })} colorScheme={standFormData.standStatus === matchFormStatus.noShow ? 'red' : 'gray'}>No Show</Button>
+                        <Center marginTop={'15px'}>
+                            <Button
+                                width={'75%'}
+                                onClick={() => setStandFormData({ ...standFormData, standStatus: standFormData.standStatus === matchFormStatus.noShow ? null : matchFormStatus.noShow })}
+                                colorScheme={standFormData.standStatus === matchFormStatus.noShow ? 'red' : 'gray'}
+                            >
+                                No Show
+                            </Button>
                         </Center>
                         <HStack marginTop={'15px'}>
-                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 2}>Preloaded:</Text>
+                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 2}>
+                                Preloaded:
+                            </Text>
                             <HStack flex={1 / 2} justifyContent={'center'}>
                                 {preLoadedPieces.map((piece) => (
-                                    <Button key={piece.id} onClick={() => setStandFormData({ ...standFormData, preLoadedPiece: piece.label })} colorScheme={standFormData.preLoadedPiece === piece.label ? 'green' : 'gray'}>{piece.label}</Button>
+                                    <Button
+                                        key={piece.id}
+                                        onClick={() => setStandFormData({ ...standFormData, preLoadedPiece: piece.label })}
+                                        colorScheme={standFormData.preLoadedPiece === piece.label ? 'green' : 'gray'}
+                                    >
+                                        {piece.label}
+                                    </Button>
                                 ))}
                             </HStack>
                         </HStack>
                         <HStack marginTop={'15px'}>
-                            <Button flex={2 / 3} wordBreak={'break-word'} whiteSpace={'none'} onClick={() => setFieldRotation((fieldRotation + 90) % 360)}>Switch Orientation</Button>
-                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>{teamNumberParam}</Text>
+                            <Button flex={2 / 3} wordBreak={'break-word'} whiteSpace={'none'} onClick={() => setFieldRotation((fieldRotation + 90) % 360)}>
+                                Switch Orientation
+                            </Button>
+                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                                {teamNumberParam}
+                            </Text>
                             <Button flex={2 / 3}>Proceed</Button>
                         </HStack>
                     </Box>
