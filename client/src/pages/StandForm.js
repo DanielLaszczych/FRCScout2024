@@ -26,10 +26,13 @@ import { AiOutlineRotateRight } from 'react-icons/ai';
 import { ChevronLeftIcon, ChevronRightIcon, StarIcon } from '@chakra-ui/icons';
 import { MdOutlineDoNotDisturbAlt } from 'react-icons/md';
 import { deepEqual, getValueByRange } from '../util/helperFunctions';
-import { createCommandManager, INCREMENT, ZERO } from '../util/commandManager';
+import { AUTO_PIECE, createCommandManager } from '../util/commandManager';
 import '../stylesheets/standformstyle.css';
 import { matchFormStatus } from '../util/helperConstants';
-import BlueField from '../images/BlueFieldStart.png';
+import PreAutoRedField from '../images/PreAutoRedField.png';
+import PreAutoBlueField from '../images/PreAutoBlueField.png';
+import AutoRedField from '../images/AutoRedField.png';
+import AutoBlueField from '../images/AutoBlueField.png';
 
 let sections = {
     preAuto: 'Pre-Auto',
@@ -39,11 +42,21 @@ let sections = {
     closing: 'Closing'
 };
 let startingPositions = [
-    [65, 50],
-    [110, 190],
-    [65, 330],
-    [65, 500]
-]; // based on 438 x 438 image
+    [28, 35],
+    [60, 118],
+    [28, 200],
+    [28, 300]
+];
+let notePositions = [
+    [31, 21],
+    [31, 103],
+    [31, 185],
+    [336, 0],
+    [336, 90],
+    [336, 185],
+    [336, 280],
+    [336, 370]
+];
 let preLoadedPieces = [
     { label: 'None', id: uuidv4() },
     { label: 'Note', id: uuidv4() }
@@ -55,8 +68,8 @@ let chargeTypesTele = [
     { label: 'Fail', id: uuidv4() }
 ];
 let doResize;
-let imageWidth = 438;
-let imageHeight = 438;
+let imageWidth = 435;
+let imageHeight = 435;
 
 function StandForm() {
     const location = useLocation();
@@ -102,7 +115,9 @@ function StandForm() {
     const [standFormAutoManager] = useState(createCommandManager());
     const [standFormTeleManager] = useState(createCommandManager());
     const [dimensionRatios, setDimensionRatios] = useState(null);
-    const [fieldImageSrc, setFieldImageSrc] = useState(null);
+    const [whitespace, setWhitespace] = useState(null);
+    const [preAutoImageSrc, setPreAutoImageSrc] = useState(null);
+    const [autoImageSrc, setAutoImageSrc] = useState(null);
 
     useEffect(() => {
         if (stationParam.length !== 2 || !/[rb][123]/.test(stationParam)) {
@@ -300,40 +315,62 @@ function StandForm() {
     }, [standFormData, eventKeyParam, matchNumberParam, stationParam]);
 
     useEffect(() => {
-        const img = new Image();
-        img.src = BlueField;
+        const preAutoImg = new Image();
+        const autoImg = new Image();
+        preAutoImg.src = stationParam.charAt(0) === 'r' ? PreAutoRedField : PreAutoBlueField;
+        autoImg.src = stationParam.charAt(0) === 'r' ? AutoRedField : AutoBlueField;
 
-        img.onload = () => {
-            setFieldImageSrc(img.src);
+        preAutoImg.onload = () => {
+            setPreAutoImageSrc(preAutoImg.src);
+        };
+        autoImg.onload = () => {
+            setAutoImageSrc(autoImg.src);
         };
 
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const imgWidth = 704;
-        const imgHeight = 704;
 
         // Calculate image dimensions based on screen size
         const maxWidth = viewportWidth * getValueByRange(viewportWidth); // Adjust the multiplier as needed
-        const maxHeight = viewportHeight; // Adjust the multiplier as needed
+        const maxHeight = (viewportHeight - 100) * 0.7; // Adjust the multiplier as needed
+        console.log({ width: maxWidth, height: maxHeight });
 
-        // Calculate dimensions maintaining aspect ratio
-        let newWidth = imgWidth;
-        let newHeight = imgHeight;
+        const screenAspectRatio = maxWidth / maxHeight;
+        const imageAspectRatio = imageWidth / imageHeight;
 
-        if (newWidth > maxWidth) {
-            const ratio = maxWidth / newWidth;
-            newWidth = maxWidth;
-            newHeight *= ratio;
+        // Calculate the new dimensions to fit the screen while maintaining the aspect ratio
+        let scaledWidth, scaledHeight;
+        if (imageAspectRatio > screenAspectRatio) {
+            // Original image has a wider aspect ratio, so add horizontal whitespace
+            scaledWidth = maxWidth;
+            scaledHeight = maxWidth / imageAspectRatio;
+            const extraHorizontalSpace = maxHeight - scaledHeight;
+            const whitespaceTop = extraHorizontalSpace / 2;
+            const whitespaceBottom = extraHorizontalSpace / 2;
+            setWhitespace({ top: whitespaceTop, bottom: whitespaceBottom, left: 0, right: 0 });
+        } else {
+            // Original image has a taller aspect ratio, so add vertical whitespace
+            scaledHeight = maxHeight;
+            scaledWidth = maxHeight * imageAspectRatio;
+            const extraVerticalSpace = maxWidth - scaledWidth;
+            const whitespaceLeft = extraVerticalSpace / 2;
+            const whitespaceRight = extraVerticalSpace / 2;
+            setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
         }
 
-        if (newHeight > maxHeight) {
-            const ratio = maxHeight / newHeight;
-            newHeight = maxHeight;
-            newWidth *= ratio;
-        }
+        console.log({ newWidth: scaledWidth, newHeight: scaledHeight });
+        setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
+    }, [stationParam]);
 
-        setDimensionRatios({ width: newWidth / imgWidth, height: newHeight / imgHeight });
-    }, []);
+    function getPoint(pointX) {
+        let mirror = 185;
+        if (stationParam.charAt(0) === 'r') {
+            // Calculate mirrored x-coordinate
+            return 2 * mirror - pointX;
+        } else {
+            return pointX;
+        }
+    }
 
     // useEffect(() => {
     //     let img = new Image();
@@ -532,228 +569,176 @@ function StandForm() {
     //     });
     // }
 
+    console.log(whitespace);
+
     function renderSection(section) {
         switch (section) {
             case sections.preAuto:
                 return (
-                    <Box>
-                        <Box margin={'0 auto'} width={'fit-content'} position={'relative'} style={{ transform: `rotate(${fieldRotation}deg)` }}>
-                            {!fieldImageSrc && (
-                                <Center width={`${704 * dimensionRatios.width}px`} height={`${704 * dimensionRatios.height}px`} pos={'relative'} backgroundColor={'white'} zIndex={2}>
+                    <Flex flex={1} flexDirection={'column'}>
+                        <Flex flex={0.7} justifyContent={'center'} alignItems={'center'} position={'relative'} style={{ transform: `rotate(${fieldRotation}deg)` }} backgroundColor={'green'}>
+                            {!preAutoImageSrc && (
+                                <Center width={`${imageWidth * dimensionRatios.width}px`} height={`${imageHeight * dimensionRatios.height}px`} pos={'relative'} backgroundColor={'white'} zIndex={2}>
                                     <Spinner />
                                 </Center>
                             )}
-                            {['1', '2', '3', '4'].map((position, index) => (
+                            {startingPositions.map((position, index) => (
                                 <Button
                                     zIndex={1}
-                                    key={position}
+                                    key={index}
                                     position={'absolute'}
-                                    left={`${startingPositions[index][0] * dimensionRatios.width}px`}
-                                    top={`${startingPositions[index][1] * dimensionRatios.height}px`}
-                                    width={`${100 * dimensionRatios.width}px`}
-                                    height={`${100 * dimensionRatios.height}px`}
+                                    left={`${whitespace.left + getPoint(position[0]) * dimensionRatios.width}px`}
+                                    top={`${whitespace.top + position[1] * dimensionRatios.height}px`}
+                                    width={`${65 * dimensionRatios.width}px`}
+                                    height={`${65 * dimensionRatios.height}px`}
                                     style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }}
-                                    onClick={() => setStandFormData({ ...standFormData, startingPosition: position })}
-                                    colorScheme={standFormData.startingPosition === position ? 'green' : 'gray'}
+                                    onClick={() => setStandFormData({ ...standFormData, startingPosition: index + 1 })}
+                                    colorScheme={standFormData.startingPosition === index + 1 ? 'green' : 'gray'}
                                 >
-                                    {position}
+                                    {index + 1}
                                 </Button>
                             ))}
-                            {fieldImageSrc && <img src={fieldImageSrc} style={{ zIndex: 0 }} alt={'Field Map'} />}
-                        </Box>
-                        <Center marginTop={'15px'}>
-                            <Button
-                                width={'75%'}
-                                onClick={() => setStandFormData({ ...standFormData, standStatus: standFormData.standStatus === matchFormStatus.noShow ? null : matchFormStatus.noShow })}
-                                colorScheme={standFormData.standStatus === matchFormStatus.noShow ? 'red' : 'gray'}
-                            >
-                                No Show
-                            </Button>
-                        </Center>
-                        <HStack marginTop={'15px'}>
-                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 2}>
-                                Preloaded:
-                            </Text>
-                            <HStack flex={1 / 2} justifyContent={'center'}>
-                                {preLoadedPieces.map((piece) => (
-                                    <Button
-                                        key={piece.id}
-                                        onClick={() => setStandFormData({ ...standFormData, preLoadedPiece: piece.label })}
-                                        colorScheme={standFormData.preLoadedPiece === piece.label ? 'green' : 'gray'}
-                                    >
-                                        {piece.label}
-                                    </Button>
-                                ))}
+                            {preAutoImageSrc && <img src={preAutoImageSrc} style={{ zIndex: 0, objectFit: 'contain', height: 'calc((100vh - 100px) * 0.7)' }} alt={'Field Map'} />}
+                        </Flex>
+                        <Flex flex={0.3} flexDirection={'column'} rowGap={'15px'}>
+                            <Center>
+                                <Button
+                                    width={'75%'}
+                                    onClick={() => setStandFormData({ ...standFormData, standStatus: standFormData.standStatus === matchFormStatus.noShow ? null : matchFormStatus.noShow })}
+                                    colorScheme={standFormData.standStatus === matchFormStatus.noShow ? 'red' : 'gray'}
+                                >
+                                    No Show
+                                </Button>
+                            </Center>
+                            <HStack>
+                                <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 2}>
+                                    Preloaded:
+                                </Text>
+                                <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
+                                    {preLoadedPieces.map((piece) => (
+                                        <Button
+                                            key={piece.id}
+                                            onClick={() => setStandFormData({ ...standFormData, preLoadedPiece: piece.label })}
+                                            colorScheme={standFormData.preLoadedPiece === piece.label ? 'green' : 'gray'}
+                                        >
+                                            {piece.label}
+                                        </Button>
+                                    ))}
+                                </HStack>
                             </HStack>
-                        </HStack>
-                        <HStack marginTop={'15px'}>
-                            <Button flex={2 / 3} wordBreak={'break-word'} whiteSpace={'none'} onClick={() => setFieldRotation((fieldRotation + 90) % 360)}>
-                                Switch Orientation
-                            </Button>
-                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
-                                {teamNumberParam}
-                            </Text>
-                            <Button flex={2 / 3}>Proceed</Button>
-                        </HStack>
-                    </Box>
+                            <HStack>
+                                <Button flex={2 / 3} wordBreak={'break-word'} whiteSpace={'none'} onClick={() => setFieldRotation((fieldRotation + 90) % 360)}>
+                                    Switch Orientation
+                                </Button>
+                                <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                                    {teamNumberParam}
+                                </Text>
+                                <Button flex={2 / 3} onClick={() => setActiveSection(sections.auto)}>
+                                    Proceed
+                                </Button>
+                            </HStack>
+                        </Flex>
+                    </Flex>
                 );
             case sections.auto:
                 return (
-                    <Box minH={'calc(100vh - 200px)'}>
-                        <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} margin={'10px 10px 30px 10px'}>
-                            <Center marginTop={'10px'} marginBottom={'10px'}>
-                                <HStack spacing={'50px'}>
-                                    <Button
-                                        outline={'none'}
-                                        _focus={{ outline: 'none' }}
-                                        colorScheme={'gray'}
-                                        onClick={() => standFormAutoManager.undo(standFormData)}
-                                        isDisabled={standFormAutoManager.getPosition() === 0}
-                                    >
-                                        Undo
-                                    </Button>
-                                    <Button
-                                        outline={'none'}
-                                        _focus={{ outline: 'none' }}
-                                        colorScheme={'gray'}
-                                        onClick={() => standFormAutoManager.redo(standFormData)}
-                                        isDisabled={standFormAutoManager.getPosition() === standFormAutoManager.getHistoryLength() - 1}
-                                    >
-                                        Redo
-                                    </Button>
-                                </HStack>
-                            </Center>
-
-                            {/* {['top', 'middle', 'bottom'].map((row) => (
-                                <React.Fragment key={'auto' + row}>
-                                    <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
-                                        {row.charAt(0).toUpperCase() + row.slice(1)} Row:
-                                    </Text>
-                                    <Center marginBottom={'20px'}>
-                                        <HStack spacing={'0px'} columnGap={'20px'} position={'relative'}>
-                                            <Box position={'absolute'} left={'-33%'} top={0}>
-                                                <MissedButton
-                                                    standFormData={standFormData}
-                                                    setStandFormData={setStandFormData}
-                                                    dataField={{ row: row, phase: 'Auto', field: 'coneMissed' }}
-                                                    manager={standFormAutoManager}
-                                                    max={Infinity}
-                                                    shakeElement={shakeElement}
-                                                    setShakeElement={setShakeElement}
-                                                    mobileFlag={mobileFlag}
-                                                    toast={toast}
-                                                />
-                                            </Box>
-                                            <ScoringButton
-                                                type={'Cone'}
-                                                standFormData={standFormData}
-                                                setStandFormData={setStandFormData}
-                                                dataField={{ row: row, phase: 'Auto', field: 'coneScored' }}
-                                                manager={standFormAutoManager}
-                                                max={row === 'bottom' ? 9 : 6}
-                                                shakeElement={shakeElement}
-                                                setShakeElement={setShakeElement}
-                                                mobileFlag={mobileFlag}
-                                                toast={toast}
-                                            />
-                                            <ScoringButton
-                                                type={'Cube'}
-                                                standFormData={standFormData}
-                                                setStandFormData={setStandFormData}
-                                                dataField={{ row: row, phase: 'Auto', field: 'cubeScored' }}
-                                                manager={standFormAutoManager}
-                                                max={row === 'bottom' ? 9 : 3}
-                                                shakeElement={shakeElement}
-                                                setShakeElement={setShakeElement}
-                                                mobileFlag={mobileFlag}
-                                                toast={toast}
-                                            />
-                                            <Box position={'absolute'} right={'-33%'} top={0}>
-                                                <MissedButton
-                                                    standFormData={standFormData}
-                                                    setStandFormData={setStandFormData}
-                                                    dataField={{ row: row, phase: 'Auto', field: 'cubeMissed' }}
-                                                    manager={standFormAutoManager}
-                                                    max={Infinity}
-                                                    shakeElement={shakeElement}
-                                                    setShakeElement={setShakeElement}
-                                                    mobileFlag={mobileFlag}
-                                                    toast={toast}
-                                                />
-                                            </Box>
-                                        </HStack>
-                                    </Center>
-                                </React.Fragment>
-                            ))} */}
-                            <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
-                                Mobility (Cross Community):
-                            </Text>
-                            <HStack marginBottom={'20px'} marginLeft={'25px'} spacing={'30px'}>
+                    <Flex flex={1} flexDirection={'column'}>
+                        <Flex flex={0.1} flexDir={'column'} position={'relative'} backgroundColor={'red'} justifyContent={'center'}>
+                            <HStack justifyContent={'center'} gap={'30px'} width={'100%'}>
                                 <Button
-                                    outline={standFormData.crossCommunity === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    outline={'none'}
                                     _focus={{ outline: 'none' }}
-                                    colorScheme={standFormData.crossCommunity === true ? 'green' : 'gray'}
-                                    onClick={() => setStandFormData({ ...standFormData, crossCommunity: true })}
+                                    colorScheme={'gray'}
+                                    onClick={() => standFormAutoManager.undo(standFormData)}
+                                    isDisabled={standFormAutoManager.getPosition() === 0}
+                                    width={'40%'}
+                                    whiteSpace={'pre-line'}
                                 >
-                                    Yes
+                                    {standFormAutoManager.getPosition() === 0 ? 'Undo' : `Undo\n${standFormAutoManager.getUndoNode()}`}
                                 </Button>
                                 <Button
-                                    outline={standFormData.crossCommunity === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    outline={'none'}
                                     _focus={{ outline: 'none' }}
-                                    colorScheme={standFormData.crossCommunity === false ? 'green' : 'gray'}
-                                    onClick={() => setStandFormData({ ...standFormData, crossCommunity: false })}
+                                    colorScheme={'gray'}
+                                    onClick={() => standFormAutoManager.redo(standFormData)}
+                                    isDisabled={standFormAutoManager.getPosition() === standFormAutoManager.getHistoryLength() - 1}
+                                    width={'40%'}
+                                    whiteSpace={'pre-line'}
                                 >
-                                    No
+                                    {standFormAutoManager.getPosition() === standFormAutoManager.getHistoryLength() - 1 ? 'Redo' : `Redo\n${standFormAutoManager.getRedoNote()}`}
                                 </Button>
                             </HStack>
-                            <Text marginBottom={'2px'} fontWeight={'bold'} fontSize={'110%'}>
-                                Charge:
+                            <Text
+                                fontWeight={'bold'}
+                                fontSize={'larger'}
+                                position={whitespace?.top > 0 ? 'absolute' : 'relative'}
+                                bottom={whitespace?.top > 0 ? 28.8 * -0.5 + whitespace.top * -0.5 : `-${(85.3 * 0.5 - 28.8) * 0.5}px`}
+                                backgroundColor={'green'}
+                                zIndex={2}
+                                width={'100%'}
+                                textAlign={'center'}
+                            >
+                                Intake
                             </Text>
-                            {/* <Center>
-                                <Flex flexWrap={'wrap'} justifyContent={'center'} marginBottom={['Dock', 'Fail'].includes(standFormData.chargeAuto) ? 'calc(25px - 8px)' : '0px'}>
-                                    {chargeTypesAuto.map((type) => (
+                        </Flex>
+                        <Flex backgroundColor={'yellow'} flex={0.7} justifyContent={'center'} alignItems={'center'} position={'relative'} style={{ transform: `rotate(${fieldRotation}deg)` }}>
+                            {!autoImageSrc && (
+                                <Center width={`${imageWidth * dimensionRatios.width}px`} height={`${imageHeight * dimensionRatios.height}px`} pos={'relative'} backgroundColor={'white'} zIndex={2}>
+                                    <Spinner />
+                                </Center>
+                            )}
+                            {notePositions.map((position, index) => (
+                                <Button
+                                    zIndex={1}
+                                    key={index}
+                                    position={'absolute'}
+                                    left={`${whitespace.left + getPoint(position[0]) * dimensionRatios.width}px`}
+                                    top={`${whitespace.top + position[1] * dimensionRatios.height}px`}
+                                    width={`${65 * dimensionRatios.width}px`}
+                                    height={`${65 * dimensionRatios.height}px`}
+                                    style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }}
+                                    onClick={() => standFormAutoManager.doCommand(AUTO_PIECE, standFormData, setStandFormData, index + 1)}
+                                    isDisabled={standFormData.autoTimeline.some((element) => element.piece === index + 1)}
+                                    _disabled={{ backgroundColor: '#FAF089', _hover: { backgroundColor: '#FAF089' }, cursor: 'default' }}
+                                >
+                                    {index + 1}
+                                </Button>
+                            ))}
+                            {autoImageSrc && <img src={autoImageSrc} style={{ zIndex: 0, objectFit: 'contain', height: 'calc((100vh - 100px) * 0.7)' }} alt={'Field Map'} />}
+                        </Flex>
+                        <Flex flex={0.2} flexDirection={'column'} rowGap={'15px'}>
+                            <HStack>
+                                <Text fontWeight={'bold'} textAlign={'center'} flex={1 / 2}>
+                                    Left starting zone:
+                                </Text>
+                                <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
+                                    {[
+                                        { label: 'Yes', value: true },
+                                        { label: 'No', value: false }
+                                    ].map((element) => (
                                         <Button
-                                            outline={standFormData.chargeAuto === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
-                                            maxW={'100px'}
-                                            minW={'100px'}
-                                            margin={'8px'}
-                                            key={type.id}
-                                            _focus={{ outline: 'none' }}
-                                            colorScheme={standFormData.chargeAuto === type.label ? 'green' : 'gray'}
-                                            onClick={() => setStandFormData({ ...standFormData, chargeAuto: type.label })}
+                                            key={element.label}
+                                            onClick={() => setStandFormData({ ...standFormData, leaveStart: element.value })}
+                                            colorScheme={standFormData.leaveStart === element.value ? 'green' : 'gray'}
                                         >
-                                            {type.label}
+                                            {element.label}
                                         </Button>
                                     ))}
-                                </Flex>
-                            </Center> */}
-                            {['Dock', 'Fail'].includes(standFormData.chargeAuto) && (
-                                <React.Fragment>
-                                    <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
-                                        Charge Comment:
-                                    </Text>
-                                    <Center marginBottom={'8px'}>
-                                        <Textarea
-                                            isInvalid={submitAttempted && standFormData.autoChargeComment.trim() === ''}
-                                            _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
-                                            onChange={(event) => setStandFormData({ ...standFormData, autoChargeComment: event.target.value })}
-                                            value={standFormData.autoChargeComment}
-                                            placeholder={(() => {
-                                                switch (standFormData.chargeAuto) {
-                                                    case 'Dock':
-                                                        return 'Why was the robot not able to engage?';
-                                                    case 'Fail':
-                                                    default:
-                                                        return 'How did the robot fail?';
-                                                }
-                                            })()}
-                                            w={'85%'}
-                                        ></Textarea>
-                                    </Center>
-                                </React.Fragment>
-                            )}
-                        </Box>
-                    </Box>
+                                </HStack>
+                            </HStack>
+                            <HStack>
+                                <Button flex={2 / 3} onClick={() => setActiveSection(sections.preAuto)}>
+                                    Go back
+                                </Button>
+                                <Text fontWeight={'bold'} fontSize={'large'} textAlign={'center'} flex={1 / 3}>
+                                    {teamNumberParam}
+                                </Text>
+                                <Button flex={2 / 3} onClick={() => setActiveSection(sections.teleop)}>
+                                    Proceed
+                                </Button>
+                            </HStack>
+                        </Flex>
+                    </Flex>
                 );
             case sections.teleop:
                 return (
@@ -1212,7 +1197,7 @@ function StandForm() {
         );
     }
 
-    if (standFormData.loading || dimensionRatios === null || futureAlly === null) {
+    if (standFormData.loading || whitespace === null || dimensionRatios === null || futureAlly === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -1221,10 +1206,10 @@ function StandForm() {
     }
 
     return (
-        <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-            {futureAlly ? <StarIcon position={'absolute'} left={'10px'} top={'95px'} stroke={'black'} viewBox={'-1 -1 26 26'} fontSize={'30px'} color={'yellow.300'} /> : null}
+        <Flex margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }} height={'calc(100vh - 100px)'}>
+            {/* {futureAlly ? <StarIcon position={'absolute'} left={'10px'} top={'95px'} stroke={'black'} viewBox={'-1 -1 26 26'} fontSize={'30px'} color={'yellow.300'} /> : null} */}
             {renderSection(activeSection)}
-        </Box>
+        </Flex>
     );
 }
 

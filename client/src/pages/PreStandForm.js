@@ -54,8 +54,7 @@ function PreStandForm() {
             .then((data) => {
                 if (!data) {
                     throw new Error('There is no event to scout 😔');
-                }
-                else {
+                } else {
                     setCurrentEvent(data);
                 }
             })

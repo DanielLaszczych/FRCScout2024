@@ -1,44 +1,73 @@
-const createIncrementCommand = (target, setTarget, field, max) => {
-    const previousCount = target[`${field.row}${field.phase}`][field.field];
+// const createIncrementCommand = (target, setTarget, field, max) => {
+//     const previousCount = target[`${field.row}${field.phase}`][field.field];
+//     return {
+//         execute(target) {
+//             let newTarget = { ...target };
+//             let value = newTarget[`${field.row}${field.phase}`][field.field];
+//             newTarget[`${field.row}${field.phase}`][field.field] = Math.min(value + 1, max);
+//             setTarget(newTarget);
+//         },
+//         undo(target) {
+//             let newTarget = { ...target };
+//             newTarget[`${field.row}${field.phase}`][field.field] = previousCount;
+//             setTarget(newTarget);
+//         },
+//     };
+// };
 
+// const createZeroCommand = (target, setTarget, field) => {
+//     const previousCount = target[`${field.row}${field.phase}`][field.field];
+
+//     return {
+//         execute(target) {
+//             let newTarget = { ...target };
+//             newTarget[`${field.row}${field.phase}`][field.field] = 0;
+//             setTarget(newTarget);
+//         },
+//         undo(target) {
+//             let newTarget = { ...target };
+//             newTarget[`${field.row}${field.phase}`][field.field] = previousCount;
+//             setTarget(newTarget);
+//         },
+//     };
+// };
+
+const createAutoPieceCommand = (setData, piece) => {
     return {
-        execute(target) {
-            let newTarget = { ...target };
-            let value = newTarget[`${field.row}${field.phase}`][field.field];
-            newTarget[`${field.row}${field.phase}`][field.field] = Math.min(value + 1, max);
-            setTarget(newTarget);
+        execute(data) {
+            let newData = { ...data };
+            newData.autoTimeline.push({ piece: piece, scored: null });
+            setData(newData);
         },
-        undo(target) {
-            let newTarget = { ...target };
-            newTarget[`${field.row}${field.phase}`][field.field] = previousCount;
-            setTarget(newTarget);
-        },
+        undo(data) {
+            let newData = { ...data };
+            newData.autoTimeline.pop();
+            setData(newData);
+        }
     };
 };
 
-const createZeroCommand = (target, setTarget, field) => {
-    const previousCount = target[`${field.row}${field.phase}`][field.field];
-
+const createAutoScoreCommand = (setData, location) => {
     return {
-        execute(target) {
-            let newTarget = { ...target };
-            newTarget[`${field.row}${field.phase}`][field.field] = 0;
-            setTarget(newTarget);
+        execute(data) {
+            let newData = { ...data };
+            newData.autoTimeline[newData.autoTimeline.length - 1].scored = location;
+            setData(newData);
         },
-        undo(target) {
-            let newTarget = { ...target };
-            newTarget[`${field.row}${field.phase}`][field.field] = previousCount;
-            setTarget(newTarget);
-        },
+        undo(data) {
+            let newData = { ...data };
+            newData.autoTimeline[newData.autoTimeline.length - 1].scored = null;
+            setData(newData);
+        }
     };
 };
 
-export const INCREMENT = 'INCREMENT';
-export const ZERO = 'ZERO';
+export const AUTO_PIECE = 'AUTO PIECE';
+export const AUTO_SCORE = 'AUTO SCORE';
 
 const commands = {
-    [INCREMENT]: createIncrementCommand,
-    [ZERO]: createZeroCommand,
+    [AUTO_PIECE]: createAutoPieceCommand,
+    [AUTO_SCORE]: createAutoScoreCommand
 };
 
 export const createCommandManager = () => {
@@ -54,38 +83,48 @@ export const createCommandManager = () => {
             return history.length;
         },
 
-        doCommand(commandType, target, setTarget, field, max = null) {
+        getUndoNode() {
+            return history[position].note;
+        },
+
+        getRedoNote() {
+            return history[position + 1].note;
+        },
+
+        doCommand(commandType, data, setData, value) {
             if (position < history.length - 1) {
                 history = history.slice(0, position + 1);
             }
 
-            if (commandType === INCREMENT) {
-                if (target[`${field.row}${field.phase}`][field.field] < max) {
-                    const concreteCommand = commands[INCREMENT](target, setTarget, field, max);
-                    history.push(concreteCommand);
-                    position += 1;
-                    concreteCommand.execute(target);
-                }
-            } else if (commandType === ZERO) {
-                const concreteCommand = commands[ZERO](target, setTarget, field);
-                history.push(concreteCommand);
-                position += 1;
-                concreteCommand.execute(target);
+            const concreteCommand = commands[commandType](setData, value);
+            let note = null;
+            switch (commandType) {
+                case AUTO_PIECE:
+                    note = `Note ${value}`;
+                    break;
+                case AUTO_SCORE:
+                    note = '123';
+                    break;
+                default:
+                    note = '';
             }
+            history.push({ command: concreteCommand, note: note });
+            position += 1;
+            concreteCommand.execute(data);
         },
 
-        undo(target) {
+        undo(data) {
             if (position > 0) {
-                history[position].undo(target);
+                history[position].command.undo(data);
                 position -= 1;
             }
         },
 
-        redo(target) {
+        redo(data) {
             if (position < history.length - 1) {
                 position += 1;
-                history[position].execute(target);
+                history[position].command.execute(data);
             }
-        },
+        }
     };
 };
