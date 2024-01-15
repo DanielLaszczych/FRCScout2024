@@ -643,7 +643,7 @@ function StandForm() {
             case sections.auto:
                 return (
                     <Flex flex={1} flexDirection={'column'}>
-                        <Flex flex={0.1} flexDir={'column'} position={'relative'} backgroundColor={'red'} justifyContent={'center'}>
+                        <Flex flex={0.1} flexDir={'column'} position={'relative'} justifyContent={'center'}>
                             <HStack justifyContent={'center'} gap={'30px'} width={'100%'}>
                                 <Button
                                     outline={'none'}
@@ -672,7 +672,11 @@ function StandForm() {
                                 fontWeight={'bold'}
                                 fontSize={'larger'}
                                 position={whitespace?.top > 0 ? 'absolute' : 'relative'}
-                                bottom={whitespace?.top > 0 ? 28.8 * -0.5 + whitespace.top * -0.5 : `-${(85.3 * 0.5 - 28.8) * 0.5}px`}
+                                top={
+                                    whitespace?.top > 0
+                                        ? ((window.innerHeight - 100) * 0.1 - 40) * 0.5 + 40 + ((((window.innerHeight - 100) * 0.1 - 40) * 0.5 + whitespace.top) * 0.5 - 28.8 * 0.5)
+                                        : ((window.innerHeight - 100) * 0.1 - 68.8) * 0.25
+                                }
                                 backgroundColor={'green'}
                                 zIndex={2}
                                 width={'100%'}
@@ -706,7 +710,7 @@ function StandForm() {
                             ))}
                             {autoImageSrc && <img src={autoImageSrc} style={{ zIndex: 0, objectFit: 'contain', height: 'calc((100vh - 100px) * 0.7)' }} alt={'Field Map'} />}
                         </Flex>
-                        <Flex flex={0.2} flexDirection={'column'} rowGap={'15px'}>
+                        <Flex backgroundColor={'red'} flex={0.2} flexDirection={'column'} rowGap={'15px'} zIndex={2} top={whitespace?.bottom > 0 ? -whitespace.bottom + 25 : 0} pos={'relative'}>
                             <HStack>
                                 <Text fontWeight={'bold'} textAlign={'center'} flex={1 / 2}>
                                     Left starting zone:
@@ -730,7 +734,7 @@ function StandForm() {
                                 <Button flex={2 / 3} onClick={() => setActiveSection(sections.preAuto)}>
                                     Go back
                                 </Button>
-                                <Text fontWeight={'bold'} fontSize={'large'} textAlign={'center'} flex={1 / 3}>
+                                <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
                                     {teamNumberParam}
                                 </Text>
                                 <Button flex={2 / 3} onClick={() => setActiveSection(sections.teleop)}>
