@@ -1,6 +1,42 @@
 const { model, Schema } = require('mongoose');
 const { matchFormStatus } = require('../util/helperConstants');
 
+const autoTimelineSchema = new Schema({
+    piece: {
+        type: Number
+    },
+    scored: {
+        type: String
+    }
+});
+
+const teleopSchema = new Schema({
+    groundIntake: {
+        type: Number
+    },
+    sourceIntake: {
+        type: Number
+    },
+    ampScore: {
+        type: Number
+    },
+    speakerScore: {
+        type: Number
+    },
+    ampMiss: {
+        type: Number
+    },
+    speakerMiss: {
+        type: Number
+    },
+    ferry: {
+        type: Number
+    },
+    trap: {
+        type: Number
+    }
+});
+
 const matchFormSchema = new Schema({
     eventKey: {
         type: String,
@@ -25,31 +61,27 @@ const matchFormSchema = new Schema({
         type: Number
     },
     preLoadedPiece: {
-        type: String,
-        required: true
+        type: String
     },
     leaveStart: {
         type: Boolean
     },
-    ampAuto: {
-        type: Number
-    },
-    speakerAuto: {
-        type: Number
-    },
     autoTimeline: {
-        type: [String]
+        type: [autoTimelineSchema]
     },
-    ampTele: {
+    teleopGP: {
+        type: teleopSchema
+    },
+    wasDefended: {
+        type: Boolean
+    },
+    defenseRating: {
         type: Number
     },
-    speakerTele: {
+    defenseAllocation: {
         type: Number
     },
-    trap: {
-        type: Number
-    },
-    stage: {
+    climb: {
         type: String
     },
     loseCommunication: {
@@ -81,12 +113,6 @@ const matchFormSchema = new Schema({
     allianceNumbers: {
         type: [Number],
         default: [0, 0, 0]
-    },
-    defenseRating: {
-        type: Number
-    },
-    defenseAllocation: {
-        type: Number
     },
     quickness: {
         type: Number

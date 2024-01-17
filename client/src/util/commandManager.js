@@ -1,37 +1,3 @@
-// const createIncrementCommand = (target, setTarget, field, max) => {
-//     const previousCount = target[`${field.row}${field.phase}`][field.field];
-//     return {
-//         execute(target) {
-//             let newTarget = { ...target };
-//             let value = newTarget[`${field.row}${field.phase}`][field.field];
-//             newTarget[`${field.row}${field.phase}`][field.field] = Math.min(value + 1, max);
-//             setTarget(newTarget);
-//         },
-//         undo(target) {
-//             let newTarget = { ...target };
-//             newTarget[`${field.row}${field.phase}`][field.field] = previousCount;
-//             setTarget(newTarget);
-//         },
-//     };
-// };
-
-// const createZeroCommand = (target, setTarget, field) => {
-//     const previousCount = target[`${field.row}${field.phase}`][field.field];
-
-//     return {
-//         execute(target) {
-//             let newTarget = { ...target };
-//             newTarget[`${field.row}${field.phase}`][field.field] = 0;
-//             setTarget(newTarget);
-//         },
-//         undo(target) {
-//             let newTarget = { ...target };
-//             newTarget[`${field.row}${field.phase}`][field.field] = previousCount;
-//             setTarget(newTarget);
-//         },
-//     };
-// };
-
 const createAutoPieceCommand = (setData, piece) => {
     return {
         execute(data) {
@@ -62,12 +28,29 @@ const createAutoScoreCommand = (setData, location) => {
     };
 };
 
+const createTeleopIncrementCommand = (setData, field) => {
+    return {
+        execute(data) {
+            let newData = { ...data };
+            newData['teleopGP'][field] += 1;
+            setData(newData);
+        },
+        undo(data) {
+            let newData = { ...data };
+            newData['teleopGP'][field] -= 1;
+            setData(newData);
+        }
+    };
+};
+
 export const AUTO_PIECE = 'AUTO PIECE';
 export const AUTO_SCORE = 'AUTO SCORE';
+export const TELEOP_INCREMENT = 'INCREMENT';
 
 const commands = {
     [AUTO_PIECE]: createAutoPieceCommand,
-    [AUTO_SCORE]: createAutoScoreCommand
+    [AUTO_SCORE]: createAutoScoreCommand,
+    [TELEOP_INCREMENT]: createTeleopIncrementCommand
 };
 
 export const createCommandManager = () => {
@@ -83,7 +66,7 @@ export const createCommandManager = () => {
             return history.length;
         },
 
-        getUndoNode() {
+        getUndoNote() {
             return history[position].note;
         },
 
@@ -91,7 +74,7 @@ export const createCommandManager = () => {
             return history[position + 1].note;
         },
 
-        doCommand(commandType, data, setData, value) {
+        doCommand(commandType, data, setData, value, optionalNote = null) {
             if (position < history.length - 1) {
                 history = history.slice(0, position + 1);
             }
@@ -103,7 +86,10 @@ export const createCommandManager = () => {
                     note = `Note ${value}`;
                     break;
                 case AUTO_SCORE:
-                    note = '123';
+                    note = optionalNote;
+                    break;
+                case TELEOP_INCREMENT:
+                    note = optionalNote;
                     break;
                 default:
                     note = '';
