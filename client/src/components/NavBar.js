@@ -7,6 +7,7 @@ import logo from '../images/RTLogoNoClaws.png';
 import '../stylesheets/navbarstyle.css';
 import { config } from '../util/helperConstants';
 import { capitalizeFirstLetter } from '../util/helperFunctions';
+import { GlobalContext } from '../context/globalState';
 
 let titleMap = [
     { path: '/', title: 'Home' },
@@ -24,6 +25,8 @@ let titleMap = [
 function NavBar() {
     let curLoc = useLocation();
     const navigate = useNavigate();
+    const { user } = useContext(AuthContext);
+    const { offline, switchModes } = useContext(GlobalContext);
 
     const [teamNumber, setTeamNumber] = useState('');
 
@@ -51,8 +54,6 @@ function NavBar() {
             document.title = title;
         }
     }, [curLoc]);
-
-    const { user } = useContext(AuthContext);
 
     return (
         <Flex position={'sticky'} zIndex={999} top={0} w={'100%'} className='navbar' minHeight={'75px'} marginBottom={'25px'} backgroundColor={'#212529'}>
@@ -224,6 +225,17 @@ function NavBar() {
                                 Log Out
                             </MenuItem>
                         </a>
+                        <MenuItem
+                            backgroundColor={'rgba(33, 37, 41, 0.98)'}
+                            _focus={{ backgroundColor: 'none' }}
+                            _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
+                            fontSize={'15px'}
+                            marginBottom={'0px'}
+                            color={'white'}
+                            onClick={() => switchModes()}
+                        >
+                            {offline ? 'Go Online' : 'Go Offline'}
+                        </MenuItem>
                     </MenuList>
                 </Menu>
             )}

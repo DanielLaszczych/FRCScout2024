@@ -8,13 +8,16 @@ import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 // import theme from './theme';
 
 import { AuthProvider } from './context/auth';
+import { GlobalProvider } from './context/globalState';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
         {/* <ColorModeScript /> */}
         <AuthProvider>
-            <App />
+            <GlobalProvider>
+                <App />
+            </GlobalProvider>
         </AuthProvider>
     </React.StrictMode>
 );

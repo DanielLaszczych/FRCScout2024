@@ -9,20 +9,21 @@ const { matchFormStatus, weekday, rtessIssuesStatus, timeZone } = require('../ut
 
 router.get('/getStandForm', async (req, res) => {
     if (req.isUnauthenticated()) {
-        res.send('Not signed in');
+        res.sendStatus(401);
         return;
     }
     try {
         const matchForm = await MatchForm.findOne(JSON.parse(req.headers.filters)).exec();
         res.status(200).json(matchForm);
     } catch (err) {
-        res.status(500).send(err);
+        res.statusMessage = err.message;
+        res.sendStatus(500);
     }
 });
 
 router.post('/postStandForm', async (req, res) => {
     if (req.isUnauthenticated()) {
-        res.send('Not signed in');
+        res.sendStatus(401);
         return;
     }
     try {
@@ -93,7 +94,8 @@ router.post('/postStandForm', async (req, res) => {
         }
         res.sendStatus(200);
     } catch (err) {
-        res.status(500).send(err);
+        res.statusMessage = err.message;
+        res.sendStatus(500);
     }
 });
 

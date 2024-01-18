@@ -3,16 +3,17 @@ import { Center, ChakraProvider, Spinner, theme } from '@chakra-ui/react';
 import { AuthContext } from './context/auth';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import NavBar from './components/NavBar';
+import { GlobalContext } from './context/globalState';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 // const PitForm = lazy(() => import('./pages/PitForm'));
 // const PitPage = lazy(() => import('./pages/PitsPage'));
-// const AdminPage = lazy(() => import('./pages/AdminPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
 // const MatchesPage = lazy(() => import('./pages/MatchesPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const PreStandForm = lazy(() => import('./pages/PreStandForm'));
 // const WebDataConnector = lazy(() => import('./pages/WebDataConnector'));
-// const AdminErrorPage = lazy(() => import('./pages/AdminErrorPage'));
+const AdminErrorPage = lazy(() => import('./pages/AdminErrorPage'));
 const FailedLoginPage = lazy(() => import('./pages/FailedLoginPage'));
 const StandForm = lazy(() => import('./pages/StandForm'));
 // const PitMapPage = lazy(() => import('./pages/PitMapPage'));
@@ -21,6 +22,7 @@ const StandForm = lazy(() => import('./pages/StandForm'));
 // const RTESSIssuePage = lazy(() => import('./pages/RTESSIssuePage'));
 const PreSuperForm = lazy(() => import('./pages/PreSuperForm'));
 // const SuperForm = lazy(() => import('./pages/SuperForm'));
+const OfflinePage = lazy(() => import('./pages/OfflinePage'));
 
 // import { createBreakpoints } from '@chakra-ui/theme-tools';
 
@@ -38,7 +40,7 @@ const customTheme = {
 
 function App() {
     const { user } = useContext(AuthContext);
-    console.log(user);
+    const { offline } = useContext(GlobalContext);
 
     return user === null ? null : user === 'NoUser' ? (
         <ChakraProvider>
@@ -88,7 +90,7 @@ function App() {
                         ))} */}
                         {/* <Route exact path='/rtessIssue/:id' element={<RTESSIssuePage />} /> */}
                         {/* <Route exact path='/pitMap' element={<PitMapPage />} /> */}
-                        {/* <Route exact path='/admin' element={user.admin ? <AdminPage /> : <AdminErrorPage />} /> */}
+                        <Route exact path='/admin' element={offline ? <OfflinePage /> : user.admin ? <AdminPage /> : <AdminErrorPage />} />
                         {/* <Route exact path='/tableau' element={<WebDataConnector />} /> */}
                         <Route path='*' element={<NotFoundPage />} />
                     </Routes>

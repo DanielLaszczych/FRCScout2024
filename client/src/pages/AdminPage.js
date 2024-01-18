@@ -1,5 +1,4 @@
 import { createRef, React, useEffect, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
 import {
     Button,
     Center,
@@ -33,12 +32,10 @@ import {
     AlertDialogFooter,
     HStack,
     Icon,
-    Tag,
+    Tag
 } from '@chakra-ui/react';
 import { TransitionGroup } from 'react-transition-group';
 import CSSTransition from '../components/CSSTransition';
-import { GET_EVENTS_KEYS_NAMES } from '../graphql/queries';
-import { CREATE_EVENT, REMOVE_EVENT, SET_CURRENT_EVENT } from '../graphql/mutations';
 import { ArrowUpIcon, ChevronDownIcon, EditIcon, SmallAddIcon } from '@chakra-ui/icons';
 import { year } from '../util/helperConstants';
 import '../stylesheets/adminstyle.css';
@@ -55,7 +52,7 @@ const eventTypesArr = [
     { name: 'Week 6', key: uuidv4() },
     { name: 'Championship', key: uuidv4() },
     { name: 'Preseason', key: uuidv4() },
-    { name: 'Offseason', key: uuidv4() },
+    { name: 'Offseason', key: uuidv4() }
 ];
 
 function AdminPage() {
@@ -86,9 +83,9 @@ function AdminPage() {
         { name: 'Week 7', events: [], count: 0, ref: createRef(), id: uuidv4() },
         { name: 'Championship', events: [], count: 0, ref: createRef(), id: uuidv4() },
         { name: 'Preseason', events: [], count: 0, ref: createRef(), id: uuidv4() },
-        { name: 'Offseason', events: [], count: 0, ref: createRef(), id: uuidv4() },
+        { name: 'Offseason', events: [], count: 0, ref: createRef(), id: uuidv4() }
     ]);
-    const [events, setEvents] = useState(false);
+    const [events, setEvents] = useState(null);
     const [mutatingEventKey, setMutatingEventKey] = useState(null);
 
     const listenToScroll = () => {
@@ -123,44 +120,47 @@ function AdminPage() {
         return () => window.removeEventListener('scroll', listenToScroll);
     }, []);
 
-    const { loading: loadingEventKeys, error: eventKeysError } = useQuery(GET_EVENTS_KEYS_NAMES, {
-        fetchPolicy: 'network-only',
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve registered events');
-        },
-        onCompleted({ getEvents: events }) {
-            setEvents(sortRegisteredEvents(events));
-            let currentEvent = events.find((event) => event.currentEvent);
-            if (currentEvent === undefined) {
-                setCurrentEvent({ name: 'None', key: 'None' });
-                setFocusedEvent({ name: 'None', key: 'None' });
-            } else {
-                setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
-                setFocusedEvent({ name: currentEvent.name, key: currentEvent.key });
-            }
-            fetch(`/blueAlliance/getEventsCustom/${year}`)
-                .then((response) => response.json())
-                .then((data) => {
-                    if (!data.Error) {
-                        let filteredData = data.filter((event) => !events.some((e) => e.name === event.name));
-                        setEventTypes((prevEventTypes) =>
-                            prevEventTypes.map((eventType) => {
-                                let events = filterEvents(eventType.name, filteredData);
-                                return { ...eventType, events: events, count: events.length };
-                            })
-                        );
-                        setVersion((prevVersion) => prevVersion + 1);
-                        setSetUpDone(true);
-                    } else {
-                        setError(data.Error);
-                    }
-                })
-                .catch((error) => {
-                    setError(error);
-                });
-        },
-    });
+    useEffect(() => {
+        fetch('/event/getEventsSimple')
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    throw new Error(response.statusText);
+                }
+            })
+            .then((data) => {
+                let events = data;
+                setEvents(sortRegisteredEvents(events));
+                let currentEvent = events.find((event) => event.currentEvent);
+                if (currentEvent === undefined) {
+                    setCurrentEvent({ name: 'None', key: 'None' });
+                    setFocusedEvent({ name: 'None', key: 'None' });
+                } else {
+                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setFocusedEvent({ name: currentEvent.name, key: currentEvent.key });
+                }
+                fetch(`/blueAlliance/getEventsCustom/${year}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (!data.Error) {
+                            let filteredData = data.filter((event) => !events.some((e) => e.name === event.name));
+                            setEventTypes((prevEventTypes) =>
+                                prevEventTypes.map((eventType) => {
+                                    let events = filterEvents(eventType.name, filteredData);
+                                    return { ...eventType, events: events, count: events.length };
+                                })
+                            );
+                            setVersion((prevVersion) => prevVersion + 1);
+                            setSetUpDone(true);
+                        } else {
+                            setError(data.Error);
+                        }
+                    })
+                    .catch((error) => setError(error.message));
+            })
+            .catch((error) => setError(error.message));
+    }, []);
 
     function filterEvents(eventTypeName, events) {
         let filteredEvents = [];
@@ -177,46 +177,100 @@ function AdminPage() {
         return sortBlueAllianceEvents(filteredEvents);
     }
 
-    const [createEvent] = useMutation(CREATE_EVENT, {
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            toast({
-                title: 'Apollo Error',
-                description: 'Event was not able to be added',
-                status: 'error',
-                duration: 3000,
-                isClosable: true,
-            });
-            setMutatingEventKey(null);
-        },
-        onCompleted({ createEvent: createdEvent }) {
-            toast({
-                title: 'Event was Added',
-                status: 'success',
-                duration: 3000,
-                isClosable: true,
-            });
-            setEventTypes((prevEventTypes) =>
-                prevEventTypes.map((eventType) => {
-                    if (createdEvent.eventType === eventType.name) {
-                        let filteredEvents = eventType.events.filter((event) => event.name !== createdEvent.name);
-                        return { ...eventType, events: filteredEvents, count: filteredEvents.length };
-                    } else {
-                        return eventType;
-                    }
-                })
-            );
-            setVersion((prevVersion) => prevVersion + 1);
-            setTimeout(() => {
+    function addEvent(event) {
+        fetch('event/addEvent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(event)
+        })
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    throw new Error(response.statusText);
+                }
+            })
+            .then((data) => {
+                let createdEvent = data;
+                toast({
+                    title: 'Event was Added',
+                    status: 'success',
+                    duration: 3000,
+                    isClosable: true
+                });
+                setEventTypes((prevEventTypes) =>
+                    prevEventTypes.map((eventType) => {
+                        if (createdEvent.eventType === eventType.name) {
+                            let filteredEvents = eventType.events.filter((event) => event.name !== createdEvent.name);
+                            return { ...eventType, events: filteredEvents, count: filteredEvents.length };
+                        } else {
+                            return eventType;
+                        }
+                    })
+                );
+                setVersion((prevVersion) => prevVersion + 1);
+                setTimeout(() => {
+                    setMutatingEventKey(null);
+                    setEvents((prevEvents) => sortRegisteredEvents([...prevEvents, createdEvent]));
+                }, 300);
+                setCustomEventDialog({ open: false });
+                setCustomEventData({ key: '', name: '', eventType: '', focusedEventType: '', startDate: '', endDate: '', teams: [], inputTeam: '' });
+                setSubmitAttempted(false);
+                setSubmitting(false);
+            })
+            .catch((error) => {
+                console.log(error);
+                toast({
+                    title: 'Error',
+                    description: 'Event was not able to be added',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true
+                });
                 setMutatingEventKey(null);
-                setEvents((prevEvents) => sortRegisteredEvents([...prevEvents, createdEvent]));
-            }, 300);
-            setCustomEventDialog({ open: false });
-            setCustomEventData({ key: '', name: '', eventType: '', focusedEventType: '', startDate: '', endDate: '', teams: [], inputTeam: '' });
-            setSubmitAttempted(false);
-            setSubmitting(false);
-        },
-    });
+            });
+    }
+
+    // const [createEvent] = useMutation(CREATE_EVENT, {
+    //     onError(err) {
+    //         console.log(JSON.stringify(err, null, 2));
+    //         toast({
+    //             title: 'Apollo Error',
+    //             description: 'Event was not able to be added',
+    //             status: 'error',
+    //             duration: 3000,
+    //             isClosable: true
+    //         });
+    //         setMutatingEventKey(null);
+    //     },
+    //     onCompleted({ createEvent: createdEvent }) {
+    //         toast({
+    //             title: 'Event was Added',
+    //             status: 'success',
+    //             duration: 3000,
+    //             isClosable: true
+    //         });
+    //         setEventTypes((prevEventTypes) =>
+    //             prevEventTypes.map((eventType) => {
+    //                 if (createdEvent.eventType === eventType.name) {
+    //                     let filteredEvents = eventType.events.filter((event) => event.name !== createdEvent.name);
+    //                     return { ...eventType, events: filteredEvents, count: filteredEvents.length };
+    //                 } else {
+    //                     return eventType;
+    //                 }
+    //             })
+    //         );
+    //         setVersion((prevVersion) => prevVersion + 1);
+    //         setTimeout(() => {
+    //             setMutatingEventKey(null);
+    //             setEvents((prevEvents) => sortRegisteredEvents([...prevEvents, createdEvent]));
+    //         }, 300);
+    //         setCustomEventDialog({ open: false });
+    //         setCustomEventData({ key: '', name: '', eventType: '', focusedEventType: '', startDate: '', endDate: '', teams: [], inputTeam: '' });
+    //         setSubmitAttempted(false);
+    //         setSubmitting(false);
+    //     }
+    // });
 
     async function handleAddEvent(name, year, week, eventType, key, startDate, endDate, teams = [], custom = false) {
         setMutatingEventKey(key);
@@ -233,7 +287,7 @@ function AdminPage() {
                             secondPick: [],
                             thirdPick: [],
                             doNotPick: [],
-                            picked: [],
+                            picked: []
                         };
                         let event = {
                             name: name,
@@ -244,13 +298,9 @@ function AdminPage() {
                             endDate: endDate,
                             key: key,
                             teams: teams,
-                            pickList: pickList,
+                            pickList: pickList
                         };
-                        createEvent({
-                            variables: {
-                                eventInput: event,
-                            },
-                        });
+                        addEvent(event);
                     } else {
                         console.log(data.Error);
                         toast({
@@ -258,7 +308,7 @@ function AdminPage() {
                             description: 'Event was not able to be added',
                             status: 'error',
                             duration: 3000,
-                            isClosable: true,
+                            isClosable: true
                         });
                     }
                 })
@@ -269,7 +319,7 @@ function AdminPage() {
                         description: 'Event was not able to be added',
                         status: 'error',
                         duration: 3000,
-                        isClosable: true,
+                        isClosable: true
                     });
                 });
         } else {
@@ -289,7 +339,7 @@ function AdminPage() {
                 secondPick: [],
                 thirdPick: [],
                 doNotPick: [],
-                picked: [],
+                picked: []
             };
             let event = {
                 name: name,
@@ -301,124 +351,211 @@ function AdminPage() {
                 key: key,
                 teams: teams,
                 pickList: pickList,
-                custom: true,
+                custom: true
             };
-            createEvent({
-                variables: {
-                    eventInput: event,
-                },
-            });
+            addEvent(event);
         }
         setMutatingEventKey(null);
     }
 
-    const [removeEvent] = useMutation(REMOVE_EVENT, {
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            toast({
-                title: 'Apollo Error',
-                description: 'Event was not able to be removed',
-                status: 'error',
-                duration: 3000,
-                isClosable: true,
-            });
-            setMutatingEventKey(null);
-        },
-        onCompleted({ removeEvent: removedEvent }) {
-            toast({
-                title: 'Event was Removed',
-                status: 'success',
-                duration: 3000,
-                isClosable: true,
-            });
-            if (removedEvent.key === currentEvent.key) {
-                setCurrentEvent({ name: 'None', key: 'None' });
-                setFocusedEvent({ name: 'None', key: 'None' });
-            }
-            setEvents((prevEvents) => prevEvents.filter((event) => event.name !== removedEvent.name));
-            setMutatingEventKey(null);
-            if (!removedEvent.custom) {
-                setTimeout(() => {
-                    setEventTypes((prevEventTypes) =>
-                        prevEventTypes.map((eventType) => {
-                            if (removedEvent.eventType === eventType.name) {
-                                let addedEvent = {
-                                    name: removedEvent.name,
-                                    key: removedEvent.key,
-                                    week: removedEvent.week,
-                                    event_type_string: removedEvent.eventType,
-                                    start_date: removedEvent.startDate,
-                                    end_date: removedEvent.endDate,
-                                    year: removedEvent.year,
-                                };
-                                let newEvents = sortBlueAllianceEvents([...eventType.events, addedEvent]);
-                                return { ...eventType, events: newEvents, count: eventType.count + 1 };
-                            } else {
-                                return eventType;
-                            }
-                        })
-                    );
-                    setVersion((prevVersion) => prevVersion + 1);
-                }, 300);
-            }
-        },
-    });
-
     function handleRemoveEvent(key) {
         setMutatingEventKey(key);
-        removeEvent({
-            variables: {
-                key: key,
-            },
-        });
+        fetch('/event/removeEvent', {
+            method: 'POST',
+            headers: { key: key }
+        })
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    throw new Error(response.statusText);
+                }
+            })
+            .then((data) => {
+                let removedEvent = data;
+                toast({
+                    title: 'Event was Removed',
+                    status: 'success',
+                    duration: 3000,
+                    isClosable: true
+                });
+                if (removedEvent.key === currentEvent.key) {
+                    setCurrentEvent({ name: 'None', key: 'None' });
+                    setFocusedEvent({ name: 'None', key: 'None' });
+                }
+                setEvents((prevEvents) => prevEvents.filter((event) => event.name !== removedEvent.name));
+                setMutatingEventKey(null);
+                if (!removedEvent.custom) {
+                    setTimeout(() => {
+                        setEventTypes((prevEventTypes) =>
+                            prevEventTypes.map((eventType) => {
+                                if (removedEvent.eventType === eventType.name) {
+                                    let addedEvent = {
+                                        name: removedEvent.name,
+                                        key: removedEvent.key,
+                                        week: removedEvent.week,
+                                        event_type_string: removedEvent.eventType,
+                                        start_date: removedEvent.startDate,
+                                        end_date: removedEvent.endDate,
+                                        year: removedEvent.year
+                                    };
+                                    let newEvents = sortBlueAllianceEvents([...eventType.events, addedEvent]);
+                                    return { ...eventType, events: newEvents, count: eventType.count + 1 };
+                                } else {
+                                    return eventType;
+                                }
+                            })
+                        );
+                        setVersion((prevVersion) => prevVersion + 1);
+                    }, 300);
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+                toast({
+                    title: 'Error',
+                    description: 'Event was not able to be removed',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true
+                });
+                setMutatingEventKey(null);
+            });
     }
 
-    const [setCurrentEventMutation] = useMutation(SET_CURRENT_EVENT, {
-        onError(err) {
-            if (err.message === 'Error: No current events') {
+    // const [removeEvent] = useMutation(REMOVE_EVENT, {
+    //     onError(err) {
+    //         console.log(JSON.stringify(err, null, 2));
+    //         toast({
+    //             title: 'Apollo Error',
+    //             description: 'Event was not able to be removed',
+    //             status: 'error',
+    //             duration: 3000,
+    //             isClosable: true
+    //         });
+    //         setMutatingEventKey(null);
+    //     },
+    //     onCompleted({ removeEvent: removedEvent }) {
+    //         toast({
+    //             title: 'Event was Removed',
+    //             status: 'success',
+    //             duration: 3000,
+    //             isClosable: true
+    //         });
+    //         if (removedEvent.key === currentEvent.key) {
+    //             setCurrentEvent({ name: 'None', key: 'None' });
+    //             setFocusedEvent({ name: 'None', key: 'None' });
+    //         }
+    //         setEvents((prevEvents) => prevEvents.filter((event) => event.name !== removedEvent.name));
+    //         setMutatingEventKey(null);
+    //         if (!removedEvent.custom) {
+    //             setTimeout(() => {
+    //                 setEventTypes((prevEventTypes) =>
+    //                     prevEventTypes.map((eventType) => {
+    //                         if (removedEvent.eventType === eventType.name) {
+    //                             let addedEvent = {
+    //                                 name: removedEvent.name,
+    //                                 key: removedEvent.key,
+    //                                 week: removedEvent.week,
+    //                                 event_type_string: removedEvent.eventType,
+    //                                 start_date: removedEvent.startDate,
+    //                                 end_date: removedEvent.endDate,
+    //                                 year: removedEvent.year
+    //                             };
+    //                             let newEvents = sortBlueAllianceEvents([...eventType.events, addedEvent]);
+    //                             return { ...eventType, events: newEvents, count: eventType.count + 1 };
+    //                         } else {
+    //                             return eventType;
+    //                         }
+    //                     })
+    //                 );
+    //                 setVersion((prevVersion) => prevVersion + 1);
+    //             }, 300);
+    //         }
+    //     }
+    // });
+
+    function handleSetCurrentEvent(key) {
+        setChangingCurrentEvent(true);
+        fetch('/event/setCurrentEvent', {
+            method: 'POST',
+            headers: { key: key }
+        })
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    throw new Error(response.statusText);
+                }
+            })
+            .then((data) => {
+                let currentEvent = data;
                 toast({
                     title: 'Current Event Changed',
                     status: 'success',
                     duration: 3000,
-                    isClosable: true,
+                    isClosable: true
                 });
-                setCurrentEvent({ name: 'None', key: 'None' });
-                setFocusedEvent({ name: 'None', key: 'None' });
+                if (!currentEvent) {
+                    setCurrentEvent({ name: 'None', key: 'None' });
+                    setFocusedEvent({ name: 'None', key: 'None' });
+                } else {
+                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setFocusedEvent({ name: currentEvent.name, key: currentEvent.key });
+                }
                 setChangingCurrentEvent(false);
-            } else {
-                console.log(JSON.stringify(err, null, 2));
+            })
+            .catch((error) => {
+                console.log(error);
                 toast({
-                    title: 'Apollo Error',
+                    title: 'Error',
                     description: 'Current event was not able to changed',
                     status: 'error',
                     duration: 3000,
-                    isClosable: true,
+                    isClosable: true
                 });
                 setFocusedEvent({ name: currentEvent.name, key: currentEvent.key });
                 setChangingCurrentEvent(false);
-            }
-        },
-        onCompleted({ setCurrentEvent: currentEvent }) {
-            toast({
-                title: 'Current Event Changed',
-                status: 'success',
-                duration: 3000,
-                isClosable: true,
             });
-            setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
-            setFocusedEvent({ name: currentEvent.name, key: currentEvent.key });
-            setChangingCurrentEvent(false);
-        },
-    });
-
-    function handleSetCurrentEvent(key) {
-        setChangingCurrentEvent(true);
-        setCurrentEventMutation({
-            variables: {
-                key: key,
-            },
-        });
     }
+
+    // const [setCurrentEventMutation] = useMutation(SET_CURRENT_EVENT, {
+    //     onError(err) {
+    //         if (err.message === 'Error: No current events') {
+    //             toast({
+    //                 title: 'Current Event Changed',
+    //                 status: 'success',
+    //                 duration: 3000,
+    //                 isClosable: true
+    //             });
+    //             setCurrentEvent({ name: 'None', key: 'None' });
+    //             setFocusedEvent({ name: 'None', key: 'None' });
+    //             setChangingCurrentEvent(false);
+    //         } else {
+    //             console.log(JSON.stringify(err, null, 2));
+    //             toast({
+    //                 title: 'Apollo Error',
+    //                 description: 'Current event was not able to changed',
+    //                 status: 'error',
+    //                 duration: 3000,
+    //                 isClosable: true
+    //             });
+    //             setFocusedEvent({ name: currentEvent.name, key: currentEvent.key });
+    //             setChangingCurrentEvent(false);
+    //         }
+    //     },
+    //     onCompleted({ setCurrentEvent: currentEvent }) {
+    //         toast({
+    //             title: 'Current Event Changed',
+    //             status: 'success',
+    //             duration: 3000,
+    //             isClosable: true
+    //         });
+    //         setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+    //         setFocusedEvent({ name: currentEvent.name, key: currentEvent.key });
+    //         setChangingCurrentEvent(false);
+    //     }
+    // });
 
     if (error) {
         return (
@@ -428,7 +565,7 @@ function AdminPage() {
         );
     }
 
-    if (loadingEventKeys || (eventKeysError && error !== false) || !setupDone) {
+    if (events === null || !setupDone) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -751,7 +888,7 @@ function AdminPage() {
                 <h2 style={{ fontWeight: '500', fontSize: '30px', lineHeight: '1.1', marginBottom: '10px' }}>Current Event: {currentEvent.name}</h2>
                 {changingCurrentEvent ? <Spinner></Spinner> : <IconButton _focus={{ outline: 'none' }} size='sm' icon={<EditIcon />} onClick={onOpen} />}
             </Box>
-            <Box margin='0 auto' marginBottom={'25px'}>
+            <Box margin='0 auto' marginBottom={'15px'}>
                 <Box marginBottom={'10px'}>
                     <h2 style={{ fontWeight: '500', fontSize: '30px', lineHeight: '1.1' }}>
                         Registered Events <small style={{ fontSize: '65%', color: '#777', lineHeight: '1' }}>{events.length} Events</small>
@@ -795,7 +932,7 @@ function AdminPage() {
                         </CSSTransition>
                     ))}
                 </TransitionGroup>
-                <Center marginTop={'15px'} marginBottom={'35px'}>
+                <Center marginTop={'15px'} marginBottom={'0px'}>
                     <Button onClick={() => setCustomEventDialog({ open: true })}>Add Custom Event</Button>
                 </Center>
             </Box>

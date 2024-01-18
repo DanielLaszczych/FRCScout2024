@@ -42,11 +42,11 @@ const matchFormSchema = new Schema({
         type: String,
         required: true
     },
-    station: {
+    matchNumber: {
         type: String,
         required: true
     },
-    matchNumber: {
+    station: {
         type: String,
         required: true
     },

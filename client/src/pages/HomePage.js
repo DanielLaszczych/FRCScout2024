@@ -39,7 +39,6 @@ function HomePage() {
     const [pitFormDialog, setPitFormDialog] = useState(false);
     const [pitTeamNumber, setPitTeamNumber] = useState('');
     const [pitPopoverError, setPitPopoverError] = useState(null);
-    const [fetchingConfirmation, setFetchingConfirmation] = useState(false);
     const [eventInfo, setEventInfo] = useState({ inEvent: null, matchTable: null, teamStatus: null });
     const [isMobile, setIsMobile] = useState(window.innerWidth < 650);
     const [openPitMap, setOpenPitMap] = useState(false);
@@ -50,7 +49,13 @@ function HomePage() {
     useEffect(() => {
         if (user !== 'NoUser') {
             fetchAndCache('/event/getCurrentEvent')
-                .then((response) => response.json())
+                .then((response) => {
+                    if (response.status === 200) {
+                        return response.json();
+                    } else {
+                        throw new Error(response.statusText);
+                    }
+                })
                 .then((data) => {
                     if (!data) {
                         throw new Error('There is no event to scout 😔');
@@ -138,31 +143,11 @@ function HomePage() {
     }
 
     function handlePitFormConfirm() {
-        if (currentEvent.custom) {
+        if (currentEvent.teams.some((team) => team.number === parseInt(pitTeamNumber))) {
             navigate(`/pitForm/${currentEvent.key}/${pitTeamNumber}`);
-            return;
+        } else {
+            setPitPopoverError('This team is not competing at this event');
         }
-        setFetchingConfirmation(true);
-        fetch(`/blueAlliance/team/frc${parseInt(pitTeamNumber)}/events/${year}/simple`)
-            .then((response) => response.json())
-            .then((data) => {
-                if (!data.Error) {
-                    let event = data.find((event) => event.key === currentEvent.key);
-                    if (event === undefined) {
-                        setPitPopoverError('This team is not competing at this event');
-                        setFetchingConfirmation(false);
-                    } else {
-                        navigate(`/pitForm/${currentEvent.key}/${pitTeamNumber}`);
-                    }
-                } else {
-                    setPitPopoverError(data.Error);
-                    setFetchingConfirmation(false);
-                }
-            })
-            .catch((error) => {
-                setPitPopoverError(error.message);
-                setFetchingConfirmation(false);
-            });
     }
 
     function getCurrentMatchString(matchTable) {
@@ -263,7 +248,6 @@ function HomePage() {
                                 setPitFormDialog(false);
                                 setPitTeamNumber('');
                                 setPitPopoverError(null);
-                                setFetchingConfirmation(false);
                             }}
                             motionPreset='slideInBottom'
                         >
@@ -274,7 +258,7 @@ function HomePage() {
                                     }
                                 }}
                                 onKeyDown={(event) => {
-                                    if (event.key === 'Enter' && pitTeamNumber.trim() !== '' && !fetchingConfirmation) {
+                                    if (event.key === 'Enter' && pitTeamNumber.trim() !== '') {
                                         handlePitFormConfirm();
                                     }
                                 }}
@@ -305,19 +289,12 @@ function HomePage() {
                                                 setPitFormDialog(false);
                                                 setPitTeamNumber('');
                                                 setPitPopoverError(null);
-                                                setFetchingConfirmation(false);
                                             }}
                                             _focus={{ outline: 'none' }}
                                         >
                                             Cancel
                                         </Button>
-                                        <Button
-                                            colorScheme='blue'
-                                            ml={3}
-                                            isDisabled={pitTeamNumber.trim() === '' || fetchingConfirmation}
-                                            _focus={{ outline: 'none' }}
-                                            onClick={() => handlePitFormConfirm()}
-                                        >
+                                        <Button colorScheme='blue' ml={3} isDisabled={pitTeamNumber.trim() === ''} _focus={{ outline: 'none' }} onClick={() => handlePitFormConfirm()}>
                                             Confirm
                                         </Button>
                                     </AlertDialogFooter>

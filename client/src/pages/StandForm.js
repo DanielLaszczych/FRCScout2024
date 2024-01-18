@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -34,6 +34,8 @@ import PreAutoRedField from '../images/PreAutoRedField.png';
 import PreAutoBlueField from '../images/PreAutoBlueField.png';
 import AutoRedField from '../images/AutoRedField.png';
 import AutoBlueField from '../images/AutoBlueField.png';
+import QRCode from 'react-qr-code';
+import { GlobalContext } from '../context/globalState';
 
 let sections = {
     preAuto: { main: 'Pre-Auto' },
@@ -111,6 +113,7 @@ function StandForm() {
     const navigate = useNavigate();
     const toast = useToast();
     const { eventKey: eventKeyParam, matchNumber: matchNumberParam, station: stationParam, teamNumber: teamNumberParam } = useParams();
+    const { offline } = useContext(GlobalContext);
 
     const cancelRef = useRef(null);
 
@@ -173,15 +176,19 @@ function StandForm() {
             setError('Invalid team number in the url');
             return;
         }
-        fetch(`/blueAlliance/isFutureAlly/${eventKeyParam}/${teamNumberParam}/${matchNumberParam}/${false}`)
-            .then((response) => response.json())
-            .then((data) => {
-                setFutureAlly(data);
-            })
-            .catch((error) => {
-                setFutureAlly(false);
-            });
-    }, [eventKeyParam, matchNumberParam, stationParam, teamNumberParam]);
+        if (offline) {
+            setFutureAlly(false);
+        } else {
+            fetch(`/blueAlliance/isFutureAlly/${eventKeyParam}/${teamNumberParam}/${matchNumberParam}/${false}`)
+                .then((response) => response.json())
+                .then((data) => {
+                    setFutureAlly(data);
+                })
+                .catch((error) => {
+                    setFutureAlly(false);
+                });
+        }
+    }, [eventKeyParam, matchNumberParam, stationParam, teamNumberParam, offline]);
 
     useEffect(() => {
         if (localStorage.getItem('StandFormData')) {
@@ -206,37 +213,48 @@ function StandForm() {
     }, [eventKeyParam, matchNumberParam, stationParam]);
 
     useEffect(() => {
-        // Only fetch stand form data if load response was false
+        // Only fetch stand form data if load response was false and are online
         if (loadResponse === false && standFormData.loading) {
-            const headers = {
-                filters: JSON.stringify({
-                    eventKey: eventKeyParam,
-                    matchNumber: matchNumberParam,
-                    station: stationParam,
-                    standStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp]
+            if (offline) {
+                let modified = JSON.parse(JSON.stringify(standFormData));
+                modified.loading = false;
+                prevStandFormData.current = modified;
+                setStandFormData(modified);
+            } else {
+                const headers = {
+                    filters: JSON.stringify({
+                        eventKey: eventKeyParam,
+                        matchNumber: matchNumberParam,
+                        station: stationParam,
+                        standStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp]
+                    })
+                };
+                fetch('/matchForm/getStandForm', {
+                    headers: headers
                 })
-            };
-
-            fetch(`/matchForm/getStandForm`, {
-                headers: headers
-            })
-                .then((response) => response.json())
-                .then((data) => {
-                    if (!data) {
-                        let modified = JSON.parse(JSON.stringify(standFormData));
-                        modified.loading = false;
-                        prevStandFormData.current = modified;
-                        setStandFormData(modified);
-                    } else {
-                        console.log(data);
-                        data.loading = false;
-                        prevStandFormData.current = JSON.parse(JSON.stringify(data));
-                        setStandFormData(data);
-                    }
-                })
-                .catch((error) => setError(error.message));
+                    .then((response) => {
+                        if (response.status === 200) {
+                            return response.json();
+                        } else {
+                            throw new Error(response.statusText);
+                        }
+                    })
+                    .then((data) => {
+                        if (!data) {
+                            let modified = JSON.parse(JSON.stringify(standFormData));
+                            modified.loading = false;
+                            prevStandFormData.current = modified;
+                            setStandFormData(modified);
+                        } else {
+                            data.loading = false;
+                            prevStandFormData.current = JSON.parse(JSON.stringify(data));
+                            setStandFormData(data);
+                        }
+                    })
+                    .catch((error) => setError(error.message));
+            }
         }
-    }, [loadResponse, eventKeyParam, matchNumberParam, stationParam, standFormData]);
+    }, [loadResponse, eventKeyParam, matchNumberParam, stationParam, standFormData, offline]);
 
     useEffect(() => {
         if (localStorage.getItem('Field Rotation')) {
@@ -364,6 +382,20 @@ function StandForm() {
         }
     }
 
+    function getQRValue() {
+        return JSON.stringify({
+            eventKey: eventKeyParam,
+            matchNumber: matchNumberParam,
+            station: stationParam,
+            teamNumber: parseInt(teamNumberParam),
+            ...standFormData,
+            defenseAllocation: standFormData.defenseRating === 0 ? 0 : standFormData.defenseAllocation,
+            standComment: standFormData.standComment.trim(),
+            standStatus: standFormData.standStatus || matchFormStatus.complete,
+            standStatusComment: isFollowOrNoShow() ? standFormData.standStatusComment.trim() : ''
+        });
+    }
+
     function submit() {
         setSubmitAttempted(true);
         if (!isFollowOrNoShow()) {
@@ -406,8 +438,8 @@ function StandForm() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 eventKey: eventKeyParam,
-                station: stationParam,
                 matchNumber: matchNumberParam,
+                station: stationParam,
                 teamNumber: parseInt(teamNumberParam),
                 ...standFormData,
                 defenseAllocation: standFormData.defenseRating === 0 ? 0 : standFormData.defenseAllocation,
@@ -434,6 +466,8 @@ function StandForm() {
                         navigate('/');
                     }
                     setSubmitting(false);
+                } else {
+                    throw new Error(response.statusText);
                 }
             })
             .catch((error) => {
@@ -448,118 +482,6 @@ function StandForm() {
                 setSubmitting(false);
             });
     }
-
-    // const [updateStandForm] = useMutation(UPDATE_STANDFORM, {
-    //     onCompleted() {
-    //         toast({
-    //             title: 'Match Form Updated',
-    //             status: 'success',
-    //             duration: 3000,
-    //             isClosable: true
-    //         });
-    //         if (location.state && location.state.previousRoute) {
-    //             if (location.state.previousRoute === 'matches') {
-    //                 navigate('/matches', { state: { scoutingError: location.state.scoutingError } });
-    //             } else if (location.state.previousRoute === 'team') {
-    //                 navigate(`/team/${teamNumber}/stand`);
-    //             }
-    //         } else {
-    //             navigate('/');
-    //         }
-    //         setSubmitting(false);
-    //         localStorage.removeItem('StandFormData');
-    //     },
-    //     onError(err) {
-    //         console.log(JSON.stringify(err, null, 2));
-    //         toast({
-    //             title: 'Apollo Error',
-    //             description: 'Match form could not be updated',
-    //             status: 'error',
-    //             duration: 3000,
-    //             isClosable: true
-    //         });
-    //         setSubmitting(false);
-    //     }
-    // });
-
-    // function submit() {
-    //     setSubmitAttempted(true);
-    //     if (!isFollowOrNoShow()) {
-    //         let toastText = [];
-    //         if (!validPreAuto()) {
-    //             toastText.push('Pre-Auto');
-    //         }
-    //         if (!validAuto()) {
-    //             toastText.push('Auto');
-    //         }
-    //         if (!validTele()) {
-    //             toastText.push('Teleop');
-    //         }
-    //         if (!validEndGame()) {
-    //             toastText.push('End Game');
-    //         }
-    //         if (!validClosing()) {
-    //             toastText.push('Closing');
-    //         }
-    //         if (toastText.length !== 0) {
-    //             toast({
-    //                 title: 'Missing fields at:',
-    //                 description: toastText.join(', '),
-    //                 status: 'error',
-    //                 duration: 2000,
-    //                 isClosable: true
-    //             });
-    //             return;
-    //         }
-    //     } else if (standFormData.standStatusComment.trim() === '') {
-    //         toast({
-    //             title: 'Missing fields',
-    //             description: `Leave a ${standFormData.standStatus.toLowerCase()} comment`,
-    //             status: 'error',
-    //             duration: 3000,
-    //             isClosable: true
-    //         });
-    //         return;
-    //     }
-    //     setSubmitting(true);
-    //     updateStandForm({
-    //         variables: {
-    //             matchFormInput: {
-    //                 eventKey: eventKeyParam,
-    //                 eventName: eventName,
-    //                 station: stationParam,
-    //                 matchNumber: matchNumberParam,
-    //                 teamNumber: parseInt(teamNumber),
-    //                 teamName: teamName,
-    //                 startingPosition: standFormData.startingPosition,
-    //                 preLoadedPiece: standFormData.preLoadedPiece,
-    //                 bottomAuto: standFormData.bottomAuto,
-    //                 middleAuto: standFormData.middleAuto,
-    //                 topAuto: standFormData.topAuto,
-    //                 crossCommunity: standFormData.crossCommunity,
-    //                 chargeAuto: standFormData.chargeAuto,
-    //                 autoChargeComment: standFormData.autoChargeComment,
-    //                 standAutoComment: standFormData.standAutoComment.trim(),
-    //                 bottomTele: standFormData.bottomTele,
-    //                 middleTele: standFormData.middleTele,
-    //                 topTele: standFormData.topTele,
-    //                 chargeTele: standFormData.chargeTele,
-    //                 chargeComment: ['Dock', 'Impaired', 'Fail'].includes(standFormData.chargeTele) ? standFormData.chargeComment.trim() : '',
-    //                 chargeRobotCount: standFormData.chargeTele === 'Dock' || standFormData.chargeTele === 'Engage' ? standFormData.chargeRobotCount : null,
-    //                 impairedCharge: standFormData.impairedCharge,
-    //                 impairedComment: standFormData.impairedCharge ? standFormData.impairedComment.trim() : '',
-    //                 defendedBy: standFormData.defendedBy,
-    //                 loseCommunication: standFormData.loseCommunication,
-    //                 robotBreak: standFormData.robotBreak,
-    //                 yellowCard: standFormData.yellowCard,
-    //                 redCard: standFormData.redCard,
-    //                 standEndComment: standFormData.standStatus === matchFormStatus.noShow ? '' : standFormData.standEndComment.trim(),
-    //                 standStatus: standFormData.standStatus || matchFormStatus.complete,
-    //                 standStatusComment: isFollowOrNoShow() ? standFormData.standStatusComment.trim() : ''
-    //             }
-    //         }
-    //     });
-    // }
 
     function renderSection() {
         switch (activeSection.section) {
@@ -639,6 +561,19 @@ function StandForm() {
                                 <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
                                     {teamNumberParam}
                                 </Text>
+                                {futureAlly ? (
+                                    <StarIcon
+                                        position={'absolute'}
+                                        left={'50%'}
+                                        transform={'translate(-50%, 0%)'}
+                                        zIndex={-1}
+                                        opacity={1}
+                                        // stroke={'black'}
+                                        viewBox={'-1 -1 26 26'}
+                                        fontSize={'60px'}
+                                        color={'yellow.300'}
+                                    />
+                                ) : null}
                                 <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.auto.main, subsection: activeSection.lastAutoSection })}>
                                     To Auto
                                 </Button>
@@ -832,6 +767,19 @@ function StandForm() {
                                 <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
                                     {teamNumberParam}
                                 </Text>
+                                {futureAlly ? (
+                                    <StarIcon
+                                        position={'absolute'}
+                                        left={'50%'}
+                                        transform={'translate(-50%, 0%)'}
+                                        zIndex={-1}
+                                        opacity={1}
+                                        // stroke={'black'}
+                                        viewBox={'-1 -1 26 26'}
+                                        fontSize={'60px'}
+                                        color={'yellow.300'}
+                                    />
+                                ) : null}
                                 <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.teleop.main, subsection: activeSection.lastTeleopSection })}>
                                     To Teleop
                                 </Button>
@@ -1076,6 +1024,19 @@ function StandForm() {
                                 <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
                                     {teamNumberParam}
                                 </Text>
+                                {futureAlly ? (
+                                    <StarIcon
+                                        position={'absolute'}
+                                        left={'50%'}
+                                        transform={'translate(-50%, 0%)'}
+                                        zIndex={-1}
+                                        opacity={1}
+                                        // stroke={'black'}
+                                        viewBox={'-1 -1 26 26'}
+                                        fontSize={'60px'}
+                                        color={'yellow.300'}
+                                    />
+                                ) : null}
                                 <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.endGame.main, subsection: null })}>
                                     To End Game
                                 </Button>
@@ -1236,6 +1197,19 @@ function StandForm() {
                                 <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
                                     {teamNumberParam}
                                 </Text>
+                                {futureAlly ? (
+                                    <StarIcon
+                                        position={'absolute'}
+                                        left={'50%'}
+                                        transform={'translate(-50%, 0%)'}
+                                        zIndex={-1}
+                                        opacity={1}
+                                        // stroke={'black'}
+                                        viewBox={'-1 -1 26 26'}
+                                        fontSize={'60px'}
+                                        color={'yellow.300'}
+                                    />
+                                ) : null}
                                 <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.submit.main, subsection: null })}>
                                     To Submit
                                 </Button>
@@ -1276,6 +1250,9 @@ function StandForm() {
                                     margin={'0 auto'}
                                 ></Textarea>
                             ) : null}
+                            <Center margin={'10px 0px 20px 0px'}>
+                                <QRCode value={getQRValue()} />
+                            </Center>
                             <HStack gap={'15px'}>
                                 <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.endGame.main })}>
                                     To End Game
@@ -1283,6 +1260,19 @@ function StandForm() {
                                 <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
                                     {teamNumberParam}
                                 </Text>
+                                {futureAlly ? (
+                                    <StarIcon
+                                        position={'absolute'}
+                                        left={'50%'}
+                                        transform={'translate(-50%, 0%)'}
+                                        zIndex={-1}
+                                        opacity={1}
+                                        // stroke={'black'}
+                                        viewBox={'-1 -1 26 26'}
+                                        fontSize={'60px'}
+                                        color={'yellow.300'}
+                                    />
+                                ) : null}
                                 <Button flex={2 / 3} isDisabled={submitting} onClick={() => submit()}>
                                     Submit
                                 </Button>
@@ -1332,17 +1322,19 @@ function StandForm() {
                             >
                                 Delete
                             </Button>
-                            <Button
-                                colorScheme='yellow'
-                                ml={3}
-                                _focus={{ outline: 'none', boxShadow: 'none' }}
-                                onClick={() => {
-                                    setStandFormDialog(false);
-                                    setLoadResponse(false);
-                                }}
-                            >
-                                Cloud
-                            </Button>
+                            {!offline && (
+                                <Button
+                                    colorScheme='yellow'
+                                    ml={3}
+                                    _focus={{ outline: 'none', boxShadow: 'none' }}
+                                    onClick={() => {
+                                        setStandFormDialog(false);
+                                        setLoadResponse(false);
+                                    }}
+                                >
+                                    Cloud
+                                </Button>
+                            )}
                             <Button
                                 colorScheme='blue'
                                 ml={3}
@@ -1374,7 +1366,6 @@ function StandForm() {
 
     return (
         <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-            {/* {futureAlly ? <StarIcon position={'absolute'} left={'10px'} top={'95px'} stroke={'black'} viewBox={'-1 -1 26 26'} fontSize={'30px'} color={'yellow.300'} /> : null} */}
             {renderSection()}
         </Box>
     );

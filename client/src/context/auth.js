@@ -34,7 +34,6 @@ function AuthProvider(props) {
 
     useEffect(() => {
         async function fetchData() {
-            console.log('getting user data');
             try {
                 let response = await fetchAndCache('/getuser');
                 let data = await response.json();

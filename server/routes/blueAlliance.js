@@ -37,8 +37,13 @@ router.use('/isFutureAlly/:eventKey/:teamNumber/:currentMatch/:allowPlayed', asy
         res.send('Not signed in');
         return;
     }
-    let isAlly = await isFutureAlly(req.params.eventKey, req.params.teamNumber, req.params.currentMatch, req.params.allowPlayed === 'true');
-    res.send(Boolean(isAlly));
+    try {
+        let isAlly = await isFutureAlly(req.params.eventKey, req.params.teamNumber, req.params.currentMatch, req.params.allowPlayed === 'true');
+        res.send(Boolean(isAlly));
+    } catch (err) {
+        res.statusMessage = err.message;
+        res.sendStatus(500);
+    }
 });
 
 router.use('/:apiCall(*)', (req, res) => {
