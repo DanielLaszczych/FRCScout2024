@@ -3,8 +3,7 @@ class HelperConstants {
         complete: 'Complete',
         followUp: 'Follow Up',
         noShow: 'No Show',
-        missing: 'Missing',
-        inconclusive: 'Inconclusive',
+        missing: 'Missing'
     };
 
     static teamNumber = 1796;
@@ -12,7 +11,7 @@ class HelperConstants {
     static rtessIssuesStatus = {
         unresolved: 'Unresolved',
         beingResolved: 'Being Resolved',
-        resolved: 'Resolved',
+        resolved: 'Resolved'
     };
 
     static weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

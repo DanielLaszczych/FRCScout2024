@@ -63,7 +63,7 @@ const matchFormSchema = new Schema({
     preLoadedPiece: {
         type: String
     },
-    leaveStart: {
+    leftStart: {
         type: Boolean
     },
     autoTimeline: {
@@ -114,14 +114,11 @@ const matchFormSchema = new Schema({
         type: [Number],
         default: [0, 0, 0]
     },
-    quickness: {
+    agility: {
         type: Number
     },
-    driverAwareness: {
+    fieldAwareness: {
         type: Number
-    },
-    superEndComment: {
-        type: String
     },
     superStatus: {
         type: String,

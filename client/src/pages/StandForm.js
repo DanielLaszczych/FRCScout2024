@@ -42,7 +42,7 @@ let sections = {
     auto: { main: 'Auto', subsections: { intake: 'Intake', score: 'Scoring' } },
     teleop: { main: 'Teleop', subsections: { intake: 'Intake', score: 'Scoring' } },
     endGame: { main: 'Endgame' },
-    submit: { main: 'Submit' }
+    closing: { main: 'Closing' }
 };
 let startingPositions = [
     [28, 35, uuidv4()],
@@ -131,7 +131,7 @@ function StandForm() {
     const [standFormData, setStandFormData] = useState({
         startingPosition: null,
         preLoadedPiece: null,
-        leaveStart: null,
+        leftStart: null,
         autoTimeline: [],
         teleopGP: {
             groundIntake: 0,
@@ -166,6 +166,7 @@ function StandForm() {
     const [whitespace, setWhitespace] = useState(null);
     const [preAutoImageSrc, setPreAutoImageSrc] = useState(null);
     const [autoImageSrc, setAutoImageSrc] = useState(null);
+    const [showQRCode, setShowQRCode] = useState(false);
 
     useEffect(() => {
         if (stationParam.length !== 2 || !/[rb][123]/.test(stationParam)) {
@@ -216,10 +217,7 @@ function StandForm() {
         // Only fetch stand form data if load response was false and are online
         if (loadResponse === false && standFormData.loading) {
             if (offline) {
-                let modified = JSON.parse(JSON.stringify(standFormData));
-                modified.loading = false;
-                prevStandFormData.current = modified;
-                setStandFormData(modified);
+                setStandFormData({ ...standFormData, loading: false });
             } else {
                 const headers = {
                     filters: JSON.stringify({
@@ -229,7 +227,7 @@ function StandForm() {
                         standStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp]
                     })
                 };
-                fetch('/matchForm/getStandForm', {
+                fetch('/matchForm/getMatchForm', {
                     headers: headers
                 })
                     .then((response) => {
@@ -241,13 +239,9 @@ function StandForm() {
                     })
                     .then((data) => {
                         if (!data) {
-                            let modified = JSON.parse(JSON.stringify(standFormData));
-                            modified.loading = false;
-                            prevStandFormData.current = modified;
-                            setStandFormData(modified);
+                            setStandFormData({ ...standFormData, loading: false });
                         } else {
                             data.loading = false;
-                            prevStandFormData.current = JSON.parse(JSON.stringify(data));
                             setStandFormData(data);
                         }
                     })
@@ -273,7 +267,9 @@ function StandForm() {
                 localStorage.setItem('StandFormData', JSON.stringify({ ...standFormData, eventKeyParam, matchNumberParam, stationParam }));
             }
         }
-        prevStandFormData.current = JSON.parse(JSON.stringify(standFormData));
+        if (standFormData.loading === false) {
+            prevStandFormData.current = JSON.parse(JSON.stringify(standFormData));
+        }
     }, [standFormData, eventKeyParam, matchNumberParam, stationParam]);
 
     function getImageVariables() {
@@ -351,7 +347,7 @@ function StandForm() {
     }
 
     function validAuto() {
-        return standFormData.leaveStart !== null;
+        return standFormData.leftStart !== null;
     }
 
     function validTele() {
@@ -362,7 +358,7 @@ function StandForm() {
         return standFormData.climb !== null && standFormData.loseCommunication !== null && standFormData.robotBreak !== null && standFormData.yellowCard !== null && standFormData.redCard !== null;
     }
 
-    function validSubmit() {
+    function validClosing() {
         return !isFollowOrNoShow() || standFormData.standStatusComment.trim() !== '';
     }
 
@@ -375,8 +371,8 @@ function StandForm() {
             return validTele();
         } else if (section === sections.endGame.main) {
             return validEndGame();
-        } else if (section === sections.submit.main) {
-            return validSubmit();
+        } else if (section === sections.closing.main) {
+            return validClosing();
         } else {
             return true;
         }
@@ -432,6 +428,10 @@ function StandForm() {
             });
             return;
         }
+        if (offline) {
+            setShowQRCode(true);
+            return;
+        }
         setSubmitting(true);
         fetch('/matchForm/postStandForm', {
             method: 'POST',
@@ -466,6 +466,7 @@ function StandForm() {
                         navigate('/');
                     }
                     setSubmitting(false);
+                    localStorage.removeItem('StandFormData');
                 } else {
                     throw new Error(response.statusText);
                 }
@@ -523,6 +524,7 @@ function StandForm() {
                                     style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }}
                                     onClick={() => setStandFormData({ ...standFormData, startingPosition: index + 1 })}
                                     colorScheme={standFormData.startingPosition === index + 1 ? 'green' : 'gray'}
+                                    outline={standFormData.startingPosition === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
                                 >
                                     {index + 1}
                                 </Button>
@@ -533,7 +535,13 @@ function StandForm() {
                             <Button
                                 margin={'0 auto'}
                                 width={'75%'}
-                                onClick={() => setStandFormData({ ...standFormData, standStatus: standFormData.standStatus === matchFormStatus.noShow ? null : matchFormStatus.noShow })}
+                                onClick={() => {
+                                    let nextStatus = standFormData.standStatus === matchFormStatus.noShow ? null : matchFormStatus.noShow;
+                                    setStandFormData({ ...standFormData, standStatus: nextStatus });
+                                    if (nextStatus === matchFormStatus.noShow) {
+                                        setActiveSection({ ...activeSection, section: sections.closing.main });
+                                    }
+                                }}
                                 colorScheme={standFormData.standStatus === matchFormStatus.noShow ? 'red' : 'gray'}
                             >
                                 No Show
@@ -548,6 +556,7 @@ function StandForm() {
                                             key={piece.id}
                                             onClick={() => setStandFormData({ ...standFormData, preLoadedPiece: piece.label })}
                                             colorScheme={standFormData.preLoadedPiece === piece.label ? 'green' : 'gray'}
+                                            outline={standFormData.preLoadedPiece === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
                                         >
                                             {piece.label}
                                         </Button>
@@ -752,8 +761,9 @@ function StandForm() {
                                     {leaveAutoOptions.map((option) => (
                                         <Button
                                             key={option.id}
-                                            onClick={() => setStandFormData({ ...standFormData, leaveStart: option.value })}
-                                            colorScheme={standFormData.leaveStart === option.value ? 'green' : 'gray'}
+                                            onClick={() => setStandFormData({ ...standFormData, leftStart: option.value })}
+                                            colorScheme={standFormData.leftStart === option.value ? 'green' : 'gray'}
+                                            outline={standFormData.leftStart === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
                                         >
                                             {option.label}
                                         </Button>
@@ -1002,6 +1012,7 @@ function StandForm() {
                                             key={option.id}
                                             onClick={() => setStandFormData({ ...standFormData, wasDefended: option.value })}
                                             colorScheme={standFormData.wasDefended === option.value ? 'green' : 'gray'}
+                                            outline={standFormData.wasDefended === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
                                         >
                                             {option.label}
                                         </Button>
@@ -1095,6 +1106,7 @@ function StandForm() {
                                             colorScheme={standFormData.climb === type.label ? 'green' : 'gray'}
                                             flex={1 / 3}
                                             whiteSpace={'normal'}
+                                            outline={standFormData.climb === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
                                         >
                                             {type.label}
                                         </Button>
@@ -1121,6 +1133,7 @@ function StandForm() {
                                             key={option.id}
                                             onClick={() => setStandFormData({ ...standFormData, loseCommunication: option.value })}
                                             colorScheme={standFormData.loseCommunication === option.value ? 'green' : 'gray'}
+                                            outline={standFormData.loseCommunication === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
                                         >
                                             {option.label}
                                         </Button>
@@ -1137,6 +1150,7 @@ function StandForm() {
                                             key={option.id}
                                             onClick={() => setStandFormData({ ...standFormData, robotBreak: option.value })}
                                             colorScheme={standFormData.robotBreak === option.value ? 'green' : 'gray'}
+                                            outline={standFormData.robotBreak === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
                                         >
                                             {option.label}
                                         </Button>
@@ -1153,6 +1167,7 @@ function StandForm() {
                                             key={option.id}
                                             onClick={() => setStandFormData({ ...standFormData, yellowCard: option.value })}
                                             colorScheme={standFormData.yellowCard === option.value ? 'green' : 'gray'}
+                                            outline={standFormData.yellowCard === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
                                         >
                                             {option.label}
                                         </Button>
@@ -1169,6 +1184,7 @@ function StandForm() {
                                             key={option.id}
                                             onClick={() => setStandFormData({ ...standFormData, redCard: option.value })}
                                             colorScheme={standFormData.redCard === option.value ? 'green' : 'gray'}
+                                            outline={standFormData.redCard === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
                                         >
                                             {option.label}
                                         </Button>
@@ -1210,14 +1226,14 @@ function StandForm() {
                                         color={'yellow.300'}
                                     />
                                 ) : null}
-                                <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.submit.main, subsection: null })}>
-                                    To Submit
+                                <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.closing.main, subsection: null })}>
+                                    To Closing
                                 </Button>
                             </HStack>
                         </Flex>
                     </Box>
                 );
-            case sections.submit.main:
+            case sections.closing.main:
                 return (
                     <Box>
                         <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} marginBottom={'5px'} color={submitAttempted && !validateSection(activeSection.section) ? 'red' : 'black'}>
@@ -1248,11 +1264,14 @@ function StandForm() {
                                     value={standFormData.standStatusComment}
                                     placeholder={`What is the reason for the ${standFormData.standStatus.toLowerCase()}?`}
                                     margin={'0 auto'}
+                                    outline={standFormData.standStatusComment.trim() === '' && submitAttempted && isFollowOrNoShow() ? '2px solid red' : 'none'}
                                 ></Textarea>
                             ) : null}
-                            <Center margin={'10px 0px 20px 0px'}>
-                                <QRCode value={getQRValue()} />
-                            </Center>
+                            {showQRCode && (
+                                <Center margin={'10px 0px 20px 0px'}>
+                                    <QRCode value={getQRValue()} />
+                                </Center>
+                            )}
                             <HStack gap={'15px'}>
                                 <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.endGame.main })}>
                                     To End Game

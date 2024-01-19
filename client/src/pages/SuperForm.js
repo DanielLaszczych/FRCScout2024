@@ -1,4 +1,3 @@
-import { useMutation, useQuery } from '@apollo/client';
 import {
     AlertDialog,
     AlertDialogBody,
@@ -12,24 +11,20 @@ import {
     Checkbox,
     Flex,
     HStack,
-    IconButton,
     Spinner,
     Text,
     Textarea,
     useToast,
-    VStack,
+    VStack
 } from '@chakra-ui/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { GET_EVENT, GET_SUPERFORMS } from '../graphql/queries';
 import { convertMatchKeyToString, deepEqual } from '../util/helperFunctions';
 import { matchFormStatus } from '../util/helperConstants';
-import { MdOutlineDoNotDisturbAlt } from 'react-icons/md';
-import { UPDATE_SUPERFORMS } from '../graphql/mutations';
 import CustomMinusButton from '../components/CustomMinusButton';
 import CustomPlusButton from '../components/CustomPlusButton';
-import { BsQuestionCircle } from 'react-icons/bs';
-import { sum } from 'mathjs';
+import { GlobalContext } from '../context/globalState';
+import QRCode from 'react-qr-code';
 
 function SuperForm() {
     const location = useLocation();
@@ -42,12 +37,11 @@ function SuperForm() {
         alliance: allianceParam,
         teamNumber1: teamNumber1Param,
         teamNumber2: teamNumber2Param,
-        teamNumber3: teamNumber3Param,
+        teamNumber3: teamNumber3Param
     } = useParams();
+    const { offline } = useContext(GlobalContext);
 
     const [teamNumbers] = useState([teamNumber1Param, teamNumber2Param, teamNumber3Param]);
-    const [teamNames, setTeamNames] = useState(null);
-    const [eventName, setEventName] = useState(null);
     const [submitAttempted, setSubmitAttempted] = useState(false);
     const [superFormDialog, setSuperFormDialog] = useState(false);
     const [loadResponse, setLoadResponse] = useState(null);
@@ -56,33 +50,17 @@ function SuperForm() {
         let obj = { loading: true };
         for (const teamNumber of [teamNumber1Param, teamNumber2Param, teamNumber3Param]) {
             obj[teamNumber] = {
-                defenseRating: 0,
-                defenseAllocation: 0.25,
-                quickness: 1,
-                driverAwareness: 1,
-                endComment: '',
-                status: null,
-                statusComment: '',
+                agility: 1,
+                fieldAwareness: 1,
+                superStatus: null,
+                superStatusComment: ''
             };
         }
         return obj;
     });
     const [error, setError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
-
-    const { loading: loadingEvent, error: eventError } = useQuery(GET_EVENT, {
-        fetchPolicy: 'network-only',
-        variables: {
-            key: eventKeyParam,
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve data on current event');
-        },
-        onCompleted({ getEvent: event }) {
-            setEventName(event.name);
-        },
-    });
+    const [showQRCode, setShowQRCode] = useState(false);
 
     useEffect(() => {
         if (localStorage.getItem('SuperFormData')) {
@@ -99,62 +77,46 @@ function SuperForm() {
     }, [eventKeyParam, matchNumberParam, allianceParam]);
 
     useEffect(() => {
-        async function getTeamNames() {
-            if (teamNumbers) {
-                if (sum(teamNumbers) === 0) {
-                    //Means this can only really happen if its a custom event
-                    setTeamNames(['N/A', 'N/A', 'N/A']);
-                } else {
-                    let fetches = [];
-                    for (let team of teamNumbers) {
-                        fetches.push(fetch(`/blueAlliance/team/frc${team}/simple`));
-                    }
-                    let responses = await Promise.all(fetches).catch((error) => console.log(error));
-                    let jsonResponses = await Promise.all(responses.map((response) => response.json())).catch((error) => console.log(error));
-                    console.log(jsonResponses);
-                    let teamNames = [];
-                    for (let teamNumber of teamNumbers) {
-                        let teamData = jsonResponses.find((team) => team.team_number === parseInt(teamNumber));
-                        teamNames.push(teamData.nickname);
-                    }
-                    setTeamNames(teamNames);
-                }
+        if (loadResponse === false && superFormData.loading) {
+            if (offline) {
+                setSuperFormData({ ...superFormData, loading: false });
+            } else {
+                const headers = {
+                    filters: JSON.stringify({
+                        eventKey: eventKeyParam,
+                        matchNumber: matchNumberParam,
+                        station: [`${allianceParam}1`, `${allianceParam}2`, `${allianceParam}3`],
+                        superStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp]
+                    })
+                };
+                fetch('/matchForm/getMatchForms', {
+                    headers: headers
+                })
+                    .then((response) => {
+                        if (response.status === 200) {
+                            return response.json();
+                        } else {
+                            throw new Error(response.statusText);
+                        }
+                    })
+                    .then((data) => {
+                        console.log(data);
+                        let modified = { ...superFormData };
+                        modified.loading = false;
+                        for (const matchForm of data) {
+                            modified[matchForm.teamNumber] = {
+                                agility: matchForm.agility,
+                                fieldAwareness: matchForm.fieldAwareness,
+                                superStatus: matchForm.superStatus,
+                                superStatusComment: matchForm.superStatusComment
+                            };
+                        }
+                        setSuperFormData(modified);
+                    })
+                    .catch((error) => setError(error.message));
             }
         }
-        getTeamNames();
-    }, [teamNumbers, eventKeyParam]);
-
-    const { loading: loadingSuperData, error: superDataError } = useQuery(GET_SUPERFORMS, {
-        skip: loadResponse === null || loadResponse,
-        fetchPolicy: 'network-only',
-        variables: {
-            eventKey: eventKeyParam,
-            matchNumber: matchNumberParam,
-            station: [`${allianceParam}1`, `${allianceParam}2`, `${allianceParam}3`],
-            superStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp, matchFormStatus.inconclusive],
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError(`Apollo error, could not retrieve match form`);
-        },
-        onCompleted({ getMatchForms: matchForms }) {
-            let data = JSON.parse(JSON.stringify(superFormData));
-            data.loading = false;
-            for (const matchForm of matchForms) {
-                data[matchForm.teamNumber] = {
-                    defenseRating: matchForm.defenseRating,
-                    defenseAllocation: matchForm.defenseAllocation,
-                    quickness: matchForm.quickness,
-                    driverAwareness: matchForm.driverAwareness,
-                    endComment: matchForm.superEndComment,
-                    status: matchForm.superStatus,
-                    statusComment: matchForm.superStatusComment,
-                };
-            }
-            prevSuperFormData.current = JSON.parse(JSON.stringify(data));
-            setSuperFormData(data);
-        },
-    });
+    }, [loadResponse, eventKeyParam, matchNumberParam, allianceParam, superFormData, offline]);
 
     useEffect(() => {
         if (prevSuperFormData.current !== null) {
@@ -162,49 +124,22 @@ function SuperForm() {
                 localStorage.setItem('SuperFormData', JSON.stringify({ ...superFormData, eventKeyParam, matchNumberParam, allianceParam }));
             }
         }
-        prevSuperFormData.current = JSON.parse(JSON.stringify(superFormData));
+        if (superFormData.loading === false) {
+            prevSuperFormData.current = JSON.parse(JSON.stringify(superFormData));
+        }
     }, [superFormData, eventKeyParam, matchNumberParam, allianceParam]);
 
     function isFollowOrNoShow(teamNumber) {
-        return [matchFormStatus.followUp, matchFormStatus.noShow].includes(superFormData[teamNumber].status);
+        return [matchFormStatus.followUp, matchFormStatus.noShow].includes(superFormData[teamNumber].superStatus);
     }
 
     function isValid(teamNumber) {
-        return superFormData[teamNumber].statusComment.trim() !== '';
+        return superFormData[teamNumber].superStatusComment.trim() !== '';
     }
 
-    const [updateSuperForms] = useMutation(UPDATE_SUPERFORMS, {
-        onCompleted() {
-            toast({
-                title: 'Match Form Updated',
-                status: 'success',
-                duration: 3000,
-                isClosable: true,
-            });
-            if (location.state && location.state.previousRoute) {
-                if (location.state.previousRoute === 'matches') {
-                    navigate('/matches');
-                } else if (location.state.previousRoute === 'team') {
-                    navigate(`/team/${location.state.teamNumber}/super`);
-                }
-            } else {
-                navigate('/');
-            }
-            setSubmitting(false);
-            localStorage.removeItem('SuperFormData');
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            toast({
-                title: 'Apollo Error',
-                description: 'Match form could not be updated',
-                status: 'error',
-                duration: 3000,
-                isClosable: true,
-            });
-            setSubmitting(false);
-        },
-    });
+    useEffect(() => {
+        if (showQRCode) window.scrollTo({ left: 0, top: document.body.scrollHeight, behavior: 'smooth' });
+    }, [showQRCode]);
 
     function submit() {
         setSubmitAttempted(true);
@@ -214,32 +149,81 @@ function SuperForm() {
                     title: 'Missing fields',
                     status: 'error',
                     duration: 3000,
-                    isClosable: true,
+                    isClosable: true
                 });
                 return;
             }
         }
+        if (offline) {
+            setShowQRCode(true);
+            return;
+        }
         setSubmitting(true);
-        updateSuperForms({
-            variables: {
-                matchFormInputs: teamNumbers.map((teamNumber, index) => ({
+        fetch('/matchForm/postSuperForm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(
+                teamNumbers.map((teamNumber, index) => ({
                     eventKey: eventKeyParam,
-                    eventName: eventName,
-                    station: `${allianceParam}${index + 1}`,
                     matchNumber: matchNumberParam,
+                    station: `${allianceParam}${index + 1}`,
                     teamNumber: parseInt(teamNumber),
-                    teamName: teamNames[index],
                     allianceNumbers: [teamNumbers[0], teamNumbers[1], teamNumbers[2]],
-                    defenseRating: superFormData[teamNumber].defenseRating,
-                    defenseAllocation: superFormData[teamNumber].defenseRating > 0 ? superFormData[teamNumber].defenseAllocation : 0,
-                    quickness: superFormData[teamNumber].quickness,
-                    driverAwareness: superFormData[teamNumber].driverAwareness,
-                    superEndComment: superFormData[teamNumber].status === matchFormStatus.noShow ? '' : superFormData[teamNumber].endComment.trim(),
-                    superStatus: superFormData[teamNumber].status || matchFormStatus.complete,
-                    superStatusComment: isFollowOrNoShow(teamNumber) ? superFormData[teamNumber].statusComment.trim() : '',
-                })),
-            },
-        });
+                    ...superFormData[teamNumber],
+                    superStatus: superFormData[teamNumber].superStatus || matchFormStatus.complete,
+                    superStatusComment: isFollowOrNoShow(teamNumber) ? superFormData[teamNumber].superStatusComment.trim() : ''
+                }))
+            )
+        })
+            .then((response) => {
+                if (response.status === 200) {
+                    toast({
+                        title: 'Match Form Updated',
+                        status: 'success',
+                        duration: 3000,
+                        isClosable: true
+                    });
+                    if (location.state && location.state.previousRoute) {
+                        if (location.state.previousRoute === 'matches') {
+                            navigate('/matches');
+                        } else if (location.state.previousRoute === 'team') {
+                            navigate(`/team/${location.state.teamNumber}/super`);
+                        }
+                    } else {
+                        navigate('/');
+                    }
+                    setSubmitting(false);
+                    localStorage.removeItem('SuperFormData');
+                } else {
+                    throw new Error(response.statusText);
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+                toast({
+                    title: 'Error',
+                    description: 'Match form could not be submitted',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true
+                });
+                setSubmitting(false);
+            });
+    }
+
+    function getQRValue() {
+        return JSON.stringify(
+            teamNumbers.map((teamNumber, index) => ({
+                eventKey: eventKeyParam,
+                matchNumber: matchNumberParam,
+                station: `${allianceParam}${index + 1}`,
+                teamNumber: parseInt(teamNumber),
+                allianceNumbers: [teamNumbers[0], teamNumbers[1], teamNumbers[2]],
+                ...superFormData[teamNumber],
+                superStatus: superFormData[teamNumber].superStatus || matchFormStatus.complete,
+                superStatusComment: isFollowOrNoShow(teamNumber) ? superFormData[teamNumber].superStatusComment.trim() : ''
+            }))
+        );
     }
 
     if (error) {
@@ -279,17 +263,19 @@ function SuperForm() {
                             >
                                 Delete
                             </Button>
-                            <Button
-                                colorScheme='yellow'
-                                ml={3}
-                                _focus={{ outline: 'none', boxShadow: 'none' }}
-                                onClick={() => {
-                                    setSuperFormDialog(false);
-                                    setLoadResponse(false);
-                                }}
-                            >
-                                Cloud
-                            </Button>
+                            {!offline && (
+                                <Button
+                                    colorScheme='yellow'
+                                    ml={3}
+                                    _focus={{ outline: 'none', boxShadow: 'none' }}
+                                    onClick={() => {
+                                        setSuperFormDialog(false);
+                                        setLoadResponse(false);
+                                    }}
+                                >
+                                    Cloud
+                                </Button>
+                            )}
                             <Button
                                 colorScheme='blue'
                                 ml={3}
@@ -311,7 +297,7 @@ function SuperForm() {
         );
     }
 
-    if (superFormData.loading || loadingSuperData || loadingEvent || (superDataError && eventError && error !== false) || teamNames === null || eventName === null) {
+    if (superFormData.loading) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -321,163 +307,68 @@ function SuperForm() {
 
     return (
         <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-            <Center marginBottom={'35px'}>
-                <Text textAlign={'center'} minW={'130px'} fontWeight={'bold'} fontSize={'110%'}>
-                    {convertMatchKeyToString(matchNumberParam)} • {allianceParam === 'r' ? 'Red' : 'Blue'}
-                </Text>
-            </Center>
+            <Text textAlign={'center'} marginBottom={'10px'} fontWeight={'bold'} fontSize={'larger'}>
+                {convertMatchKeyToString(matchNumberParam)} • {allianceParam === 'r' ? 'Red' : 'Blue'}
+            </Text>
             {teamNumbers.map((teamNumber, index) => (
                 <Box
-                    position={'relative'}
                     key={teamNumber.toString() + index.toString()} // stupid solution but w/e
-                    boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'}
-                    borderRadius={'10px'}
-                    padding={'10px'}
-                    marginBottom={'30px'}
+                    marginBottom={'15px'}
                 >
-                    <HStack position={'absolute'} right={'10px'} top={'8px'} spacing={'10px'}>
-                        <IconButton
-                            onClick={() => {
-                                let teamData = { ...superFormData };
-                                teamData[teamNumber].status = teamData[teamNumber].status === matchFormStatus.inconclusive ? null : matchFormStatus.inconclusive;
-                                setSuperFormData(teamData);
-                            }}
-                            icon={<BsQuestionCircle />}
-                            colorScheme={superFormData[teamNumber].status === matchFormStatus.inconclusive ? 'yellow' : 'black'}
-                            variant={superFormData[teamNumber].status === matchFormStatus.inconclusive ? 'solid' : 'outline'}
-                            _focus={{ outline: 'none' }}
-                            size='sm'
-                        />
-                        <IconButton
-                            onClick={() => {
-                                let teamData = { ...superFormData };
-                                teamData[teamNumber].status = teamData[teamNumber].status === matchFormStatus.noShow ? null : matchFormStatus.noShow;
-                                setSuperFormData(teamData);
-                            }}
-                            icon={<MdOutlineDoNotDisturbAlt />}
-                            colorScheme={superFormData[teamNumber].status === matchFormStatus.noShow ? 'red' : 'black'}
-                            variant={superFormData[teamNumber].status === matchFormStatus.noShow ? 'solid' : 'outline'}
-                            _focus={{ outline: 'none' }}
-                            size='sm'
-                        />
-                    </HStack>
-                    <Text marginBottom={'20px'} fontWeight={'bold'} fontSize={'110%'}>
-                        Team Number: {teamNumber}
+                    <Text textAlign={'center'} fontWeight={'bold'} fontSize={'large'} borderBottom={'2px solid black'} margin={'0 auto'} marginBottom={'10px'} width={'112px'}>
+                        {teamNumber}
                     </Text>
-                    <Flex marginBottom={'25px'} flexWrap={'wrap'} flexDirection={'row'} rowGap={'15px'}>
-                        <VStack flex={'50%'}>
-                            <Text minWidth={'95px'} maxWidth={'95px'} textAlign={'center'} fontWeight={'bold'} fontSize={'110%'}>
-                                Defense Rating:
-                            </Text>
-                            <HStack>
-                                <CustomMinusButton
-                                    disabled={[matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status)}
-                                    onClick={() => {
-                                        let teamData = { ...superFormData };
-                                        teamData[teamNumber].defenseRating = Math.max(teamData[teamNumber].defenseRating - 1, 0);
-                                        setSuperFormData(teamData);
-                                    }}
-                                    fontSize={'20px'}
-                                />
-                                <Text color={[matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status) && 'gray.400'} textAlign={'center'} minWidth={'39px'}>
-                                    {superFormData[teamNumber].defenseRating || 'None'}
-                                </Text>
-                                <CustomPlusButton
-                                    disabled={[matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status)}
-                                    onClick={() => {
-                                        let teamData = { ...superFormData };
-                                        teamData[teamNumber].defenseRating = Math.min(teamData[teamNumber].defenseRating + 1, 3);
-                                        setSuperFormData(teamData);
-                                    }}
-                                    fontSize={'20px'}
-                                />
-                            </HStack>
-                        </VStack>
-                        <VStack flex={'50%'}>
-                            <Text minWidth={'95px'} maxWidth={'95px'} textAlign={'center'} fontWeight={'bold'} fontSize={'110%'}>
-                                Defense Allocation:
-                            </Text>
-                            <HStack>
-                                <CustomMinusButton
-                                    disabled={[matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status) || superFormData[teamNumber].defenseRating === 0}
-                                    onClick={() => {
-                                        let teamData = { ...superFormData };
-                                        teamData[teamNumber].defenseAllocation = Math.max(teamData[teamNumber].defenseAllocation - 0.25, 0.25);
-                                        setSuperFormData(teamData);
-                                    }}
-                                    fontSize={'20px'}
-                                />
-                                <Text
-                                    color={
-                                        ([matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status) || superFormData[teamNumber].defenseRating === 0) &&
-                                        'gray.400'
-                                    }
-                                    textAlign={'center'}
-                                    minWidth={'39px'}
-                                >
-                                    {superFormData[teamNumber].defenseAllocation * 100}%
-                                </Text>
-                                <CustomPlusButton
-                                    disabled={[matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status) || superFormData[teamNumber].defenseRating === 0}
-                                    onClick={() => {
-                                        let teamData = { ...superFormData };
-                                        teamData[teamNumber].defenseAllocation = Math.min(teamData[teamNumber].defenseAllocation + 0.25, 1.0);
-                                        setSuperFormData(teamData);
-                                    }}
-                                    fontSize={'20px'}
-                                />
-                            </HStack>
-                        </VStack>
-                        <VStack flex={'50%'}>
-                            <Center minHeight={'53px'} minWidth={'95px'} maxWidth={'95px'} textAlign={'center'} fontWeight={'bold'} fontSize={'110%'}>
-                                Quickness:
+                    <Flex marginBottom={'20px'}>
+                        <VStack flex={'50%'} gap={'5px'}>
+                            <Center height={'48px'} width={'95px'} textAlign={'center'} fontWeight={'bold'}>
+                                Agility:
                             </Center>
                             <HStack>
                                 <CustomMinusButton
-                                    disabled={[matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status)}
+                                    disabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
                                     onClick={() => {
                                         let teamData = { ...superFormData };
-                                        teamData[teamNumber].quickness = Math.max(teamData[teamNumber].quickness - 1, 1);
+                                        teamData[teamNumber].agility = Math.max(teamData[teamNumber].agility - 1, 1);
                                         setSuperFormData(teamData);
                                     }}
                                     fontSize={'20px'}
                                 />
-                                <Text color={[matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status) && 'gray.400'} textAlign={'center'}>
-                                    {superFormData[teamNumber].quickness}
+                                <Text color={superFormData[teamNumber].superStatus === matchFormStatus.noShow && 'gray.400'} textAlign={'center'}>
+                                    {superFormData[teamNumber].agility}
                                 </Text>
                                 <CustomPlusButton
-                                    disabled={[matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status)}
+                                    disabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
                                     onClick={() => {
                                         let teamData = { ...superFormData };
-                                        teamData[teamNumber].quickness = Math.min(teamData[teamNumber].quickness + 1, 3);
+                                        teamData[teamNumber].agility = Math.min(teamData[teamNumber].agility + 1, 3);
                                         setSuperFormData(teamData);
                                     }}
                                     fontSize={'20px'}
                                 />
                             </HStack>
                         </VStack>
-                        <VStack flex={'50%'}>
-                            <Text minWidth={'95px'} maxWidth={'95px'} textAlign={'center'} fontWeight={'bold'} fontSize={'110%'}>
-                                Driver Awareness:
+                        <VStack flex={'50%'} gap={'5px'}>
+                            <Text width={'95px'} textAlign={'center'} fontWeight={'bold'}>
+                                Field Awareness:
                             </Text>
                             <HStack>
                                 <CustomMinusButton
-                                    disabled={[matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status)}
+                                    disabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
                                     onClick={() => {
                                         let teamData = { ...superFormData };
-                                        teamData[teamNumber].driverAwareness = Math.max(teamData[teamNumber].driverAwareness - 1, 1);
+                                        teamData[teamNumber].fieldAwareness = Math.max(teamData[teamNumber].fieldAwareness - 1, 1);
                                         setSuperFormData(teamData);
                                     }}
                                     fontSize={'20px'}
                                 />
-                                <Text color={[matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status) && 'gray.400'} textAlign={'center'}>
-                                    {superFormData[teamNumber].driverAwareness}
+                                <Text color={superFormData[teamNumber].superStatus === matchFormStatus.noShow && 'gray.400'} textAlign={'center'}>
+                                    {superFormData[teamNumber].fieldAwareness}
                                 </Text>
                                 <CustomPlusButton
-                                    disabled={[matchFormStatus.noShow, matchFormStatus.inconclusive].includes(superFormData[teamNumber].status)}
+                                    disabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
                                     onClick={() => {
                                         let teamData = { ...superFormData };
-                                        teamData[teamNumber].driverAwareness = Math.min(teamData[teamNumber].driverAwareness + 1, 3);
+                                        teamData[teamNumber].fieldAwareness = Math.min(teamData[teamNumber].fieldAwareness + 1, 3);
                                         setSuperFormData(teamData);
                                     }}
                                     fontSize={'20px'}
@@ -485,62 +376,57 @@ function SuperForm() {
                             </HStack>
                         </VStack>
                     </Flex>
-                    {superFormData[teamNumber].status !== matchFormStatus.noShow && (
-                        <React.Fragment>
-                            <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
-                                Ending Comment:
-                            </Text>
-                            <Center marginBottom={'25px'}>
-                                <Textarea
-                                    _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
-                                    onChange={(event) => {
-                                        let teamData = { ...superFormData };
-                                        teamData[teamNumber].endComment = event.target.value;
-                                        setSuperFormData(teamData);
-                                    }}
-                                    value={superFormData[teamNumber].endComment}
-                                    placeholder='Any ending comments'
-                                    w={'85%'}
-                                ></Textarea>
-                            </Center>
-                        </React.Fragment>
-                    )}
-                    {superFormData[teamNumber].status !== matchFormStatus.noShow && (
-                        <Center marginBottom={'10px'}>
-                            <Checkbox
-                                //removes the blue outline on focus
-                                css={`
-                                    > span:first-of-type {
-                                        box-shadow: unset;
-                                    }
-                                `}
-                                colorScheme={'green'}
-                                isChecked={superFormData[teamNumber].status === matchFormStatus.followUp}
-                                onChange={() => {
-                                    let teamData = { ...superFormData };
-                                    teamData[teamNumber].status = teamData[teamNumber].status === matchFormStatus.followUp ? null : matchFormStatus.followUp;
-                                    setSuperFormData(teamData);
-                                }}
-                            >
-                                Mark For Follow Up
-                            </Checkbox>
-                        </Center>
-                    )}
+                    <HStack justifyContent={'center'} gap={'25px'} marginBottom={[matchFormStatus.followUp, matchFormStatus.noShow].includes(superFormData[teamNumber].superStatus) ? '15px' : '0px'}>
+                        <Checkbox
+                            //removes the blue outline on focus
+                            // css={`
+                            //     > span:first-of-type {
+                            //         box-shadow: unset;
+                            //     }
+                            // `}
+                            colorScheme={'green'}
+                            isChecked={superFormData[teamNumber].superStatus === matchFormStatus.followUp}
+                            onChange={() => {
+                                let teamData = { ...superFormData };
+                                teamData[teamNumber].superStatus = teamData[teamNumber].superStatus === matchFormStatus.followUp ? null : matchFormStatus.followUp;
+                                setSuperFormData(teamData);
+                            }}
+                            width={'100px'}
+                        >
+                            Mark For Follow Up
+                        </Checkbox>
+                        <Checkbox
+                            //removes the blue outline on focus
+                            // css={`
+                            //     > span:first-of-type {
+                            //         box-shadow: unset;
+                            //     }
+                            // `}
+                            colorScheme={'green'}
+                            isChecked={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
+                            onChange={() => {
+                                let teamData = { ...superFormData };
+                                teamData[teamNumber].superStatus = teamData[teamNumber].superStatus === matchFormStatus.noShow ? null : matchFormStatus.noShow;
+                                setSuperFormData(teamData);
+                            }}
+                            width={'100px'}
+                        >
+                            No Show
+                        </Checkbox>
+                    </HStack>
                     {isFollowOrNoShow(teamNumber) ? (
-                        <Center marginBottom={'10px'}>
-                            <Textarea
-                                isInvalid={submitAttempted && superFormData[teamNumber].statusComment.trim() === ''}
-                                _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
-                                onChange={(event) => {
-                                    let teamData = { ...superFormData };
-                                    teamData[teamNumber].statusComment = event.target.value;
-                                    setSuperFormData(teamData);
-                                }}
-                                value={superFormData[teamNumber].statusComment}
-                                placeholder={`What is the reason for the ${superFormData[teamNumber].status.toLowerCase()}?`}
-                                w={'85%'}
-                            ></Textarea>
-                        </Center>
+                        <Textarea
+                            isInvalid={submitAttempted && superFormData[teamNumber].superStatusComment.trim() === ''}
+                            _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
+                            onChange={(event) => {
+                                let teamData = { ...superFormData };
+                                teamData[teamNumber].superStatusComment = event.target.value;
+                                setSuperFormData(teamData);
+                            }}
+                            value={superFormData[teamNumber].superStatusComment}
+                            placeholder={`What is the reason for the ${superFormData[teamNumber].superStatus.toLowerCase()}?`}
+                            margin={'0 auto'}
+                        ></Textarea>
                     ) : null}
                 </Box>
             ))}
@@ -549,6 +435,11 @@ function SuperForm() {
                     Submit
                 </Button>
             </Center>
+            {showQRCode && (
+                <Center margin={'10px 0px 40px 0px'}>
+                    <QRCode value={getQRValue()} />
+                </Center>
+            )}
         </Box>
     );
 }

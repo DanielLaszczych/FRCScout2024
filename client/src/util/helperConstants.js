@@ -14,8 +14,7 @@ export const matchFormStatus = {
     complete: 'Complete',
     followUp: 'Follow Up',
     noShow: 'No Show',
-    missing: 'Missing',
-    inconclusive: 'Inconclusive'
+    missing: 'Missing'
 };
 
 export const rtessIssuesStatus = {

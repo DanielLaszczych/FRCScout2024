@@ -7,7 +7,21 @@ const { convertMatchKeyToString } = require('../util/helperFunctions');
 const RTESSIssue = require('../models/RTESSIssue');
 const { matchFormStatus, weekday, rtessIssuesStatus, timeZone } = require('../util/helperConstants');
 
-router.get('/getStandForm', async (req, res) => {
+router.get('/getMatchForms', async (req, res) => {
+    if (req.isUnauthenticated()) {
+        res.sendStatus(401);
+        return;
+    }
+    try {
+        const matchForms = await MatchForm.find(JSON.parse(req.headers.filters)).exec();
+        res.status(200).json(matchForms);
+    } catch (err) {
+        res.statusMessage = err.message;
+        res.sendStatus(500);
+    }
+});
+
+router.get('/getMatchForm', async (req, res) => {
     if (req.isUnauthenticated()) {
         res.sendStatus(401);
         return;
@@ -93,6 +107,35 @@ router.post('/postStandForm', async (req, res) => {
             }
         }
         res.sendStatus(200);
+    } catch (err) {
+        res.statusMessage = err.message;
+        res.sendStatus(500);
+    }
+});
+
+router.post('/postSuperForm', async (req, res) => {
+    if (req.isUnauthenticated()) {
+        res.sendStatus(401);
+        return;
+    }
+    try {
+        let matchFormInputs = req.body;
+        matchFormInputs.forEach((matchFormInput) => (matchFormInput.superScouter = req.user.displayName));
+
+        let updates = matchFormInputs.map((matchFormInput) =>
+            MatchForm.findOneAndUpdate({ eventKey: matchFormInput.eventKey, matchNumber: matchFormInput.matchNumber, station: matchFormInput.station }, matchFormInput, {
+                new: true,
+                upsert: true
+            }).exec()
+        );
+        Promise.all(updates)
+            .then(() => {
+                res.sendStatus(200);
+            })
+            .catch((err) => {
+                res.statusMessage = err.message;
+                res.sendStatus(500);
+            });
     } catch (err) {
         res.statusMessage = err.message;
         res.sendStatus(500);

@@ -130,7 +130,7 @@ function TeamPage({ keyProp }) {
         fetchPolicy: 'network-only',
         variables: {
             teamNumber: parseInt(teamNumberParam),
-            superStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.inconclusive]
+            superStatus: [matchFormStatus.complete, matchFormStatus.noShow]
         },
         onError(err) {
             console.log(JSON.stringify(err, null, 2));
@@ -168,9 +168,7 @@ function TeamPage({ keyProp }) {
             setStandForms(standFormsData.filter((standForm) => standForm.eventKey === event.key));
             setFilteredStandForms(standFormsData.filter((standForm) => standForm.standStatus !== matchFormStatus.noShow && standForm.eventKey === event.key));
             setSuperForms(superFormsData.filter((superForm) => superForm.eventKey === event.key));
-            setFilteredSuperForms(
-                superFormsData.filter((superForm) => superForm.superStatus !== matchFormStatus.noShow && superForm.superStatus !== matchFormStatus.inconclusive && superForm.eventKey === event.key)
-            );
+            setFilteredSuperForms(superFormsData.filter((superForm) => superForm.superStatus !== matchFormStatus.noShow && superForm.eventKey === event.key));
             setCurrentEvent({ name: event.name, key: event.key });
             setFocusedEvent(event.name);
         }
