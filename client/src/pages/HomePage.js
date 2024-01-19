@@ -199,9 +199,7 @@ function HomePage() {
         <Center>
             {user === 'NoUser' ? (
                 <a style={{ marginTop: '100px' }} href={`${config.API_URL}/auth/google`}>
-                    <Button _hover={{ textColor: '#1A202C', backgroundColor: 'gray.200' }} _focus={{ outline: 'none' }}>
-                        Login with Google
-                    </Button>
+                    <Button _hover={{ textColor: '#1A202C', backgroundColor: 'gray.200' }}>Login with Google</Button>
                 </a>
             ) : (
                 <Box width={'100vw'}>
@@ -214,7 +212,6 @@ function HomePage() {
                                 top={'95px'}
                                 onClick={() => setOpenPitMap(!openPitMap)}
                                 icon={<GrMapLocation />}
-                                _focus={{ outline: 'none' }}
                                 size='sm'
                             />
                             {openPitMap && (
@@ -237,7 +234,7 @@ function HomePage() {
                         Current Event: {currentEvent.name}
                     </Text>
                     <VStack spacing={'25px'} marginTop={'25px'}>
-                        <Button minWidth={'120px'} _focus={{ outline: 'none' }} onClick={() => setPitFormDialog(true)}>
+                        <Button minWidth={'120px'} onClick={() => setPitFormDialog(true)}>
                             Pit Scout
                         </Button>
                         <AlertDialog
@@ -268,14 +265,7 @@ function HomePage() {
                                         Enter a team number
                                     </AlertDialogHeader>
                                     <AlertDialogBody>
-                                        <Input
-                                            ref={inputElement}
-                                            type={'number'}
-                                            _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
-                                            borderColor='gray.300'
-                                            value={pitTeamNumber}
-                                            onChange={(e) => setPitTeamNumber(e.target.value)}
-                                        />
+                                        <Input ref={inputElement} type={'number'} borderColor='gray.300' value={pitTeamNumber} onChange={(e) => setPitTeamNumber(e.target.value)} />
                                         {pitPopoverError && (
                                             <Center color={'red.500'} marginTop={'5px'}>
                                                 {pitPopoverError}
@@ -290,21 +280,20 @@ function HomePage() {
                                                 setPitTeamNumber('');
                                                 setPitPopoverError(null);
                                             }}
-                                            _focus={{ outline: 'none' }}
                                         >
                                             Cancel
                                         </Button>
-                                        <Button colorScheme='blue' ml={3} isDisabled={pitTeamNumber.trim() === ''} _focus={{ outline: 'none' }} onClick={() => handlePitFormConfirm()}>
+                                        <Button colorScheme='blue' ml={3} isDisabled={pitTeamNumber.trim() === ''} onClick={() => handlePitFormConfirm()}>
                                             Confirm
                                         </Button>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialogOverlay>
                         </AlertDialog>
-                        <Button minWidth={'120px'} _focus={{ outline: 'none' }} as={Link} to={'/preStandForm'}>
+                        <Button minWidth={'120px'} as={Link} to={'/preStandForm'}>
                             Stand Scout
                         </Button>
-                        <Button minWidth={'120px'} _focus={{ outline: 'none' }} as={Link} to={'/preSuperForm'}>
+                        <Button minWidth={'120px'} as={Link} to={'/preSuperForm'}>
                             Super Scout
                         </Button>
                     </VStack>

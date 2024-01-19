@@ -193,13 +193,13 @@ function PreStandForm() {
                         <Text fontWeight={'bold'} fontSize={'110%'}>
                             Competition: {currentEvent.name}
                         </Text>
-                        <IconButton _focus={{ outline: 'none' }} onClick={() => setManualMode(!manualMode)} icon={!manualMode ? <LockIcon /> : <UnlockIcon />}></IconButton>
+                        <IconButton onClick={() => setManualMode(!manualMode)} icon={!manualMode ? <LockIcon /> : <UnlockIcon />}></IconButton>
                     </HStack>
                     <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
                         Alliance Station:
                     </Text>
                     <Menu>
-                        <MenuButton marginLeft={'10px'} onClick={() => setFocusedStation(station)} _focus={{ outline: 'none' }} as={Button} rightIcon={<ChevronDownIcon />}>
+                        <MenuButton marginLeft={'10px'} onClick={() => setFocusedStation(station)} as={Button} rightIcon={<ChevronDownIcon />}>
                             {station === '' ? 'Choose Station' : station.label}
                         </MenuButton>
                         <MenuList>
@@ -221,7 +221,7 @@ function PreStandForm() {
                         Match Number:
                     </Text>
                     <Menu>
-                        <MenuButton marginLeft={'10px'} onClick={() => setFocusedMatchType(matchType)} _focus={{ outline: 'none' }} as={Button} rightIcon={<ChevronDownIcon />}>
+                        <MenuButton marginLeft={'10px'} onClick={() => setFocusedMatchType(matchType)} as={Button} rightIcon={<ChevronDownIcon />}>
                             {matchType === '' ? 'Choose Match Type' : matchType.label}
                         </MenuButton>
                         <MenuList>
@@ -263,10 +263,6 @@ function PreStandForm() {
                                         }
                                     }}
                                     enterKeyHint='done'
-                                    _focus={{
-                                        outline: 'none',
-                                        boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px'
-                                    }}
                                     textAlign={'center'}
                                     placeholder='Enter Match #'
                                 />
@@ -318,10 +314,6 @@ function PreStandForm() {
                                     }
                                 }}
                                 enterKeyHint='done'
-                                _focus={{
-                                    outline: 'none',
-                                    boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px'
-                                }}
                                 textAlign={'center'}
                                 placeholder='Enter Team #'
                             />
@@ -331,7 +323,6 @@ function PreStandForm() {
                 <Center>
                     <Button
                         isDisabled={!validSetup()}
-                        _focus={{ outline: 'none' }}
                         marginBottom={'20px'}
                         marginTop={'20px'}
                         onClick={() => {

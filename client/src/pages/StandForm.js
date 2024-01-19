@@ -498,7 +498,7 @@ function StandForm() {
                         >
                             Pre-Auto
                         </Text>
-                        <Box style={{ transform: `rotate(${fieldRotation}deg)` }}>
+                        <Box position={'relative'} style={{ transform: `rotate(${fieldRotation}deg)` }}>
                             {!preAutoImageSrc && (
                                 <Center
                                     width={`${imageWidth * dimensionRatios.width}px`}
@@ -595,8 +595,6 @@ function StandForm() {
                     <Box>
                         <HStack justifyContent={'center'} gap={'30px'}>
                             <Button
-                                outline={'none'}
-                                _focus={{ outline: 'none' }}
                                 colorScheme={'gray'}
                                 onClick={() => {
                                     standFormAutoManager.undo(standFormData);
@@ -614,8 +612,6 @@ function StandForm() {
                                 {standFormAutoManager.getPosition() === 0 ? 'Undo' : `Undo\n${standFormAutoManager.getUndoNote()}`}
                             </Button>
                             <Button
-                                outline={'none'}
-                                _focus={{ outline: 'none' }}
                                 colorScheme={'gray'}
                                 onClick={() => {
                                     standFormAutoManager.redo(standFormData);
@@ -802,8 +798,6 @@ function StandForm() {
                     <Box>
                         <HStack justifyContent={'center'} gap={'30px'}>
                             <Button
-                                outline={'none'}
-                                _focus={{ outline: 'none' }}
                                 colorScheme={'gray'}
                                 onClick={() => {
                                     standFormTeleManager.undo(standFormData);
@@ -821,8 +815,6 @@ function StandForm() {
                                 {standFormTeleManager.getPosition() === 0 ? 'Undo' : `Undo\n${standFormTeleManager.getUndoNote()}`}
                             </Button>
                             <Button
-                                outline={'none'}
-                                _focus={{ outline: 'none' }}
                                 colorScheme={'gray'}
                                 onClick={() => {
                                     standFormTeleManager.redo(standFormData);
@@ -1060,8 +1052,6 @@ function StandForm() {
                     <Box>
                         <HStack justifyContent={'center'} gap={'30px'}>
                             <Button
-                                outline={'none'}
-                                _focus={{ outline: 'none' }}
                                 colorScheme={'gray'}
                                 onClick={() => {
                                     standFormEndManager.undo(standFormData);
@@ -1073,8 +1063,6 @@ function StandForm() {
                                 {standFormEndManager.getPosition() === 0 ? 'Undo' : `Undo\n${standFormEndManager.getUndoNote()}`}
                             </Button>
                             <Button
-                                outline={'none'}
-                                _focus={{ outline: 'none' }}
                                 colorScheme={'gray'}
                                 onClick={() => {
                                     standFormEndManager.redo(standFormData);
@@ -1191,12 +1179,13 @@ function StandForm() {
                                     ))}
                                 </HStack>
                             </HStack>
-                            <Textarea
-                                onChange={(event) => setStandFormData({ ...standFormData, standComment: event.target.value })}
-                                value={standFormData.standComment}
-                                placeholder='Only write comments you think are VITAL!'
-                                margin={'0 auto'}
-                            ></Textarea>
+                            <Center>
+                                <Textarea
+                                    onChange={(event) => setStandFormData({ ...standFormData, standComment: event.target.value })}
+                                    value={standFormData.standComment}
+                                    placeholder='Only write comments you think are VITAL!'
+                                />
+                            </Center>
                             <HStack gap={'15px'}>
                                 <Button
                                     flex={2 / 3}
@@ -1243,12 +1232,6 @@ function StandForm() {
                             {standFormData.standStatus !== matchFormStatus.noShow && (
                                 <Center>
                                     <Checkbox
-                                        //removes the blue outline on focus
-                                        // css={`
-                                        //     > span:first-of-type {
-                                        //         box-shadow: unset;
-                                        //     }
-                                        // `}
                                         colorScheme={'green'}
                                         isChecked={standFormData.standStatus === matchFormStatus.followUp}
                                         onChange={() => setStandFormData({ ...standFormData, standStatus: standFormData.standStatus === matchFormStatus.followUp ? null : matchFormStatus.followUp })}
@@ -1258,14 +1241,15 @@ function StandForm() {
                                 </Center>
                             )}
                             {isFollowOrNoShow() ? (
-                                <Textarea
-                                    isInvalid={submitAttempted && standFormData.standStatusComment.trim() === ''}
-                                    onChange={(event) => setStandFormData({ ...standFormData, standStatusComment: event.target.value })}
-                                    value={standFormData.standStatusComment}
-                                    placeholder={`What is the reason for the ${standFormData.standStatus.toLowerCase()}?`}
-                                    margin={'0 auto'}
-                                    outline={standFormData.standStatusComment.trim() === '' && submitAttempted && isFollowOrNoShow() ? '2px solid red' : 'none'}
-                                ></Textarea>
+                                <Center>
+                                    <Textarea
+                                        isInvalid={submitAttempted && standFormData.standStatusComment.trim() === ''}
+                                        onChange={(event) => setStandFormData({ ...standFormData, standStatusComment: event.target.value })}
+                                        value={standFormData.standStatusComment}
+                                        placeholder={`What is the reason for the ${standFormData.standStatus.toLowerCase()}?`}
+                                        outline={standFormData.standStatusComment.trim() === '' && submitAttempted && isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                    />
+                                </Center>
                             ) : null}
                             {showQRCode && (
                                 <Center margin={'10px 0px 20px 0px'}>
@@ -1322,6 +1306,7 @@ function StandForm() {
                 onClose={() => {
                     setStandFormDialog(false);
                 }}
+                autoFocus={false}
             >
                 <AlertDialogOverlay>
                     <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
@@ -1336,7 +1321,6 @@ function StandForm() {
                                     setLoadResponse(false);
                                     localStorage.removeItem('StandFormData');
                                 }}
-                                _focus={{ outline: 'none', boxShadow: 'none' }}
                                 colorScheme='red'
                             >
                                 Delete
@@ -1345,7 +1329,6 @@ function StandForm() {
                                 <Button
                                     colorScheme='yellow'
                                     ml={3}
-                                    _focus={{ outline: 'none', boxShadow: 'none' }}
                                     onClick={() => {
                                         setStandFormDialog(false);
                                         setLoadResponse(false);
@@ -1357,7 +1340,6 @@ function StandForm() {
                             <Button
                                 colorScheme='blue'
                                 ml={3}
-                                _focus={{ outline: 'none', boxShadow: 'none' }}
                                 onClick={() => {
                                     setStandFormDialog(false);
                                     setLoadResponse(true);

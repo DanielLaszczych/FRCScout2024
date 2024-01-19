@@ -583,7 +583,7 @@ function AdminPage() {
                         </ModalHeader>
                         <ModalBody maxHeight={'250px'} overflowY={'auto'}>
                             <VStack spacing={'10px'}>
-                                <Button colorScheme={focusedEvent.key === 'None' ? 'green' : 'gray'} onClick={() => setFocusedEvent({ name: 'None', key: 'None' })} _focus={{ outline: 'none' }}>
+                                <Button colorScheme={focusedEvent.key === 'None' ? 'green' : 'gray'} onClick={() => setFocusedEvent({ name: 'None', key: 'None' })}>
                                     None
                                 </Button>
                                 {events.map((event) => (
@@ -595,7 +595,6 @@ function AdminPage() {
                                         paddingTop={'5px'}
                                         onClick={() => setFocusedEvent({ name: event.name, key: event.key })}
                                         colorScheme={focusedEvent.key === event.key ? 'green' : 'gray'}
-                                        _focus={{ outline: 'none' }}
                                         style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}
                                     >
                                         {event.name}
@@ -604,13 +603,10 @@ function AdminPage() {
                             </VStack>
                         </ModalBody>
                         <ModalFooter>
-                            <Button onClick={onClose} _focus={{ outline: 'none' }}>
-                                Cancel
-                            </Button>
+                            <Button onClick={onClose}>Cancel</Button>
                             <Button
                                 colorScheme='blue'
                                 ml={3}
-                                _focus={{ outline: 'none' }}
                                 onClick={() => {
                                     handleSetCurrentEvent(focusedEvent.key);
                                     onClose();
@@ -645,7 +641,6 @@ function AdminPage() {
                             </Text>
                             <Input
                                 type={'text'}
-                                _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
                                 borderColor='gray.300'
                                 value={customEventData.key}
                                 onChange={(e) => setCustomEventData({ ...customEventData, key: e.target.value })}
@@ -660,7 +655,6 @@ function AdminPage() {
                             </Text>
                             <Input
                                 type={'text'}
-                                _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
                                 borderColor='gray.300'
                                 value={customEventData.name}
                                 onChange={(e) => setCustomEventData({ ...customEventData, name: e.target.value })}
@@ -677,7 +671,6 @@ function AdminPage() {
                                 <MenuButton
                                     maxW={'75vw'}
                                     onClick={() => setCustomEventData({ ...customEventData, focusedEventType: '' })}
-                                    _focus={{ outline: 'none' }}
                                     as={Button}
                                     rightIcon={<ChevronDownIcon />}
                                     outline={customEventData.eventType === '' && submitAttempted ? '2px solid red' : 'none'}
@@ -715,7 +708,6 @@ function AdminPage() {
                             </Text>
                             <Input
                                 type={'date'}
-                                _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
                                 borderColor='gray.300'
                                 value={customEventData.startDate}
                                 onChange={(e) => setCustomEventData({ ...customEventData, startDate: e.target.value })}
@@ -730,7 +722,6 @@ function AdminPage() {
                             </Text>
                             <Input
                                 type={'date'}
-                                _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
                                 borderColor='gray.300'
                                 value={customEventData.endDate}
                                 onChange={(e) => setCustomEventData({ ...customEventData, endDate: e.target.value })}
@@ -761,7 +752,6 @@ function AdminPage() {
                                     value={customEventData.inputTeam}
                                     maxWidth={'150px'}
                                     borderRadius={'5px 0px 0px 5px'}
-                                    _focus={{ outline: 'none', boxShadow: 'none', borderColor: 'gray.300' }}
                                     onKeyDown={(event) => {
                                         if (event.key === 'Enter') {
                                             if (customEventData.teams.includes(customEventData.inputTeam)) {
@@ -828,7 +818,6 @@ function AdminPage() {
                                     setSubmitAttempted(false);
                                     setSubmitting(false);
                                 }}
-                                _focus={{ outline: 'none' }}
                             >
                                 Cancel
                             </Button>
@@ -844,7 +833,6 @@ function AdminPage() {
                                     customEventData.teams.length === 0 ||
                                     submitting
                                 }
-                                _focus={{ outline: 'none' }}
                                 onClick={() =>
                                     handleAddEvent(
                                         customEventData.name,
@@ -886,7 +874,7 @@ function AdminPage() {
             ) : null}
             <Box marginBottom={'25px'}>
                 <h2 style={{ fontWeight: '500', fontSize: '30px', lineHeight: '1.1', marginBottom: '10px' }}>Current Event: {currentEvent.name}</h2>
-                {changingCurrentEvent ? <Spinner></Spinner> : <IconButton _focus={{ outline: 'none' }} size='sm' icon={<EditIcon />} onClick={onOpen} />}
+                {changingCurrentEvent ? <Spinner></Spinner> : <IconButton size='sm' icon={<EditIcon />} onClick={onOpen} />}
             </Box>
             <Box margin='0 auto' marginBottom={'15px'}>
                 <Box marginBottom={'10px'}>
@@ -916,14 +904,7 @@ function AdminPage() {
                                             <Spinner></Spinner>
                                         </Box>
                                     ) : (
-                                        <Button
-                                            _focus={{ outline: 'none' }}
-                                            isDisabled={mutatingEventKey !== null}
-                                            onClick={() => handleRemoveEvent(event.key)}
-                                            size={'md'}
-                                            marginLeft={'10px'}
-                                            marginRight={'10px'}
-                                        >
+                                        <Button isDisabled={mutatingEventKey !== null} onClick={() => handleRemoveEvent(event.key)} size={'md'} marginLeft={'10px'} marginRight={'10px'}>
                                             Remove
                                         </Button>
                                     )}
@@ -939,15 +920,7 @@ function AdminPage() {
             <Center>
                 <Flex flexWrap={'wrap'} marginBottom={'25px'} justifyContent={'center'}>
                     {eventTypes.map((eventType) => (
-                        <Button
-                            key={eventType.id}
-                            _focus={{ outline: 'none' }}
-                            ref={eventType.name === 'Week 1' ? linkRef : null}
-                            maxW={'125px'}
-                            minW={'125px'}
-                            margin={'8px'}
-                            onClick={() => handleScrollAction(eventType.ref)}
-                        >
+                        <Button key={eventType.id} ref={eventType.name === 'Week 1' ? linkRef : null} maxW={'125px'} minW={'125px'} margin={'8px'} onClick={() => handleScrollAction(eventType.ref)}>
                             {eventType.name}
                         </Button>
                     ))}

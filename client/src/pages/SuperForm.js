@@ -244,6 +244,7 @@ function SuperForm() {
                 onClose={() => {
                     setSuperFormDialog(false);
                 }}
+                autoFocus={false}
             >
                 <AlertDialogOverlay>
                     <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
@@ -258,7 +259,6 @@ function SuperForm() {
                                     setLoadResponse(false);
                                     localStorage.removeItem('SuperFormData');
                                 }}
-                                _focus={{ outline: 'none', boxShadow: 'none' }}
                                 colorScheme='red'
                             >
                                 Delete
@@ -267,7 +267,6 @@ function SuperForm() {
                                 <Button
                                     colorScheme='yellow'
                                     ml={3}
-                                    _focus={{ outline: 'none', boxShadow: 'none' }}
                                     onClick={() => {
                                         setSuperFormDialog(false);
                                         setLoadResponse(false);
@@ -279,7 +278,6 @@ function SuperForm() {
                             <Button
                                 colorScheme='blue'
                                 ml={3}
-                                _focus={{ outline: 'none', boxShadow: 'none' }}
                                 onClick={() => {
                                     setSuperFormDialog(false);
                                     setLoadResponse(true);
@@ -378,12 +376,6 @@ function SuperForm() {
                     </Flex>
                     <HStack justifyContent={'center'} gap={'25px'} marginBottom={[matchFormStatus.followUp, matchFormStatus.noShow].includes(superFormData[teamNumber].superStatus) ? '15px' : '0px'}>
                         <Checkbox
-                            //removes the blue outline on focus
-                            // css={`
-                            //     > span:first-of-type {
-                            //         box-shadow: unset;
-                            //     }
-                            // `}
                             colorScheme={'green'}
                             isChecked={superFormData[teamNumber].superStatus === matchFormStatus.followUp}
                             onChange={() => {
@@ -396,12 +388,6 @@ function SuperForm() {
                             Mark For Follow Up
                         </Checkbox>
                         <Checkbox
-                            //removes the blue outline on focus
-                            // css={`
-                            //     > span:first-of-type {
-                            //         box-shadow: unset;
-                            //     }
-                            // `}
                             colorScheme={'green'}
                             isChecked={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
                             onChange={() => {
@@ -415,23 +401,24 @@ function SuperForm() {
                         </Checkbox>
                     </HStack>
                     {isFollowOrNoShow(teamNumber) ? (
-                        <Textarea
-                            isInvalid={submitAttempted && superFormData[teamNumber].superStatusComment.trim() === ''}
-                            _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
-                            onChange={(event) => {
-                                let teamData = { ...superFormData };
-                                teamData[teamNumber].superStatusComment = event.target.value;
-                                setSuperFormData(teamData);
-                            }}
-                            value={superFormData[teamNumber].superStatusComment}
-                            placeholder={`What is the reason for the ${superFormData[teamNumber].superStatus.toLowerCase()}?`}
-                            margin={'0 auto'}
-                        ></Textarea>
+                        <Center>
+                            <Textarea
+                                isInvalid={submitAttempted && superFormData[teamNumber].superStatusComment.trim() === ''}
+                                onChange={(event) => {
+                                    let teamData = { ...superFormData };
+                                    teamData[teamNumber].superStatusComment = event.target.value;
+                                    setSuperFormData(teamData);
+                                }}
+                                value={superFormData[teamNumber].superStatusComment}
+                                placeholder={`What is the reason for the ${superFormData[teamNumber].superStatus.toLowerCase()}?`}
+                                width={'85%'}
+                            />
+                        </Center>
                     ) : null}
                 </Box>
             ))}
             <Center>
-                <Button isDisabled={submitting} _focus={{ outline: 'none' }} marginBottom={'20px'} marginTop={'0px'} onClick={() => submit()}>
+                <Button isDisabled={submitting} marginBottom={'20px'} marginTop={'0px'} onClick={() => submit()}>
                     Submit
                 </Button>
             </Center>

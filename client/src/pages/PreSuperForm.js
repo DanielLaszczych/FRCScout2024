@@ -150,13 +150,13 @@ function PreSuperForm() {
                         <Text fontWeight={'bold'} fontSize={'110%'}>
                             Competition: {currentEvent.name}
                         </Text>
-                        <IconButton _focus={{ outline: 'none' }} onClick={() => setManualMode(!manualMode)} icon={!manualMode ? <LockIcon /> : <UnlockIcon />}></IconButton>
+                        <IconButton onClick={() => setManualMode(!manualMode)} icon={!manualMode ? <LockIcon /> : <UnlockIcon />}></IconButton>
                     </HStack>
                     <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
                         Alliance:
                     </Text>
                     <Menu>
-                        <MenuButton marginLeft={'10px'} onClick={() => setFocusedAlliance(alliance)} _focus={{ outline: 'none' }} as={Button} rightIcon={<ChevronDownIcon />}>
+                        <MenuButton marginLeft={'10px'} onClick={() => setFocusedAlliance(alliance)} as={Button} rightIcon={<ChevronDownIcon />}>
                             {alliance === '' ? 'Choose Alliance' : alliance.label}
                         </MenuButton>
                         <MenuList>
@@ -178,7 +178,7 @@ function PreSuperForm() {
                         Match Number:
                     </Text>
                     <Menu>
-                        <MenuButton marginLeft={'10px'} onClick={() => setFocusedMatchType(matchType)} _focus={{ outline: 'none' }} as={Button} rightIcon={<ChevronDownIcon />}>
+                        <MenuButton marginLeft={'10px'} onClick={() => setFocusedMatchType(matchType)} as={Button} rightIcon={<ChevronDownIcon />}>
                             {matchType === '' ? 'Choose Match Type' : matchType.label}
                         </MenuButton>
                         <MenuList>
@@ -220,10 +220,6 @@ function PreSuperForm() {
                                         }
                                     }}
                                     enterKeyHint='done'
-                                    _focus={{
-                                        outline: 'none',
-                                        boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px'
-                                    }}
                                     textAlign={'center'}
                                     placeholder='Enter Match #'
                                 />
@@ -280,10 +276,6 @@ function PreSuperForm() {
                                               }
                                           }}
                                           enterKeyHint='done'
-                                          _focus={{
-                                              outline: 'none',
-                                              boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px'
-                                          }}
                                           textAlign={'center'}
                                           placeholder='Enter Team #'
                                       />

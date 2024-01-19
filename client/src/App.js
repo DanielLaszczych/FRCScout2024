@@ -6,7 +6,7 @@ import NavBar from './components/NavBar';
 import { GlobalContext } from './context/globalState';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
-// const PitForm = lazy(() => import('./pages/PitForm'));
+const PitForm = lazy(() => import('./pages/PitForm'));
 // const PitPage = lazy(() => import('./pages/PitsPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 // const MatchesPage = lazy(() => import('./pages/MatchesPage'));
@@ -80,7 +80,7 @@ function App() {
                         {/* {['team', 'event'].map((path) => (
                             <Route path={`/rtessIssues/${path}`} key={path} element={<RTESSIssuesPage />} />
                         ))} */}
-                        {/* <Route exact path='/pitForm/:eventKey/:teamNumber' element={<PitForm />} /> */}
+                        <Route exact path='/pitForm/:eventKey/:teamNumber' element={<PitForm />} />
                         <Route exact path='/preStandForm' element={<PreStandForm />} />
                         <Route exact path='/preSuperForm' element={<PreSuperForm />} />
                         <Route exact path='/standForm/:eventKey/:matchNumber/:station/:teamNumber' element={<StandForm />} />
