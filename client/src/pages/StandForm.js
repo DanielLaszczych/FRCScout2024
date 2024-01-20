@@ -1195,7 +1195,7 @@ function StandForm() {
                                 </HStack>
                             </HStack>
                         </Flex>
-                        <HStack marginTop={`${15 + maxContainerHeight - 442.8}px`} marginBottom={'15px'} gap={'15px'}>
+                        <HStack marginTop={`${Math.max(15, 15 + maxContainerHeight - 442.8)}px`} marginBottom={'15px'} gap={'15px'}>
                             <Button
                                 flex={2 / 3}
                                 leftIcon={<ChevronLeftIcon />}
@@ -1274,7 +1274,14 @@ function StandForm() {
                             )}
                         </Flex>
                         <HStack
-                            marginTop={`${15 + maxContainerHeight - 152.8 - (isFollowOrNoShow() && 95) - (showQRCode && maxContainerHeight + 45 - 182.8 - (isFollowOrNoShow() && 95))}px`}
+                            marginTop={`${
+                                15 +
+                                maxContainerHeight -
+                                113.8 -
+                                (standFormData.standStatus !== matchFormStatus.noShow && 39) -
+                                (isFollowOrNoShow() && 95) -
+                                (showQRCode && maxContainerHeight + 45 - 182.8 - (isFollowOrNoShow() && 95))
+                            }px`}
                             marginBottom={'15px'}
                             gap={'15px'}
                         >
