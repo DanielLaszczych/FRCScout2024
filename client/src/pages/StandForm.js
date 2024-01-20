@@ -25,7 +25,7 @@ import {
     VStack,
     useToast
 } from '@chakra-ui/react';
-import { StarIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, ChevronRightIcon, StarIcon } from '@chakra-ui/icons';
 import { deepEqual, getValueByRange } from '../util/helperFunctions';
 import { AUTO_PIECE, AUTO_SCORE, TELEOP_INCREMENT, createCommandManager } from '../util/commandManager';
 import '../stylesheets/standformstyle.css';
@@ -36,6 +36,7 @@ import AutoRedField from '../images/AutoRedField.png';
 import AutoBlueField from '../images/AutoBlueField.png';
 import QRCode from 'react-qr-code';
 import { GlobalContext } from '../context/globalState';
+import { AiOutlineRotateRight } from 'react-icons/ai';
 
 let sections = {
     preAuto: { main: 'Pre-Auto' },
@@ -564,8 +565,8 @@ function StandForm() {
                                 </HStack>
                             </HStack>
                             <HStack gap={'15px'}>
-                                <Button flex={2 / 3} wordBreak={'break-word'} whiteSpace={'none'} onClick={() => setFieldRotation((fieldRotation + 90) % 360)}>
-                                    Switch Orientation
+                                <Button flex={2 / 3} wordBreak={'break-word'} whiteSpace={'none'} leftIcon={<AiOutlineRotateRight />} onClick={() => setFieldRotation((fieldRotation + 90) % 360)}>
+                                    Rotate
                                 </Button>
                                 <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
                                     {teamNumberParam}
@@ -583,8 +584,12 @@ function StandForm() {
                                         color={'yellow.300'}
                                     />
                                 ) : null}
-                                <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.auto.main, subsection: activeSection.lastAutoSection })}>
-                                    To Auto
+                                <Button
+                                    flex={2 / 3}
+                                    rightIcon={<ChevronRightIcon />}
+                                    onClick={() => setActiveSection({ ...activeSection, section: sections.auto.main, subsection: activeSection.lastAutoSection })}
+                                >
+                                    Auto
                                 </Button>
                             </HStack>
                         </Flex>
@@ -668,7 +673,7 @@ function StandForm() {
                                             setActiveSection({ ...activeSection, subsection: sections.auto.subsections.score, lastAutoSection: sections.auto.subsections.score });
                                         }}
                                         isDisabled={standFormData.autoTimeline.some((element) => element.piece === index + 1)}
-                                        _disabled={{ backgroundColor: '#FAF089', _hover: { backgroundColor: '#FAF089' }, cursor: 'default' }}
+                                        _disabled={{ backgroundColor: '#38A169', textColor: 'white', _hover: { backgroundColor: '#38A169' }, cursor: 'default' }}
                                     >
                                         {index + 1}
                                     </Button>
@@ -767,8 +772,8 @@ function StandForm() {
                                 </HStack>
                             </HStack>
                             <HStack gap={'15px'}>
-                                <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.preAuto.main, subsection: null })}>
-                                    To Pre-Auto
+                                <Button flex={2 / 3} leftIcon={<ChevronLeftIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.preAuto.main, subsection: null })}>
+                                    Pre-Auto
                                 </Button>
                                 <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
                                     {teamNumberParam}
@@ -786,8 +791,12 @@ function StandForm() {
                                         color={'yellow.300'}
                                     />
                                 ) : null}
-                                <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.teleop.main, subsection: activeSection.lastTeleopSection })}>
-                                    To Teleop
+                                <Button
+                                    flex={2 / 3}
+                                    rightIcon={<ChevronRightIcon />}
+                                    onClick={() => setActiveSection({ ...activeSection, section: sections.teleop.main, subsection: activeSection.lastTeleopSection })}
+                                >
+                                    Teleop
                                 </Button>
                             </HStack>
                         </Flex>
@@ -1014,6 +1023,7 @@ function StandForm() {
                             <HStack gap={'15px'}>
                                 <Button
                                     flex={2 / 3}
+                                    leftIcon={<ChevronLeftIcon />}
                                     onClick={() =>
                                         setActiveSection({
                                             ...activeSection,
@@ -1022,7 +1032,7 @@ function StandForm() {
                                         })
                                     }
                                 >
-                                    To Auto
+                                    Auto
                                 </Button>
                                 <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
                                     {teamNumberParam}
@@ -1040,8 +1050,8 @@ function StandForm() {
                                         color={'yellow.300'}
                                     />
                                 ) : null}
-                                <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.endGame.main, subsection: null })}>
-                                    To End Game
+                                <Button flex={2 / 3} rightIcon={<ChevronRightIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.endGame.main, subsection: null })}>
+                                    End Game
                                 </Button>
                             </HStack>
                         </Flex>
@@ -1189,6 +1199,7 @@ function StandForm() {
                             <HStack gap={'15px'}>
                                 <Button
                                     flex={2 / 3}
+                                    leftIcon={<ChevronLeftIcon />}
                                     onClick={() =>
                                         setActiveSection({
                                             ...activeSection,
@@ -1197,7 +1208,7 @@ function StandForm() {
                                         })
                                     }
                                 >
-                                    To Teleop
+                                    Teleop
                                 </Button>
                                 <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
                                     {teamNumberParam}
@@ -1215,8 +1226,8 @@ function StandForm() {
                                         color={'yellow.300'}
                                     />
                                 ) : null}
-                                <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.closing.main, subsection: null })}>
-                                    To Closing
+                                <Button flex={2 / 3} rightIcon={<ChevronRightIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.closing.main, subsection: null })}>
+                                    Closing
                                 </Button>
                             </HStack>
                         </Flex>
@@ -1257,8 +1268,8 @@ function StandForm() {
                                 </Center>
                             )}
                             <HStack gap={'15px'}>
-                                <Button flex={2 / 3} onClick={() => setActiveSection({ ...activeSection, section: sections.endGame.main })}>
-                                    To End Game
+                                <Button flex={2 / 3} leftIcon={<ChevronLeftIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.endGame.main })}>
+                                    End Game
                                 </Button>
                                 <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
                                     {teamNumberParam}
