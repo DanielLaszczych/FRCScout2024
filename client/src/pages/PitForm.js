@@ -1601,8 +1601,8 @@ function PitForm() {
                     />
                 </Center>
             ) : null}
-            <Center marginTop={'15px'}>
-                <Button isDisabled={submitting} marginBottom={'15px'} onClick={() => submit()}>
+            <Center marginTop={'15px'} marginBottom={'15px'}>
+                <Button isDisabled={submitting} onClick={() => submit()}>
                     Submit
                 </Button>
             </Center>

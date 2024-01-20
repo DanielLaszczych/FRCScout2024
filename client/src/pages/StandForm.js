@@ -46,7 +46,8 @@ let sections = {
     closing: { main: 'Closing' }
 };
 let startingPositions = [
-    [28, 35, uuidv4()],
+    // 28, 35
+    [0, 0, uuidv4()],
     [60, 118, uuidv4()],
     [28, 200, uuidv4()],
     [28, 300, uuidv4()]
@@ -168,6 +169,7 @@ function StandForm() {
     const [preAutoImageSrc, setPreAutoImageSrc] = useState(null);
     const [autoImageSrc, setAutoImageSrc] = useState(null);
     const [showQRCode, setShowQRCode] = useState(false);
+    const [maxContainerHeight, setMaxContainerHeight] = useState(null);
 
     useEffect(() => {
         if (stationParam.length !== 2 || !/[rb][123]/.test(stationParam)) {
@@ -279,7 +281,7 @@ function StandForm() {
 
         // Calculate image dimensions based on screen size
         const maxWidth = viewportWidth * getValueByRange(viewportWidth); // Adjust the multiplier as needed
-        const maxHeight = imageHeight;
+        const maxHeight = Math.min(imageHeight, document.documentElement.clientHeight - 313.8);
 
         const screenAspectRatio = maxWidth / maxHeight;
         const imageAspectRatio = imageWidth / imageHeight;
@@ -307,6 +309,7 @@ function StandForm() {
             setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
         }
 
+        setMaxContainerHeight(scaledHeight + 143.8);
         setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
     }
 
@@ -530,7 +533,9 @@ function StandForm() {
                                     {index + 1}
                                 </Button>
                             ))}
-                            {preAutoImageSrc && <img src={preAutoImageSrc} style={{ zIndex: 0, margin: '0 auto' }} alt={'Field Map'} />}
+                            {preAutoImageSrc && (
+                                <img src={preAutoImageSrc} style={{ zIndex: 0, margin: '0 auto', maxHeight: `${document.documentElement.clientHeight - 313.8}px` }} alt={'Field Map'} />
+                            )}
                         </Box>
                         <Flex flexDir={'column'} rowGap={'15px'} marginTop={'15px'}>
                             <Button
@@ -564,35 +569,35 @@ function StandForm() {
                                     ))}
                                 </HStack>
                             </HStack>
-                            <HStack gap={'15px'}>
-                                <Button flex={2 / 3} wordBreak={'break-word'} whiteSpace={'none'} leftIcon={<AiOutlineRotateRight />} onClick={() => setFieldRotation((fieldRotation + 90) % 360)}>
-                                    Rotate
-                                </Button>
-                                <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
-                                    {teamNumberParam}
-                                </Text>
-                                {futureAlly ? (
-                                    <StarIcon
-                                        position={'absolute'}
-                                        left={'50%'}
-                                        transform={'translate(-50%, 0%)'}
-                                        zIndex={-1}
-                                        opacity={1}
-                                        // stroke={'black'}
-                                        viewBox={'-1 -1 26 26'}
-                                        fontSize={'60px'}
-                                        color={'yellow.300'}
-                                    />
-                                ) : null}
-                                <Button
-                                    flex={2 / 3}
-                                    rightIcon={<ChevronRightIcon />}
-                                    onClick={() => setActiveSection({ ...activeSection, section: sections.auto.main, subsection: activeSection.lastAutoSection })}
-                                >
-                                    Auto
-                                </Button>
-                            </HStack>
                         </Flex>
+                        <HStack marginTop={`${15 + maxContainerHeight - imageHeight * dimensionRatios.height - 143.8}px`} marginBottom={'15px'} gap={'15px'}>
+                            <Button flex={2 / 3} wordBreak={'break-word'} whiteSpace={'none'} leftIcon={<AiOutlineRotateRight />} onClick={() => setFieldRotation((fieldRotation + 90) % 360)}>
+                                Rotate
+                            </Button>
+                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                                {teamNumberParam}
+                            </Text>
+                            {futureAlly ? (
+                                <StarIcon
+                                    position={'absolute'}
+                                    left={'50%'}
+                                    transform={'translate(-50%, 0%)'}
+                                    zIndex={-1}
+                                    opacity={1}
+                                    // stroke={'black'}
+                                    viewBox={'-1 -1 26 26'}
+                                    fontSize={'60px'}
+                                    color={'yellow.300'}
+                                />
+                            ) : null}
+                            <Button
+                                flex={2 / 3}
+                                rightIcon={<ChevronRightIcon />}
+                                onClick={() => setActiveSection({ ...activeSection, section: sections.auto.main, subsection: activeSection.lastAutoSection })}
+                            >
+                                Auto
+                            </Button>
+                        </HStack>
                     </Box>
                 );
             case sections.auto.main:
@@ -678,7 +683,7 @@ function StandForm() {
                                         {index + 1}
                                     </Button>
                                 ))}
-                                {autoImageSrc && <img src={autoImageSrc} style={{ zIndex: 0, margin: '0 auto' }} alt={'Field Map'} />}
+                                {autoImageSrc && <img src={autoImageSrc} style={{ zIndex: 0, margin: '0 auto', maxHeight: `${document.documentElement.clientHeight - 313.8}px` }} alt={'Field Map'} />}
                             </Box>
                         ) : (
                             <Flex width={`${imageWidth * dimensionRatios.width}px`} height={`${imageHeight * dimensionRatios.height}px`} flexDir={'column'} margin={'0 auto'} gap={'15px'}>
@@ -771,35 +776,35 @@ function StandForm() {
                                     ))}
                                 </HStack>
                             </HStack>
-                            <HStack gap={'15px'}>
-                                <Button flex={2 / 3} leftIcon={<ChevronLeftIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.preAuto.main, subsection: null })}>
-                                    Pre-Auto
-                                </Button>
-                                <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
-                                    {teamNumberParam}
-                                </Text>
-                                {futureAlly ? (
-                                    <StarIcon
-                                        position={'absolute'}
-                                        left={'50%'}
-                                        transform={'translate(-50%, 0%)'}
-                                        zIndex={-1}
-                                        opacity={1}
-                                        // stroke={'black'}
-                                        viewBox={'-1 -1 26 26'}
-                                        fontSize={'60px'}
-                                        color={'yellow.300'}
-                                    />
-                                ) : null}
-                                <Button
-                                    flex={2 / 3}
-                                    rightIcon={<ChevronRightIcon />}
-                                    onClick={() => setActiveSection({ ...activeSection, section: sections.teleop.main, subsection: activeSection.lastTeleopSection })}
-                                >
-                                    Teleop
-                                </Button>
-                            </HStack>
                         </Flex>
+                        <HStack marginTop={`${15 + maxContainerHeight - imageHeight * dimensionRatios.height - 133.8}px`} marginBottom={'15px'} gap={'15px'}>
+                            <Button flex={2 / 3} leftIcon={<ChevronLeftIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.preAuto.main, subsection: null })}>
+                                Pre-Auto
+                            </Button>
+                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                                {teamNumberParam}
+                            </Text>
+                            {futureAlly ? (
+                                <StarIcon
+                                    position={'absolute'}
+                                    left={'50%'}
+                                    transform={'translate(-50%, 0%)'}
+                                    zIndex={-1}
+                                    opacity={1}
+                                    // stroke={'black'}
+                                    viewBox={'-1 -1 26 26'}
+                                    fontSize={'60px'}
+                                    color={'yellow.300'}
+                                />
+                            ) : null}
+                            <Button
+                                flex={2 / 3}
+                                rightIcon={<ChevronRightIcon />}
+                                onClick={() => setActiveSection({ ...activeSection, section: sections.teleop.main, subsection: activeSection.lastTeleopSection })}
+                            >
+                                Teleop
+                            </Button>
+                        </HStack>
                     </Box>
                 );
             case sections.teleop.main:
@@ -851,7 +856,7 @@ function StandForm() {
                             {activeSection.section}: {activeSection.subsection}
                         </Text>
                         {activeSection.subsection === sections.teleop.subsections.intake ? (
-                            <Flex width={`${imageWidth * dimensionRatios.width}px`} height={`${imageHeight * dimensionRatios.height}px`} margin={'0 auto'} gap={'15px'}>
+                            <Flex width={`${imageWidth * dimensionRatios.width}px`} height={`${maxContainerHeight - 213.8}px`} margin={'0 auto'} gap={'15px'}>
                                 <Button
                                     colorScheme={'teal'}
                                     fontWeight={'bold'}
@@ -880,7 +885,7 @@ function StandForm() {
                                 </Button>
                             </Flex>
                         ) : (
-                            <Flex width={`${imageWidth * dimensionRatios.width}px`} height={`${imageHeight * dimensionRatios.height}px`} flexDir={'column'} margin={'0 auto'} gap={'15px'}>
+                            <Flex width={`${imageWidth * dimensionRatios.width}px`} height={`${maxContainerHeight - 213.8}px`} flexDir={'column'} margin={'0 auto'} gap={'15px'}>
                                 <Flex flex={1 / 2} gap={'15px'}>
                                     <Button
                                         colorScheme={'teal'}
@@ -1020,41 +1025,41 @@ function StandForm() {
                                     ))}
                                 </HStack>
                             </HStack>
-                            <HStack gap={'15px'}>
-                                <Button
-                                    flex={2 / 3}
-                                    leftIcon={<ChevronLeftIcon />}
-                                    onClick={() =>
-                                        setActiveSection({
-                                            ...activeSection,
-                                            section: sections.auto.main,
-                                            subsection: activeSection.lastAutoSection
-                                        })
-                                    }
-                                >
-                                    Auto
-                                </Button>
-                                <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
-                                    {teamNumberParam}
-                                </Text>
-                                {futureAlly ? (
-                                    <StarIcon
-                                        position={'absolute'}
-                                        left={'50%'}
-                                        transform={'translate(-50%, 0%)'}
-                                        zIndex={-1}
-                                        opacity={1}
-                                        // stroke={'black'}
-                                        viewBox={'-1 -1 26 26'}
-                                        fontSize={'60px'}
-                                        color={'yellow.300'}
-                                    />
-                                ) : null}
-                                <Button flex={2 / 3} rightIcon={<ChevronRightIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.endGame.main, subsection: null })}>
-                                    End Game
-                                </Button>
-                            </HStack>
                         </Flex>
+                        <HStack marginTop={`${15 + maxContainerHeight - (maxContainerHeight - 213.8) - 213.8}px`} marginBottom={'15px'} gap={'15px'}>
+                            <Button
+                                flex={2 / 3}
+                                leftIcon={<ChevronLeftIcon />}
+                                onClick={() =>
+                                    setActiveSection({
+                                        ...activeSection,
+                                        section: sections.auto.main,
+                                        subsection: activeSection.lastAutoSection
+                                    })
+                                }
+                            >
+                                Auto
+                            </Button>
+                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                                {teamNumberParam}
+                            </Text>
+                            {futureAlly ? (
+                                <StarIcon
+                                    position={'absolute'}
+                                    left={'50%'}
+                                    transform={'translate(-50%, 0%)'}
+                                    zIndex={-1}
+                                    opacity={1}
+                                    // stroke={'black'}
+                                    viewBox={'-1 -1 26 26'}
+                                    fontSize={'60px'}
+                                    color={'yellow.300'}
+                                />
+                            ) : null}
+                            <Button flex={2 / 3} rightIcon={<ChevronRightIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.endGame.main, subsection: null })}>
+                                End Game
+                            </Button>
+                        </HStack>
                     </Box>
                 );
             case sections.endGame.main:
@@ -1189,48 +1194,41 @@ function StandForm() {
                                     ))}
                                 </HStack>
                             </HStack>
-                            <Center>
-                                <Textarea
-                                    onChange={(event) => setStandFormData({ ...standFormData, standComment: event.target.value })}
-                                    value={standFormData.standComment}
-                                    placeholder='Only write comments you think are VITAL!'
-                                />
-                            </Center>
-                            <HStack gap={'15px'}>
-                                <Button
-                                    flex={2 / 3}
-                                    leftIcon={<ChevronLeftIcon />}
-                                    onClick={() =>
-                                        setActiveSection({
-                                            ...activeSection,
-                                            section: sections.teleop.main,
-                                            subsection: activeSection.lastTeleopSection
-                                        })
-                                    }
-                                >
-                                    Teleop
-                                </Button>
-                                <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
-                                    {teamNumberParam}
-                                </Text>
-                                {futureAlly ? (
-                                    <StarIcon
-                                        position={'absolute'}
-                                        left={'50%'}
-                                        transform={'translate(-50%, 0%)'}
-                                        zIndex={-1}
-                                        opacity={1}
-                                        // stroke={'black'}
-                                        viewBox={'-1 -1 26 26'}
-                                        fontSize={'60px'}
-                                        color={'yellow.300'}
-                                    />
-                                ) : null}
-                                <Button flex={2 / 3} rightIcon={<ChevronRightIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.closing.main, subsection: null })}>
-                                    Closing
-                                </Button>
-                            </HStack>
                         </Flex>
+                        <HStack marginTop={`${15 + maxContainerHeight - 442.8}px`} marginBottom={'15px'} gap={'15px'}>
+                            <Button
+                                flex={2 / 3}
+                                leftIcon={<ChevronLeftIcon />}
+                                onClick={() =>
+                                    setActiveSection({
+                                        ...activeSection,
+                                        section: sections.teleop.main,
+                                        subsection: activeSection.lastTeleopSection
+                                    })
+                                }
+                            >
+                                Teleop
+                            </Button>
+                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                                {teamNumberParam}
+                            </Text>
+                            {futureAlly ? (
+                                <StarIcon
+                                    position={'absolute'}
+                                    left={'50%'}
+                                    transform={'translate(-50%, 0%)'}
+                                    zIndex={-1}
+                                    opacity={1}
+                                    // stroke={'black'}
+                                    viewBox={'-1 -1 26 26'}
+                                    fontSize={'60px'}
+                                    color={'yellow.300'}
+                                />
+                            ) : null}
+                            <Button flex={2 / 3} rightIcon={<ChevronRightIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.closing.main, subsection: null })}>
+                                Closing
+                            </Button>
+                        </HStack>
                     </Box>
                 );
             case sections.closing.main:
@@ -1240,6 +1238,13 @@ function StandForm() {
                             Closing
                         </Text>
                         <Flex flexDir={'column'} rowGap={'15px'}>
+                            <Center>
+                                <Textarea
+                                    onChange={(event) => setStandFormData({ ...standFormData, standComment: event.target.value })}
+                                    value={standFormData.standComment}
+                                    placeholder='Only write comments you think are VITAL!'
+                                />
+                            </Center>
                             {standFormData.standStatus !== matchFormStatus.noShow && (
                                 <Center>
                                     <Checkbox
@@ -1264,34 +1269,38 @@ function StandForm() {
                             ) : null}
                             {showQRCode && (
                                 <Center margin={'10px 0px 20px 0px'}>
-                                    <QRCode value={getQRValue()} />
+                                    <QRCode value={getQRValue()} size={`${maxContainerHeight - 182.8 - (isFollowOrNoShow() && 95)}px`} />
                                 </Center>
                             )}
-                            <HStack gap={'15px'}>
-                                <Button flex={2 / 3} leftIcon={<ChevronLeftIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.endGame.main })}>
-                                    End Game
-                                </Button>
-                                <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
-                                    {teamNumberParam}
-                                </Text>
-                                {futureAlly ? (
-                                    <StarIcon
-                                        position={'absolute'}
-                                        left={'50%'}
-                                        transform={'translate(-50%, 0%)'}
-                                        zIndex={-1}
-                                        opacity={1}
-                                        // stroke={'black'}
-                                        viewBox={'-1 -1 26 26'}
-                                        fontSize={'60px'}
-                                        color={'yellow.300'}
-                                    />
-                                ) : null}
-                                <Button flex={2 / 3} isDisabled={submitting} onClick={() => submit()}>
-                                    Submit
-                                </Button>
-                            </HStack>
                         </Flex>
+                        <HStack
+                            marginTop={`${15 + maxContainerHeight - 152.8 - (isFollowOrNoShow() && 95) - (showQRCode && maxContainerHeight + 45 - 182.8 - (isFollowOrNoShow() && 95))}px`}
+                            marginBottom={'15px'}
+                            gap={'15px'}
+                        >
+                            <Button flex={2 / 3} leftIcon={<ChevronLeftIcon />} onClick={() => setActiveSection({ ...activeSection, section: sections.endGame.main })}>
+                                End Game
+                            </Button>
+                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                                {teamNumberParam}
+                            </Text>
+                            {futureAlly ? (
+                                <StarIcon
+                                    position={'absolute'}
+                                    left={'50%'}
+                                    transform={'translate(-50%, 0%)'}
+                                    zIndex={-1}
+                                    opacity={1}
+                                    // stroke={'black'}
+                                    viewBox={'-1 -1 26 26'}
+                                    fontSize={'60px'}
+                                    color={'yellow.300'}
+                                />
+                            ) : null}
+                            <Button flex={2 / 3} isDisabled={submitting} onClick={() => submit()}>
+                                Submit
+                            </Button>
+                        </HStack>
                     </Box>
                 );
             default:
@@ -1368,7 +1377,7 @@ function StandForm() {
         );
     }
 
-    if (standFormData.loading || whitespace === null || dimensionRatios === null || futureAlly === null) {
+    if (standFormData.loading || whitespace === null || dimensionRatios === null || maxContainerHeight === null || futureAlly === null) {
         return (
             <Center>
                 <Spinner></Spinner>
