@@ -27,7 +27,7 @@ import {
 } from '@chakra-ui/react';
 import { StarIcon } from '@chakra-ui/icons';
 import { deepEqual, getValueByRange } from '../util/helperFunctions';
-import { AUTO, TELEOP, createHistoryManager } from '../util/historyManager';
+import { AUTO, ENDGAME, TELEOP, createHistoryManager } from '../util/historyManager';
 import '../stylesheets/standformstyle.css';
 import { matchFormStatus, scoutedField } from '../util/helperConstants';
 import PreAutoRedField from '../images/PreAutoRedField.png';
@@ -153,14 +153,17 @@ function StandForm() {
         standComment: '',
         standStatus: null,
         standStatusComment: '',
-        loading: true
+        loading: true,
+        history: {
+            auto: [],
+            teleop: [],
+            endGame: []
+        }
     });
     const [error, setError] = useState(null);
     const [futureAlly, setFutureAlly] = useState(null);
     const [submitting, setSubmitting] = useState(false);
-    const [standFormAutoManager] = useState(createHistoryManager(AUTO, setStandFormData));
-    const [standFormTeleManager] = useState(createHistoryManager(TELEOP, setStandFormData));
-    const [standFormEndManager] = useState(createHistoryManager(TELEOP, setStandFormData));
+    const [standFormManagers, setStandFormManagers] = useState(null);
     const [dimensionRatios, setDimensionRatios] = useState(null);
     const [whitespace, setWhitespace] = useState(null);
     const [preAutoImageSrc, setPreAutoImageSrc] = useState(null);
@@ -269,8 +272,15 @@ function StandForm() {
         }
         if (standFormData.loading === false) {
             prevStandFormData.current = JSON.parse(JSON.stringify(standFormData));
+            if (standFormManagers === null) {
+                setStandFormManagers({
+                    auto: createHistoryManager(AUTO, setStandFormData, standFormData.history.auto),
+                    teleop: createHistoryManager(TELEOP, setStandFormData, standFormData.history.teleop),
+                    endGame: createHistoryManager(ENDGAME, setStandFormData, standFormData.history.endGame)
+                });
+            }
         }
-    }, [standFormData, eventKeyParam, matchNumberParam, stationParam]);
+    }, [standFormData, eventKeyParam, matchNumberParam, stationParam, standFormManagers]);
 
     function getImageVariables() {
         const viewportWidth = window.innerWidth;
@@ -563,10 +573,10 @@ function StandForm() {
                                             key={piece.id}
                                             onClick={() => {
                                                 if (piece.label === 'Note' && standFormData.preLoadedPiece !== 'Note') {
-                                                    setStandFormData({ ...standFormData, preLoadedPiece: piece.label, autoTimeline: [{ piece: 0, scored: null }, ...standFormData.autoTimeline] });
+                                                    setStandFormData({ ...standFormData, preLoadedPiece: piece.label, autoTimeline: [{ piece: '0', scored: null }, ...standFormData.autoTimeline] });
                                                 } else if (piece.label === 'None' && standFormData.preLoadedPiece === 'Note') {
+                                                    standFormManagers.auto.removePreloadedEntry(standFormData);
                                                     setStandFormData({ ...standFormData, preLoadedPiece: piece.label, autoTimeline: standFormData.autoTimeline.slice(1) });
-                                                    standFormAutoManager.removeEntry(0);
                                                 } else {
                                                     setStandFormData({ ...standFormData, preLoadedPiece: piece.label });
                                                 }
@@ -613,24 +623,24 @@ function StandForm() {
                             <Button
                                 colorScheme={'gray'}
                                 onClick={() => {
-                                    standFormAutoManager.undo(standFormData);
+                                    standFormManagers.auto.undo(standFormData);
                                 }}
-                                isDisabled={standFormAutoManager.getPosition() === -1}
+                                isDisabled={standFormManagers.auto.getPosition() === -1}
                                 width={'100%'}
                                 whiteSpace={'pre-line'}
                             >
-                                {standFormAutoManager.getPosition() === -1 ? 'Undo' : `Undo\n${standFormAutoManager.getUndoNote()}`}
+                                {standFormManagers.auto.getPosition() === -1 ? 'Undo' : `Undo\n${standFormManagers.auto.getUndoNote()}`}
                             </Button>
                             <Button
                                 colorScheme={'gray'}
                                 onClick={() => {
-                                    standFormAutoManager.redo(standFormData);
+                                    standFormManagers.auto.redo(standFormData);
                                 }}
-                                isDisabled={standFormAutoManager.getPosition() === standFormAutoManager.getHistoryLength() - 1}
+                                isDisabled={standFormManagers.auto.getPosition() === standFormManagers.auto.getHistoryLength() - 1}
                                 width={'100%'}
                                 whiteSpace={'pre-line'}
                             >
-                                {standFormAutoManager.getPosition() === standFormAutoManager.getHistoryLength() - 1 ? 'Redo' : `Redo\n${standFormAutoManager.getRedoNote()}`}
+                                {standFormManagers.auto.getPosition() === standFormManagers.auto.getHistoryLength() - 1 ? 'Redo' : `Redo\n${standFormManagers.auto.getRedoNote()}`}
                             </Button>
                         </HStack>
                         <Text
@@ -642,13 +652,13 @@ function StandForm() {
                         >
                             {activeSection}:{' '}
                             {standFormData.autoTimeline.length === 0 ||
-                            (standFormData.autoTimeline.slice(-1)[0].scored !== null && (standFormData.autoTimeline[0].piece !== 0 || standFormData.autoTimeline[0].scored !== null))
+                            (standFormData.autoTimeline.slice(-1)[0].scored !== null && (standFormData.autoTimeline[0].piece !== '0' || standFormData.autoTimeline[0].scored !== null))
                                 ? 'Intake'
                                 : 'Scoring'}
-                            {standFormData.autoTimeline.length > 0 && standFormData.autoTimeline[0].piece === 0 && standFormData.autoTimeline[0].scored === null ? '(Preloaded)' : ''}
+                            {standFormData.autoTimeline.length > 0 && standFormData.autoTimeline[0].piece === '0' && standFormData.autoTimeline[0].scored === null ? '(Preloaded)' : ''}
                         </Text>
                         {standFormData.autoTimeline.length === 0 ||
-                        (standFormData.autoTimeline.slice(-1)[0].scored !== null && (standFormData.autoTimeline[0].piece !== 0 || standFormData.autoTimeline[0].scored !== null)) ? (
+                        (standFormData.autoTimeline.slice(-1)[0].scored !== null && (standFormData.autoTimeline[0].piece !== '0' || standFormData.autoTimeline[0].scored !== null)) ? (
                             <Box style={{ transform: `rotate(${fieldRotation}deg)` }}>
                                 {!autoImageSrc && (
                                     <Center
@@ -674,9 +684,9 @@ function StandForm() {
                                         height={`${65 * dimensionRatios.height}px`}
                                         style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }}
                                         onClick={() => {
-                                            standFormAutoManager.doCommand(standFormData, index + 1);
+                                            standFormManagers.auto.doCommand(standFormData, (index + 1).toString());
                                         }}
-                                        isDisabled={standFormData.autoTimeline.some((element) => element.piece === index + 1)}
+                                        isDisabled={standFormData.autoTimeline.some((element) => element.piece === (index + 1).toString())}
                                         _disabled={{ backgroundColor: '#3182ce', textColor: 'white', _hover: { backgroundColor: '#3182ce' }, cursor: 'default' }}
                                     >
                                         {index + 1}
@@ -700,7 +710,7 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormAutoManager.doCommand(standFormData, scoutedField.ampScore.field);
+                                            standFormManagers.auto.doCommand(standFormData, scoutedField.ampScore.field);
                                         }}
                                     >
                                         Amp: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === scoutedField.ampScore.field ? ++acc : acc), 0)}
@@ -712,7 +722,7 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormAutoManager.doCommand(standFormData, scoutedField.speakerScore.field);
+                                            standFormManagers.auto.doCommand(standFormData, scoutedField.speakerScore.field);
                                         }}
                                     >
                                         Speaker: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === scoutedField.speakerScore.field ? ++acc : acc), 0)}
@@ -726,7 +736,7 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormAutoManager.doCommand(standFormData, scoutedField.ampMiss.field);
+                                            standFormManagers.auto.doCommand(standFormData, scoutedField.ampMiss.field);
                                         }}
                                     >
                                         Amp Miss: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === scoutedField.ampMiss.field ? ++acc : acc), 0)}
@@ -739,7 +749,7 @@ function StandForm() {
                                         height={'100%'}
                                         whiteSpace={'normal'}
                                         onClick={() => {
-                                            standFormAutoManager.doCommand(standFormData, scoutedField.speakerMiss.field);
+                                            standFormManagers.auto.doCommand(standFormData, scoutedField.speakerMiss.field);
                                         }}
                                     >
                                         Speaker Miss: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === scoutedField.speakerMiss.field ? ++acc : acc), 0)}
@@ -751,7 +761,7 @@ function StandForm() {
                                     fontSize={'larger'}
                                     flex={0.2}
                                     onClick={() => {
-                                        standFormAutoManager.doCommand(standFormData, scoutedField.intakeMiss.field);
+                                        standFormManagers.auto.doCommand(standFormData, scoutedField.intakeMiss.field);
                                     }}
                                 >
                                     Intake Miss: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === scoutedField.intakeMiss.field ? ++acc : acc), 0)}
@@ -810,24 +820,24 @@ function StandForm() {
                             <Button
                                 colorScheme={'gray'}
                                 onClick={() => {
-                                    standFormTeleManager.undo(standFormData);
+                                    standFormManagers.teleop.undo(standFormData);
                                 }}
-                                isDisabled={standFormTeleManager.getPosition() === -1}
+                                isDisabled={standFormManagers.teleop.getPosition() === -1}
                                 width={'100%'}
                                 whiteSpace={'pre-line'}
                             >
-                                {standFormTeleManager.getPosition() === -1 ? 'Undo' : `Undo\n${standFormTeleManager.getUndoNote()}`}
+                                {standFormManagers.teleop.getPosition() === -1 ? 'Undo' : `Undo\n${standFormManagers.teleop.getUndoNote()}`}
                             </Button>
                             <Button
                                 colorScheme={'gray'}
                                 onClick={() => {
-                                    standFormTeleManager.redo(standFormData);
+                                    standFormManagers.teleop.redo(standFormData);
                                 }}
-                                isDisabled={standFormTeleManager.getPosition() === standFormTeleManager.getHistoryLength() - 1}
+                                isDisabled={standFormManagers.teleop.getPosition() === standFormManagers.teleop.getHistoryLength() - 1}
                                 width={'100%'}
                                 whiteSpace={'pre-line'}
                             >
-                                {standFormTeleManager.getPosition() === standFormTeleManager.getHistoryLength() - 1 ? 'Redo' : `Redo\n${standFormTeleManager.getRedoNote()}`}
+                                {standFormManagers.teleop.getPosition() === standFormManagers.teleop.getHistoryLength() - 1 ? 'Redo' : `Redo\n${standFormManagers.teleop.getRedoNote()}`}
                             </Button>
                         </HStack>
                         <Text
@@ -852,7 +862,7 @@ function StandForm() {
                                     flex={1 / 2}
                                     height={'100%'}
                                     onClick={() => {
-                                        standFormTeleManager.doCommand(standFormData, scoutedField.intakeSource.field);
+                                        standFormManagers.teleop.doCommand(standFormData, scoutedField.intakeSource.field);
                                     }}
                                 >
                                     Source: {standFormData.teleopGP.intakeSource}
@@ -864,7 +874,7 @@ function StandForm() {
                                     flex={1 / 2}
                                     height={'100%'}
                                     onClick={() => {
-                                        standFormTeleManager.doCommand(standFormData, scoutedField.intakeGround.field);
+                                        standFormManagers.teleop.doCommand(standFormData, scoutedField.intakeGround.field);
                                     }}
                                 >
                                     Ground: {standFormData.teleopGP.intakeGround}
@@ -880,7 +890,7 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormTeleManager.doCommand(standFormData, scoutedField.ampScore.field);
+                                            standFormManagers.teleop.doCommand(standFormData, scoutedField.ampScore.field);
                                         }}
                                     >
                                         Amp: {standFormData.teleopGP.ampScore}
@@ -892,7 +902,7 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormTeleManager.doCommand(standFormData, scoutedField.speakerScore.field);
+                                            standFormManagers.teleop.doCommand(standFormData, scoutedField.speakerScore.field);
                                         }}
                                     >
                                         Speaker: {standFormData.teleopGP.speakerScore}
@@ -906,7 +916,7 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormTeleManager.doCommand(standFormData, scoutedField.ampMiss.field);
+                                            standFormManagers.teleop.doCommand(standFormData, scoutedField.ampMiss.field);
                                         }}
                                     >
                                         Amp Miss: {standFormData.teleopGP.ampMiss}
@@ -919,7 +929,7 @@ function StandForm() {
                                         height={'100%'}
                                         whiteSpace={'normal'}
                                         onClick={() => {
-                                            standFormTeleManager.doCommand(standFormData, scoutedField.speakerMiss.field);
+                                            standFormManagers.teleop.doCommand(standFormData, scoutedField.speakerMiss.field);
                                         }}
                                     >
                                         Speaker Miss: {standFormData.teleopGP.speakerMiss}
@@ -931,7 +941,7 @@ function StandForm() {
                                     fontSize={'larger'}
                                     flex={0.2}
                                     onClick={() => {
-                                        standFormTeleManager.doCommand(standFormData, scoutedField.ferry.field);
+                                        standFormManagers.teleop.doCommand(standFormData, scoutedField.ferry.field);
                                     }}
                                 >
                                     Ferry: {standFormData.teleopGP.ferry}
@@ -1040,24 +1050,24 @@ function StandForm() {
                             <Button
                                 colorScheme={'gray'}
                                 onClick={() => {
-                                    standFormEndManager.undo(standFormData);
+                                    standFormManagers.endGame.undo(standFormData);
                                 }}
-                                isDisabled={standFormEndManager.getPosition() === -1}
+                                isDisabled={standFormManagers.endGame.getPosition() === -1}
                                 width={'100%'}
                                 whiteSpace={'pre-line'}
                             >
-                                {standFormEndManager.getPosition() === -1 ? 'Undo' : `Undo\n${standFormEndManager.getUndoNote()}`}
+                                {standFormManagers.endGame.getPosition() === -1 ? 'Undo' : `Undo\n${standFormManagers.endGame.getUndoNote()}`}
                             </Button>
                             <Button
                                 colorScheme={'gray'}
                                 onClick={() => {
-                                    standFormEndManager.redo(standFormData);
+                                    standFormManagers.endGame.redo(standFormData);
                                 }}
-                                isDisabled={standFormEndManager.getPosition() === standFormEndManager.getHistoryLength() - 1}
+                                isDisabled={standFormManagers.endGame.getPosition() === standFormManagers.endGame.getHistoryLength() - 1}
                                 width={'100%'}
                                 whiteSpace={'pre-line'}
                             >
-                                {standFormEndManager.getPosition() === standFormEndManager.getHistoryLength() - 1 ? 'Redo' : `Redo\n${standFormEndManager.getRedoNote()}`}
+                                {standFormManagers.endGame.getPosition() === standFormManagers.endGame.getHistoryLength() - 1 ? 'Redo' : `Redo\n${standFormManagers.endGame.getRedoNote()}`}
                             </Button>
                         </HStack>
                         <Text
@@ -1092,7 +1102,7 @@ function StandForm() {
                                 height={'60px'}
                                 fontWeight={'bold'}
                                 onClick={() => {
-                                    standFormEndManager.doCommand(standFormData, scoutedField.trap.field);
+                                    standFormManagers.endGame.doCommand(standFormData, scoutedField.trap.field);
                                 }}
                             >
                                 Trap: {standFormData.teleopGP.trap}
@@ -1345,7 +1355,7 @@ function StandForm() {
         );
     }
 
-    if (standFormData.loading || whitespace === null || dimensionRatios === null || maxContainerHeight === null || futureAlly === null) {
+    if (standFormData.loading || whitespace === null || dimensionRatios === null || maxContainerHeight === null || standFormManagers === null || futureAlly === null) {
         return (
             <Center>
                 <Spinner></Spinner>

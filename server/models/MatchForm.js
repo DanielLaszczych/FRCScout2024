@@ -3,7 +3,7 @@ const { matchFormStatus } = require('../util/helperConstants');
 
 const autoTimelineSchema = new Schema({
     piece: {
-        type: Number
+        type: String
     },
     scored: {
         type: String
@@ -11,10 +11,10 @@ const autoTimelineSchema = new Schema({
 });
 
 const teleopSchema = new Schema({
-    intakeGround: {
+    intakeSource: {
         type: Number
     },
-    intakeSource: {
+    intakeGround: {
         type: Number
     },
     ampScore: {
@@ -34,6 +34,18 @@ const teleopSchema = new Schema({
     },
     trap: {
         type: Number
+    }
+});
+
+const historySchema = new Schema({
+    auto: {
+        type: [String]
+    },
+    teleop: {
+        type: [String]
+    },
+    endGame: {
+        type: [String]
     }
 });
 
@@ -106,6 +118,9 @@ const matchFormSchema = new Schema({
     },
     standStatusComment: {
         type: String
+    },
+    history: {
+        type: historySchema
     },
     superScouter: {
         type: String
