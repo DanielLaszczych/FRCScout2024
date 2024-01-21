@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const PitForm = require('../models/PitForm');
+const cloudinary = require('cloudinary').v2;
 
 router.get('/getPitForm', async (req, res) => {
     if (req.isUnauthenticated()) {
