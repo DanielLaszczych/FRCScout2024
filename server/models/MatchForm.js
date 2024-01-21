@@ -11,10 +11,10 @@ const autoTimelineSchema = new Schema({
 });
 
 const teleopSchema = new Schema({
-    groundIntake: {
+    intakeGround: {
         type: Number
     },
-    sourceIntake: {
+    intakeSource: {
         type: Number
     },
     ampScore: {

@@ -195,6 +195,11 @@ export function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+export function camelToFlat(string) {
+    string = string.replace(/[A-Z]/g, ' $&');
+    return string[0].toUpperCase() + string.slice(1);
+}
+
 export function roundToHundredth(value) {
     const stringValue = value.toString();
     return Number(stringValue).toFixed(2);

@@ -23,4 +23,16 @@ export const rtessIssuesStatus = {
     resolved: 'Resolved'
 };
 
+export const scoutedField = {
+    intakeSource: { field: 'intakeSource', label: 'Source' },
+    intakeGround: { field: 'intakeGround', label: 'Ground' },
+    intakeMiss: { field: 'intakeMiss', label: 'Intake Miss' },
+    ampScore: { field: 'ampScore', label: 'Amp' },
+    speakerScore: { field: 'speakerScore', label: 'Speaker' },
+    ampMiss: { field: 'ampMiss', label: 'Amp Miss' },
+    speakerMiss: { field: 'speakerMiss', label: 'Speaker Miss' },
+    ferry: { field: 'ferry', label: 'Ferry' },
+    trap: { field: 'trap', label: 'Trap' }
+};
+
 export const timeZone = 'US/Central';
