@@ -907,7 +907,7 @@ function PitForm() {
             case abilityTypes.radio:
                 return (
                     <Box key={abilityContainer.id}>
-                        <Text fontWeight={'bold'} fontSize={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={containerIndex !== 0 && '10px'}>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={containerIndex !== 0 && '10px'}>
                             {abilityContainer.label}
                         </Text>
                         <RadioGroup
@@ -929,7 +929,7 @@ function PitForm() {
             case abilityTypes.checkbox:
                 return (
                     <Box key={abilityContainer.id}>
-                        <Text fontWeight={'bold'} fontSize={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={containerIndex !== 0 && '10px'}>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={containerIndex !== 0 && '10px'}>
                             {abilityContainer.label}
                         </Text>
                         <Flex flexWrap={'wrap'} rowGap={'5px'} columnGap={'20px'} justifyContent={'flex-start'}>
@@ -1055,7 +1055,7 @@ function PitForm() {
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
                 {error}
             </Box>
         );
@@ -1075,7 +1075,7 @@ function PitForm() {
             >
                 <AlertDialogOverlay>
                     <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
-                        <AlertDialogHeader color='black' fontSize='lg' fontWeight='bold'>
+                        <AlertDialogHeader color='black' fontSize={'lg'} fontWeight={'semibold'}>
                             Unsaved Data
                         </AlertDialogHeader>
                         <AlertDialogBody>You have unsaved data for this pit form. Would you like to load it, delete it, or pull data from the cloud?</AlertDialogBody>
@@ -1142,12 +1142,12 @@ function PitForm() {
                 borderRadius={'50%'}
                 border={'2px solid black'}
             >
-                <AddIcon fontSize={'150%'} />
+                <AddIcon fontSize={'xl'} />
             </Circle>
             <Modal lockFocusAcrossFrames={true} closeOnEsc={true} isOpen={isModalOpen} onClose={onModalClose}>
                 <ModalOverlay>
                     <ModalContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
-                        <ModalHeader color='black' fontSize='lg' fontWeight='bold'>
+                        <ModalHeader color='black' fontSize={'lg'} fontWeight={'semibold'}>
                             Write a comment
                         </ModalHeader>
                         <ModalBody maxHeight={'250px'} overflowY={'auto'}>
@@ -1179,10 +1179,10 @@ function PitForm() {
                     </ModalContent>
                 </ModalOverlay>
             </Modal>
-            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'}>
+            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'}>
                 Team Number: {teamNumberParam}
             </Text>
-            <Text fontWeight={'bold'} fontSize={'large'} textAlign={'center'} marginTop={'15px'} marginBottom={'5px'}>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginTop={'15px'} marginBottom={'5px'}>
                 Weight:
             </Text>
             <NumberInput
@@ -1207,7 +1207,7 @@ function PitForm() {
                     textAlign={'center'}
                 />
             </NumberInput>
-            <Text fontWeight={'bold'} fontSize={'large'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
                 Starting Height:
             </Text>
             <NumberInput
@@ -1233,7 +1233,7 @@ function PitForm() {
                     textAlign={'center'}
                 />
             </NumberInput>
-            <Text fontWeight={'bold'} fontSize={'large'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
                 Frame Size:
             </Text>
             <HStack gap={'0px'}>
@@ -1282,10 +1282,10 @@ function PitForm() {
                     />
                 </NumberInput>
             </HStack>
-            <Text fontWeight={'bold'} fontSize={'large'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
                 Drive Train:
             </Text>
-            <Text fontWeight={'bold'} fontSize={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
+            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
                 Type
             </Text>
             <RadioGroup
@@ -1328,7 +1328,7 @@ function PitForm() {
                 </Flex>
             </RadioGroup>
             <HStack gap={'0px'} pos={'relative'} marginBottom={'5px'} marginTop={'10px'} justifyContent={'center'}>
-                <Text fontWeight={'bold'} fontSize={'medium'} textAlign={'center'}>
+                <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
                     Motors (Drive Only!)
                 </Text>
                 {pitFormData.motors.length > 0 ? (
@@ -1374,12 +1374,12 @@ function PitForm() {
             <Center marginTop={pitFormData.motors.length > 0 ? '10px' : '5px'}>
                 <Popover isLazy flip={false} placement='bottom' isOpen={isMotorsOpen} onOpen={onMotorsOpen} onClose={onMotorsClose}>
                     <PopoverTrigger>
-                        <Button size={'sm'}>Add Motor</Button>
+                        <Button>Add Motor</Button>
                     </PopoverTrigger>
                     <PopoverContent maxWidth={'75vw'}>
                         <PopoverArrow />
                         <PopoverCloseButton />
-                        <PopoverHeader color='black' fontSize='md' fontWeight='bold'>
+                        <PopoverHeader color='black' fontSize={'md'} fontWeight={'medium'}>
                             Choose a motor
                         </PopoverHeader>
                         <PopoverBody maxHeight={'160px'} overflowY={'auto'}>
@@ -1388,7 +1388,6 @@ function PitForm() {
                                     .filter((motor) => !pitFormData.motors.some((secondMotor) => secondMotor.label === motor.label))
                                     .map((motor) => (
                                         <Button
-                                            fontSize={'sm'}
                                             key={motor.id}
                                             onClick={() => {
                                                 handleAddMotor(motor.label);
@@ -1411,10 +1410,10 @@ function PitForm() {
                     width={'85%'}
                 />
             </Center>
-            <Text fontWeight={'bold'} fontSize={'large'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
                 Autonomous:
             </Text>
-            <Text fontWeight={'bold'} fontSize={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
+            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
                 Programming Language
             </Text>
             <RadioGroup
@@ -1461,7 +1460,7 @@ function PitForm() {
                     ))}
                 </Flex>
             </RadioGroup>
-            <Text fontWeight={'bold'} fontSize={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
+            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
                 Prefered Starting Position
             </Text>
             <Box marginBottom={'10px'} position={'relative'}>
@@ -1505,14 +1504,14 @@ function PitForm() {
                     w={'85%'}
                 />
             </Center>
-            <Text fontWeight={'bold'} fontSize={'large'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
                 Abilities:
             </Text>
             {pitFormData.teleAbilities.map((abilityContainer, containerIndex) => getAbilityComponent(abilityContainer, containerIndex, 'teleAbilities'))}
-            <Text fontWeight={'bold'} fontSize={'large'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
                 Closing:
             </Text>
-            <Text fontWeight={'bold'} fontSize={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
+            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
                 Total Batteries
             </Text>
             <NumberInput
@@ -1537,8 +1536,8 @@ function PitForm() {
                     textAlign={'center'}
                 />
             </NumberInput>
-            <Text fontWeight={'bold'} fontSize={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
-                Total Batteries
+            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
+                Batteries Charging
             </Text>
             <NumberInput
                 onChange={(value) => setPitFormData({ ...pitFormData, chargingBatteryCount: value })}

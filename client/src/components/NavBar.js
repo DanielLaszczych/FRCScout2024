@@ -55,13 +55,21 @@ function NavBar() {
         }
     }, [curLoc]);
 
+    // This prevents a bug where a logged in user who is in offline mode deletes their cache and get login
+    // because they are stuck in offline mode preventing fetches to the network
+    useEffect(() => {
+        if (user === 'NoUser' && offline) {
+            switchModes();
+        }
+    }, [user, offline, switchModes]);
+
     return (
         <Flex position={'sticky'} zIndex={999} top={0} w={'100%'} className='navbar' minHeight={'75px'} marginBottom={'25px'} backgroundColor={'#212529'}>
             <Link to={'/'}>
                 <Box h='75px'>
                     <Image
-                        width={{ base: '70px', sm: '80px', md: '80px', lg: '100px' }}
-                        minW={{ base: '70px', sm: '80px', md: '80px', lg: '100px' }}
+                        width={{ base: '75px', sm: '80px', md: '80px', lg: '100px' }}
+                        minW={{ base: '75px', sm: '80px', md: '80px', lg: '100px' }}
                         src={logo}
                         _hover={{
                             cursor: 'pointer'
@@ -87,7 +95,6 @@ function NavBar() {
                             }}
                             enterKeyHint='search'
                             placeholder='Search team'
-                            fontSize='17px'
                             borderRadius={'5px 0px 0px 5px'}
                             bgColor={'white'}
                             _focus={{ boxShadow: 'none' }}
@@ -120,10 +127,10 @@ function NavBar() {
                         minW={{ base: 'calc(50vw)', sm: '3xs', md: '3xs', lg: '300px' }}
                     >
                         <Box borderBottom={'1px solid rgba(255, 255, 255, 0.5)'}>
-                            <Text marginLeft={'10px'} fontSize={'20px'} fontWeight={'bold'} color={'white'}>
+                            <Text marginLeft={'10px'} fontSize={'xl'} fontWeight={'bold'} color={'white'}>
                                 {user.displayName}
                             </Text>
-                            <Text marginLeft={'10px'} marginBottom={'5px'} fontSize={'20px'} fontWeight={'bold'} color={'white'}>
+                            <Text marginLeft={'10px'} marginBottom={'5px'} fontSize={'xl'} fontWeight={'bold'} color={'white'}>
                                 Role: {user.role}
                             </Text>
                         </Box>
@@ -134,7 +141,7 @@ function NavBar() {
                                 to={'/pits'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
-                                fontSize={'15px'}
+                                fontSize={'md'}
                                 marginBottom={'0px'}
                                 color={'white'}
                             >
@@ -146,7 +153,7 @@ function NavBar() {
                                 to={'/matches'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
-                                fontSize={'15px'}
+                                fontSize={'md'}
                                 marginBottom={'0px'}
                                 color={'white'}
                             >
@@ -158,7 +165,7 @@ function NavBar() {
                                 to={'/rtessIssues/team'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
-                                fontSize={'15px'}
+                                fontSize={'md'}
                                 marginBottom={'0px'}
                                 color={'white'}
                             >
@@ -170,7 +177,7 @@ function NavBar() {
                                 to={'/pickList'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
-                                fontSize={'15px'}
+                                fontSize={'md'}
                                 marginBottom={'0px'}
                                 color={'white'}
                             >
@@ -182,7 +189,7 @@ function NavBar() {
                                 to={'/pitMap'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
-                                fontSize={'15px'}
+                                fontSize={'md'}
                                 marginBottom={'0px'}
                                 color={'white'}
                             >
@@ -194,7 +201,7 @@ function NavBar() {
                                 to={'/admin'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
-                                fontSize={'15px'}
+                                fontSize={'md'}
                                 marginBottom={'0px'}
                                 color={'white'}
                             >
@@ -206,7 +213,7 @@ function NavBar() {
                                 to={'/tableau'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
-                                fontSize={'15px'}
+                                fontSize={'md'}
                                 marginBottom={'0px'}
                                 color={'white'}
                             >
@@ -218,7 +225,7 @@ function NavBar() {
                                 backgroundColor={'rgba(33, 37, 41, 0.98)'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-                                fontSize={'15px'}
+                                fontSize={'md'}
                                 marginBottom={'0px'}
                                 color={'white'}
                             >
@@ -229,7 +236,7 @@ function NavBar() {
                             backgroundColor={'rgba(33, 37, 41, 0.98)'}
                             _focus={{ backgroundColor: 'none' }}
                             _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
-                            fontSize={'15px'}
+                            fontSize={'md'}
                             marginBottom={'0px'}
                             color={'white'}
                             onClick={() => switchModes()}

@@ -4,7 +4,6 @@ import {
     Center,
     Box,
     Grid,
-    GridItem,
     Text,
     Flex,
     Circle,
@@ -231,47 +230,6 @@ function AdminPage() {
             });
     }
 
-    // const [createEvent] = useMutation(CREATE_EVENT, {
-    //     onError(err) {
-    //         console.log(JSON.stringify(err, null, 2));
-    //         toast({
-    //             title: 'Apollo Error',
-    //             description: 'Event was not able to be added',
-    //             status: 'error',
-    //             duration: 3000,
-    //             isClosable: true
-    //         });
-    //         setMutatingEventKey(null);
-    //     },
-    //     onCompleted({ createEvent: createdEvent }) {
-    //         toast({
-    //             title: 'Event was Added',
-    //             status: 'success',
-    //             duration: 3000,
-    //             isClosable: true
-    //         });
-    //         setEventTypes((prevEventTypes) =>
-    //             prevEventTypes.map((eventType) => {
-    //                 if (createdEvent.eventType === eventType.name) {
-    //                     let filteredEvents = eventType.events.filter((event) => event.name !== createdEvent.name);
-    //                     return { ...eventType, events: filteredEvents, count: filteredEvents.length };
-    //                 } else {
-    //                     return eventType;
-    //                 }
-    //             })
-    //         );
-    //         setVersion((prevVersion) => prevVersion + 1);
-    //         setTimeout(() => {
-    //             setMutatingEventKey(null);
-    //             setEvents((prevEvents) => sortRegisteredEvents([...prevEvents, createdEvent]));
-    //         }, 300);
-    //         setCustomEventDialog({ open: false });
-    //         setCustomEventData({ key: '', name: '', eventType: '', focusedEventType: '', startDate: '', endDate: '', teams: [], inputTeam: '' });
-    //         setSubmitAttempted(false);
-    //         setSubmitting(false);
-    //     }
-    // });
-
     async function handleAddEvent(name, year, week, eventType, key, startDate, endDate, teams = [], custom = false) {
         setMutatingEventKey(key);
         if (!custom) {
@@ -310,6 +268,7 @@ function AdminPage() {
                             duration: 3000,
                             isClosable: true
                         });
+                        setMutatingEventKey(null);
                     }
                 })
                 .catch((error) => {
@@ -321,6 +280,7 @@ function AdminPage() {
                         duration: 3000,
                         isClosable: true
                     });
+                    setMutatingEventKey(null);
                 });
         } else {
             setSubmitting(true);
@@ -355,7 +315,6 @@ function AdminPage() {
             };
             addEvent(event);
         }
-        setMutatingEventKey(null);
     }
 
     function handleRemoveEvent(key) {
@@ -423,58 +382,6 @@ function AdminPage() {
             });
     }
 
-    // const [removeEvent] = useMutation(REMOVE_EVENT, {
-    //     onError(err) {
-    //         console.log(JSON.stringify(err, null, 2));
-    //         toast({
-    //             title: 'Apollo Error',
-    //             description: 'Event was not able to be removed',
-    //             status: 'error',
-    //             duration: 3000,
-    //             isClosable: true
-    //         });
-    //         setMutatingEventKey(null);
-    //     },
-    //     onCompleted({ removeEvent: removedEvent }) {
-    //         toast({
-    //             title: 'Event was Removed',
-    //             status: 'success',
-    //             duration: 3000,
-    //             isClosable: true
-    //         });
-    //         if (removedEvent.key === currentEvent.key) {
-    //             setCurrentEvent({ name: 'None', key: 'None' });
-    //             setFocusedEvent({ name: 'None', key: 'None' });
-    //         }
-    //         setEvents((prevEvents) => prevEvents.filter((event) => event.name !== removedEvent.name));
-    //         setMutatingEventKey(null);
-    //         if (!removedEvent.custom) {
-    //             setTimeout(() => {
-    //                 setEventTypes((prevEventTypes) =>
-    //                     prevEventTypes.map((eventType) => {
-    //                         if (removedEvent.eventType === eventType.name) {
-    //                             let addedEvent = {
-    //                                 name: removedEvent.name,
-    //                                 key: removedEvent.key,
-    //                                 week: removedEvent.week,
-    //                                 event_type_string: removedEvent.eventType,
-    //                                 start_date: removedEvent.startDate,
-    //                                 end_date: removedEvent.endDate,
-    //                                 year: removedEvent.year
-    //                             };
-    //                             let newEvents = sortBlueAllianceEvents([...eventType.events, addedEvent]);
-    //                             return { ...eventType, events: newEvents, count: eventType.count + 1 };
-    //                         } else {
-    //                             return eventType;
-    //                         }
-    //                     })
-    //                 );
-    //                 setVersion((prevVersion) => prevVersion + 1);
-    //             }, 300);
-    //         }
-    //     }
-    // });
-
     function handleSetCurrentEvent(key) {
         setChangingCurrentEvent(true);
         fetch('/event/setCurrentEvent', {
@@ -519,47 +426,9 @@ function AdminPage() {
             });
     }
 
-    // const [setCurrentEventMutation] = useMutation(SET_CURRENT_EVENT, {
-    //     onError(err) {
-    //         if (err.message === 'Error: No current events') {
-    //             toast({
-    //                 title: 'Current Event Changed',
-    //                 status: 'success',
-    //                 duration: 3000,
-    //                 isClosable: true
-    //             });
-    //             setCurrentEvent({ name: 'None', key: 'None' });
-    //             setFocusedEvent({ name: 'None', key: 'None' });
-    //             setChangingCurrentEvent(false);
-    //         } else {
-    //             console.log(JSON.stringify(err, null, 2));
-    //             toast({
-    //                 title: 'Apollo Error',
-    //                 description: 'Current event was not able to changed',
-    //                 status: 'error',
-    //                 duration: 3000,
-    //                 isClosable: true
-    //             });
-    //             setFocusedEvent({ name: currentEvent.name, key: currentEvent.key });
-    //             setChangingCurrentEvent(false);
-    //         }
-    //     },
-    //     onCompleted({ setCurrentEvent: currentEvent }) {
-    //         toast({
-    //             title: 'Current Event Changed',
-    //             status: 'success',
-    //             duration: 3000,
-    //             isClosable: true
-    //         });
-    //         setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
-    //         setFocusedEvent({ name: currentEvent.name, key: currentEvent.key });
-    //         setChangingCurrentEvent(false);
-    //     }
-    // });
-
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
                 {error}
             </Box>
         );
@@ -578,7 +447,7 @@ function AdminPage() {
             <Modal lockFocusAcrossFrames={true} closeOnEsc={true} isOpen={isOpen} onClose={onClose}>
                 <ModalOverlay>
                     <ModalContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
-                        <ModalHeader color='black' fontSize='lg' fontWeight='bold'>
+                        <ModalHeader color='black' fontSize={'lg'} fontWeight={'semibold'}>
                             Select an Event
                         </ModalHeader>
                         <ModalBody maxHeight={'250px'} overflowY={'auto'}>
@@ -632,11 +501,11 @@ function AdminPage() {
             >
                 <AlertDialogOverlay>
                     <AlertDialogContent ref={dialogRef} maxHeight={'75vh'} overflowY={'auto'} margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top={'15%'}>
-                        <AlertDialogHeader color='black' fontSize='lg' fontWeight='bold' paddingBottom={'5px'}>
+                        <AlertDialogHeader color='black' fontSize={'lg'} fontWeight={'semibold'} paddingBottom={'5px'}>
                             Custom Event
                         </AlertDialogHeader>
                         <AlertDialogBody>
-                            <Text marginBottom={'10px'} fontWeight={'medium'} fontSize={'100%'}>
+                            <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
                                 Event Key:
                             </Text>
                             <Input
@@ -650,7 +519,7 @@ function AdminPage() {
                                 outline={customEventData.key.trim() === '' && submitAttempted ? '2px solid red' : 'none'}
                                 marginLeft={'15px'}
                             />
-                            <Text marginBottom={'10px'} fontWeight={'medium'} fontSize={'100%'}>
+                            <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
                                 Event Name:
                             </Text>
                             <Input
@@ -664,7 +533,7 @@ function AdminPage() {
                                 outline={customEventData.name.trim() === '' && submitAttempted ? '2px solid red' : 'none'}
                                 marginLeft={'15px'}
                             />
-                            <Text marginBottom={'10px'} fontWeight={'medium'} fontSize={'100%'}>
+                            <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
                                 Event Type:
                             </Text>
                             <Menu>
@@ -703,7 +572,7 @@ function AdminPage() {
                                     ))}
                                 </MenuList>
                             </Menu>
-                            <Text marginBottom={'10px'} fontWeight={'medium'} fontSize={'100%'}>
+                            <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
                                 Start Date:
                             </Text>
                             <Input
@@ -717,7 +586,7 @@ function AdminPage() {
                                 outline={customEventData.startDate.trim() === '' && submitAttempted ? '2px solid red' : 'none'}
                                 marginLeft={'15px'}
                             />
-                            <Text marginBottom={'10px'} fontWeight={'medium'} fontSize={'100%'}>
+                            <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
                                 End Date:
                             </Text>
                             <Input
@@ -731,7 +600,7 @@ function AdminPage() {
                                 outline={customEventData.endDate.trim() === '' && submitAttempted ? '2px solid red' : 'none'}
                                 marginLeft={'15px'}
                             />
-                            <Text marginBottom={'10px'} fontWeight={'medium'} fontSize={'100%'}>
+                            <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
                                 Teams:
                             </Text>
                             <HStack spacing={0} marginLeft={'15px'} marginBottom={customEventData.teams.length > 0 && '20px'}>
@@ -869,46 +738,46 @@ function AdminPage() {
                     borderRadius={'50%'}
                     border={'2px solid black'}
                 >
-                    <ArrowUpIcon fontSize={'150%'} />
+                    <ArrowUpIcon fontSize={'xl'} />
                 </Circle>
             ) : null}
             <Box marginBottom={'25px'}>
-                <h2 style={{ fontWeight: '500', fontSize: '30px', lineHeight: '1.1', marginBottom: '10px' }}>Current Event: {currentEvent.name}</h2>
+                <Text fontSize={'3xl'} fontWeight={'semibold'} lineHeight={'1.1'} marginBottom={'10px'}>
+                    Current Event: {currentEvent.name}
+                </Text>
                 {changingCurrentEvent ? <Spinner></Spinner> : <IconButton size='sm' icon={<EditIcon />} onClick={onOpen} />}
             </Box>
             <Box margin='0 auto' marginBottom={'15px'}>
                 <Box marginBottom={'10px'}>
-                    <h2 style={{ fontWeight: '500', fontSize: '30px', lineHeight: '1.1' }}>
+                    <Text fontSize={'3xl'} fontWeight={'semibold'} lineHeight={'1.1'}>
                         Registered Events <small style={{ fontSize: '65%', color: '#777', lineHeight: '1' }}>{events.length} Events</small>
-                    </h2>
+                    </Text>
                 </Box>
                 <TransitionGroup>
                     {events.map((event, index) => (
                         <CSSTransition key={event.key} timeout={500} classNames='shrink'>
                             <Grid
-                                minHeight={'61px'}
+                                minHeight={'60px'}
                                 borderTop={'1px solid black'}
                                 borderBottom={index === events.length - 1 && '1px solid black'}
                                 backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
                                 templateColumns='2fr 1fr'
                                 gap={'15px'}
                             >
-                                <GridItem marginLeft={'5px'} padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                    <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                        {event.name}
-                                    </Text>
-                                </GridItem>
-                                <GridItem padding={'10px 0px 10px 0px'} textAlign={'center'}>
+                                <Flex justifyContent={'center'} paddingLeft={'5px'} alignItems={'center'}>
+                                    <Text textAlign={'center'}>{event.name}</Text>
+                                </Flex>
+                                <Flex justifyContent={'center'} alignItems={'center'}>
                                     {mutatingEventKey === event.key ? (
                                         <Box marginTop={'8px'} minW={'110px'}>
                                             <Spinner></Spinner>
                                         </Box>
                                     ) : (
-                                        <Button isDisabled={mutatingEventKey !== null} onClick={() => handleRemoveEvent(event.key)} size={'md'} marginLeft={'10px'} marginRight={'10px'}>
+                                        <Button isDisabled={mutatingEventKey !== null} onClick={() => handleRemoveEvent(event.key)} marginLeft={'10px'} marginRight={'10px'}>
                                             Remove
                                         </Button>
                                     )}
-                                </GridItem>
+                                </Flex>
                             </Grid>
                         </CSSTransition>
                     ))}

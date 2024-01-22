@@ -288,7 +288,7 @@ function StandForm() {
 
         // Calculate image dimensions based on screen size
         const maxWidth = viewportWidth * getValueByRange(viewportWidth); // Adjust the multiplier as needed
-        const maxHeight = Math.min(imageHeight, Math.max(442.8 - 143.8, document.documentElement.clientHeight - 313.8));
+        const maxHeight = Math.min(imageHeight, Math.max(447 - 145, document.documentElement.clientHeight - 315));
 
         const screenAspectRatio = maxWidth / maxHeight;
         const imageAspectRatio = imageWidth / imageHeight;
@@ -316,7 +316,7 @@ function StandForm() {
             setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
         }
 
-        setMaxContainerHeight(scaledHeight + 143.8);
+        setMaxContainerHeight(scaledHeight + 145);
         setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
     }
 
@@ -501,13 +501,13 @@ function StandForm() {
                 return (
                     <Box>
                         <Text
+                            fontSize={'xl'}
                             fontWeight={'bold'}
-                            fontSize={'larger'}
                             textAlign={'center'}
                             marginBottom={'5px'}
                             color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
                         >
-                            Pre-Auto
+                            {activeSection}
                         </Text>
                         <Box position={'relative'} style={{ transform: `rotate(${fieldRotation}deg)` }}>
                             {!preAutoImageSrc && (
@@ -543,7 +543,7 @@ function StandForm() {
                             {preAutoImageSrc && (
                                 <img
                                     src={preAutoImageSrc}
-                                    style={{ zIndex: 0, margin: '0 auto', maxHeight: `${Math.max(442.8 - 143.8, document.documentElement.clientHeight - 313.8)}px` }}
+                                    style={{ zIndex: 0, margin: '0 auto', maxHeight: `${Math.max(447 - 145, document.documentElement.clientHeight - 315)}px` }}
                                     alt={'Field Map'}
                                 />
                             )}
@@ -564,7 +564,7 @@ function StandForm() {
                                 No Show
                             </Button>
                             <HStack gap={0}>
-                                <Text fontWeight={'bold'} textAlign={'center'} flex={1 / 2}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 2}>
                                     Preloaded:
                                 </Text>
                                 <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
@@ -590,11 +590,11 @@ function StandForm() {
                                 </HStack>
                             </HStack>
                         </Flex>
-                        <HStack marginTop={`${15 + maxContainerHeight - imageHeight * dimensionRatios.height - 143.8}px`} marginBottom={'15px'} gap={'15px'}>
+                        <HStack marginTop={`${15 + maxContainerHeight - imageHeight * dimensionRatios.height - 145}px`} marginBottom={'15px'} gap={'15px'}>
                             <Button flex={2 / 3} leftIcon={<AiOutlineRotateRight />} onClick={() => setFieldRotation((fieldRotation + 90) % 360)}>
                                 Rotate
                             </Button>
-                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} flex={1 / 3}>
                                 {teamNumberParam}
                             </Text>
                             {futureAlly ? (
@@ -606,7 +606,7 @@ function StandForm() {
                                     opacity={1}
                                     // stroke={'black'}
                                     viewBox={'-1 -1 26 26'}
-                                    fontSize={'60px'}
+                                    fontSize={'xl'}
                                     color={'yellow.300'}
                                 />
                             ) : null}
@@ -644,8 +644,8 @@ function StandForm() {
                             </Button>
                         </HStack>
                         <Text
+                            fontSize={'xl'}
                             fontWeight={'bold'}
-                            fontSize={'larger'}
                             textAlign={'center'}
                             margin={'5px 0'}
                             color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
@@ -695,18 +695,18 @@ function StandForm() {
                                 {autoImageSrc && (
                                     <img
                                         src={autoImageSrc}
-                                        style={{ zIndex: 0, margin: '0 auto', maxHeight: `${Math.max(442.8 - 143.8, document.documentElement.clientHeight - 313.8)}px` }}
+                                        style={{ zIndex: 0, margin: '0 auto', maxHeight: `${Math.max(447 - 145, document.documentElement.clientHeight - 315)}px` }}
                                         alt={'Field Map'}
                                     />
                                 )}
                             </Box>
                         ) : (
-                            <Flex width={`${imageWidth * dimensionRatios.width}px`} height={`${imageHeight * dimensionRatios.height}px`} flexDir={'column'} margin={'0 auto'} gap={'15px'}>
+                            <Flex height={`${imageHeight * dimensionRatios.height}px`} flexDir={'column'} margin={'0 auto'} gap={'15px'}>
                                 <Flex flex={1 / 2} gap={'15px'}>
                                     <Button
                                         colorScheme={'teal'}
+                                        fontSize={'xl'}
                                         fontWeight={'bold'}
-                                        fontSize={'larger'}
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
@@ -717,8 +717,8 @@ function StandForm() {
                                     </Button>
                                     <Button
                                         colorScheme={'facebook'}
+                                        fontSize={'xl'}
                                         fontWeight={'bold'}
-                                        fontSize={'larger'}
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
@@ -731,8 +731,8 @@ function StandForm() {
                                 <Flex flex={0.3} gap={'15px'}>
                                     <Button
                                         colorScheme={'pink'}
+                                        fontSize={'xl'}
                                         fontWeight={'bold'}
-                                        fontSize={'larger'}
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
@@ -743,8 +743,8 @@ function StandForm() {
                                     </Button>
                                     <Button
                                         colorScheme={'purple'}
+                                        fontSize={'xl'}
                                         fontWeight={'bold'}
-                                        fontSize={'larger'}
                                         flex={1 / 2}
                                         height={'100%'}
                                         whiteSpace={'normal'}
@@ -757,8 +757,8 @@ function StandForm() {
                                 </Flex>
                                 <Button
                                     colorScheme={'yellow'}
+                                    fontSize={'xl'}
                                     fontWeight={'bold'}
-                                    fontSize={'larger'}
                                     flex={0.2}
                                     onClick={() => {
                                         standFormManagers.auto.doCommand(standFormData, scoutedField.intakeMiss.field);
@@ -770,7 +770,7 @@ function StandForm() {
                         )}
                         <Flex flexDir={'column'} rowGap={'15px'} marginTop={'15px'}>
                             <HStack gap={0}>
-                                <Text fontWeight={'bold'} textAlign={'center'} flex={1 / 2}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 2}>
                                     Left starting zone:
                                 </Text>
                                 <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
@@ -787,11 +787,11 @@ function StandForm() {
                                 </HStack>
                             </HStack>
                         </Flex>
-                        <HStack marginTop={`${15 + maxContainerHeight - imageHeight * dimensionRatios.height - 133.8}px`} marginBottom={'15px'} gap={'15px'}>
+                        <HStack marginTop={`${15 + maxContainerHeight - imageHeight * dimensionRatios.height - 135}px`} marginBottom={'15px'} gap={'15px'}>
                             <Button flex={2 / 3} leftIcon={<IoChevronBack />} onClick={() => setActiveSection(sections.preAuto)}>
                                 Pre-Auto
                             </Button>
-                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} flex={1 / 3}>
                                 {teamNumberParam}
                             </Text>
                             {futureAlly ? (
@@ -803,7 +803,7 @@ function StandForm() {
                                     opacity={1}
                                     // stroke={'black'}
                                     viewBox={'-1 -1 26 26'}
-                                    fontSize={'60px'}
+                                    fontSize={'xl'}
                                     color={'yellow.300'}
                                 />
                             ) : null}
@@ -841,24 +841,34 @@ function StandForm() {
                             </Button>
                         </HStack>
                         <Text
+                            fontSize={'xl'}
                             fontWeight={'bold'}
-                            fontSize={'larger'}
                             textAlign={'center'}
                             margin={'5px 0'}
                             color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
                         >
-                            {activeSection}:
+                            {activeSection}:{' '}
+                            {standFormData.teleopGP.intakeGround + standFormData.teleopGP.intakeSource ===
+                            [
+                                standFormData.teleopGP.ampScore,
+                                standFormData.teleopGP.speakerScore,
+                                standFormData.teleopGP.ampMiss,
+                                standFormData.teleopGP.speakerMiss,
+                                standFormData.teleopGP.ferry
+                            ].reduce((partialSum, a) => partialSum + a, 0)
+                                ? 'Intake'
+                                : 'Scoring'}
                         </Text>
                         {standFormData.teleopGP.intakeGround + standFormData.teleopGP.intakeSource ===
                         [standFormData.teleopGP.ampScore, standFormData.teleopGP.speakerScore, standFormData.teleopGP.ampMiss, standFormData.teleopGP.speakerMiss, standFormData.teleopGP.ferry].reduce(
                             (partialSum, a) => partialSum + a,
                             0
                         ) ? (
-                            <Flex width={`${imageWidth * dimensionRatios.width}px`} height={`${maxContainerHeight - 213.8}px`} margin={'0 auto'} gap={'15px'}>
+                            <Flex height={`${maxContainerHeight - 215}px`} margin={'0 auto'} gap={'15px'}>
                                 <Button
                                     colorScheme={'teal'}
+                                    fontSize={'xl'}
                                     fontWeight={'bold'}
-                                    fontSize={'larger'}
                                     flex={1 / 2}
                                     height={'100%'}
                                     onClick={() => {
@@ -869,8 +879,8 @@ function StandForm() {
                                 </Button>
                                 <Button
                                     colorScheme={'facebook'}
+                                    fontSize={'xl'}
                                     fontWeight={'bold'}
-                                    fontSize={'larger'}
                                     flex={1 / 2}
                                     height={'100%'}
                                     onClick={() => {
@@ -881,12 +891,12 @@ function StandForm() {
                                 </Button>
                             </Flex>
                         ) : (
-                            <Flex width={`${imageWidth * dimensionRatios.width}px`} height={`${maxContainerHeight - 213.8}px`} flexDir={'column'} margin={'0 auto'} gap={'15px'}>
+                            <Flex height={`${maxContainerHeight - 215}px`} flexDir={'column'} margin={'0 auto'} gap={'15px'}>
                                 <Flex flex={1 / 2} gap={'15px'}>
                                     <Button
                                         colorScheme={'teal'}
+                                        fontSize={'xl'}
                                         fontWeight={'bold'}
-                                        fontSize={'larger'}
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
@@ -897,8 +907,8 @@ function StandForm() {
                                     </Button>
                                     <Button
                                         colorScheme={'facebook'}
+                                        fontSize={'xl'}
                                         fontWeight={'bold'}
-                                        fontSize={'larger'}
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
@@ -911,8 +921,8 @@ function StandForm() {
                                 <Flex flex={0.3} gap={'15px'}>
                                     <Button
                                         colorScheme={'pink'}
+                                        fontSize={'xl'}
                                         fontWeight={'bold'}
-                                        fontSize={'larger'}
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
@@ -923,8 +933,8 @@ function StandForm() {
                                     </Button>
                                     <Button
                                         colorScheme={'purple'}
+                                        fontSize={'xl'}
                                         fontWeight={'bold'}
-                                        fontSize={'larger'}
                                         flex={1 / 2}
                                         height={'100%'}
                                         whiteSpace={'normal'}
@@ -937,8 +947,8 @@ function StandForm() {
                                 </Flex>
                                 <Button
                                     colorScheme={'yellow'}
+                                    fontSize={'xl'}
                                     fontWeight={'bold'}
-                                    fontSize={'larger'}
                                     flex={0.2}
                                     onClick={() => {
                                         standFormManagers.teleop.doCommand(standFormData, scoutedField.ferry.field);
@@ -949,11 +959,11 @@ function StandForm() {
                             </Flex>
                         )}
                         <Flex flexDir={'column'} rowGap={'15px'} marginTop={'15px'}>
-                            <HStack marginBottom={'20px'}>
+                            <HStack marginBottom={'20px'} gap={'15px'}>
                                 <Flex flex={1 / 2} alignItems={'center'} flexDir={'column'} gap={'5px'}>
-                                    <Center fontWeight={'bold'} textAlign={'center'}>
+                                    <Text fontSize={'md'} fontWeight={'medium'}>
                                         Defense Rating
-                                    </Center>
+                                    </Text>
                                     <Slider
                                         min={0}
                                         max={3}
@@ -975,7 +985,7 @@ function StandForm() {
                                     </Slider>
                                 </Flex>
                                 <Flex flex={1 / 2} alignItems={'center'} flexDir={'column'} gap={'5px'}>
-                                    <Text fontWeight={'bold'} textAlign={'center'}>
+                                    <Text fontSize={'md'} fontWeight={'medium'}>
                                         Defense Allocation
                                     </Text>
                                     <Slider
@@ -1000,7 +1010,7 @@ function StandForm() {
                                 </Flex>
                             </HStack>
                             <HStack gap={0}>
-                                <Text fontWeight={'bold'} textAlign={'center'} flex={1 / 2}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 2}>
                                     Was Defended:
                                 </Text>
                                 <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
@@ -1017,11 +1027,11 @@ function StandForm() {
                                 </HStack>
                             </HStack>
                         </Flex>
-                        <HStack marginTop={`${15 + maxContainerHeight - (maxContainerHeight - 213.8) - 213.8}px`} marginBottom={'15px'} gap={'15px'}>
+                        <HStack marginTop={`${15 + maxContainerHeight - (maxContainerHeight - 215) - 215}px`} marginBottom={'15px'} gap={'15px'}>
                             <Button flex={2 / 3} leftIcon={<IoChevronBack />} onClick={() => setActiveSection(sections.auto)}>
                                 Auto
                             </Button>
-                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} flex={1 / 3}>
                                 {teamNumberParam}
                             </Text>
                             {futureAlly ? (
@@ -1033,7 +1043,7 @@ function StandForm() {
                                     opacity={1}
                                     // stroke={'black'}
                                     viewBox={'-1 -1 26 26'}
-                                    fontSize={'60px'}
+                                    fontSize={'xl'}
                                     color={'yellow.300'}
                                 />
                             ) : null}
@@ -1071,18 +1081,20 @@ function StandForm() {
                             </Button>
                         </HStack>
                         <Text
+                            fontSize={'xl'}
                             fontWeight={'bold'}
-                            fontSize={'larger'}
                             textAlign={'center'}
                             margin={'5px 0'}
                             color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
                         >
-                            End Game
+                            {activeSection}
                         </Text>
                         <Flex flexDir={'column'} rowGap={'15px'}>
                             <VStack gap={'5px'}>
-                                <Text fontWeight={'bold'}>Climb:</Text>
-                                <Flex columnGap={'10px'} width={'100%'}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'}>
+                                    Climb:
+                                </Text>
+                                <Flex columnGap={'10px'} width={'100%'} justifyContent={'center'}>
                                     {climbTypes.map((type) => (
                                         <Button
                                             key={type.id}
@@ -1108,7 +1120,7 @@ function StandForm() {
                                 Trap: {standFormData.teleopGP.trap}
                             </Button>
                             <HStack gap={0}>
-                                <Text fontWeight={'bold'} textAlign={'center'} flex={1 / 2}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 2}>
                                     Lost Comms:
                                 </Text>
                                 <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
@@ -1125,7 +1137,7 @@ function StandForm() {
                                 </HStack>
                             </HStack>
                             <HStack gap={0}>
-                                <Text fontWeight={'bold'} textAlign={'center'} flex={1 / 2}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 2}>
                                     Robot Broke:
                                 </Text>
                                 <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
@@ -1142,7 +1154,7 @@ function StandForm() {
                                 </HStack>
                             </HStack>
                             <HStack gap={0}>
-                                <Text fontWeight={'bold'} textAlign={'center'} flex={1 / 2}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 2}>
                                     Yellow Card:
                                 </Text>
                                 <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
@@ -1159,7 +1171,7 @@ function StandForm() {
                                 </HStack>
                             </HStack>
                             <HStack gap={0}>
-                                <Text fontWeight={'bold'} textAlign={'center'} flex={1 / 2}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 2}>
                                     Red Card:
                                 </Text>
                                 <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
@@ -1176,11 +1188,11 @@ function StandForm() {
                                 </HStack>
                             </HStack>
                         </Flex>
-                        <HStack marginTop={`${Math.max(15, 15 + maxContainerHeight - 442.8)}px`} marginBottom={'15px'} gap={'15px'}>
+                        <HStack marginTop={`${Math.max(15, 15 + maxContainerHeight - 447)}px`} marginBottom={'15px'} gap={'15px'}>
                             <Button flex={2 / 3} leftIcon={<IoChevronBack />} onClick={() => setActiveSection(sections.teleop)}>
                                 Teleop
                             </Button>
-                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} flex={1 / 3}>
                                 {teamNumberParam}
                             </Text>
                             {futureAlly ? (
@@ -1192,7 +1204,7 @@ function StandForm() {
                                     opacity={1}
                                     // stroke={'black'}
                                     viewBox={'-1 -1 26 26'}
-                                    fontSize={'60px'}
+                                    fontSize={'xl'}
                                     color={'yellow.300'}
                                 />
                             ) : null}
@@ -1205,8 +1217,8 @@ function StandForm() {
             case sections.closing:
                 return (
                     <Box>
-                        <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} marginBottom={'5px'} color={submitAttempted && !validateSection(activeSection) ? 'red' : 'black'}>
-                            Closing
+                        <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} marginBottom={'5px'} color={submitAttempted && !validateSection(activeSection) ? 'red' : 'black'}>
+                            {activeSection}
                         </Text>
                         <Flex flexDir={'column'} rowGap={'15px'}>
                             <Center>
@@ -1240,7 +1252,7 @@ function StandForm() {
                             ) : null}
                             {showQRCode && (
                                 <Center margin={'0px 0px 0px 0px'}>
-                                    <QRCode value={getQRValue()} size={maxContainerHeight - 113.8 - 15 - (standFormData.standStatus !== matchFormStatus.noShow && 39) - (isFollowOrNoShow() && 95)} />
+                                    <QRCode value={getQRValue()} size={maxContainerHeight - 115 - 15 - (standFormData.standStatus !== matchFormStatus.noShow && 39) - (isFollowOrNoShow() && 95)} />
                                 </Center>
                             )}
                         </Flex>
@@ -1248,10 +1260,10 @@ function StandForm() {
                             marginTop={`${
                                 15 +
                                 maxContainerHeight -
-                                113.8 -
+                                115 -
                                 (standFormData.standStatus !== matchFormStatus.noShow && 39) -
                                 (isFollowOrNoShow() && 95) -
-                                (showQRCode && maxContainerHeight - 113.8 - (standFormData.standStatus !== matchFormStatus.noShow && 39) - (isFollowOrNoShow() && 95))
+                                (showQRCode && maxContainerHeight - 115 - (standFormData.standStatus !== matchFormStatus.noShow && 39) - (isFollowOrNoShow() && 95))
                             }px`}
                             marginBottom={'15px'}
                             gap={'15px'}
@@ -1259,7 +1271,7 @@ function StandForm() {
                             <Button flex={2 / 3} leftIcon={<IoChevronBack />} onClick={() => setActiveSection(sections.endGame)}>
                                 End Game
                             </Button>
-                            <Text fontWeight={'bold'} fontSize={'larger'} textAlign={'center'} flex={1 / 3}>
+                            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} flex={1 / 3}>
                                 {teamNumberParam}
                             </Text>
                             {futureAlly ? (
@@ -1271,7 +1283,7 @@ function StandForm() {
                                     opacity={1}
                                     // stroke={'black'}
                                     viewBox={'-1 -1 26 26'}
-                                    fontSize={'60px'}
+                                    fontSize={'xl'}
                                     color={'yellow.300'}
                                 />
                             ) : null}
@@ -1288,7 +1300,7 @@ function StandForm() {
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
                 {error}
             </Box>
         );
@@ -1308,7 +1320,7 @@ function StandForm() {
             >
                 <AlertDialogOverlay>
                     <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
-                        <AlertDialogHeader color='black' fontSize='lg' fontWeight='bold'>
+                        <AlertDialogHeader color='black' fontSize={'lg'} fontWeight={'semibold'}>
                             Unsaved Data
                         </AlertDialogHeader>
                         <AlertDialogBody>You have unsaved data for this stand form. Would you like to load it, delete it, or pull data from the cloud?</AlertDialogBody>

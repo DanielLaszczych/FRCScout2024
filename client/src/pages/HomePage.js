@@ -181,7 +181,7 @@ function HomePage() {
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
                 {error}
             </Box>
         );
@@ -230,7 +230,7 @@ function HomePage() {
                             )}
                         </React.Fragment>
                     )}
-                    <Text textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '75%', md: '75%', lg: '100%' }}>
+                    <Text textAlign={'center'} fontSize={'xl'} fontWeight={'bold'} margin={'0 auto'} width={{ base: '75%', md: '75%', lg: '100%' }}>
                         Current Event: {currentEvent.name}
                     </Text>
                     <VStack spacing={'25px'} marginTop={'25px'}>
@@ -261,7 +261,7 @@ function HomePage() {
                                 }}
                             >
                                 <AlertDialogContent w={{ base: '75%', md: '40%', lg: '30%' }}>
-                                    <AlertDialogHeader color='black' fontSize='lg' fontWeight='bold'>
+                                    <AlertDialogHeader color='black' fontSize={'lg'} fontWeight={'semibold'}>
                                         Enter a team number
                                     </AlertDialogHeader>
                                     <AlertDialogBody>
@@ -316,23 +316,23 @@ function HomePage() {
                             return (
                                 <Box width={{ base: '95vw', sm: '90vw', md: '80vw', lg: '670px' }} margin={'0 auto'} marginTop={'25px'} marginBottom={'25px'}>
                                     {Object.keys(eventInfo.teamStatus).length === 0 ? (
-                                        <Text textAlign={'center'} fontSize={'20px'} marginBottom={eventInfo.matchTable.length === 0 ? '10px' : '20px'} fontWeight={'medium'}>
+                                        <Text textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} marginBottom={eventInfo.matchTable.length === 0 ? '10px' : '20px'}>
                                             No status posted yet
                                         </Text>
                                     ) : (
                                         <Box>
                                             {eventInfo.matchTable.find((match) => match.actualTime === null) && (
-                                                <Text textAlign={'center'} fontSize={'20px'} marginBottom={'10px'} fontWeight={'medium'}>
+                                                <Text textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} marginBottom={'10px'}>
                                                     {getCurrentMatchString(eventInfo.matchTable)}
                                                 </Text>
                                             )}
-                                            <Text textAlign={'center'} fontSize={'20px'} marginBottom={'25px'} fontWeight={'medium'}>
+                                            <Text textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} marginBottom={'25px'}>
                                                 {getTeamStatusString(eventInfo.teamStatus)}
                                             </Text>
                                         </Box>
                                     )}
                                     {eventInfo.matchTable.length === 0 ? (
-                                        <Text textAlign={'center'} fontSize={'20px'} marginBottom={'10px'} fontWeight={'medium'}>
+                                        <Text textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} marginBottom={'10px'}>
                                             No matches posted yet
                                         </Text>
                                     ) : (

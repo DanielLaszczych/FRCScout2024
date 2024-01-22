@@ -5,7 +5,7 @@ import { config } from '../util/helperConstants';
 function FailedLoginPage() {
     return (
         <VStack>
-            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
                 Please sign in with a RoboTigers account
             </Box>
             <a style={{ marginTop: '25px' }} href={`${config.API_URL}/auth/google`}>

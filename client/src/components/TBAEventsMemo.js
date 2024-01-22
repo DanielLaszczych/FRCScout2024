@@ -1,4 +1,4 @@
-import { Box, Button, Grid, GridItem, Spinner, Text } from '@chakra-ui/react';
+import { Box, Button, Flex, Grid, Spinner, Text } from '@chakra-ui/react';
 import React from 'react';
 import { TransitionGroup } from 'react-transition-group';
 import CSSTransition from './CSSTransition';
@@ -7,33 +7,32 @@ function TBAEventsMemo({ eventType, mutatingEventKey, handleAddEvent }) {
     return (
         <Box margin='0 auto' marginBottom={'25px'}>
             <Box marginBottom={'10px'}>
-                <h2 ref={eventType.ref} style={{ fontWeight: '500', fontSize: '30px', lineHeight: '1.1' }}>
+                <Text ref={eventType.ref} fontSize={'3xl'} fontWeight={'semibold'} lineHeight={'1.1'}>
                     {eventType.name} <small style={{ fontSize: '65%', color: '#777', lineHeight: '1' }}>{eventType.count} Events</small>
-                </h2>
+                </Text>
             </Box>
             <TransitionGroup>
                 {eventType.events.map((event, index) => (
                     <CSSTransition key={event.key} timeout={500} classNames='shrink'>
-                        <Grid minHeight={'61px'} borderTop={'1px solid black'} backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'} templateColumns='2fr 1fr' gap={'15px'}>
-                            <GridItem marginLeft={'5px'} padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                    {event.name}
-                                </Text>
-                            </GridItem>
-                            <GridItem padding={'10px 0px 10px 0px'} textAlign={'center'}>
+                        <Grid minHeight={'60px'} borderTop={'1px solid black'} backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'} templateColumns='2fr 1fr' gap={'15px'}>
+                            <Flex justifyContent={'center'} paddingLeft={'5px'} alignItems={'center'}>
+                                <Text textAlign={'center'}>{event.name}</Text>
+                            </Flex>
+                            <Flex justifyContent={'center'} alignItems={'center'}>
                                 {mutatingEventKey === event.key ? (
-                                    <Spinner marginTop={'8px'}></Spinner>
+                                    <Box marginTop={'8px'} minW={'110px'}>
+                                        <Spinner></Spinner>
+                                    </Box>
                                 ) : (
                                     <Button
                                         _focus={{ outline: 'none' }}
                                         isDisabled={mutatingEventKey !== null}
-                                        size={'md'}
                                         onClick={() => handleAddEvent(event.name, event.year, event.week, eventType.name, event.key, event.start_date, event.end_date)}
                                     >
                                         Add
                                     </Button>
                                 )}
-                            </GridItem>
+                            </Flex>
                         </Grid>
                     </CSSTransition>
                 ))}
