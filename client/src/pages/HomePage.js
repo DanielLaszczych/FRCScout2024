@@ -27,6 +27,7 @@ import { config, teamNumber, year, timeZone } from '../util/helperConstants';
 import { convertMatchKeyToString, fetchAndCache, sortMatches } from '../util/helperFunctions';
 import { ConditionalWrapper } from '../components/ConditionalWrapper';
 import { GrMapLocation } from 'react-icons/gr';
+import GoogleButton from '../components/GoogleButton';
 
 const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -199,7 +200,7 @@ function HomePage() {
         <Center>
             {user === 'NoUser' ? (
                 <a style={{ marginTop: '100px' }} href={`${config.API_URL}/auth/google`}>
-                    <Button _hover={{ textColor: '#1A202C', backgroundColor: 'gray.200' }}>Login with Google</Button>
+                    <GoogleButton />
                 </a>
             ) : (
                 <Box width={'100vw'}>
@@ -230,7 +231,7 @@ function HomePage() {
                             )}
                         </React.Fragment>
                     )}
-                    <Text textAlign={'center'} fontSize={'xl'} fontWeight={'bold'} margin={'0 auto'} width={{ base: '75%', md: '75%', lg: '100%' }}>
+                    <Text textAlign={'center'} fontSize={'2xl'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '75%', md: '75%', lg: '100%' }}>
                         Current Event: {currentEvent.name}
                     </Text>
                     <VStack spacing={'25px'} marginTop={'25px'}>

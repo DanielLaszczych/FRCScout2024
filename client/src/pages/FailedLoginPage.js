@@ -1,6 +1,7 @@
-import { Box, Button, VStack } from '@chakra-ui/react';
+import { Box, VStack } from '@chakra-ui/react';
 import React from 'react';
 import { config } from '../util/helperConstants';
+import GoogleButton from '../components/GoogleButton';
 
 function FailedLoginPage() {
     return (
@@ -9,9 +10,7 @@ function FailedLoginPage() {
                 Please sign in with a RoboTigers account
             </Box>
             <a style={{ marginTop: '25px' }} href={`${config.API_URL}/auth/google`}>
-                <Button _hover={{ textColor: '#1A202C', backgroundColor: 'gray.200' }} _focus={{ outline: 'none' }}>
-                    Login with Google
-                </Button>
+                <GoogleButton />
             </a>
         </VStack>
     );

@@ -189,7 +189,7 @@ function PreStandForm() {
         <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
             <Box>
                 <IconButton position={'absolute'} right={'10px'} onClick={() => setManualMode(!manualMode)} icon={!manualMode ? <LockIcon /> : <UnlockIcon />} />
-                <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} margin={'0 auto'} marginBottom={'20px'} maxWidth={'calc(100% - 60px)'}>
+                <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} margin={'0 auto'} marginBottom={'20px'} maxWidth={'calc(100% - 60px)'}>
                     Competition: {currentEvent.name}
                 </Text>
                 <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'10px'}>

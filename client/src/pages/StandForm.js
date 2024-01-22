@@ -502,7 +502,7 @@ function StandForm() {
                     <Box>
                         <Text
                             fontSize={'xl'}
-                            fontWeight={'bold'}
+                            fontWeight={'semibold'}
                             textAlign={'center'}
                             marginBottom={'5px'}
                             color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
@@ -594,7 +594,7 @@ function StandForm() {
                             <Button flex={2 / 3} leftIcon={<AiOutlineRotateRight />} onClick={() => setFieldRotation((fieldRotation + 90) % 360)}>
                                 Rotate
                             </Button>
-                            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} flex={1 / 3}>
+                            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 3}>
                                 {teamNumberParam}
                             </Text>
                             {futureAlly ? (
@@ -645,7 +645,7 @@ function StandForm() {
                         </HStack>
                         <Text
                             fontSize={'xl'}
-                            fontWeight={'bold'}
+                            fontWeight={'semibold'}
                             textAlign={'center'}
                             margin={'5px 0'}
                             color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
@@ -791,7 +791,7 @@ function StandForm() {
                             <Button flex={2 / 3} leftIcon={<IoChevronBack />} onClick={() => setActiveSection(sections.preAuto)}>
                                 Pre-Auto
                             </Button>
-                            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} flex={1 / 3}>
+                            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 3}>
                                 {teamNumberParam}
                             </Text>
                             {futureAlly ? (
@@ -842,7 +842,7 @@ function StandForm() {
                         </HStack>
                         <Text
                             fontSize={'xl'}
-                            fontWeight={'bold'}
+                            fontWeight={'semibold'}
                             textAlign={'center'}
                             margin={'5px 0'}
                             color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
@@ -1031,7 +1031,7 @@ function StandForm() {
                             <Button flex={2 / 3} leftIcon={<IoChevronBack />} onClick={() => setActiveSection(sections.auto)}>
                                 Auto
                             </Button>
-                            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} flex={1 / 3}>
+                            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 3}>
                                 {teamNumberParam}
                             </Text>
                             {futureAlly ? (
@@ -1082,7 +1082,7 @@ function StandForm() {
                         </HStack>
                         <Text
                             fontSize={'xl'}
-                            fontWeight={'bold'}
+                            fontWeight={'semibold'}
                             textAlign={'center'}
                             margin={'5px 0'}
                             color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
@@ -1192,7 +1192,7 @@ function StandForm() {
                             <Button flex={2 / 3} leftIcon={<IoChevronBack />} onClick={() => setActiveSection(sections.teleop)}>
                                 Teleop
                             </Button>
-                            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} flex={1 / 3}>
+                            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 3}>
                                 {teamNumberParam}
                             </Text>
                             {futureAlly ? (
@@ -1217,7 +1217,7 @@ function StandForm() {
             case sections.closing:
                 return (
                     <Box>
-                        <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} marginBottom={'5px'} color={submitAttempted && !validateSection(activeSection) ? 'red' : 'black'}>
+                        <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} color={submitAttempted && !validateSection(activeSection) ? 'red' : 'black'}>
                             {activeSection}
                         </Text>
                         <Flex flexDir={'column'} rowGap={'15px'}>
@@ -1271,7 +1271,7 @@ function StandForm() {
                             <Button flex={2 / 3} leftIcon={<IoChevronBack />} onClick={() => setActiveSection(sections.endGame)}>
                                 End Game
                             </Button>
-                            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'} flex={1 / 3}>
+                            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 3}>
                                 {teamNumberParam}
                             </Text>
                             {futureAlly ? (

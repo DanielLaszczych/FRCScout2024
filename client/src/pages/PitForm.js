@@ -1179,7 +1179,7 @@ function PitForm() {
                     </ModalContent>
                 </ModalOverlay>
             </Modal>
-            <Text fontSize={'xl'} fontWeight={'bold'} textAlign={'center'}>
+            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
                 Team Number: {teamNumberParam}
             </Text>
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginTop={'15px'} marginBottom={'5px'}>

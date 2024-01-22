@@ -68,8 +68,8 @@ function NavBar() {
             <Link to={'/'}>
                 <Box h='75px'>
                     <Image
-                        width={{ base: '75px', sm: '80px', md: '80px', lg: '100px' }}
-                        minW={{ base: '75px', sm: '80px', md: '80px', lg: '100px' }}
+                        width={{ base: '80px', sm: '100px' }}
+                        minW={{ base: '80px', sm: '100px' }}
                         src={logo}
                         _hover={{
                             cursor: 'pointer'
@@ -81,46 +81,47 @@ function NavBar() {
                     />
                 </Box>
             </Link>
-            <Box className='search' flex={1} h={'75px'}>
-                <HStack width={{ base: '75%', sm: '75%', md: '60%', lg: '50%' }} margin={{ base: 'auto', md: '0 0 0 22%' }} pos={'relative'} top='50%' transform={'translateY(-50%)'} spacing={0}>
-                    <NumberInput w={'100%'} value={teamNumber} onChange={(value) => setTeamNumber(value)} precision={0}>
-                        <NumberInputField
-                            padding={'0px 0px 0px 16px'}
+            {user !== 'NoUser' && (
+                <Box className='search' flex={1} h={'75px'}>
+                    <HStack width={{ base: '75%', sm: '75%', md: '60%', lg: '50%' }} margin={{ base: 'auto', md: '0 0 0 22%' }} pos={'relative'} top='50%' transform={'translateY(-50%)'} spacing={0}>
+                        <NumberInput w={'100%'} value={teamNumber} onChange={(value) => setTeamNumber(value)} precision={0}>
+                            <NumberInputField
+                                padding={'0px 0px 0px 16px'}
+                                h='45px'
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Enter') {
+                                        navigate(`/team/${teamNumber}/overview`, { state: Date.now() });
+                                        event.target.blur();
+                                    }
+                                }}
+                                enterKeyHint='search'
+                                placeholder='Search team'
+                                borderRadius={'5px 0px 0px 5px'}
+                                bgColor={'white'}
+                                _focus={{ boxShadow: 'none' }}
+                            />
+                        </NumberInput>
+                        <Button
                             h='45px'
-                            onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                    navigate(`/team/${teamNumber}/overview`, { state: Date.now() });
-                                    event.target.blur();
-                                }
-                            }}
-                            enterKeyHint='search'
-                            placeholder='Search team'
-                            borderRadius={'5px 0px 0px 5px'}
+                            onClick={() => navigate(`/team/${teamNumber}/overview`, { state: Date.now() })}
+                            _hover={{ bgColor: 'white' }}
+                            borderRadius='0px 5px 5px 0px'
                             bgColor={'white'}
                             _focus={{ boxShadow: 'none' }}
-                        />
-                    </NumberInput>
-                    <Button
-                        h='45px'
-                        onClick={() => navigate(`/team/${teamNumber}/overview`, { state: Date.now() })}
-                        _hover={{ bgColor: 'white' }}
-                        borderRadius='0px 5px 5px 0px'
-                        bgColor={'white'}
-                        _focus={{ boxShadow: 'none' }}
-                    >
-                        <Icon as={BsSearch} boxSize='5' />
-                    </Button>
-                </HStack>
-            </Box>
-            {user === 'NoUser' ? null : (
+                        >
+                            <Icon as={BsSearch} boxSize='5' />
+                        </Button>
+                    </HStack>
+                </Box>
+            )}
+            {user !== 'NoUser' && (
                 <Menu>
                     <Box h='75px'>
                         <MenuButton marginRight={'15px'} cursor={'pointer'} position={'relative'} top='50%' transform={'translateY(-50%)'} as={Avatar} src={user.iconImage} border='2px solid white' />
                     </Box>
                     <MenuList
-                        backgroundColor={'rgba(33, 37, 41, 0.98)'}
-                        border={'1px solid rgba(255, 255, 255, 0.5)'}
-                        borderTop={'none'}
+                        backgroundColor={'#2D3339'}
+                        border={'none'}
                         borderRadius={'5px'}
                         padding={0}
                         maxW={{ base: 'calc(50vw)', sm: '3xs', md: '3xs', lg: '300px' }}
@@ -136,110 +137,96 @@ function NavBar() {
                         </Box>
                         <Box borderBottom={'1px solid rgba(255, 255, 255, 0.5)'}>
                             <MenuItem
-                                backgroundColor={'rgba(33, 37, 41, 0.98)'}
+                                backgroundColor={'#2D3339'}
                                 as={Link}
                                 to={'/pits'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                                 fontSize={'md'}
-                                marginBottom={'0px'}
                                 color={'white'}
                             >
                                 Pits
                             </MenuItem>
                             <MenuItem
-                                backgroundColor={'rgba(33, 37, 41, 0.98)'}
+                                backgroundColor={'#2D3339'}
                                 as={Link}
                                 to={'/matches'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                                 fontSize={'md'}
-                                marginBottom={'0px'}
                                 color={'white'}
                             >
                                 Matches
                             </MenuItem>
                             <MenuItem
-                                backgroundColor={'rgba(33, 37, 41, 0.98)'}
+                                backgroundColor={'#2D3339'}
                                 as={Link}
                                 to={'/rtessIssues/team'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                                 fontSize={'md'}
-                                marginBottom={'0px'}
                                 color={'white'}
                             >
                                 RTESS
                             </MenuItem>
                             <MenuItem
-                                backgroundColor={'rgba(33, 37, 41, 0.98)'}
+                                backgroundColor={'#2D3339'}
                                 as={Link}
                                 to={'/pickList'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                                 fontSize={'md'}
-                                marginBottom={'0px'}
                                 color={'white'}
                             >
                                 Pick List
                             </MenuItem>
                             <MenuItem
-                                backgroundColor={'rgba(33, 37, 41, 0.98)'}
+                                backgroundColor={'#2D3339'}
                                 as={Link}
                                 to={'/pitMap'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                                 fontSize={'md'}
-                                marginBottom={'0px'}
                                 color={'white'}
                             >
                                 Pit Map
                             </MenuItem>
                             <MenuItem
-                                backgroundColor={'rgba(33, 37, 41, 0.98)'}
+                                backgroundColor={'#2D3339'}
                                 as={Link}
                                 to={'/admin'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                                 fontSize={'md'}
-                                marginBottom={'0px'}
                                 color={'white'}
                             >
                                 Admin
                             </MenuItem>
                             <MenuItem
-                                backgroundColor={'rgba(33, 37, 41, 0.98)'}
+                                backgroundColor={'#2D3339'}
                                 as={Link}
                                 to={'/tableau'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                                 fontSize={'md'}
-                                marginBottom={'0px'}
                                 color={'white'}
                             >
                                 Tableau
                             </MenuItem>
                         </Box>
                         <a href={`${config.API_URL}/auth/logout`}>
-                            <MenuItem
-                                backgroundColor={'rgba(33, 37, 41, 0.98)'}
-                                _focus={{ backgroundColor: 'none' }}
-                                _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-                                fontSize={'md'}
-                                marginBottom={'0px'}
-                                color={'white'}
-                            >
+                            <MenuItem backgroundColor={'#2D3339'} _focus={{ backgroundColor: 'none' }} _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }} fontSize={'md'} color={'white'}>
                                 Log Out
                             </MenuItem>
                         </a>
                         <MenuItem
-                            backgroundColor={'rgba(33, 37, 41, 0.98)'}
+                            backgroundColor={'#2D3339'}
                             _focus={{ backgroundColor: 'none' }}
                             _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                             fontSize={'md'}
-                            marginBottom={'0px'}
                             color={'white'}
                             onClick={() => switchModes()}
+                            borderRadius={'5px'}
                         >
                             {offline ? 'Go Online' : 'Go Offline'}
                         </MenuItem>
