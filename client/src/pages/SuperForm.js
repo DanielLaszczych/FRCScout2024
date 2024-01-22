@@ -248,7 +248,7 @@ function SuperForm() {
             >
                 <AlertDialogOverlay>
                     <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
-                        <AlertDialogHeader color='black' fontSize='lg' fontWeight='bold'>
+                        <AlertDialogHeader fontSize='lg' fontWeight='bold'>
                             Unsaved Data
                         </AlertDialogHeader>
                         <AlertDialogBody>You have unsaved data for this super form. Would you like to load it, delete it, or pull data from the cloud?</AlertDialogBody>

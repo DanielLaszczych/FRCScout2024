@@ -262,11 +262,18 @@ function HomePage() {
                                 }}
                             >
                                 <AlertDialogContent w={{ base: '75%', md: '40%', lg: '30%' }}>
-                                    <AlertDialogHeader color='black' fontSize={'lg'} fontWeight={'semibold'}>
+                                    <AlertDialogHeader fontSize={'lg'} fontWeight={'semibold'}>
                                         Enter a team number
                                     </AlertDialogHeader>
                                     <AlertDialogBody>
-                                        <Input ref={inputElement} type={'number'} borderColor='gray.300' value={pitTeamNumber} onChange={(e) => setPitTeamNumber(e.target.value)} />
+                                        <Input
+                                            ref={inputElement}
+                                            placeholder='Team Number'
+                                            type={'number'}
+                                            borderColor='gray.300'
+                                            value={pitTeamNumber}
+                                            onChange={(e) => setPitTeamNumber(e.target.value)}
+                                        />
                                         {pitPopoverError && (
                                             <Center color={'red.500'} marginTop={'5px'}>
                                                 {pitPopoverError}

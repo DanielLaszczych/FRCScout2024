@@ -1075,7 +1075,7 @@ function PitForm() {
             >
                 <AlertDialogOverlay>
                     <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
-                        <AlertDialogHeader color='black' fontSize={'lg'} fontWeight={'semibold'}>
+                        <AlertDialogHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Unsaved Data
                         </AlertDialogHeader>
                         <AlertDialogBody>You have unsaved data for this pit form. Would you like to load it, delete it, or pull data from the cloud?</AlertDialogBody>
@@ -1142,12 +1142,12 @@ function PitForm() {
                 borderRadius={'50%'}
                 border={'2px solid black'}
             >
-                <AddIcon fontSize={'xl'} />
+                <AddIcon textColor={'black'} fontSize={'xl'} />
             </Circle>
             <Modal lockFocusAcrossFrames={true} closeOnEsc={true} isOpen={isModalOpen} onClose={onModalClose}>
                 <ModalOverlay>
                     <ModalContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
-                        <ModalHeader color='black' fontSize={'lg'} fontWeight={'semibold'}>
+                        <ModalHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Write a comment
                         </ModalHeader>
                         <ModalBody maxHeight={'250px'} overflowY={'auto'}>
@@ -1379,7 +1379,7 @@ function PitForm() {
                     <PopoverContent maxWidth={'75vw'}>
                         <PopoverArrow />
                         <PopoverCloseButton />
-                        <PopoverHeader color='black' fontSize={'md'} fontWeight={'medium'}>
+                        <PopoverHeader fontSize={'md'} fontWeight={'medium'}>
                             Choose a motor
                         </PopoverHeader>
                         <PopoverBody maxHeight={'160px'} overflowY={'auto'}>

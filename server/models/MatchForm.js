@@ -37,15 +37,24 @@ const teleopSchema = new Schema({
     }
 });
 
+const historyDataSchema = new Schema({
+    data: {
+        type: [String]
+    },
+    position: {
+        type: Number
+    }
+});
+
 const historySchema = new Schema({
     auto: {
-        type: [String]
+        type: historyDataSchema
     },
     teleop: {
-        type: [String]
+        type: historyDataSchema
     },
     endGame: {
-        type: [String]
+        type: historyDataSchema
     }
 });
 

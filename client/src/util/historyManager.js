@@ -1,10 +1,10 @@
 import { scoutedField } from './helperConstants';
 
-const createAutoCommand = (setData) => {
+const createAutoCommand = () => {
     return {
         // Can overwrite is used to prevent a redo from being able to alter the preloaded piece info
         execute(data, value, canOverWrite = false) {
-            let newData = { ...data };
+            let newData = JSON.parse(JSON.stringify(data));
             // Since pieces are all numbers if the value is NaN we know its a scoring location
             if (isNaN(value)) {
                 if (canOverWrite && newData.autoTimeline.length > 0 && newData.autoTimeline[0].piece === '0' && newData.autoTimeline[0].scored === null) {
@@ -15,31 +15,31 @@ const createAutoCommand = (setData) => {
             } else {
                 newData.autoTimeline.push({ piece: value, scored: null });
             }
-            setData(newData);
+            return newData;
         },
         undo(data, value) {
-            let newData = { ...data };
+            let newData = JSON.parse(JSON.stringify(data));
             if (isNaN(value)) {
                 newData.autoTimeline[newData.autoTimeline.length - 1].scored = null;
             } else {
                 newData.autoTimeline.pop();
             }
-            setData(newData);
+            return newData;
         }
     };
 };
 
-const createTeleopCommand = (setData) => {
+const createTeleopCommand = () => {
     return {
         execute(data, value) {
-            let newData = { ...data };
+            let newData = JSON.parse(JSON.stringify(data));
             newData['teleopGP'][value] += 1;
-            setData(newData);
+            return newData;
         },
         undo(data, value) {
-            let newData = { ...data };
+            let newData = JSON.parse(JSON.stringify(data));
             newData['teleopGP'][value] -= 1;
-            setData(newData);
+            return newData;
         }
     };
 };
@@ -55,10 +55,10 @@ const commands = {
     [ENDGAME]: createTeleopCommand
 };
 
-export const createHistoryManager = (type, setData, prevHistory = []) => {
-    let history = prevHistory;
-    let position = history.length ? history.length - 1 : -1;
-    let command = commands[type](setData);
+export const createHistoryManager = (type, setData, prevHistoryData = { data: [], position: -1 }) => {
+    let history = prevHistoryData.data;
+    let position = prevHistoryData.position;
+    let command = commands[type]();
 
     function getNote(note) {
         if (type === AUTO && !isNaN(note)) {
@@ -111,10 +111,11 @@ export const createHistoryManager = (type, setData, prevHistory = []) => {
             } else {
                 history.push(value);
             }
+
             position += 1;
-            command.execute(data, value, true);
-            let newData = { ...data };
-            newData.history[type] = history;
+            let newData = command.execute(data, value, true);
+            console.log(newData);
+            newData.history[type] = { data: history, position: position };
             setData(newData);
         },
 
@@ -126,23 +127,27 @@ export const createHistoryManager = (type, setData, prevHistory = []) => {
                 if (position > -1) {
                     position -= 1;
                 }
-                let newData = { ...data };
-                newData.history[type] = history;
+                let newData = JSON.parse(JSON.stringify(data));
+                newData.history[type] = { data: history, position: position };
                 setData(newData);
             }
         },
 
         undo(data) {
             if (position > -1) {
-                command.undo(data, history[position]);
+                let newData = command.undo(data, history[position]);
                 position -= 1;
+                newData.history[type] = { data: history, position: position };
+                setData(newData);
             }
         },
 
         redo(data) {
             if (position < history.length - 1) {
                 position += 1;
-                command.execute(data, history[position]);
+                let newData = command.execute(data, history[position]);
+                newData.history[type] = { data: history, position: position };
+                setData(newData);
             }
         }
     };

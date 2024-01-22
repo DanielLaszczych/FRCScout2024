@@ -155,9 +155,18 @@ function StandForm() {
         standStatusComment: '',
         loading: true,
         history: {
-            auto: [],
-            teleop: [],
-            endGame: []
+            auto: {
+                data: [],
+                position: -1
+            },
+            teleop: {
+                data: [],
+                position: -1
+            },
+            endGame: {
+                data: [],
+                position: -1
+            }
         }
     });
     const [error, setError] = useState(null);
@@ -505,7 +514,7 @@ function StandForm() {
                             fontWeight={'semibold'}
                             textAlign={'center'}
                             marginBottom={'5px'}
-                            color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
+                            color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'default'}
                         >
                             {activeSection}
                         </Text>
@@ -648,7 +657,7 @@ function StandForm() {
                             fontWeight={'semibold'}
                             textAlign={'center'}
                             margin={'5px 0'}
-                            color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
+                            color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'default'}
                         >
                             {activeSection}:{' '}
                             {standFormData.autoTimeline.length === 0 ||
@@ -845,7 +854,7 @@ function StandForm() {
                             fontWeight={'semibold'}
                             textAlign={'center'}
                             margin={'5px 0'}
-                            color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
+                            color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'default'}
                         >
                             {activeSection}:{' '}
                             {standFormData.teleopGP.intakeGround + standFormData.teleopGP.intakeSource ===
@@ -1085,7 +1094,7 @@ function StandForm() {
                             fontWeight={'semibold'}
                             textAlign={'center'}
                             margin={'5px 0'}
-                            color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'black'}
+                            color={submitAttempted && !isFollowOrNoShow() && !validateSection(activeSection) ? 'red' : 'default'}
                         >
                             {activeSection}
                         </Text>
@@ -1217,7 +1226,7 @@ function StandForm() {
             case sections.closing:
                 return (
                     <Box>
-                        <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} color={submitAttempted && !validateSection(activeSection) ? 'red' : 'black'}>
+                        <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} color={submitAttempted && !validateSection(activeSection) ? 'red' : 'default'}>
                             {activeSection}
                         </Text>
                         <Flex flexDir={'column'} rowGap={'15px'}>
@@ -1320,7 +1329,7 @@ function StandForm() {
             >
                 <AlertDialogOverlay>
                     <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
-                        <AlertDialogHeader color='black' fontSize={'lg'} fontWeight={'semibold'}>
+                        <AlertDialogHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Unsaved Data
                         </AlertDialogHeader>
                         <AlertDialogBody>You have unsaved data for this stand form. Would you like to load it, delete it, or pull data from the cloud?</AlertDialogBody>
