@@ -1165,6 +1165,7 @@ function StandForm() {
                                 height={'60px'}
                                 fontWeight={'bold'}
                                 isDisabled={standFormData.teleopGP.trap === 3}
+                                key={'Trap'}
                                 onClick={() => {
                                     standFormManagers.endGame.doCommand(standFormData, scoutedField.trap.field);
                                 }}
