@@ -28,7 +28,7 @@ module.exports = {
             } catch (err) {
                 throw new Error(err);
             }
-        },
+        }
     },
     Mutation: {
         async updateStandForm(_, { matchFormInput }, context) {
@@ -40,14 +40,14 @@ module.exports = {
 
                 const matchForm = await MatchForm.findOneAndUpdate({ eventKey: matchFormInput.eventKey, matchNumber: matchFormInput.matchNumber, station: matchFormInput.station }, matchFormInput, {
                     new: true,
-                    upsert: true,
+                    upsert: true
                 }).exec();
-                if (matchFormInput.loseCommunication || matchFormInput.robotBreak || matchFormInput.standStatus === matchFormStatus.noShow) {
+                if (matchFormInput.lostCommunication || matchFormInput.robotBreak || matchFormInput.standStatus === matchFormStatus.noShow) {
                     let futureMatchNumber = await isFutureAlly(matchFormInput.eventKey, matchFormInput.teamNumber, matchFormInput.matchNumber, false);
                     let prevRTESSIssue = await RTESSIssue.findOne({ eventKey: matchFormInput.eventKey, matchNumber: matchFormInput.matchNumber, teamNumber: matchFormInput.teamNumber });
                     if (futureMatchNumber || prevRTESSIssue) {
                         let issues = [];
-                        if (matchFormInput.loseCommunication) issues.push('Lost Communication');
+                        if (matchFormInput.lostCommunication) issues.push('Lost Communication');
                         if (matchFormInput.robotBreak) issues.push('Robot Broke');
                         if (matchFormInput.standStatus === matchFormStatus.noShow) issues.push('No show');
 
@@ -59,7 +59,7 @@ module.exports = {
                             submitter: context.req.user.displayName,
                             issue: issues.join(', '),
                             problemComment: matchFormInput.standStatus === matchFormStatus.noShow ? matchFormInput.standStatusComment : matchFormInput.standEndComment,
-                            status: rtessIssuesStatus.unresolved,
+                            status: rtessIssuesStatus.unresolved
                         };
 
                         if (prevRTESSIssue) {
@@ -70,7 +70,7 @@ module.exports = {
 
                         await RTESSIssue.findOneAndUpdate({ eventKey: rtessIssueInput.eventKey, matchNumber: rtessIssueInput.matchNumber, teamNumber: rtessIssueInput.teamNumber }, rtessIssueInput, {
                             new: true,
-                            upsert: true,
+                            upsert: true
                         }).exec();
 
                         let io = context.req.app.get('socketio');
@@ -89,7 +89,7 @@ module.exports = {
                                               hour: 'numeric',
                                               minute: 'numeric',
                                               hour12: true,
-                                              timeZone: timeZone,
+                                              timeZone: timeZone
                                           })})`
                                         : '';
                                     internalSendMessage(
@@ -122,7 +122,7 @@ module.exports = {
                 let updates = matchFormInputs.map((matchFormInput) =>
                     MatchForm.findOneAndUpdate({ eventKey: matchFormInput.eventKey, matchNumber: matchFormInput.matchNumber, station: matchFormInput.station }, matchFormInput, {
                         new: true,
-                        upsert: true,
+                        upsert: true
                     }).exec()
                 );
                 Promise.all(updates).then((values) => {
@@ -131,6 +131,6 @@ module.exports = {
             } catch (err) {
                 throw new Error(err);
             }
-        },
-    },
+        }
+    }
 };

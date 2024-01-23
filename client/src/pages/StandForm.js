@@ -93,11 +93,11 @@ let climbTypes = [
     { label: 'Harmony', color: 'green', id: uuidv4() },
     { label: 'Fail', color: 'red', id: uuidv4() }
 ];
-let loseCommOptions = [
+let lostCommOptions = [
     { label: 'Yes', value: true, color: 'red', id: uuidv4() },
     { label: 'No', value: false, color: 'green', id: uuidv4() }
 ];
-let robotBreakOptions = [
+let robotBrokeOptions = [
     { label: 'Yes', value: true, color: 'red', id: uuidv4() },
     { label: 'No', value: false, color: 'green', id: uuidv4() }
 ];
@@ -146,8 +146,8 @@ function StandForm() {
         defenseRating: 0,
         defenseAllocation: 0.25,
         climb: null,
-        loseCommunication: null,
-        robotBreak: null,
+        lostCommunication: null,
+        robotBroke: null,
         yellowCard: null,
         redCard: null,
         standComment: '',
@@ -375,7 +375,7 @@ function StandForm() {
     }
 
     function validEndGame() {
-        return standFormData.climb !== null && standFormData.loseCommunication !== null && standFormData.robotBreak !== null && standFormData.yellowCard !== null && standFormData.redCard !== null;
+        return standFormData.climb !== null && standFormData.lostCommunication !== null && standFormData.robotBroke !== null && standFormData.yellowCard !== null && standFormData.redCard !== null;
     }
 
     function validClosing() {
@@ -399,17 +399,60 @@ function StandForm() {
     }
 
     function getQRValue() {
-        return JSON.stringify({
-            eventKey: eventKeyParam,
-            matchNumber: matchNumberParam,
-            station: stationParam,
-            teamNumber: parseInt(teamNumberParam),
-            ...standFormData,
-            defenseAllocation: standFormData.defenseRating === 0 ? 0 : standFormData.defenseAllocation,
-            standComment: standFormData.standComment.trim(),
-            standStatus: standFormData.standStatus || matchFormStatus.complete,
-            standStatusComment: isFollowOrNoShow() ? standFormData.standStatusComment.trim() : ''
-        });
+        let map = {
+            null: 'n',
+            true: 't',
+            false: 'f',
+            'No Attempt': 'na',
+            Success: 'sc',
+            Harmony: 'hm',
+            Fail: 'fl',
+            Complete: 'cp',
+            'Follow Up': 'fu',
+            'No Show': 'ns',
+            Missing: 'ms' //Dont think this is ever needed
+        };
+        // I listed all the fields just as insurance that everything will always be in this order
+        return [
+            eventKeyParam,
+            matchNumberParam,
+            stationParam,
+            parseInt(teamNumberParam),
+            standFormData.startingPosition === null ? 'n' : standFormData.startingPosition,
+            standFormData.preLoadedPiece === null ? 'n' : map[standFormData.preLoadedPiece === 'Note'],
+            map[standFormData.leftStart],
+            standFormData.autoTimeline.length === 0
+                ? 'n'
+                : standFormData.autoTimeline
+                      .map((element) => [element.piece, element.scored ? scoutedField[element.scored].short : 'n'])
+                      .flat()
+                      .join('#'),
+            standFormData.teleopGP.intakeSource,
+            standFormData.teleopGP.intakeGround,
+            standFormData.teleopGP.ampScore,
+            standFormData.teleopGP.speakerScore,
+            standFormData.teleopGP.ampMiss,
+            standFormData.teleopGP.speakerMiss,
+            standFormData.teleopGP.ferry,
+            standFormData.teleopGP.trap,
+            map[standFormData.wasDefended],
+            standFormData.defenseRating,
+            standFormData.defenseRating === 0 ? 0 : standFormData.defenseAllocation,
+            map[standFormData.climb],
+            map[standFormData.lostCommunication],
+            map[standFormData.robotBroke],
+            map[standFormData.yellowCard],
+            map[standFormData.redCard],
+            standFormData.standComment.trim() === '' ? 'n' : standFormData.standComment.trim(),
+            map[standFormData.standStatus || matchFormStatus.complete],
+            isFollowOrNoShow() ? (standFormData.standStatusComment.trim() === '' ? 'n' : standFormData.standStatusComment.trim()) : 'n',
+            standFormData.history.auto.data.length === 0 ? 'n' : standFormData.history.auto.data.map((element) => (isNaN(element) ? scoutedField[element].short : element)).join('#'),
+            standFormData.history.auto.position,
+            standFormData.history.teleop.data.length === 0 ? 'n' : standFormData.history.teleop.data.map((element) => (isNaN(element) ? scoutedField[element].short : element)).join('#'),
+            standFormData.history.teleop.position,
+            standFormData.history.endGame.data.length === 0 ? 'n' : standFormData.history.endGame.data.map((element) => (isNaN(element) ? scoutedField[element].short : element)).join('#'),
+            standFormData.history.endGame.position
+        ].join('$');
     }
 
     function submit() {
@@ -523,11 +566,10 @@ function StandForm() {
                                 <Center
                                     width={`${imageWidth * dimensionRatios.width}px`}
                                     height={`${imageHeight * dimensionRatios.height}px`}
-                                    pos={'absolute'}
                                     backgroundColor={'white'}
                                     zIndex={2}
-                                    left={'50%'}
-                                    transform={'translate(-50%, 0%)'}
+                                    margin={'0 auto'}
+                                    position={'relative'}
                                 >
                                     <Spinner />
                                 </Center>
@@ -676,8 +718,8 @@ function StandForm() {
                                         pos={'absolute'}
                                         backgroundColor={'white'}
                                         zIndex={2}
-                                        left={'50%'}
-                                        transform={'translate(-50%, 0%)'}
+                                        margin={'0 auto'}
+                                        position={'relative'}
                                     >
                                         <Spinner />
                                     </Center>
@@ -1122,23 +1164,25 @@ function StandForm() {
                                 colorScheme={'facebook'}
                                 height={'60px'}
                                 fontWeight={'bold'}
+                                isDisabled={standFormData.teleopGP.trap === 3}
                                 onClick={() => {
                                     standFormManagers.endGame.doCommand(standFormData, scoutedField.trap.field);
                                 }}
                             >
                                 Trap: {standFormData.teleopGP.trap}
+                                {standFormData.teleopGP.trap === 3 && '(Max)'}
                             </Button>
                             <HStack gap={0}>
                                 <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 2}>
                                     Lost Comms:
                                 </Text>
                                 <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
-                                    {loseCommOptions.map((option) => (
+                                    {lostCommOptions.map((option) => (
                                         <Button
                                             key={option.id}
-                                            onClick={() => setStandFormData({ ...standFormData, loseCommunication: option.value })}
-                                            colorScheme={standFormData.loseCommunication === option.value ? option.color : 'gray'}
-                                            outline={standFormData.loseCommunication === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                            onClick={() => setStandFormData({ ...standFormData, lostCommunication: option.value })}
+                                            colorScheme={standFormData.lostCommunication === option.value ? option.color : 'gray'}
+                                            outline={standFormData.lostCommunication === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
                                         >
                                             {option.label}
                                         </Button>
@@ -1150,12 +1194,12 @@ function StandForm() {
                                     Robot Broke:
                                 </Text>
                                 <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
-                                    {robotBreakOptions.map((option) => (
+                                    {robotBrokeOptions.map((option) => (
                                         <Button
                                             key={option.id}
-                                            onClick={() => setStandFormData({ ...standFormData, robotBreak: option.value })}
-                                            colorScheme={standFormData.robotBreak === option.value ? option.color : 'gray'}
-                                            outline={standFormData.robotBreak === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
+                                            onClick={() => setStandFormData({ ...standFormData, robotBroke: option.value })}
+                                            colorScheme={standFormData.robotBroke === option.value ? option.color : 'gray'}
+                                            outline={standFormData.robotBroke === null && submitAttempted && !isFollowOrNoShow() ? '2px solid red' : 'none'}
                                         >
                                             {option.label}
                                         </Button>
@@ -1260,7 +1304,7 @@ function StandForm() {
                                 </Center>
                             ) : null}
                             {showQRCode && (
-                                <Center margin={'0px 0px 0px 0px'}>
+                                <Center>
                                     <QRCode value={getQRValue()} size={maxContainerHeight - 115 - 15 - (standFormData.standStatus !== matchFormStatus.noShow && 39) - (isFollowOrNoShow() && 95)} />
                                 </Center>
                             )}

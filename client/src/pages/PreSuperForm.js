@@ -14,7 +14,7 @@ let matchTypes = [
     { label: 'Playoffs', value: 'sf', id: uuidv4() },
     { label: 'Finals', value: 'f', id: uuidv4() }
 ];
-let stations = [{ id: uuidv4() }, { id: uuidv4() }, { id: uuidv4() }];
+let stations = [uuidv4(), uuidv4(), uuidv4()];
 
 function PreSuperForm() {
     let navigate = useNavigate();

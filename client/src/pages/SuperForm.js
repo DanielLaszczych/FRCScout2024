@@ -212,18 +212,27 @@ function SuperForm() {
     }
 
     function getQRValue() {
-        return JSON.stringify(
-            teamNumbers.map((teamNumber, index) => ({
-                eventKey: eventKeyParam,
-                matchNumber: matchNumberParam,
-                station: `${allianceParam}${index + 1}`,
-                teamNumber: parseInt(teamNumber),
-                allianceNumbers: [teamNumbers[0], teamNumbers[1], teamNumbers[2]],
-                ...superFormData[teamNumber],
-                superStatus: superFormData[teamNumber].superStatus || matchFormStatus.complete,
-                superStatusComment: isFollowOrNoShow(teamNumber) ? superFormData[teamNumber].superStatusComment.trim() : ''
-            }))
-        );
+        let map = {
+            null: 'n',
+            Complete: 'cp',
+            'Follow Up': 'fu',
+            'No Show': 'ns',
+            Missing: 'ms' //Dont think this is ever needed
+        };
+        return [
+            eventKeyParam,
+            matchNumberParam,
+            allianceParam,
+            ...teamNumbers.map((teamNumber) =>
+                [
+                    teamNumber,
+                    superFormData[teamNumber].agility,
+                    superFormData[teamNumber].fieldAwareness,
+                    map[superFormData[teamNumber].superStatus || matchFormStatus.complete],
+                    isFollowOrNoShow(teamNumber) ? (superFormData[teamNumber].superStatusComment.trim() === '' ? 'n' : superFormData[teamNumber].superStatusComment.trim()) : 'n'
+                ].join('#')
+            )
+        ].join('$');
     }
 
     if (error) {
@@ -443,7 +452,7 @@ function SuperForm() {
                 </Button>
             </Center>
             {showQRCode && (
-                <Center margin={'10px 0px 40px 0px'}>
+                <Center>
                     <QRCode value={getQRValue()} />
                 </Center>
             )}

@@ -114,7 +114,6 @@ export const createHistoryManager = (type, setData, prevHistoryData = { data: []
 
             position += 1;
             let newData = command.execute(data, value, true);
-            console.log(newData);
             newData.history[type] = { data: history, position: position };
             setData(newData);
         },

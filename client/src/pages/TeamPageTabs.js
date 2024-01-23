@@ -454,10 +454,10 @@ function TeamPageTabs({ tab, pitForm, superForms, filteredSuperForms, standForms
                                 {filteredStandForms.length > 0 ? (
                                     <Box>
                                         <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                            # of Lose Communication: {countOccurencesForTFField(filteredStandForms, 'loseCommunication')}
+                                            # of Lost Communication: {countOccurencesForTFField(filteredStandForms, 'lostCommunication')}
                                         </Text>
                                         <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                            # of Robot Break: {countOccurencesForTFField(filteredStandForms, 'robotBreak')}
+                                            # of Robot Broke: {countOccurencesForTFField(filteredStandForms, 'robotBroke')}
                                         </Text>
                                         <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
                                             # of Yellow Card: {countOccurencesForTFField(filteredStandForms, 'yellowCard')}
@@ -1506,12 +1506,12 @@ function TeamPageTabs({ tab, pitForm, superForms, filteredSuperForms, standForms
                                     <div className='grid-item'>
                                         {match.standStatus === matchFormStatus.noShow ? (
                                             <div style={{ wordBreak: 'break-word' }}>No Show</div>
-                                        ) : !match.loseCommunication && !match.robotBreak && !match.yellowCard & !match.redCard ? (
+                                        ) : !match.lostCommunication && !match.robotBroke && !match.yellowCard & !match.redCard ? (
                                             <div style={{ wordBreak: 'break-word' }}>None</div>
                                         ) : (
                                             <Box>
-                                                {match.loseCommunication ? <div style={{ wordBreak: 'break-word' }}>Lost Communication</div> : null}
-                                                {match.robotBreak ? <div>Robot broke</div> : null}
+                                                {match.lostCommunication ? <div style={{ wordBreak: 'break-word' }}>Lost Communication</div> : null}
+                                                {match.robotBroke ? <div>Robot broke</div> : null}
                                                 {match.yellowCard ? <div>Yellow Card Given</div> : null}
                                                 {match.redCard ? <div>Red Card Given</div> : null}
                                             </Box>

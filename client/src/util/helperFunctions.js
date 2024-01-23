@@ -225,7 +225,6 @@ export function deepEqual(object1, object2) {
         const val2 = object2[key];
         const areObjects = isObject(val1) && isObject(val2);
         if ((areObjects && !deepEqual(val1, val2)) || (!areObjects && val1 !== val2)) {
-            console.log(key);
             return false;
         }
     }

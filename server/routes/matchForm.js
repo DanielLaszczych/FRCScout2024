@@ -49,14 +49,14 @@ router.post('/postStandForm', async (req, res) => {
             upsert: true
         }).exec();
 
-        if (matchFormInput.loseCommunication || matchFormInput.robotBreak || matchFormInput.standStatus === matchFormStatus.noShow) {
+        if (matchFormInput.lostCommunication || matchFormInput.robotBroke || matchFormInput.standStatus === matchFormStatus.noShow) {
             let futureMatchNumber = await isFutureAlly(matchFormInput.eventKey, matchFormInput.teamNumber, matchFormInput.matchNumber, false);
             let prevRTESSIssue = await RTESSIssue.findOne({ eventKey: matchFormInput.eventKey, matchNumber: matchFormInput.matchNumber, teamNumber: matchFormInput.teamNumber });
 
             if (futureMatchNumber || prevRTESSIssue) {
                 let issues = [];
-                if (matchFormInput.loseCommunication) issues.push('Lost Communication');
-                if (matchFormInput.robotBreak) issues.push('Robot Broke');
+                if (matchFormInput.lostCommunication) issues.push('Lost Communication');
+                if (matchFormInput.robotBroke) issues.push('Robot Broke');
                 if (matchFormInput.standStatus === matchFormStatus.noShow) issues.push('No show');
 
                 let rtessIssueInput = {

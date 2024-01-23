@@ -105,10 +105,10 @@ const matchFormSchema = new Schema({
     climb: {
         type: String
     },
-    loseCommunication: {
+    lostCommunication: {
         type: Boolean
     },
-    robotBreak: {
+    robotBroke: {
         type: Boolean
     },
     yellowCard: {

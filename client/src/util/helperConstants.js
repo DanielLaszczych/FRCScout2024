@@ -24,15 +24,15 @@ export const rtessIssuesStatus = {
 };
 
 export const scoutedField = {
-    intakeSource: { field: 'intakeSource', label: 'Source' },
-    intakeGround: { field: 'intakeGround', label: 'Ground' },
-    intakeMiss: { field: 'intakeMiss', label: 'Intake Miss' },
-    ampScore: { field: 'ampScore', label: 'Amp' },
-    speakerScore: { field: 'speakerScore', label: 'Speaker' },
-    ampMiss: { field: 'ampMiss', label: 'Amp Miss' },
-    speakerMiss: { field: 'speakerMiss', label: 'Speaker Miss' },
-    ferry: { field: 'ferry', label: 'Ferry' },
-    trap: { field: 'trap', label: 'Trap' }
+    intakeSource: { field: 'intakeSource', label: 'Source', short: 'is' },
+    intakeGround: { field: 'intakeGround', label: 'Ground', short: 'ig' },
+    intakeMiss: { field: 'intakeMiss', label: 'Intake Miss', short: 'im' },
+    ampScore: { field: 'ampScore', label: 'Amp', short: 'as' },
+    speakerScore: { field: 'speakerScore', label: 'Speaker', short: 'ss' },
+    ampMiss: { field: 'ampMiss', label: 'Amp Miss', short: 'am' },
+    speakerMiss: { field: 'speakerMiss', label: 'Speaker Miss', short: 'sm' },
+    ferry: { field: 'ferry', label: 'Ferry', short: 'f' },
+    trap: { field: 'trap', label: 'Trap', short: 't' }
 };
 
 export const timeZone = 'US/Central';
