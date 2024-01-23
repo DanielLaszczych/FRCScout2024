@@ -1,4 +1,4 @@
-import { React, useEffect, useRef, useState } from 'react';
+import { React, useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
     Text,
@@ -46,6 +46,7 @@ import { AddIcon, CloseIcon, DeleteIcon, ChevronDownIcon, ChevronUpIcon } from '
 import { v4 as uuidv4 } from 'uuid';
 import PreAutoBlueField from '../images/PreAutoBlueField.png';
 import { deepEqual, getValueByRange } from '../util/helperFunctions';
+import { GlobalContext } from '../context/globalState';
 
 let driveTrainsList = [
     { label: 'Swerve', id: uuidv4() },
@@ -100,6 +101,7 @@ function PitForm() {
     const navigate = useNavigate();
     const toast = useToast();
     const { eventKey: eventKeyParam, teamNumber: teamNumberParam } = useParams();
+    const { offline } = useContext(GlobalContext);
 
     const hiddenImageInput = useRef(null);
     const cancelRef = useRef();
@@ -208,49 +210,53 @@ function PitForm() {
 
     useEffect(() => {
         if (loadResponse === false && pitFormData.loading) {
-            const headers = {
-                filters: JSON.stringify({
-                    eventKey: eventKeyParam,
-                    teamNumber: parseInt(teamNumberParam)
+            if (offline) {
+                setPitFormData({ ...pitFormData, loading: false });
+            } else {
+                const headers = {
+                    filters: JSON.stringify({
+                        eventKey: eventKeyParam,
+                        teamNumber: parseInt(teamNumberParam)
+                    })
+                };
+                fetch('/pitForm/getPitForm', {
+                    headers: headers
                 })
-            };
-            fetch('/pitForm/getPitForm', {
-                headers: headers
-            })
-                .then((response) => {
-                    if (response.status === 200) {
-                        return response.json();
-                    } else {
-                        throw new Error(response.statusText);
-                    }
-                })
-                .then((data) => {
-                    let pitForm = data;
-                    if (!pitForm) {
-                        setPitFormData({ ...pitFormData, loading: false });
-                        return;
-                    }
-                    let modifiedMotors = pitForm.motors.map((motor) => {
-                        return {
-                            label: motor.label,
-                            value: motor.value,
-                            id: uuidv4()
+                    .then((response) => {
+                        if (response.status === 200) {
+                            return response.json();
+                        } else {
+                            throw new Error(response.statusText);
+                        }
+                    })
+                    .then((data) => {
+                        let pitForm = data;
+                        if (!pitForm) {
+                            setPitFormData({ ...pitFormData, loading: false });
+                            return;
+                        }
+                        let modifiedMotors = pitForm.motors.map((motor) => {
+                            return {
+                                label: motor.label,
+                                value: motor.value,
+                                id: uuidv4()
+                            };
+                        });
+                        let modifiedAutoAbilities = modifyDataBaseAbilities(pitFormData.autoAbilities, pitForm.autoAbilities);
+                        let modifiedTeleAbilities = modifyDataBaseAbilities(pitFormData.teleAbilities, pitForm.teleAbilities);
+                        let modifiedData = {
+                            ...pitForm,
+                            motors: modifiedMotors,
+                            autoAbilities: modifiedAutoAbilities,
+                            teleAbilities: modifiedTeleAbilities,
+                            loading: false
                         };
-                    });
-                    let modifiedAutoAbilities = modifyDataBaseAbilities(pitFormData.autoAbilities, pitForm.autoAbilities);
-                    let modifiedTeleAbilities = modifyDataBaseAbilities(pitFormData.teleAbilities, pitForm.teleAbilities);
-                    let modifiedData = {
-                        ...pitForm,
-                        motors: modifiedMotors,
-                        autoAbilities: modifiedAutoAbilities,
-                        teleAbilities: modifiedTeleAbilities,
-                        loading: false
-                    };
-                    setPitFormData(modifiedData);
-                })
-                .catch((error) => setError(error.message));
+                        setPitFormData(modifiedData);
+                    })
+                    .catch((error) => setError(error.message));
+            }
         }
-    }, [loadResponse, pitFormData, eventKeyParam, teamNumberParam]);
+    }, [loadResponse, pitFormData, eventKeyParam, teamNumberParam, offline]);
 
     useEffect(() => {
         if (prevPitFormData.current !== null) {
@@ -1090,16 +1096,18 @@ function PitForm() {
                             >
                                 Delete
                             </Button>
-                            <Button
-                                colorScheme='yellow'
-                                ml={3}
-                                onClick={() => {
-                                    setPitFormDialog(false);
-                                    setLoadResponse(false);
-                                }}
-                            >
-                                Cloud
-                            </Button>
+                            {!offline && (
+                                <Button
+                                    colorScheme='yellow'
+                                    ml={3}
+                                    onClick={() => {
+                                        setPitFormDialog(false);
+                                        setLoadResponse(false);
+                                    }}
+                                >
+                                    Cloud
+                                </Button>
+                            )}
                             <Button
                                 colorScheme='blue'
                                 ml={3}
