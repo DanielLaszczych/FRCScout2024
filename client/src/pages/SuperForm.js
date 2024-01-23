@@ -11,6 +11,7 @@ import {
     Checkbox,
     Flex,
     HStack,
+    IconButton,
     Spinner,
     Text,
     Textarea,
@@ -21,10 +22,9 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { convertMatchKeyToString, deepEqual } from '../util/helperFunctions';
 import { matchFormStatus } from '../util/helperConstants';
-import CustomMinusButton from '../components/CustomMinusButton';
-import CustomPlusButton from '../components/CustomPlusButton';
 import { GlobalContext } from '../context/globalState';
 import QRCode from 'react-qr-code';
+import { AddIcon, MinusIcon } from '@chakra-ui/icons';
 
 function SuperForm() {
     const location = useLocation();
@@ -228,7 +228,7 @@ function SuperForm() {
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
                 {error}
             </Box>
         );
@@ -248,7 +248,7 @@ function SuperForm() {
             >
                 <AlertDialogOverlay>
                     <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
-                        <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+                        <AlertDialogHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Unsaved Data
                         </AlertDialogHeader>
                         <AlertDialogBody>You have unsaved data for this super form. Would you like to load it, delete it, or pull data from the cloud?</AlertDialogBody>
@@ -305,7 +305,7 @@ function SuperForm() {
 
     return (
         <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-            <Text textAlign={'center'} marginBottom={'10px'} fontWeight={'bold'} fontSize={'larger'}>
+            <Text textAlign={'center'} marginBottom={'10px'} fontSize={'xl'} fontWeight={'semibold'}>
                 {convertMatchKeyToString(matchNumberParam)} • {allianceParam === 'r' ? 'Red' : 'Blue'}
             </Text>
             {teamNumbers.map((teamNumber, index) => (
@@ -313,70 +313,90 @@ function SuperForm() {
                     key={teamNumber.toString() + index.toString()} // stupid solution but w/e
                     marginBottom={'15px'}
                 >
-                    <Text textAlign={'center'} fontWeight={'bold'} fontSize={'large'} borderBottom={'2px solid black'} margin={'0 auto'} marginBottom={'10px'} width={'112px'}>
+                    <Text textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} borderBottom={'1px solid black'} margin={'0 auto'} marginBottom={'10px'} width={'112px'}>
                         {teamNumber}
                     </Text>
                     <Flex marginBottom={'20px'}>
                         <VStack flex={'50%'} gap={'5px'}>
-                            <Center height={'48px'} width={'95px'} textAlign={'center'} fontWeight={'bold'}>
-                                Agility:
+                            <Center textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'}>
+                                Agility
                             </Center>
-                            <HStack>
-                                <CustomMinusButton
-                                    disabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
+                            <HStack gap={'15px'}>
+                                <IconButton
+                                    isDisabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
                                     onClick={() => {
                                         let teamData = { ...superFormData };
                                         teamData[teamNumber].agility = Math.max(teamData[teamNumber].agility - 1, 1);
                                         setSuperFormData(teamData);
                                     }}
-                                    fontSize={'20px'}
+                                    icon={<MinusIcon />}
+                                    size={'md'}
+                                    colorScheme={'red'}
                                 />
-                                <Text color={superFormData[teamNumber].superStatus === matchFormStatus.noShow && 'gray.400'} textAlign={'center'}>
+                                <Text
+                                    fontSize={'lg'}
+                                    fontWeight={'semibold'}
+                                    textAlign={'center'}
+                                    minWidth={'10px'}
+                                    color={superFormData[teamNumber].superStatus === matchFormStatus.noShow && 'gray.400'}
+                                >
                                     {superFormData[teamNumber].agility}
                                 </Text>
-                                <CustomPlusButton
-                                    disabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
+                                <IconButton
+                                    isDisabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
                                     onClick={() => {
                                         let teamData = { ...superFormData };
                                         teamData[teamNumber].agility = Math.min(teamData[teamNumber].agility + 1, 3);
                                         setSuperFormData(teamData);
                                     }}
-                                    fontSize={'20px'}
+                                    icon={<AddIcon />}
+                                    size={'md'}
+                                    colorScheme={'green'}
                                 />
                             </HStack>
                         </VStack>
                         <VStack flex={'50%'} gap={'5px'}>
-                            <Text width={'95px'} textAlign={'center'} fontWeight={'bold'}>
-                                Field Awareness:
+                            <Text textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'}>
+                                Field Aware
                             </Text>
-                            <HStack>
-                                <CustomMinusButton
-                                    disabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
+                            <HStack gap={'15px'}>
+                                <IconButton
+                                    isDisabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
                                     onClick={() => {
                                         let teamData = { ...superFormData };
                                         teamData[teamNumber].fieldAwareness = Math.max(teamData[teamNumber].fieldAwareness - 1, 1);
                                         setSuperFormData(teamData);
                                     }}
-                                    fontSize={'20px'}
+                                    icon={<MinusIcon />}
+                                    size={'md'}
+                                    colorScheme={'red'}
                                 />
-                                <Text color={superFormData[teamNumber].superStatus === matchFormStatus.noShow && 'gray.400'} textAlign={'center'}>
+                                <Text
+                                    fontSize={'lg'}
+                                    fontWeight={'semibold'}
+                                    textAlign={'center'}
+                                    minWidth={'10px'}
+                                    color={superFormData[teamNumber].superStatus === matchFormStatus.noShow && 'gray.400'}
+                                >
                                     {superFormData[teamNumber].fieldAwareness}
                                 </Text>
-                                <CustomPlusButton
-                                    disabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
+                                <IconButton
+                                    isDisabled={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
                                     onClick={() => {
                                         let teamData = { ...superFormData };
                                         teamData[teamNumber].fieldAwareness = Math.min(teamData[teamNumber].fieldAwareness + 1, 3);
                                         setSuperFormData(teamData);
                                     }}
-                                    fontSize={'20px'}
+                                    icon={<AddIcon />}
+                                    size={'md'}
+                                    colorScheme={'green'}
                                 />
                             </HStack>
                         </VStack>
                     </Flex>
                     <HStack justifyContent={'center'} gap={'25px'} marginBottom={[matchFormStatus.followUp, matchFormStatus.noShow].includes(superFormData[teamNumber].superStatus) ? '15px' : '0px'}>
                         <Checkbox
-                            colorScheme={'green'}
+                            colorScheme={'yellow'}
                             isChecked={superFormData[teamNumber].superStatus === matchFormStatus.followUp}
                             onChange={() => {
                                 let teamData = { ...superFormData };
@@ -388,7 +408,7 @@ function SuperForm() {
                             Mark For Follow Up
                         </Checkbox>
                         <Checkbox
-                            colorScheme={'green'}
+                            colorScheme={'red'}
                             isChecked={superFormData[teamNumber].superStatus === matchFormStatus.noShow}
                             onChange={() => {
                                 let teamData = { ...superFormData };
@@ -418,7 +438,7 @@ function SuperForm() {
                 </Box>
             ))}
             <Center>
-                <Button isDisabled={submitting} marginBottom={'20px'} marginTop={'0px'} onClick={() => submit()}>
+                <Button isLoading={submitting} marginBottom={'15px'} onClick={() => submit()}>
                     Submit
                 </Button>
             </Center>

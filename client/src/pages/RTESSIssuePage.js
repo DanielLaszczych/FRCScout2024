@@ -21,7 +21,7 @@ function RTESSIssuePage() {
         fetchPolicy: 'network-only',
         skip: rtessIssueData === null,
         variables: {
-            key: rtessIssueData?.eventKey,
+            key: rtessIssueData?.eventKey
         },
         onError(err) {
             console.log(JSON.stringify(err, null, 2));
@@ -29,13 +29,13 @@ function RTESSIssuePage() {
         },
         onCompleted({ getEvent: event }) {
             setEventName(event.name);
-        },
+        }
     });
 
     const { loading: loadingRTESSIssue, error: rtessIssueError } = useQuery(GET_RTESS_ISSUE, {
         fetchPolicy: 'network-only',
         variables: {
-            _id: idParam,
+            _id: idParam
         },
         onError(err) {
             console.log(JSON.stringify(err, null, 2));
@@ -46,7 +46,7 @@ function RTESSIssuePage() {
                 setError('RTESS issue does not exist');
             }
             setRTESSIssueData(rtessIssue);
-        },
+        }
     });
 
     function validForm() {
@@ -59,7 +59,7 @@ function RTESSIssuePage() {
                 title: 'RTESS Issue Updated',
                 status: 'success',
                 duration: 3000,
-                isClosable: true,
+                isClosable: true
             });
             navigate('/rtessIssues/event');
             setSubmitting(false);
@@ -71,10 +71,10 @@ function RTESSIssuePage() {
                 description: 'RTESS Issues could not be updated',
                 status: 'error',
                 duration: 3000,
-                isClosable: true,
+                isClosable: true
             });
             setSubmitting(false);
-        },
+        }
     });
 
     function submit() {
@@ -85,7 +85,7 @@ function RTESSIssuePage() {
                 description: 'Fill out all fields',
                 status: 'error',
                 duration: 3000,
-                isClosable: true,
+                isClosable: true
             });
             return;
         }
@@ -95,9 +95,9 @@ function RTESSIssuePage() {
                 rtessIssueInput: {
                     _id: rtessIssueData._id,
                     solutionComment: rtessIssueData.solutionComment ? rtessIssueData.solutionComment.trim() : '',
-                    status: rtessIssueData.status,
-                },
-            },
+                    status: rtessIssueData.status
+                }
+            }
         });
     }
 
@@ -155,7 +155,7 @@ function RTESSIssuePage() {
                         isInvalid={rtessIssueData.status === rtessIssuesStatus.resolved && submitAttempted && (!rtessIssueData.solutionComment || rtessIssueData.solutionComment.trim() === '')}
                         _focus={{
                             outline: 'none',
-                            boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px',
+                            boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px'
                         }}
                         onChange={(event) => {
                             setRTESSIssueData({ ...rtessIssueData, solutionComment: event.target.value });
@@ -202,7 +202,7 @@ function RTESSIssuePage() {
                 </HStack>
             </Box>
             <Center>
-                <Button isDisabled={submitting} _focus={{ outline: 'none' }} marginBottom={'25px'} onClick={() => submit()}>
+                <Button isLoading={submitting} _focus={{ outline: 'none' }} marginBottom={'25px'} onClick={() => submit()}>
                     Submit
                 </Button>
             </Center>

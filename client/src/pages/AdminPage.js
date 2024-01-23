@@ -769,9 +769,9 @@ function AdminPage() {
                                 </Flex>
                                 <Flex justifyContent={'center'} alignItems={'center'}>
                                     {mutatingEventKey === event.key ? (
-                                        <Box marginTop={'8px'} minW={'110px'}>
+                                        <Flex justifyContent={'center'} alignItems={'center'} minW={'110.27px'}>
                                             <Spinner></Spinner>
-                                        </Box>
+                                        </Flex>
                                     ) : (
                                         <Button isDisabled={mutatingEventKey !== null} onClick={() => handleRemoveEvent(event.key)} marginLeft={'10px'} marginRight={'10px'}>
                                             Remove

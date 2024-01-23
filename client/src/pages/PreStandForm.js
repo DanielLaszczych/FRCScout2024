@@ -187,154 +187,152 @@ function PreStandForm() {
 
     return (
         <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-            <Box>
-                <IconButton position={'absolute'} right={'10px'} onClick={() => setManualMode(!manualMode)} icon={!manualMode ? <LockIcon /> : <UnlockIcon />} />
-                <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} margin={'0 auto'} marginBottom={'20px'} maxWidth={'calc(100% - 60px)'}>
-                    Competition: {currentEvent.name}
-                </Text>
-                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'10px'}>
-                    Alliance Station:
-                </Text>
-                <Menu placement={'bottom'}>
-                    <MenuButton display={'flex'} margin={'0 auto'} onClick={() => setFocusedStation(station)} as={Button} rightIcon={<ChevronDownIcon />}>
-                        {station === '' ? 'Choose Station' : station.label}
-                    </MenuButton>
-                    <MenuList>
-                        {stations.map((stationItem) => (
-                            <MenuItem
-                                _focus={{ backgroundColor: 'none' }}
-                                onMouseEnter={() => setFocusedStation(stationItem)}
-                                backgroundColor={(station.value === stationItem.value && focusedStation === '') || focusedStation.value === stationItem.value ? 'gray.100' : 'none'}
-                                maxW={'80vw'}
-                                key={stationItem.id}
-                                display={'flex'}
-                                justifyContent={'center'}
-                                onClick={() => setStation(stationItem)}
-                            >
-                                {stationItem.label}
-                            </MenuItem>
-                        ))}
-                    </MenuList>
-                </Menu>
-                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginTop={'20px'} marginBottom={'10px'}>
-                    Match Number:
-                </Text>
-                <Menu placement={'bottom'}>
-                    <MenuButton display={'flex'} margin={'0 auto'} onClick={() => setFocusedMatchType(matchType)} as={Button} rightIcon={<ChevronDownIcon />}>
-                        {matchType === '' ? 'Choose Match Type' : matchType.label}
-                    </MenuButton>
-                    <MenuList>
-                        {matchTypes.map((matchTypeItem) => (
-                            <MenuItem
-                                _focus={{ backgroundColor: 'none' }}
-                                onMouseEnter={() => setFocusedMatchType(matchTypeItem)}
-                                backgroundColor={(matchType.value === matchTypeItem.value && focusedMatchType === '') || focusedMatchType.value === matchTypeItem.value ? 'gray.100' : 'none'}
-                                maxW={'80vw'}
-                                key={matchTypeItem.id}
-                                display={'flex'}
-                                justifyContent={'center'}
-                                onClick={() => {
-                                    setMatchNumber('');
-                                    setMatchType(matchTypeItem);
-                                }}
-                            >
-                                {matchTypeItem.label}
-                            </MenuItem>
-                        ))}
-                    </MenuList>
-                </Menu>
-                {matchType !== '' ? (
-                    <NumberInput
-                        margin={'0 auto'}
-                        marginTop={'10px'}
-                        onChange={(value) => setMatchNumber(value)}
-                        value={matchNumber}
-                        min={1}
-                        precision={0}
-                        width={{
-                            base: matchType === 'Quals' ? '75%' : '62%',
-                            md: '66%',
-                            lg: '50%'
-                        }}
-                    >
-                        <NumberInputField
-                            onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                    event.target.blur();
-                                }
+            <IconButton position={'absolute'} right={'15px'} onClick={() => setManualMode(!manualMode)} icon={!manualMode ? <LockIcon /> : <UnlockIcon />} />
+            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} margin={'0 auto'} marginBottom={'20px'} maxWidth={'calc(100% - 100px)'}>
+                Competition: {currentEvent.name}
+            </Text>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'10px'}>
+                Alliance Station
+            </Text>
+            <Menu placement={'bottom'}>
+                <MenuButton display={'flex'} margin={'0 auto'} onClick={() => setFocusedStation(station)} as={Button} rightIcon={<ChevronDownIcon />}>
+                    {station === '' ? 'Choose Station' : station.label}
+                </MenuButton>
+                <MenuList>
+                    {stations.map((stationItem) => (
+                        <MenuItem
+                            _focus={{ backgroundColor: 'none' }}
+                            onMouseEnter={() => setFocusedStation(stationItem)}
+                            backgroundColor={(station.value === stationItem.value && focusedStation === '') || focusedStation.value === stationItem.value ? 'gray.100' : 'none'}
+                            maxW={'80vw'}
+                            key={stationItem.id}
+                            display={'flex'}
+                            justifyContent={'center'}
+                            onClick={() => setStation(stationItem)}
+                        >
+                            {stationItem.label}
+                        </MenuItem>
+                    ))}
+                </MenuList>
+            </Menu>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginTop={'20px'} marginBottom={'10px'}>
+                Match Number
+            </Text>
+            <Menu placement={'bottom'}>
+                <MenuButton display={'flex'} margin={'0 auto'} onClick={() => setFocusedMatchType(matchType)} as={Button} rightIcon={<ChevronDownIcon />}>
+                    {matchType === '' ? 'Choose Match Type' : matchType.label}
+                </MenuButton>
+                <MenuList>
+                    {matchTypes.map((matchTypeItem) => (
+                        <MenuItem
+                            _focus={{ backgroundColor: 'none' }}
+                            onMouseEnter={() => setFocusedMatchType(matchTypeItem)}
+                            backgroundColor={(matchType.value === matchTypeItem.value && focusedMatchType === '') || focusedMatchType.value === matchTypeItem.value ? 'gray.100' : 'none'}
+                            maxW={'80vw'}
+                            key={matchTypeItem.id}
+                            display={'flex'}
+                            justifyContent={'center'}
+                            onClick={() => {
+                                setMatchNumber('');
+                                setMatchType(matchTypeItem);
                             }}
-                            enterKeyHint='done'
-                            textAlign={'center'}
-                            placeholder='Enter Match #'
-                        />
-                    </NumberInput>
-                ) : null}
-                <Flex alignItems={'center'} justifyContent={'center'} marginTop={'20px'} marginBottom={'10px'} columnGap={'10px'}>
-                    <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                        Team Number: {!manualMode ? (doneFetching() ? teamNumber : '') : ''}
+                        >
+                            {matchTypeItem.label}
+                        </MenuItem>
+                    ))}
+                </MenuList>
+            </Menu>
+            {matchType !== '' ? (
+                <NumberInput
+                    margin={'0 auto'}
+                    marginTop={'10px'}
+                    onChange={(value) => setMatchNumber(value)}
+                    value={matchNumber}
+                    min={1}
+                    precision={0}
+                    width={{
+                        base: '65%',
+                        md: '30%',
+                        lg: '30%'
+                    }}
+                >
+                    <NumberInputField
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                event.target.blur();
+                            }
+                        }}
+                        enterKeyHint='done'
+                        textAlign={'center'}
+                        placeholder='Enter Match #'
+                    />
+                </NumberInput>
+            ) : null}
+            <Flex alignItems={'center'} justifyContent={'center'} marginTop={'20px'} marginBottom={'10px'} columnGap={'10px'}>
+                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                    Team Number{!manualMode ? (doneFetching() ? `: ${teamNumber || ''}` : ': ') : ''}
+                </Text>
+                {!manualMode && doneFetching() && futureAlly ? <StarIcon stroke={'black'} viewBox={'-1 -1 26 26'} fontSize={'lg'} color={'yellow.300'} /> : null}
+                {!manualMode && teamNumberError !== '' && (
+                    //width={'calc(100% - 73px)'} make the px slightly bigger than the width of the text from above
+                    <Text color={'red.500'} fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} maxWidth={'calc(100% - 122px)'}>
+                        {teamNumberError}
                     </Text>
-                    {!manualMode && doneFetching() && futureAlly ? <StarIcon stroke={'black'} viewBox={'-1 -1 26 26'} fontSize={'lg'} color={'yellow.300'} /> : null}
-                    {!manualMode && teamNumberError !== '' && (
-                        //width={'calc(100% - 73px)'} make the px slightly bigger than the width of the text from above
-                        <Text color={'red.500'} fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} maxWidth={'calc(100% - 122px)'}>
+                )}
+                {!manualMode && !doneFetching() ? <Spinner fontSize={'lg'} /> : null}
+            </Flex>
+            {!manualMode ? (
+                <Flex alignItems={'center'} justifyContent={'center'} marginTop={'10px'} columnGap={'10px'}>
+                    <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                        Team Name: {!doneFetching() ? '' : teamName}
+                    </Text>
+                    {teamNumberError !== '' && (
+                        //width={'calc(100% - 63px)'} make the px slightly bigger than the width of the text from above
+                        <Text color={'red.500'} fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} maxWidth={'calc(100% - 102px)'}>
                             {teamNumberError}
                         </Text>
                     )}
-                    {!doneFetching() && !manualMode ? <Spinner fontSize={'lg'} /> : null}
+                    {!doneFetching() ? <Spinner fontSize={'lg'} /> : null}
                 </Flex>
-                {!manualMode ? (
-                    <Flex alignItems={'center'} justifyContent={'center'} marginTop={'10px'} columnGap={'10px'}>
-                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                            Team Name: {!doneFetching() ? '' : teamName}
-                        </Text>
-                        {teamNumberError !== '' && (
-                            //width={'calc(100% - 63px)'} make the px slightly bigger than the width of the text from above
-                            <Text color={'red.500'} fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} maxWidth={'calc(100% - 102px)'}>
-                                {teamNumberError}
-                            </Text>
-                        )}
-                        {!doneFetching() ? <Spinner fontSize={'lg'} /> : null}
-                    </Flex>
-                ) : null}
-                {manualMode ? (
-                    <NumberInput
-                        margin={'auto'}
-                        onChange={(value) => setTeamNumber(value)}
-                        value={teamNumber || ''}
-                        min={1}
-                        precision={0}
-                        width={{
-                            base: '75%',
-                            md: '66%',
-                            lg: '50%'
-                        }}
-                    >
-                        <NumberInputField
-                            onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                    event.target.blur();
-                                }
-                            }}
-                            enterKeyHint='done'
-                            textAlign={'center'}
-                            placeholder='Enter Team #'
-                        />
-                    </NumberInput>
-                ) : null}
-            </Box>
-            <Center>
-                <Button
-                    isDisabled={!validSetup()}
-                    marginBottom={'15px'}
-                    marginTop={'20px'}
-                    onClick={() => {
-                        localStorage.setItem('PreStandFormData', JSON.stringify({ station, matchType, manualMode }));
-                        navigate(`/standForm/${currentEvent.key}/${getMatchKey()}/${station.value}/${teamNumber}`);
+            ) : null}
+            {manualMode ? (
+                <NumberInput
+                    margin={'0 auto'}
+                    onChange={(value) => setTeamNumber(value)}
+                    value={teamNumber || ''}
+                    min={1}
+                    precision={0}
+                    width={{
+                        base: '65%',
+                        md: '30%',
+                        lg: '30%'
                     }}
                 >
-                    Confirm
-                </Button>
-            </Center>
+                    <NumberInputField
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                event.target.blur();
+                            }
+                        }}
+                        enterKeyHint='done'
+                        textAlign={'center'}
+                        placeholder='Enter Team #'
+                    />
+                </NumberInput>
+            ) : null}
+            <Button
+                isDisabled={!validSetup()}
+                display={'flex'}
+                margin={'0 auto'}
+                marginBottom={'15px'}
+                marginTop={'20px'}
+                onClick={() => {
+                    localStorage.setItem('PreStandFormData', JSON.stringify({ station, matchType, manualMode }));
+                    navigate(`/standForm/${currentEvent.key}/${getMatchKey()}/${station.value}/${teamNumber}`);
+                }}
+            >
+                Confirm
+            </Button>
         </Box>
     );
 }

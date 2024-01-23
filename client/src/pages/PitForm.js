@@ -1183,7 +1183,7 @@ function PitForm() {
                 Team Number: {teamNumberParam}
             </Text>
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginTop={'15px'} marginBottom={'5px'}>
-                Weight:
+                Weight
             </Text>
             <NumberInput
                 onChange={(value) => setPitFormData({ ...pitFormData, weight: value })}
@@ -1208,7 +1208,7 @@ function PitForm() {
                 />
             </NumberInput>
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
-                Starting Height:
+                Starting Height
             </Text>
             <NumberInput
                 onChange={(value) => setPitFormData({ ...pitFormData, height: value })}
@@ -1234,7 +1234,7 @@ function PitForm() {
                 />
             </NumberInput>
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
-                Frame Size:
+                Frame Size
             </Text>
             <HStack gap={'0px'}>
                 <NumberInput
@@ -1283,7 +1283,7 @@ function PitForm() {
                 </NumberInput>
             </HStack>
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
-                Drive Train:
+                Drive
             </Text>
             <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
                 Type
@@ -1411,7 +1411,7 @@ function PitForm() {
                 />
             </Center>
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
-                Autonomous:
+                Autonomous
             </Text>
             <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
                 Programming Language
@@ -1505,11 +1505,11 @@ function PitForm() {
                 />
             </Center>
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
-                Abilities:
+                Abilities
             </Text>
             {pitFormData.teleAbilities.map((abilityContainer, containerIndex) => getAbilityComponent(abilityContainer, containerIndex, 'teleAbilities'))}
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
-                Closing:
+                Closing
             </Text>
             <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
                 Total Batteries
@@ -1601,7 +1601,7 @@ function PitForm() {
                 </Center>
             ) : null}
             <Center marginTop={'15px'} marginBottom={'15px'}>
-                <Button isDisabled={submitting} onClick={() => submit()}>
+                <Button isLoading={submitting} onClick={() => submit()}>
                     Submit
                 </Button>
             </Center>

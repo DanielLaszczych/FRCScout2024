@@ -1101,7 +1101,7 @@ function StandForm() {
                         <Flex flexDir={'column'} rowGap={'15px'}>
                             <VStack gap={'5px'}>
                                 <Text fontSize={'lg'} fontWeight={'semibold'}>
-                                    Climb:
+                                    Climb
                                 </Text>
                                 <Flex columnGap={'10px'} width={'100%'} justifyContent={'center'}>
                                     {climbTypes.map((type) => (
@@ -1296,7 +1296,7 @@ function StandForm() {
                                     color={'yellow.300'}
                                 />
                             ) : null}
-                            <Button flex={2 / 3} isDisabled={submitting} onClick={() => submit()}>
+                            <Button flex={2 / 3} isLoading={submitting} onClick={() => submit()}>
                                 Submit
                             </Button>
                         </HStack>

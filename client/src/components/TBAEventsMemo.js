@@ -20,12 +20,9 @@ function TBAEventsMemo({ eventType, mutatingEventKey, handleAddEvent }) {
                             </Flex>
                             <Flex justifyContent={'center'} alignItems={'center'}>
                                 {mutatingEventKey === event.key ? (
-                                    <Box marginTop={'8px'} minW={'110px'}>
-                                        <Spinner></Spinner>
-                                    </Box>
+                                    <Spinner></Spinner>
                                 ) : (
                                     <Button
-                                        _focus={{ outline: 'none' }}
                                         isDisabled={mutatingEventKey !== null}
                                         onClick={() => handleAddEvent(event.name, event.year, event.week, eventType.name, event.key, event.start_date, event.end_date)}
                                     >

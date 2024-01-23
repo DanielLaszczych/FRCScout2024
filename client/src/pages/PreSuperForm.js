@@ -1,5 +1,5 @@
 import { ChevronDownIcon, LockIcon, UnlockIcon } from '@chakra-ui/icons';
-import { Box, Button, Center, Flex, HStack, IconButton, Menu, MenuButton, MenuItem, MenuList, NumberInput, NumberInputField, Spinner, Text } from '@chakra-ui/react';
+import { Box, Button, Center, Flex, IconButton, Menu, MenuButton, MenuItem, MenuList, NumberInput, NumberInputField, Spinner, Text } from '@chakra-ui/react';
 import { React, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,6 +14,7 @@ let matchTypes = [
     { label: 'Playoffs', value: 'sf', id: uuidv4() },
     { label: 'Finals', value: 'f', id: uuidv4() }
 ];
+let stations = [{ id: uuidv4() }, { id: uuidv4() }, { id: uuidv4() }];
 
 function PreSuperForm() {
     let navigate = useNavigate();
@@ -144,161 +145,150 @@ function PreSuperForm() {
 
     return (
         <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-            <Box>
-                <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'}>
-                    <HStack justify={'space-between'} marginBottom={'20px'}>
-                        <Text fontWeight={'bold'} fontSize={'110%'}>
-                            Competition: {currentEvent.name}
-                        </Text>
-                        <IconButton onClick={() => setManualMode(!manualMode)} icon={!manualMode ? <LockIcon /> : <UnlockIcon />}></IconButton>
-                    </HStack>
-                    <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
-                        Alliance:
-                    </Text>
-                    <Menu>
-                        <MenuButton marginLeft={'10px'} onClick={() => setFocusedAlliance(alliance)} as={Button} rightIcon={<ChevronDownIcon />}>
-                            {alliance === '' ? 'Choose Alliance' : alliance.label}
-                        </MenuButton>
-                        <MenuList>
-                            {alliances.map((allianceItem) => (
-                                <MenuItem
-                                    _focus={{ backgroundColor: 'none' }}
-                                    onMouseEnter={() => setFocusedAlliance(allianceItem)}
-                                    backgroundColor={(alliance.value === allianceItem.value && focusedAlliance === '') || focusedAlliance.value === allianceItem.value ? 'gray.100' : 'none'}
-                                    maxW={'80vw'}
-                                    key={allianceItem.id}
-                                    onClick={() => setAlliance(allianceItem)}
-                                >
-                                    {allianceItem.label}
-                                </MenuItem>
-                            ))}
-                        </MenuList>
-                    </Menu>
-                    <Text marginTop={'20px'} marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
-                        Match Number:
-                    </Text>
-                    <Menu>
-                        <MenuButton marginLeft={'10px'} onClick={() => setFocusedMatchType(matchType)} as={Button} rightIcon={<ChevronDownIcon />}>
-                            {matchType === '' ? 'Choose Match Type' : matchType.label}
-                        </MenuButton>
-                        <MenuList>
-                            {matchTypes.map((matchTypeItem) => (
-                                <MenuItem
-                                    _focus={{ backgroundColor: 'none' }}
-                                    onMouseEnter={() => setFocusedMatchType(matchTypeItem)}
-                                    backgroundColor={(matchType.value === matchTypeItem.value && focusedMatchType === '') || focusedMatchType.value === matchTypeItem.value ? 'gray.100' : 'none'}
-                                    maxW={'80vw'}
-                                    key={matchTypeItem.id}
-                                    onClick={() => {
-                                        setMatchNumber('');
-                                        setMatchType(matchTypeItem);
-                                    }}
-                                >
-                                    {matchTypeItem.label}
-                                </MenuItem>
-                            ))}
-                        </MenuList>
-                    </Menu>
-                    <HStack marginTop={'10px'}>
-                        {matchType !== '' ? (
-                            <NumberInput
-                                marginLeft={'10px'}
-                                onChange={(value) => setMatchNumber(value)}
-                                value={matchNumber}
-                                min={1}
-                                precision={0}
-                                width={{
-                                    base: matchType === 'Quals' ? '75%' : '62%',
-                                    md: '66%',
-                                    lg: '50%'
-                                }}
-                            >
-                                <NumberInputField
-                                    onKeyDown={(event) => {
-                                        if (event.key === 'Enter') {
-                                            event.target.blur();
-                                        }
-                                    }}
-                                    enterKeyHint='done'
-                                    textAlign={'center'}
-                                    placeholder='Enter Match #'
-                                />
-                            </NumberInput>
-                        ) : null}
-                    </HStack>
-                    <Flex alignItems={'center'} marginTop={'10px'} marginBottom={'10px'}>
-                        <Box fontWeight={'bold'} fontSize={'110%'}>
-                            Team Numbers:
-                            {!manualMode
-                                ? teamNumbers.filter((teamNumber) => teamNumber !== '').length === 3
-                                    ? teamNumbers.map((teamNumber, index) => (
-                                          //not good practice to use index for key
-                                          <Text key={index} marginLeft={'10px'} marginTop={index === 0 && '10px'} marginBottom={index < 2 && '5px'}>
-                                              Station {index + 1}: {teamNumber}
-                                          </Text>
-                                      ))
-                                    : ''
-                                : ''}
-                        </Box>
-                        {!manualMode && teamNumberError !== '' && (
-                            <Text color={'red.500'} marginTop={'10px'} marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
-                                {teamNumberError}
-                            </Text>
-                        )}
-                        {!doneFetching() && !manualMode ? <Spinner marginLeft={'15px'} fontSize={'50px'} /> : null}
-                    </Flex>
-                    {manualMode
-                        ? teamNumbers.map((teamNumber, index) => (
-                              // not good practice to use index for key
-                              <HStack key={index} marginLeft={'10px'} marginTop={index === 0 && '10px'} marginBottom={index < 2 && '5px'}>
-                                  <Text fontWeight={'bold'} fontSize={'110%'}>
-                                      Station {index + 1}:
-                                  </Text>
-                                  <NumberInput
-                                      onChange={(value) => {
-                                          let temp = [...teamNumbers];
-                                          temp[index] = value;
-                                          setTeamNumbers(temp);
-                                      }}
-                                      value={teamNumber}
-                                      min={1}
-                                      precision={0}
-                                      width={{
-                                          base: '50%',
-                                          md: '66%',
-                                          lg: '50%'
-                                      }}
-                                  >
-                                      <NumberInputField
-                                          onKeyDown={(event) => {
-                                              if (event.key === 'Enter') {
-                                                  event.target.blur();
-                                              }
-                                          }}
-                                          enterKeyHint='done'
-                                          textAlign={'center'}
-                                          placeholder='Enter Team #'
-                                      />
-                                  </NumberInput>
-                              </HStack>
-                          ))
-                        : null}
-                </Box>
-                <Center>
-                    <Button
-                        isDisabled={!validSetup()}
-                        _focus={{ outline: 'none' }}
-                        marginBottom={'20px'}
-                        marginTop={'20px'}
-                        onClick={() => {
-                            localStorage.setItem('PreSuperFormData', JSON.stringify({ alliance, matchType, manualMode }));
-                            navigate(`/superForm/${currentEvent.key}/${getMatchKey()}/${alliance.value}/${teamNumbers[0]}/${teamNumbers[1]}/${teamNumbers[2]}`);
+            <IconButton position={'absolute'} right={'15px'} onClick={() => setManualMode(!manualMode)} icon={!manualMode ? <LockIcon /> : <UnlockIcon />} />
+            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} margin={'0 auto'} marginBottom={'20px'} maxWidth={'calc(100% - 100px)'}>
+                Competition: {currentEvent.name}
+            </Text>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'10px'}>
+                Alliance
+            </Text>
+            <Menu placement={'bottom'}>
+                <MenuButton display={'flex'} margin={'0 auto'} onClick={() => setFocusedAlliance(alliance)} as={Button} rightIcon={<ChevronDownIcon />}>
+                    {alliance === '' ? 'Choose Alliance' : alliance.label}
+                </MenuButton>
+                <MenuList>
+                    {alliances.map((allianceItem) => (
+                        <MenuItem
+                            _focus={{ backgroundColor: 'none' }}
+                            onMouseEnter={() => setFocusedAlliance(allianceItem)}
+                            backgroundColor={(alliance.value === allianceItem.value && focusedAlliance === '') || focusedAlliance.value === allianceItem.value ? 'gray.100' : 'none'}
+                            maxW={'80vw'}
+                            key={allianceItem.id}
+                            display={'flex'}
+                            justifyContent={'center'}
+                            onClick={() => setAlliance(allianceItem)}
+                        >
+                            {allianceItem.label}
+                        </MenuItem>
+                    ))}
+                </MenuList>
+            </Menu>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginTop={'20px'} marginBottom={'10px'}>
+                Match Number
+            </Text>
+            <Menu>
+                <MenuButton display={'flex'} margin={'0 auto'} onClick={() => setFocusedMatchType(matchType)} as={Button} rightIcon={<ChevronDownIcon />}>
+                    {matchType === '' ? 'Choose Match Type' : matchType.label}
+                </MenuButton>
+                <MenuList>
+                    {matchTypes.map((matchTypeItem) => (
+                        <MenuItem
+                            _focus={{ backgroundColor: 'none' }}
+                            onMouseEnter={() => setFocusedMatchType(matchTypeItem)}
+                            backgroundColor={(matchType.value === matchTypeItem.value && focusedMatchType === '') || focusedMatchType.value === matchTypeItem.value ? 'gray.100' : 'none'}
+                            maxW={'80vw'}
+                            key={matchTypeItem.id}
+                            display={'flex'}
+                            justifyContent={'center'}
+                            onClick={() => {
+                                setMatchNumber('');
+                                setMatchType(matchTypeItem);
+                            }}
+                        >
+                            {matchTypeItem.label}
+                        </MenuItem>
+                    ))}
+                </MenuList>
+            </Menu>
+            {matchType !== '' ? (
+                <NumberInput
+                    margin={'0 auto'}
+                    marginTop={'10px'}
+                    onChange={(value) => setMatchNumber(value)}
+                    value={matchNumber}
+                    min={1}
+                    precision={0}
+                    width={{
+                        base: '65%',
+                        md: '30%',
+                        lg: '30%'
+                    }}
+                >
+                    <NumberInputField
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                event.target.blur();
+                            }
                         }}
-                    >
-                        Confirm
-                    </Button>
-                </Center>
-            </Box>
+                        enterKeyHint='done'
+                        textAlign={'center'}
+                        placeholder='Enter Match #'
+                    />
+                </NumberInput>
+            ) : null}
+            <Flex alignItems={'center'} justifyContent={'center'} marginTop={'20px'} columnGap={'10px'}>
+                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                    Team Numbers{!manualMode ? (doneFetching() && teamNumberError === '' ? '' : ': ') : ''}
+                </Text>
+                {!manualMode && teamNumberError !== '' && (
+                    <Text color={'red.500'} fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} maxWidth={'calc(100% - 124px)'}>
+                        {teamNumberError}
+                    </Text>
+                )}
+                {!manualMode && !doneFetching() ? <Spinner fontSize={'lg'} /> : null}
+            </Flex>
+            <Flex flexDirection={'column'} alignItems={'center'} rowGap={'5px'} marginTop={'10px'}>
+                {!manualMode
+                    ? teamNumbers.filter((teamNumber) => teamNumber !== '').length === 3 &&
+                      teamNumbers.map((teamNumber, index) => (
+                          <Text fontSize={'lg'} fontWeight={'semibold'} key={stations[index]}>
+                              Station {index + 1}: {teamNumber}
+                          </Text>
+                      ))
+                    : teamNumbers.map((teamNumber, index) => (
+                          <Flex key={stations[index]} justifyContent={'center'} alignItems={'center'} rowGap={'5px'} columnGap={'10px'}>
+                              <Text fontSize={'lg'} fontWeight={'semibold'}>
+                                  Station {index + 1}:
+                              </Text>
+                              <NumberInput
+                                  onChange={(value) => {
+                                      let temp = [...teamNumbers];
+                                      temp[index] = value;
+                                      setTeamNumbers(temp);
+                                  }}
+                                  value={teamNumber}
+                                  min={1}
+                                  precision={0}
+                                  width={'50%'}
+                              >
+                                  <NumberInputField
+                                      onKeyDown={(event) => {
+                                          if (event.key === 'Enter') {
+                                              event.target.blur();
+                                          }
+                                      }}
+                                      enterKeyHint='done'
+                                      textAlign={'center'}
+                                      placeholder='Enter Team #'
+                                  />
+                              </NumberInput>
+                          </Flex>
+                      ))}
+            </Flex>
+
+            <Button
+                isDisabled={!validSetup()}
+                display={'flex'}
+                margin={'0 auto'}
+                marginBottom={'15px'}
+                marginTop={'20px'}
+                onClick={() => {
+                    localStorage.setItem('PreSuperFormData', JSON.stringify({ alliance, matchType, manualMode }));
+                    navigate(`/superForm/${currentEvent.key}/${getMatchKey()}/${alliance.value}/${teamNumbers[0]}/${teamNumbers[1]}/${teamNumbers[2]}`);
+                }}
+            >
+                Confirm
+            </Button>
         </Box>
     );
 }

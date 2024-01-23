@@ -43,7 +43,7 @@ function TeamPage({ keyProp }) {
                 .then((response) => response.json())
                 .then((data) => {
                     if (!data.Error) {
-                        let blueEvents = data.filter((event) => event.key !== '2023cmptx');
+                        let blueEvents = data.filter((event) => event.key !== `${year}cmptx`);
                         let events = customEvents.concat(blueEvents);
                         setEvents(sortBlueAllianceEvents(events));
                     } else {
