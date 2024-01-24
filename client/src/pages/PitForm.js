@@ -166,6 +166,7 @@ function PitForm() {
                 type: abilityTypes.checkbox,
                 abilities: [
                     { label: 'Onstage (Hang on chain)', id: uuidv4() },
+                    { label: 'Harmony', id: uuidv4() },
                     { label: 'Trap', id: uuidv4() }
                 ],
                 checked: [],
@@ -938,7 +939,7 @@ function PitForm() {
                         <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={containerIndex !== 0 && '10px'}>
                             {abilityContainer.label}
                         </Text>
-                        <Flex flexWrap={'wrap'} rowGap={'5px'} columnGap={'20px'} justifyContent={'flex-start'}>
+                        <Flex flexWrap={'wrap'} rowGap={'5px'} columnGap={'25px'} justifyContent={'center'}>
                             {abilityContainer.abilities.map((ability) => (
                                 <Box key={ability.id}>
                                     <Checkbox

@@ -441,11 +441,11 @@ function AdminPage() {
         <Box margin={'0 auto'} width={{ base: '90%', md: '66%', lg: '66%' }}>
             <Modal closeOnEsc={true} isOpen={isOpen} onClose={onClose}>
                 <ModalOverlay>
-                    <ModalContent width={{ base: '75%', md: '40%', lg: '30%' }} marginTop={'25dvh'} marginBottom={'10dvh'}>
+                    <ModalContent width={{ base: '75%', md: '40%', lg: '30%' }} marginTop={'10dvh'} marginBottom={'10dvh'}>
                         <ModalHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Select an Event
                         </ModalHeader>
-                        <ModalBody maxHeight={'calc(65dvh - 59px - 72px)'} overflowY={'auto'}>
+                        <ModalBody maxHeight={'calc(80dvh - 59px - 72px)'} overflowY={'auto'}>
                             <VStack spacing={'10px'}>
                                 <Button colorScheme={focusedEvent.key === 'None' ? 'green' : 'gray'} onClick={() => setFocusedEvent({ name: 'None', key: 'None' })}>
                                     None
@@ -491,14 +491,13 @@ function AdminPage() {
                     setSubmitAttempted(false);
                     setSubmitting(false);
                 }}
-                scrollBehavior='inside'
             >
                 <ModalOverlay>
-                    <ModalContent width={{ base: '75%', md: '40%', lg: '30%' }} marginTop={'10dvh'} marginBottom={'10dvh'}>
+                    <ModalContent width={{ base: '75%', md: '40%', lg: '30%' }} marginTop={'10dvh'} marginBottom={'10dvh'} maxHeight={'80dvh'} overflowY={'auto'}>
                         <ModalHeader fontSize={'lg'} fontWeight={'semibold'} paddingBottom={'5px'}>
                             Custom Event
                         </ModalHeader>
-                        <ModalBody paddingLeft={'30px'} maxHeight={'calc(80dvh - 48px - 72px)'} overflowY={'auto'}>
+                        <ModalBody paddingLeft={'30px'}>
                             <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
                                 Event Key:
                             </Text>
