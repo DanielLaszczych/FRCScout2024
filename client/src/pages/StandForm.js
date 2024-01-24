@@ -14,6 +14,12 @@ import {
     Checkbox,
     Flex,
     HStack,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalHeader,
+    ModalOverlay,
     Slider,
     SliderFilledTrack,
     SliderMark,
@@ -23,6 +29,7 @@ import {
     Text,
     Textarea,
     VStack,
+    useDisclosure,
     useToast
 } from '@chakra-ui/react';
 import { StarIcon } from '@chakra-ui/icons';
@@ -118,6 +125,7 @@ function StandForm() {
     const toast = useToast();
     const { eventKey: eventKeyParam, matchNumber: matchNumberParam, station: stationParam, teamNumber: teamNumberParam } = useParams();
     const { offline } = useContext(GlobalContext);
+    const { isOpen, onOpen, onClose } = useDisclosure();
 
     const cancelRef = useRef(null);
 
@@ -177,7 +185,6 @@ function StandForm() {
     const [whitespace, setWhitespace] = useState(null);
     const [preAutoImageSrc, setPreAutoImageSrc] = useState(null);
     const [autoImageSrc, setAutoImageSrc] = useState(null);
-    const [showQRCode, setShowQRCode] = useState(false);
     const [maxContainerHeight, setMaxContainerHeight] = useState(null);
 
     useEffect(() => {
@@ -324,7 +331,6 @@ function StandForm() {
             const whitespaceRight = extraVerticalSpace / 2;
             setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
         }
-
         setMaxContainerHeight(scaledHeight + 145);
         setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
     }
@@ -492,7 +498,7 @@ function StandForm() {
             return;
         }
         if (offline) {
-            setShowQRCode(true);
+            onOpen();
             return;
         }
         setSubmitting(true);
@@ -710,12 +716,11 @@ function StandForm() {
                         </Text>
                         {standFormData.autoTimeline.length === 0 ||
                         (standFormData.autoTimeline.slice(-1)[0].scored !== null && (standFormData.autoTimeline[0].piece !== '0' || standFormData.autoTimeline[0].scored !== null)) ? (
-                            <Box style={{ transform: `rotate(${fieldRotation}deg)` }}>
+                            <Box position={'relative'} style={{ transform: `rotate(${fieldRotation}deg)` }}>
                                 {!autoImageSrc && (
                                     <Center
                                         width={`${imageWidth * dimensionRatios.width}px`}
                                         height={`${imageHeight * dimensionRatios.height}px`}
-                                        pos={'absolute'}
                                         backgroundColor={'white'}
                                         zIndex={2}
                                         margin={'0 auto'}
@@ -819,7 +824,7 @@ function StandForm() {
                                 </Button>
                             </Flex>
                         )}
-                        <Flex flexDir={'column'} rowGap={'15px'} marginTop={'15px'}>
+                        <Flex flexDir={'column'} marginTop={'15px'}>
                             <HStack gap={0}>
                                 <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 2}>
                                     Left starting zone:
@@ -1304,21 +1309,19 @@ function StandForm() {
                                     />
                                 </Center>
                             ) : null}
-                            {showQRCode && (
-                                <Center>
-                                    <QRCode value={getQRValue()} size={maxContainerHeight - 115 - 15 - (standFormData.standStatus !== matchFormStatus.noShow && 39) - (isFollowOrNoShow() && 95)} />
-                                </Center>
-                            )}
+                            <Modal isOpen={isOpen} onClose={onClose} isCentered={true}>
+                                <ModalOverlay />
+                                <ModalContent width={{ base: '90%', lg: '50%' }} height={'75dvh'}>
+                                    <ModalHeader />
+                                    <ModalCloseButton />
+                                    <ModalBody margin={'0 auto'} height={'75dvh'}>
+                                        <QRCode value={getQRValue()} style={{ height: 'calc(75dvh - 64px)', width: '100%' }} />
+                                    </ModalBody>
+                                </ModalContent>
+                            </Modal>
                         </Flex>
                         <HStack
-                            marginTop={`${
-                                15 +
-                                maxContainerHeight -
-                                115 -
-                                (standFormData.standStatus !== matchFormStatus.noShow && 39) -
-                                (isFollowOrNoShow() && 95) -
-                                (showQRCode && maxContainerHeight - 115 - (standFormData.standStatus !== matchFormStatus.noShow && 39) - (isFollowOrNoShow() && 95))
-                            }px`}
+                            marginTop={`${15 + maxContainerHeight - 115 - (standFormData.standStatus !== matchFormStatus.noShow && 39) - (isFollowOrNoShow() && 95)}px`}
                             marginBottom={'15px'}
                             gap={'15px'}
                         >
@@ -1370,10 +1373,9 @@ function StandForm() {
                 onClose={() => {
                     setStandFormDialog(false);
                 }}
-                autoFocus={false}
             >
                 <AlertDialogOverlay>
-                    <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
+                    <AlertDialogContent width={{ base: '75%', md: '40%', lg: '30%' }} marginTop={'25dvh'}>
                         <AlertDialogHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Unsaved Data
                         </AlertDialogHeader>
@@ -1404,6 +1406,7 @@ function StandForm() {
                             <Button
                                 colorScheme='blue'
                                 ml={3}
+                                ref={cancelRef}
                                 onClick={() => {
                                     setStandFormDialog(false);
                                     setLoadResponse(true);

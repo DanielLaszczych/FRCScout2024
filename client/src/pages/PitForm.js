@@ -1077,10 +1077,9 @@ function PitForm() {
                 onClose={() => {
                     setPitFormDialog(false);
                 }}
-                autoFocus={false}
             >
                 <AlertDialogOverlay>
-                    <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
+                    <AlertDialogContent width={{ base: '75%', md: '40%', lg: '30%' }} marginTop={'25dvh'}>
                         <AlertDialogHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Unsaved Data
                         </AlertDialogHeader>
@@ -1111,6 +1110,7 @@ function PitForm() {
                             <Button
                                 colorScheme='blue'
                                 ml={3}
+                                ref={cancelRef}
                                 onClick={() => {
                                     setPitFormDialog(false);
                                     setLoadResponse(true);
@@ -1152,13 +1152,13 @@ function PitForm() {
             >
                 <AddIcon textColor={'black'} fontSize={'xl'} />
             </Circle>
-            <Modal lockFocusAcrossFrames={true} closeOnEsc={true} isOpen={isModalOpen} onClose={onModalClose}>
+            <Modal closeOnEsc={true} isOpen={isModalOpen} onClose={onModalClose}>
                 <ModalOverlay>
-                    <ModalContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
+                    <ModalContent w={{ base: '75%', md: '40%', lg: '30%' }}>
                         <ModalHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Write a comment
                         </ModalHeader>
-                        <ModalBody maxHeight={'250px'} overflowY={'auto'}>
+                        <ModalBody maxHeight={'150px'} overflowY={'auto'}>
                             <Textarea onChange={(event) => setModalComment(event.target.value)} value={modalComment} placeholder='Comment...' />
                         </ModalBody>
                         <ModalFooter>

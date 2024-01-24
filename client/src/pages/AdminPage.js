@@ -18,20 +18,16 @@ import {
     ModalBody,
     ModalFooter,
     useToast,
-    AlertDialog,
     Input,
-    AlertDialogOverlay,
-    AlertDialogHeader,
-    AlertDialogContent,
-    AlertDialogBody,
     Menu,
     MenuButton,
     MenuList,
     MenuItem,
-    AlertDialogFooter,
     HStack,
     Icon,
-    Tag
+    Tag,
+    NumberInput,
+    NumberInputField
 } from '@chakra-ui/react';
 import { TransitionGroup } from 'react-transition-group';
 import CSSTransition from '../components/CSSTransition';
@@ -57,7 +53,6 @@ const eventTypesArr = [
 function AdminPage() {
     const linkRef = useRef();
     const toast = useToast();
-    const dialogRef = useRef();
     const { isOpen, onOpen, onClose } = useDisclosure();
 
     const [customEventDialog, setCustomEventDialog] = useState({ open: false });
@@ -444,13 +439,13 @@ function AdminPage() {
 
     return (
         <Box margin={'0 auto'} width={{ base: '90%', md: '66%', lg: '66%' }}>
-            <Modal lockFocusAcrossFrames={true} closeOnEsc={true} isOpen={isOpen} onClose={onClose}>
+            <Modal closeOnEsc={true} isOpen={isOpen} onClose={onClose}>
                 <ModalOverlay>
-                    <ModalContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
-                        <ModalHeader color='black' fontSize={'lg'} fontWeight={'semibold'}>
+                    <ModalContent width={{ base: '75%', md: '40%', lg: '30%' }} marginTop={'25dvh'} marginBottom={'10dvh'}>
+                        <ModalHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Select an Event
                         </ModalHeader>
-                        <ModalBody maxHeight={'250px'} overflowY={'auto'}>
+                        <ModalBody maxHeight={'calc(65dvh - 59px - 72px)'} overflowY={'auto'}>
                             <VStack spacing={'10px'}>
                                 <Button colorScheme={focusedEvent.key === 'None' ? 'green' : 'gray'} onClick={() => setFocusedEvent({ name: 'None', key: 'None' })}>
                                     None
@@ -487,24 +482,23 @@ function AdminPage() {
                     </ModalContent>
                 </ModalOverlay>
             </Modal>
-            <AlertDialog
-                scrollBehavior='inside'
+            <Modal
                 closeOnEsc={true}
                 isOpen={customEventDialog.open}
-                leastDestructiveRef={dialogRef}
                 onClose={() => {
                     setCustomEventDialog({ open: false });
                     setCustomEventData({ key: '', name: '', eventType: '', focusedEventType: '', startDate: '', endDate: '', teams: [], inputTeam: '' });
                     setSubmitAttempted(false);
                     setSubmitting(false);
                 }}
+                scrollBehavior='inside'
             >
-                <AlertDialogOverlay>
-                    <AlertDialogContent ref={dialogRef} maxHeight={'75vh'} overflowY={'auto'} margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top={'15%'}>
-                        <AlertDialogHeader color='black' fontSize={'lg'} fontWeight={'semibold'} paddingBottom={'5px'}>
+                <ModalOverlay>
+                    <ModalContent width={{ base: '75%', md: '40%', lg: '30%' }} marginTop={'10dvh'} marginBottom={'10dvh'}>
+                        <ModalHeader fontSize={'lg'} fontWeight={'semibold'} paddingBottom={'5px'}>
                             Custom Event
-                        </AlertDialogHeader>
-                        <AlertDialogBody>
+                        </ModalHeader>
+                        <ModalBody paddingLeft={'30px'} maxHeight={'calc(80dvh - 48px - 72px)'} overflowY={'auto'}>
                             <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
                                 Event Key:
                             </Text>
@@ -604,25 +598,49 @@ function AdminPage() {
                                 Teams:
                             </Text>
                             <HStack spacing={0} marginLeft={'15px'} marginBottom={customEventData.teams.length > 0 && '20px'}>
-                                <Input
-                                    onFocus={(e) =>
-                                        e.target.addEventListener(
-                                            'wheel',
-                                            function (e) {
-                                                e.preventDefault();
-                                            },
-                                            { passive: false }
-                                        )
-                                    }
-                                    enterKeyHint={'send'}
-                                    onChange={(e) => setCustomEventData({ ...customEventData, inputTeam: e.target.value })}
-                                    placeholder={'Enter team'}
-                                    type={'number'}
+                                <NumberInput
+                                    onChange={(value) => setCustomEventData({ ...customEventData, inputTeam: value })}
                                     value={customEventData.inputTeam}
                                     maxWidth={'150px'}
                                     borderRadius={'5px 0px 0px 5px'}
-                                    onKeyDown={(event) => {
-                                        if (event.key === 'Enter') {
+                                >
+                                    <NumberInputField
+                                        placeholder={'Enter team'}
+                                        enterKeyHint={'send'}
+                                        textAlign={'center'}
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Enter' && customEventData.inputTeam !== '') {
+                                                if (customEventData.teams.includes(customEventData.inputTeam)) {
+                                                    let tempObject = { ...customEventData };
+                                                    let temp = [...tempObject.teams];
+                                                    temp = temp.filter((team) => team !== customEventData.inputTeam);
+                                                    tempObject.teams = temp;
+                                                    tempObject.inputTeam = '';
+                                                    setCustomEventData(tempObject);
+                                                } else {
+                                                    let tempObject = { ...customEventData };
+                                                    let temp = [...tempObject.teams];
+                                                    temp.push(customEventData.inputTeam);
+                                                    tempObject.teams = temp.sort((a, b) => a - b);
+                                                    tempObject.inputTeam = '';
+                                                    setCustomEventData(tempObject);
+                                                }
+                                            }
+                                        }}
+                                    />
+                                </NumberInput>
+                                <Button
+                                    h='40px'
+                                    w='40px'
+                                    _hover={{ bgColor: 'gray.200' }}
+                                    borderRadius='0px 5px 5px 0px'
+                                    bgColor={'transparent'}
+                                    border={'1px solid'}
+                                    borderLeft={'transparent'}
+                                    borderColor={'gray.200'}
+                                    _focus={{ boxShadow: 'none' }}
+                                    onClick={() => {
+                                        if (customEventData.inputTeam !== '') {
                                             if (customEventData.teams.includes(customEventData.inputTeam)) {
                                                 let tempObject = { ...customEventData };
                                                 let temp = [...tempObject.teams];
@@ -640,34 +658,6 @@ function AdminPage() {
                                             }
                                         }
                                     }}
-                                ></Input>
-                                <Button
-                                    h='40px'
-                                    w='40px'
-                                    _hover={{ bgColor: 'gray.200' }}
-                                    borderRadius='0px 5px 5px 0px'
-                                    bgColor={'transparent'}
-                                    border={'1px solid'}
-                                    borderLeft={'transparent'}
-                                    borderColor={'gray.200'}
-                                    _focus={{ boxShadow: 'none' }}
-                                    onClick={() => {
-                                        if (customEventData.teams.includes(customEventData.inputTeam)) {
-                                            let tempObject = { ...customEventData };
-                                            let temp = [...tempObject.teams];
-                                            temp = temp.filter((team) => team !== customEventData.inputTeam);
-                                            tempObject.teams = temp;
-                                            tempObject.inputTeam = '';
-                                            setCustomEventData(tempObject);
-                                        } else {
-                                            let tempObject = { ...customEventData };
-                                            let temp = [...tempObject.teams];
-                                            temp.push(customEventData.inputTeam);
-                                            tempObject.teams = temp.sort((a, b) => a - b);
-                                            tempObject.inputTeam = '';
-                                            setCustomEventData(tempObject);
-                                        }
-                                    }}
                                 >
                                     <Icon as={SmallAddIcon} boxSize='5' />
                                 </Button>
@@ -677,10 +667,9 @@ function AdminPage() {
                                     <Tag key={team}>{team}</Tag>
                                 ))}
                             </Flex>
-                        </AlertDialogBody>
-                        <AlertDialogFooter paddingTop={'var(--chakra-space-4)'}>
+                        </ModalBody>
+                        <ModalFooter paddingTop={'var(--chakra-space-4)'}>
                             <Button
-                                ref={dialogRef}
                                 onClick={() => {
                                     setCustomEventDialog({ open: false });
                                     setCustomEventData({ key: '', name: '', eventType: '', focusedEventType: '', startDate: '', endDate: '', teams: [], inputTeam: '' });
@@ -718,10 +707,10 @@ function AdminPage() {
                             >
                                 Submit
                             </Button>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialogOverlay>
-            </AlertDialog>
+                        </ModalFooter>
+                    </ModalContent>
+                </ModalOverlay>
+            </Modal>
             {position > findPos(linkRef.current, window.innerWidth <= 285 ? -150 : -75) ? (
                 <Circle
                     backgroundColor={'gray.200'}

@@ -12,9 +12,16 @@ import {
     Flex,
     HStack,
     IconButton,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalHeader,
+    ModalOverlay,
     Spinner,
     Text,
     Textarea,
+    useDisclosure,
     useToast,
     VStack
 } from '@chakra-ui/react';
@@ -40,6 +47,7 @@ function SuperForm() {
         teamNumber3: teamNumber3Param
     } = useParams();
     const { offline } = useContext(GlobalContext);
+    const { isOpen, onOpen, onClose } = useDisclosure();
 
     const [teamNumbers] = useState([teamNumber1Param, teamNumber2Param, teamNumber3Param]);
     const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -60,7 +68,6 @@ function SuperForm() {
     });
     const [error, setError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
-    const [showQRCode, setShowQRCode] = useState(false);
 
     useEffect(() => {
         if (localStorage.getItem('SuperFormData')) {
@@ -137,10 +144,6 @@ function SuperForm() {
         return superFormData[teamNumber].superStatusComment.trim() !== '';
     }
 
-    useEffect(() => {
-        if (showQRCode) window.scrollTo({ left: 0, top: document.body.scrollHeight, behavior: 'smooth' });
-    }, [showQRCode]);
-
     function submit() {
         setSubmitAttempted(true);
         for (const teamNumber of teamNumbers) {
@@ -155,7 +158,7 @@ function SuperForm() {
             }
         }
         if (offline) {
-            setShowQRCode(true);
+            onOpen();
             return;
         }
         setSubmitting(true);
@@ -253,10 +256,9 @@ function SuperForm() {
                 onClose={() => {
                     setSuperFormDialog(false);
                 }}
-                autoFocus={false}
             >
                 <AlertDialogOverlay>
-                    <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top='25%'>
+                    <AlertDialogContent width={{ base: '75%', md: '40%', lg: '30%' }} marginTop={'25dvh'}>
                         <AlertDialogHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Unsaved Data
                         </AlertDialogHeader>
@@ -287,6 +289,7 @@ function SuperForm() {
                             <Button
                                 colorScheme='blue'
                                 ml={3}
+                                ref={cancelRef}
                                 onClick={() => {
                                     setSuperFormDialog(false);
                                     setLoadResponse(true);
@@ -451,11 +454,16 @@ function SuperForm() {
                     Submit
                 </Button>
             </Center>
-            {showQRCode && (
-                <Center>
-                    <QRCode value={getQRValue()} />
-                </Center>
-            )}
+            <Modal isOpen={isOpen} onClose={onClose} isCentered={true}>
+                <ModalOverlay />
+                <ModalContent width={{ base: '90%', lg: '50%' }} height={'75dvh'}>
+                    <ModalHeader />
+                    <ModalCloseButton />
+                    <ModalBody margin={'0 auto'} height={'75dvh'}>
+                        <QRCode value={getQRValue()} style={{ height: 'calc(75dvh - 64px)', width: '100%' }} />
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }
