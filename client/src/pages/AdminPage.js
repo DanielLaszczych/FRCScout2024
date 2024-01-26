@@ -34,7 +34,7 @@ import CSSTransition from '../components/CSSTransition';
 import { ArrowUpIcon, ChevronDownIcon, EditIcon, SmallAddIcon } from '@chakra-ui/icons';
 import { year } from '../util/helperConstants';
 import '../stylesheets/adminstyle.css';
-import { sortBlueAllianceEvents, sortRegisteredEvents } from '../util/helperFunctions';
+import { sortEvents, sortRegisteredEvents } from '../util/helperFunctions';
 import TBAEventsMemo from '../components/TBAEventsMemo';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -168,7 +168,7 @@ function AdminPage() {
         } else {
             filteredEvents = events.filter((event) => event.event_type_string === 'Offseason');
         }
-        return sortBlueAllianceEvents(filteredEvents);
+        return sortEvents(filteredEvents);
     }
 
     function addEvent(event) {
@@ -353,7 +353,7 @@ function AdminPage() {
                                         end_date: removedEvent.endDate,
                                         year: removedEvent.year
                                     };
-                                    let newEvents = sortBlueAllianceEvents([...eventType.events, addedEvent]);
+                                    let newEvents = sortEvents([...eventType.events, addedEvent]);
                                     return { ...eventType, events: newEvents, count: eventType.count + 1 };
                                 } else {
                                     return eventType;
@@ -696,7 +696,7 @@ function AdminPage() {
                                         year,
                                         -1,
                                         customEventData.eventType,
-                                        customEventData.key,
+                                        customEventData.key + '_cst', //This somewhat ensures custom keys do not have the potential to match FRC event keys
                                         customEventData.startDate,
                                         customEventData.endDate,
                                         customEventData.teams,

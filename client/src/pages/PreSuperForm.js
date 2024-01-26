@@ -1,15 +1,17 @@
-import { ChevronDownIcon, LockIcon, UnlockIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon } from '@chakra-ui/icons';
 import { Box, Button, Center, Flex, IconButton, Menu, MenuButton, MenuItem, MenuList, NumberInput, NumberInputField, Spinner, Text } from '@chakra-ui/react';
 import { React, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { fetchAndCache } from '../util/helperFunctions';
+import { MdOutlineWifi, MdOutlineWifiOff } from 'react-icons/md';
 
 let alliances = [
     { label: 'Red', value: 'r', id: uuidv4() },
     { label: 'Blue', value: 'b', id: uuidv4() }
 ];
 let matchTypes = [
+    { label: 'Practice', value: 'p', id: uuidv4() },
     { label: 'Quals', value: 'q', id: uuidv4() },
     { label: 'Playoffs', value: 'sf', id: uuidv4() },
     { label: 'Finals', value: 'f', id: uuidv4() }
@@ -63,7 +65,9 @@ function PreSuperForm() {
         if (matchNumber === '') {
             return null;
         }
-        if (matchType.value === 'q') {
+        if (matchType.value === 'p') {
+            matchKey = `pm${matchNumber}`;
+        } else if (matchType.value === 'q') {
             matchKey = `qm${matchNumber}`;
         } else if (matchType.value === 'sf') {
             if (matchNumber < 1 || matchNumber > 13) {
@@ -76,6 +80,10 @@ function PreSuperForm() {
         }
         return matchKey;
     }, [matchNumber, matchType.value]);
+
+    const enableManualMode = useCallback(() => {
+        return manualMode || matchType.value === 'p';
+    }, [manualMode, matchType.value]);
 
     useEffect(() => {
         function getTeamNumbers() {
@@ -109,12 +117,12 @@ function PreSuperForm() {
                 });
         }
         setTeamNumberError('');
-        if (!manualMode) {
-            setTeamNumbers(['', '', '']);
-            abort.current.abort();
+        setTeamNumbers(['', '', '']);
+        abort.current.abort();
+        if (!enableManualMode()) {
             getTeamNumbers();
         }
-    }, [alliance, matchType, matchNumber, currentEvent, getMatchKey, manualMode]);
+    }, [alliance, matchType, matchNumber, currentEvent, getMatchKey, enableManualMode]);
 
     function validSetup() {
         return alliance !== '' && matchType !== '' && matchNumber !== '' && teamNumbers.filter((teamNumber) => teamNumber !== '').length === 3;
@@ -145,7 +153,13 @@ function PreSuperForm() {
 
     return (
         <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-            <IconButton position={'absolute'} right={'15px'} onClick={() => setManualMode(!manualMode)} icon={!manualMode ? <LockIcon /> : <UnlockIcon />} />
+            <IconButton
+                position={'absolute'}
+                right={'15px'}
+                isDisabled={matchType.value === 'p'}
+                onClick={() => setManualMode(!manualMode)}
+                icon={enableManualMode() ? <MdOutlineWifiOff /> : <MdOutlineWifi />}
+            />
             <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} margin={'0 auto'} marginBottom={'20px'} maxWidth={'calc(100% - 100px)'}>
                 Competition: {currentEvent.name}
             </Text>
@@ -176,7 +190,7 @@ function PreSuperForm() {
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginTop={'20px'} marginBottom={'10px'}>
                 Match Number
             </Text>
-            <Menu>
+            <Menu placement={'bottom'}>
                 <MenuButton display={'flex'} margin={'0 auto'} onClick={() => setFocusedMatchType(matchType)} as={Button} rightIcon={<ChevronDownIcon />}>
                     {matchType === '' ? 'Choose Match Type' : matchType.label}
                 </MenuButton>
@@ -228,17 +242,17 @@ function PreSuperForm() {
             ) : null}
             <Flex alignItems={'center'} justifyContent={'center'} marginTop={'20px'} columnGap={'10px'}>
                 <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                    Team Numbers{!manualMode ? (doneFetching() && teamNumberError === '' ? '' : ': ') : ''}
+                    Team Numbers{enableManualMode() ? '' : doneFetching() && teamNumberError === '' ? '' : ': '}
                 </Text>
-                {!manualMode && teamNumberError !== '' && (
+                {!enableManualMode() && teamNumberError !== '' && (
                     <Text color={'red.500'} fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} maxWidth={'calc(100% - 124px)'}>
                         {teamNumberError}
                     </Text>
                 )}
-                {!manualMode && !doneFetching() ? <Spinner fontSize={'lg'} /> : null}
+                {!enableManualMode() && !doneFetching() ? <Spinner fontSize={'lg'} /> : null}
             </Flex>
             <Flex flexDirection={'column'} alignItems={'center'} rowGap={'5px'} marginTop={'10px'}>
-                {!manualMode
+                {!enableManualMode()
                     ? teamNumbers.filter((teamNumber) => teamNumber !== '').length === 3 &&
                       teamNumbers.map((teamNumber, index) => (
                           <Text fontSize={'lg'} fontWeight={'semibold'} key={stations[index]}>

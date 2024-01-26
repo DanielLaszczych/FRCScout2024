@@ -1,11 +1,5 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
-    AlertDialog,
-    AlertDialogBody,
-    AlertDialogContent,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogOverlay,
     Box,
     Button,
     Center,
@@ -16,6 +10,12 @@ import {
     IconButton,
     Image,
     Input,
+    Modal,
+    ModalBody,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
     Spinner,
     Text,
     Tooltip,
@@ -43,9 +43,6 @@ function HomePage() {
     const [eventInfo, setEventInfo] = useState({ inEvent: null, matchTable: null, teamStatus: null });
     const [isMobile, setIsMobile] = useState(window.innerWidth < 650);
     const [openPitMap, setOpenPitMap] = useState(false);
-
-    const cancelRef = useRef();
-    const inputElement = useRef();
 
     useEffect(() => {
         if (user !== 'NoUser') {
@@ -238,51 +235,36 @@ function HomePage() {
                         <Button minWidth={'120px'} onClick={() => setPitFormDialog(true)}>
                             Pit Scout
                         </Button>
-                        <AlertDialog
+                        <Modal
                             closeOnEsc={true}
                             isOpen={pitFormDialog}
-                            leastDestructiveRef={cancelRef}
                             onClose={() => {
                                 setPitFormDialog(false);
                                 setPitTeamNumber('');
                                 setPitPopoverError(null);
                             }}
-                            motionPreset='slideInBottom'
                         >
-                            <AlertDialogOverlay
-                                onFocus={() => {
-                                    if (inputElement.current) {
-                                        inputElement.current.focus();
-                                    }
-                                }}
+                            <ModalOverlay
                                 onKeyDown={(event) => {
                                     if (event.key === 'Enter' && pitTeamNumber.trim() !== '') {
                                         handlePitFormConfirm();
                                     }
                                 }}
                             >
-                                <AlertDialogContent width={{ base: '75%', md: '40%', lg: '30%' }}>
-                                    <AlertDialogHeader fontSize={'lg'} fontWeight={'semibold'}>
+                                <ModalContent width={{ base: '75%', md: '40%', lg: '30%' }}>
+                                    <ModalHeader fontSize={'lg'} fontWeight={'semibold'}>
                                         Enter a team number
-                                    </AlertDialogHeader>
-                                    <AlertDialogBody>
-                                        <Input
-                                            ref={inputElement}
-                                            placeholder='Team Number'
-                                            type={'number'}
-                                            borderColor='gray.300'
-                                            value={pitTeamNumber}
-                                            onChange={(e) => setPitTeamNumber(e.target.value)}
-                                        />
+                                    </ModalHeader>
+                                    <ModalBody>
+                                        <Input placeholder='Team Number' type={'number'} borderColor='gray.300' value={pitTeamNumber} onChange={(e) => setPitTeamNumber(e.target.value)} />
                                         {pitPopoverError && (
                                             <Center color={'red.500'} marginTop={'5px'}>
                                                 {pitPopoverError}
                                             </Center>
                                         )}
-                                    </AlertDialogBody>
-                                    <AlertDialogFooter paddingTop={pitPopoverError ? 0 : 'var(--chakra-space-4)'}>
+                                    </ModalBody>
+                                    <ModalFooter paddingTop={pitPopoverError ? 0 : 'var(--chakra-space-4)'}>
                                         <Button
-                                            ref={cancelRef}
                                             onClick={() => {
                                                 setPitFormDialog(false);
                                                 setPitTeamNumber('');
@@ -294,10 +276,10 @@ function HomePage() {
                                         <Button colorScheme='blue' ml={3} isDisabled={pitTeamNumber.trim() === ''} onClick={() => handlePitFormConfirm()}>
                                             Confirm
                                         </Button>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialogOverlay>
-                        </AlertDialog>
+                                    </ModalFooter>
+                                </ModalContent>
+                            </ModalOverlay>
+                        </Modal>
                         <Button minWidth={'120px'} as={Link} to={'/preStandForm'}>
                             Stand Scout
                         </Button>

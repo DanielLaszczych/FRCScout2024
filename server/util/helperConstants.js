@@ -17,6 +17,85 @@ class HelperConstants {
     static weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     static timeZone = 'US/Central';
+
+    // Try to combine these two next year maybe into an all encompasing fields object
+    static gamePieceFields = {
+        intakeSource: {
+            field: 'intakeSource',
+            label: 'Source',
+            short: 'is',
+            auto: false,
+            teleop: true
+        },
+        intakeGround: {
+            field: 'intakeGround',
+            label: 'Ground',
+            short: 'ig',
+            auto: false,
+            teleop: true
+        },
+        intakeMiss: {
+            field: 'intakeMiss',
+            label: 'Intake Miss',
+            short: 'im',
+            auto: true,
+            teleop: false
+        },
+        ampScore: {
+            field: 'ampScore',
+            label: 'Amp',
+            short: 'as',
+            auto: true,
+            teleop: true,
+            autoValue: 2,
+            teleopValue: 1
+        },
+        speakerScore: {
+            field: 'speakerScore',
+            label: 'Speaker',
+            short: 'ss',
+            auto: true,
+            teleop: true,
+            autoValue: 5,
+            teleopValue: 2
+        },
+        ampMiss: {
+            field: 'ampMiss',
+            label: 'Amp Miss',
+            short: 'am',
+            auto: true,
+            teleop: true
+        },
+        speakerMiss: {
+            field: 'speakerMiss',
+            label: 'Speaker Miss',
+            short: 'sm',
+            auto: true,
+            teleop: true
+        },
+        ferry: {
+            field: 'ferry',
+            label: 'Ferry',
+            short: 'f',
+            auto: false,
+            teleop: true
+        },
+        trap: {
+            field: 'trap',
+            label: 'Trap',
+            short: 't',
+            auto: false,
+            teleop: true,
+            teleopValue: 5
+        }
+    };
+
+    static climbFields = {
+        'No Attempt': { field: 'noAttempt' },
+        Success: { field: 'success', teleopValue: 3 },
+        Harmony: { field: 'harmony', teleopValue: 3 },
+        Fail: { field: 'fail' }
+    };
 }
 
 module.exports = HelperConstants;

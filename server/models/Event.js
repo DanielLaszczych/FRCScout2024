@@ -3,89 +3,89 @@ const { model, Schema } = require('mongoose');
 const pickListSchema = new Schema({
     firstPick: {
         type: [String],
-        required: true,
+        required: true
     },
     secondPick: {
         type: [String],
-        required: true,
+        required: true
     },
     thirdPick: {
         type: [String],
-        required: true,
+        required: true
     },
     doNotPick: {
         type: [String],
-        required: true,
+        required: true
     },
     picked: {
         type: [String],
-        required: true,
-    },
+        required: true
+    }
 });
 
 const eventSchema = new Schema({
     name: {
         type: String,
-        required: true,
+        required: true
     },
     year: {
         type: Number,
-        required: true,
+        required: true
     },
     week: {
         type: Number,
-        required: false, //to allow events with a null week such as Championship events
+        required: false //to allow events with a null week such as Championship events
     },
     eventType: {
         type: String,
-        required: true,
+        required: true
     },
     startDate: {
         type: String,
-        required: true,
+        required: true
     },
     endDate: {
         type: String,
-        required: true,
+        required: true
     },
     teams: [
         {
             name: {
                 type: String,
-                required: true,
+                required: true
             },
             number: {
                 type: Number,
-                required: true,
+                required: true
             },
             key: {
                 type: String,
-                required: true,
+                required: true
             },
-            _id: false,
-        },
+            _id: false
+        }
     ],
     key: {
         type: String,
-        required: true,
+        required: true
     },
     currentEvent: {
         type: Boolean,
         required: true,
-        default: false,
+        default: false
     },
     pitMapImage: {
         type: String,
-        required: false,
+        required: false
     },
     pickList: {
         type: pickListSchema,
-        required: true,
+        required: true
     },
     custom: {
         type: Boolean,
-        default: false,
-    },
+        default: false
+    }
 });
 
 const Event = model('Event', eventSchema);

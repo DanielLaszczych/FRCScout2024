@@ -2,7 +2,7 @@ const { mean } = require('mathjs');
 const Event = require('../models/Event');
 const { teamNumber } = require('./helperConstants');
 
-class HelperFunction {
+class HelperFunctions {
     static sortMatches(matches, field = 'matchNumber', compareStations = true) {
         let matchTypes = { q: 0, s: 1, f: 2 };
         return matches.sort((a, b) => {
@@ -25,6 +25,8 @@ class HelperFunction {
 
     static convertMatchKeyToString(matchKey) {
         switch (matchKey.substring(0, 2)) {
+            case 'pm':
+                return `Practice ${matchKey.substring(2)}`;
             case 'qm':
                 return `Quals ${matchKey.substring(2)}`;
             case 'sf':
@@ -96,7 +98,7 @@ class HelperFunction {
         if (x.length === 0) {
             return 'N/A';
         }
-        return round ? (roundToHundredthBoolean ? HelperFunction.roundToHundredth(mean(x)) : HelperFunction.roundToTenth(mean(x))) : mean(x);
+        return round ? (roundToHundredthBoolean ? HelperFunctions.roundToHundredth(mean(x)) : HelperFunctions.roundToTenth(mean(x))) : mean(x);
     }
 
     static getPercentageForTFField(arr, field) {
@@ -157,4 +159,4 @@ class HelperFunction {
     }
 }
 
-module.exports = HelperFunction;
+module.exports = HelperFunctions;

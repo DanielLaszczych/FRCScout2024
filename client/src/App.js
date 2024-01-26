@@ -17,7 +17,7 @@ const AdminErrorPage = lazy(() => import('./pages/AdminErrorPage'));
 const FailedLoginPage = lazy(() => import('./pages/FailedLoginPage'));
 const StandForm = lazy(() => import('./pages/StandForm'));
 // const PitMapPage = lazy(() => import('./pages/PitMapPage'));
-// const TeamPageHelper = lazy(() => import('./pages/TeamPageHelper'));
+const TeamPageHelper = lazy(() => import('./pages/TeamPageHelper'));
 // const RTESSIssuesPage = lazy(() => import('./pages/RTESSIssuesPage'));
 // const RTESSIssuePage = lazy(() => import('./pages/RTESSIssuePage'));
 const PreSuperForm = lazy(() => import('./pages/PreSuperForm'));
@@ -85,9 +85,9 @@ function App() {
                         <Route exact path='/preSuperForm' element={<PreSuperForm />} />
                         <Route exact path='/standForm/:eventKey/:matchNumber/:station/:teamNumber' element={<StandForm />} />
                         <Route exact path='/superForm/:eventKey/:matchNumber/:alliance/:teamNumber1/:teamNumber2/:teamNumber3' element={<SuperForm />} />
-                        {/* {['overview', 'pit', 'stand', 'super', 'other'].map((path) => (
+                        {['overview', 'pit', 'stand', 'super', 'other'].map((path) => (
                             <Route path={`/team/:teamNumber/${path}`} key={path} element={<TeamPageHelper />} />
-                        ))} */}
+                        ))}
                         {/* <Route exact path='/rtessIssue/:id' element={<RTESSIssuePage />} /> */}
                         {/* <Route exact path='/pitMap' element={<PitMapPage />} /> */}
                         <Route exact path='/admin' element={offline ? <OfflinePage /> : user.admin ? <AdminPage /> : <AdminErrorPage />} />

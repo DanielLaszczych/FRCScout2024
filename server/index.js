@@ -64,12 +64,14 @@ const serverOptions = (app) => {
 serverOptions(app);
 
 //routes
-app.use('/auth', require('./routes/auth'));
-app.use('/event', require('./routes/event'));
-app.use('/pitForm', require('./routes/pitForm'));
-app.use('/matchForm', require('./routes/matchForm'));
-app.use('/blueAlliance', require('./routes/blueAlliance').router);
-app.use('/matchData', require('./routes/matchData'));
+require('./routes')(app);
+// app.use('/auth', require('./routes/auth'));
+// app.use('/event', require('./routes/event'));
+// app.use('/pitForm', require('./routes/pitForm'));
+// app.use('/matchForm', require('./routes/matchForm'));
+// app.use('/matchData', require('./routes/matchData'));
+// app.use('/blueAlliance', require('./routes/blueAlliance').router);
+// app.use('/groupMeBot', require('./routes/groupMeBot').router);
 app.use('/checkTableauPass/:password', async (req, res) => {
     await bcrypt
         .compare(req.params.password, process.env.TABLEAU_HASH)
@@ -83,7 +85,6 @@ app.use('/checkTableauPass/:password', async (req, res) => {
 app.use('/getuser', (req, res) => {
     res.send(req.user);
 });
-app.use('/groupMeBot', require('./routes/groupMeBot').router);
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

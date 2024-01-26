@@ -6,6 +6,7 @@ const { internalSendMessage } = require('./groupMeBot');
 const { convertMatchKeyToString } = require('../util/helperFunctions');
 const RTESSIssue = require('../models/RTESSIssue');
 const { matchFormStatus, weekday, rtessIssuesStatus, timeZone } = require('../util/helperConstants');
+const { updateTEDStandForm, updateTEDSuperForms } = require('./ted').HelperFunctions;
 
 router.get('/getMatchForms', async (req, res) => {
     if (req.isUnauthenticated()) {
@@ -44,14 +45,36 @@ router.post('/postStandForm', async (req, res) => {
         let matchFormInput = req.body;
         matchFormInput.standScouter = req.user.displayName;
 
-        await MatchForm.findOneAndUpdate({ eventKey: matchFormInput.eventKey, matchNumber: matchFormInput.matchNumber, station: matchFormInput.station }, matchFormInput, {
-            new: true,
-            upsert: true
-        }).exec();
+        const prevMatchForm = await MatchForm.findOneAndUpdate(
+            {
+                eventKey: matchFormInput.eventKey,
+                matchNumber: matchFormInput.matchNumber,
+                station: matchFormInput.station
+            },
+            matchFormInput,
+            {
+                upsert: true
+            }
+        ).exec();
 
-        if (matchFormInput.lostCommunication || matchFormInput.robotBroke || matchFormInput.standStatus === matchFormStatus.noShow) {
-            let futureMatchNumber = await isFutureAlly(matchFormInput.eventKey, matchFormInput.teamNumber, matchFormInput.matchNumber, false);
-            let prevRTESSIssue = await RTESSIssue.findOne({ eventKey: matchFormInput.eventKey, matchNumber: matchFormInput.matchNumber, teamNumber: matchFormInput.teamNumber });
+        // await updateTEDStandForm(prevMatchForm, matchFormInput);
+
+        if (
+            matchFormInput.lostCommunication ||
+            matchFormInput.robotBroke ||
+            matchFormInput.standStatus === matchFormStatus.noShow
+        ) {
+            let futureMatchNumber = await isFutureAlly(
+                matchFormInput.eventKey,
+                matchFormInput.teamNumber,
+                matchFormInput.matchNumber,
+                false
+            );
+            let prevRTESSIssue = await RTESSIssue.findOne({
+                eventKey: matchFormInput.eventKey,
+                matchNumber: matchFormInput.matchNumber,
+                teamNumber: matchFormInput.teamNumber
+            });
 
             if (futureMatchNumber || prevRTESSIssue) {
                 let issues = [];
@@ -65,7 +88,10 @@ router.post('/postStandForm', async (req, res) => {
                     teamNumber: matchFormInput.teamNumber,
                     submitter: context.req.user.displayName,
                     issue: issues.join(', '),
-                    problemComment: matchFormInput.standStatus === matchFormStatus.noShow ? matchFormInput.standStatusComment : matchFormInput.standEndComment,
+                    problemComment:
+                        matchFormInput.standStatus === matchFormStatus.noShow
+                            ? matchFormInput.standStatusComment
+                            : matchFormInput.standEndComment,
                     status: rtessIssuesStatus.unresolved
                 };
 
@@ -75,10 +101,18 @@ router.post('/postStandForm', async (req, res) => {
                     rtessIssueInput.solutionComment = prevRTESSIssue.solutionComment;
                 }
 
-                await RTESSIssue.findOneAndUpdate({ eventKey: rtessIssueInput.eventKey, matchNumber: rtessIssueInput.matchNumber, teamNumber: rtessIssueInput.teamNumber }, rtessIssueInput, {
-                    new: true,
-                    upsert: true
-                }).exec();
+                await RTESSIssue.findOneAndUpdate(
+                    {
+                        eventKey: rtessIssueInput.eventKey,
+                        matchNumber: rtessIssueInput.matchNumber,
+                        teamNumber: rtessIssueInput.teamNumber
+                    },
+                    rtessIssueInput,
+                    {
+                        new: true,
+                        upsert: true
+                    }
+                ).exec();
 
                 //Service Squad Anncoument
                 if (futureMatchNumber && !prevRTESSIssue) {
@@ -89,15 +123,20 @@ router.post('/postStandForm', async (req, res) => {
                                 time = data.predicted_time;
                             }
                             let convertedTime = time
-                                ? ` (${weekday[new Date(time * 1000).getDay()]} ${new Date(time * 1000).toLocaleString('en-US', {
-                                      hour: 'numeric',
-                                      minute: 'numeric',
-                                      hour12: true,
-                                      timeZone: timeZone
-                                  })})`
+                                ? ` (${weekday[new Date(time * 1000).getDay()]} ${new Date(time * 1000).toLocaleString(
+                                      'en-US',
+                                      {
+                                          hour: 'numeric',
+                                          minute: 'numeric',
+                                          hour12: true,
+                                          timeZone: timeZone
+                                      }
+                                  )})`
                                 : '';
                             internalSendMessage(
-                                `*SSA*\nTeam: ${rtessIssueInput.teamNumber}\nIssue: ${rtessIssueInput.issue}\nPlaying together in: ${convertMatchKeyToString(futureMatchNumber)}${convertedTime}`
+                                `*SSA*\nTeam: ${rtessIssueInput.teamNumber}\nIssue: ${
+                                    rtessIssueInput.issue
+                                }\nPlaying together in: ${convertMatchKeyToString(futureMatchNumber)}${convertedTime}`
                             );
                         })
                         .catch((err) => {
@@ -106,6 +145,7 @@ router.post('/postStandForm', async (req, res) => {
                 }
             }
         }
+
         res.sendStatus(200);
     } catch (err) {
         res.statusMessage = err.message;
@@ -122,16 +162,23 @@ router.post('/postSuperForm', async (req, res) => {
         let matchFormInputs = req.body;
         matchFormInputs.forEach((matchFormInput) => (matchFormInput.superScouter = req.user.displayName));
 
-        let updates = matchFormInputs.map((matchFormInput) =>
-            MatchForm.findOneAndUpdate({ eventKey: matchFormInput.eventKey, matchNumber: matchFormInput.matchNumber, station: matchFormInput.station }, matchFormInput, {
-                new: true,
-                upsert: true
-            }).exec()
+        const updates = matchFormInputs.map((matchFormInput) =>
+            MatchForm.findOneAndUpdate(
+                {
+                    eventKey: matchFormInput.eventKey,
+                    matchNumber: matchFormInput.matchNumber,
+                    station: matchFormInput.station
+                },
+                matchFormInput,
+                {
+                    upsert: true
+                }
+            ).exec()
         );
+
         Promise.all(updates)
-            .then(() => {
-                res.sendStatus(200);
-            })
+            .then((prevMatchForms) => updateTEDSuperForms(prevMatchForms, matchFormInputs))
+            .then(() => res.sendStatus(200))
             .catch((err) => {
                 res.statusMessage = err.message;
                 res.sendStatus(500);

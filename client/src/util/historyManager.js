@@ -1,4 +1,4 @@
-import { scoutedField } from './helperConstants';
+import { gamePieceFields } from './helperConstants';
 
 const createAutoCommand = () => {
     return {
@@ -64,9 +64,9 @@ export const createHistoryManager = (type, setData, prevHistoryData = { data: []
         if (type === AUTO && !isNaN(note)) {
             return 'Note ' + note;
         } else if (type === AUTO && position <= 0 && history[0] === note && isNaN(note)) {
-            return scoutedField[note].label + ' (Preloaded)';
+            return gamePieceFields[note].label + ' (Preloaded)';
         } else {
-            return scoutedField[note].label;
+            return gamePieceFields[note].label;
         }
     }
 

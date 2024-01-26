@@ -23,16 +23,16 @@ export const rtessIssuesStatus = {
     resolved: 'Resolved'
 };
 
-export const scoutedField = {
-    intakeSource: { field: 'intakeSource', label: 'Source', short: 'is' },
-    intakeGround: { field: 'intakeGround', label: 'Ground', short: 'ig' },
-    intakeMiss: { field: 'intakeMiss', label: 'Intake Miss', short: 'im' },
-    ampScore: { field: 'ampScore', label: 'Amp', short: 'as' },
-    speakerScore: { field: 'speakerScore', label: 'Speaker', short: 'ss' },
-    ampMiss: { field: 'ampMiss', label: 'Amp Miss', short: 'am' },
-    speakerMiss: { field: 'speakerMiss', label: 'Speaker Miss', short: 'sm' },
-    ferry: { field: 'ferry', label: 'Ferry', short: 'f' },
-    trap: { field: 'trap', label: 'Trap', short: 't' }
+export const gamePieceFields = {
+    intakeSource: { field: 'intakeSource', label: 'Source', short: 'is', auto: false, teleop: true },
+    intakeGround: { field: 'intakeGround', label: 'Ground', short: 'ig', auto: false, teleop: true },
+    intakeMiss: { field: 'intakeMiss', label: 'Intake Miss', short: 'im', auto: true, teleop: false },
+    ampScore: { field: 'ampScore', label: 'Amp', short: 'as', auto: true, teleop: true },
+    speakerScore: { field: 'speakerScore', label: 'Speaker', short: 'ss', auto: true, teleop: true },
+    ampMiss: { field: 'ampMiss', label: 'Amp Miss', short: 'am', auto: true, teleop: true },
+    speakerMiss: { field: 'speakerMiss', label: 'Speaker Miss', short: 'sm', auto: true, teleop: true },
+    ferry: { field: 'ferry', label: 'Ferry', short: 'f', auto: false, teleop: true },
+    trap: { field: 'trap', label: 'Trap', short: 't', auto: false, teleop: true }
 };
 
 export const timeZone = 'US/Central';

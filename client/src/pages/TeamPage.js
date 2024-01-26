@@ -1,12 +1,11 @@
 import { Box, Button, Center, Menu, MenuButton, MenuItem, MenuList, Spinner } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import TeamPageTabs from './TeamPageTabs';
-import { sortBlueAllianceEvents } from '../util/helperFunctions';
-import { useQuery } from '@apollo/client';
-import { GET_CURRENT_EVENT, GET_STANDFORMS_BY_TEAM, GET_PITFORMS_BY_TEAM, GET_SUPERFORMS_BY_TEAM, GET_TEAMS_EVENTS } from '../graphql/queries';
+// import TeamPageTabs from './TeamPageTabs';
+import { sortEvents } from '../util/helperFunctions';
 import { ChevronDownIcon } from '@chakra-ui/icons';
-import { matchFormStatus, year } from '../util/helperConstants';
+import { year } from '../util/helperConstants';
+import '../stylesheets/teamstyle.css';
 
 function TeamPage({ keyProp }) {
     const navigate = useNavigate();
@@ -17,44 +16,47 @@ function TeamPage({ keyProp }) {
     const [error, setError] = useState(null);
     const [events, setEvents] = useState(null);
     const [teamName, setTeamName] = useState(null);
-    const [currentEvent, setCurrentEvent] = useState({ name: '', key: '' });
-    const [focusedEvent, setFocusedEvent] = useState('');
-    const [pitForm, setPitForm] = useState(null);
-    const [standForms, setStandForms] = useState(null);
-    const [filteredStandForms, setFilteredStandForms] = useState(null);
-    const [superForms, setSuperForms] = useState(null);
-    const [filteredSuperForms, setFilteredSuperForms] = useState(null);
-    const [loadingImage, setLoadingImage] = useState(true);
-    const [blueAllianceImage, setBlueAllianceImage] = useState(null);
-    const [dataMedian, setDataMedian] = useState(true);
+    const [currentEvent, setCurrentEvent] = useState(null);
+    const [focusedEvent, setFocusedEvent] = useState(null);
+    const [teamData, setTeamData] = useState(null);
 
-    const { error: eventsError } = useQuery(GET_TEAMS_EVENTS, {
-        fetchPolicy: 'network-only',
-        variables: {
-            teamNumber: parseInt(teamNumberParam)
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve data on current event');
-        },
-        onCompleted({ getTeamsEvents: teamEvents }) {
-            let customEvents = teamEvents.filter((event) => event.custom);
-            fetch(`/blueAlliance/team/frc${teamNumberParam}/events/${year}/simple`)
-                .then((response) => response.json())
-                .then((data) => {
-                    if (!data.Error) {
-                        let blueEvents = data.filter((event) => event.key !== `${year}cmptx`);
-                        let events = customEvents.concat(blueEvents);
-                        setEvents(sortBlueAllianceEvents(events));
-                    } else {
-                        setError(data.Error);
-                    }
-                })
-                .catch((error) => {
-                    setError(error);
-                });
-        }
-    });
+    useEffect(() => {
+        let storedTeamEvents = fetch('/event/getEventsSimple', {
+            headers: { filters: JSON.stringify({ teams: { $elemMatch: { number: teamNumberParam } } }) }
+        });
+        let allTeamEvents = fetch(`/blueAlliance/team/frc${teamNumberParam}/events/${year}/simple`);
+        Promise.all([storedTeamEvents, allTeamEvents])
+            .then((responses) => {
+                let responseError = responses.find((response) => response.status !== 200);
+                if (responseError) {
+                    throw new Error(responseError.statusText);
+                } else {
+                    return Promise.all(responses.map((response) => response.json()));
+                }
+            })
+            .then((data) => {
+                console.log(data);
+                let storedTeamEvents = data[0];
+                let allTeamEvents = data[1];
+                if (allTeamEvents.Error) {
+                    throw new Error(allTeamEvents.Error);
+                }
+                allTeamEvents = allTeamEvents.filter((event) => event.key !== `${year}cmptx` && !storedTeamEvents.some((storedEvent) => storedEvent.key === event.key));
+                let events = storedTeamEvents.concat(allTeamEvents);
+                console.log(events);
+                setEvents(sortEvents(events));
+                let currentEvent = events.find((event) => event.currentEvent);
+                if (currentEvent) {
+                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setFocusedEvent(currentEvent.name);
+                } else {
+                    currentEvent = events[events.length - 1];
+                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setFocusedEvent(currentEvent.name);
+                }
+            })
+            .catch((error) => setError(error.message));
+    }, [teamNumberParam]);
 
     useEffect(() => {
         fetch(`/blueAlliance/team/frc${teamNumberParam}/simple`)
@@ -69,124 +71,32 @@ function TeamPage({ keyProp }) {
             .catch((error) => {
                 setError(error);
             });
-        fetch(`/blueAlliance/team/frc${teamNumberParam}/media/${year}`)
-            .then((response) => response.json())
-            .then((data) => {
-                if (!data.Error) {
-                    for (let media of data) {
-                        if (media.type !== 'avatar' && media.type !== 'youtube' && media.type !== 'youtube-channel' && media.type !== 'instagram-image') {
-                            setBlueAllianceImage(media.direct_url);
-                            break;
-                        }
-                    }
-                } else {
-                    setError(data.Error);
-                }
-                setLoadingImage(false);
-            })
-            .catch((error) => {
-                setError(error);
-                setLoadingImage(false);
-            });
     }, [teamNumberParam]);
 
-    const {
-        loading: loadingPitForms,
-        error: pitFormsError,
-        data: { getPitForms: pitFormsData } = {}
-    } = useQuery(GET_PITFORMS_BY_TEAM, {
-        fetchPolicy: 'network-only',
-        variables: {
-            teamNumber: parseInt(teamNumberParam),
-            followUp: false
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve pit forms');
-        }
-    });
-
-    const {
-        loading: loadingStandForms,
-        error: standFormsError,
-        data: { getMatchForms: standFormsData } = {}
-    } = useQuery(GET_STANDFORMS_BY_TEAM, {
-        fetchPolicy: 'network-only',
-        variables: {
-            teamNumber: parseInt(teamNumberParam),
-            standStatus: [matchFormStatus.complete, matchFormStatus.noShow]
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve match forms');
-        }
-    });
-
-    const {
-        loading: loadingSuperForms,
-        error: superFormsError,
-        data: { getMatchForms: superFormsData } = {}
-    } = useQuery(GET_SUPERFORMS_BY_TEAM, {
-        fetchPolicy: 'network-only',
-        variables: {
-            teamNumber: parseInt(teamNumberParam),
-            superStatus: [matchFormStatus.complete, matchFormStatus.noShow]
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve match forms');
-        }
-    });
-
-    const { loading: loadingCurrentEvent, error: currentEventError } = useQuery(GET_CURRENT_EVENT, {
-        skip: events === null || loadingSuperForms || loadingStandForms || loadingPitForms,
-        fetchPolicy: 'network-only',
-        onError(err) {
-            if (err.message === 'Error: There is no current event') {
-                let event = events[events.length - 1];
-                setPitForm(pitFormsData.find((pitForm) => pitForm.eventKey === event.key));
-                setStandForms(standFormsData.filter((standForm) => standForm.eventKey === event.key));
-                setFilteredStandForms(standFormsData.filter((standForm) => standForm.standStatus !== matchFormStatus.noShow && standForm.eventKey === event.key));
-                setSuperForms(superFormsData.filter((superForm) => superForm.eventKey === event.key));
-                setFilteredSuperForms(
-                    superFormsData.filter((superForm) => superForm.superStatus !== matchFormStatus.noShow && superForm.superStatus !== matchFormStatus.inconclusive && superForm.eventKey === event.key)
-                );
-                setCurrentEvent({ name: event.name, key: event.key });
-                setFocusedEvent(event.name);
-                setError(false);
-            } else {
-                console.log(JSON.stringify(err, null, 2));
-                setError('Apollo error, could not retrieve current event data');
-            }
-        },
-        onCompleted({ getCurrentEvent: currentEvent }) {
-            let event = events[events.length - 1];
-            if (events.some((event) => event.key === currentEvent.key)) {
-                event = currentEvent;
-            }
-            setPitForm(pitFormsData.find((pitForm) => pitForm.eventKey === event.key));
-            setStandForms(standFormsData.filter((standForm) => standForm.eventKey === event.key));
-            setFilteredStandForms(standFormsData.filter((standForm) => standForm.standStatus !== matchFormStatus.noShow && standForm.eventKey === event.key));
-            setSuperForms(superFormsData.filter((superForm) => superForm.eventKey === event.key));
-            setFilteredSuperForms(superFormsData.filter((superForm) => superForm.superStatus !== matchFormStatus.noShow && superForm.eventKey === event.key));
-            setCurrentEvent({ name: event.name, key: event.key });
-            setFocusedEvent(event.name);
-        }
-    });
-
     useEffect(() => {
-        if (localStorage.getItem('DataMedian')) {
-            setDataMedian(localStorage.getItem('DataMedian') === 'true');
+        setTeamData(null);
+        if (currentEvent !== null) {
+            fetch('/ted/getAllTeamEventData', {
+                headers: { filters: JSON.stringify({ eventKey: currentEvent.key, teamNumber: parseInt(teamNumberParam) }) }
+            })
+                .then((response) => {
+                    if (response.status === 200) {
+                        return response.json();
+                    } else {
+                        throw new Error(response.statusText);
+                    }
+                })
+                .then((data) => {
+                    console.log(data);
+                    setTeamData(data);
+                })
+                .catch((error) => setError(error.message));
         }
-    }, []);
-
-    useEffect(() => {
-        localStorage.setItem('DataMedian', dataMedian);
-    }, [dataMedian]);
+    }, [currentEvent, teamNumberParam]);
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
                 {error}
             </Box>
         );
@@ -200,17 +110,7 @@ function TeamPage({ keyProp }) {
         );
     }
 
-    if (
-        loadingSuperForms ||
-        loadingStandForms ||
-        loadingPitForms ||
-        loadingCurrentEvent ||
-        events === null ||
-        teamName === null ||
-        currentEvent.key === '' ||
-        ((pitFormsError || standFormsError || superFormsError || currentEventError || eventsError) && error !== false) ||
-        loadingImage
-    ) {
+    if (events === null || teamName === null || currentEvent === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -231,11 +131,6 @@ function TeamPage({ keyProp }) {
                 <div className='tab-indicator' style={{ left: `calc((calc(100% / 5) * ${['overview', 'pit', 'stand', 'super', 'other'].indexOf(tab)}) + 2.5%)` }}></div>
             </div>
             <Box margin={'0 auto'} marginTop={'25px'} width={['pit', 'other'].includes(tab) % 2 !== 0 ? { base: '100%', md: '66%', lg: '66%' } : { base: '100%', md: '100%', lg: '100%' }}>
-                {tab === 'overview' ? (
-                    <Button position={'absolute'} maxWidth={'32px'} right={'10px'} top={'160px'} onClick={() => setDataMedian(!dataMedian)} _focus={{ outline: 'none' }} size='sm'>
-                        {dataMedian ? 'M' : 'A'}
-                    </Button>
-                ) : null}
                 <Center marginBottom={'25px'}>
                     <Menu placement='bottom'>
                         <MenuButton maxW={'65vw'} onClick={() => setFocusedEvent('')} _focus={{ outline: 'none' }} as={Button} rightIcon={<ChevronDownIcon />}>
@@ -255,16 +150,6 @@ function TeamPage({ keyProp }) {
                                     key={eventItem.key}
                                     onClick={() => {
                                         setCurrentEvent({ name: eventItem.name, key: eventItem.key });
-                                        setPitForm(pitFormsData.find((pitForm) => pitForm.eventKey === eventItem.key));
-                                        setStandForms(standFormsData.filter((standForm) => standForm.eventKey === eventItem.key));
-                                        setFilteredStandForms(standFormsData.filter((standForm) => standForm.standStatus !== matchFormStatus.noShow && standForm.eventKey === eventItem.key));
-                                        setSuperForms(superFormsData.filter((superForm) => superForm.eventKey === eventItem.key));
-                                        setFilteredSuperForms(
-                                            superFormsData.filter(
-                                                (superForm) =>
-                                                    superForm.superStatus !== matchFormStatus.noShow && superForm.superStatus !== matchFormStatus.inconclusive && superForm.eventKey === eventItem.key
-                                            )
-                                        );
                                     }}
                                 >
                                     {eventItem.name}
@@ -273,7 +158,7 @@ function TeamPage({ keyProp }) {
                         </MenuList>
                     </Menu>
                 </Center>
-                <TeamPageTabs
+                {/* <TeamPageTabs
                     tab={tab}
                     pitForm={pitForm}
                     standForms={standForms}
@@ -281,11 +166,10 @@ function TeamPage({ keyProp }) {
                     superForms={superForms}
                     filteredSuperForms={filteredSuperForms}
                     blueAllianceImage={blueAllianceImage}
-                    dataMedian={dataMedian}
                     teamNumberParam={teamNumberParam}
                     teamName={teamName}
                     currentEvent={currentEvent}
-                />
+                /> */}
             </Box>
         </Box>
     );

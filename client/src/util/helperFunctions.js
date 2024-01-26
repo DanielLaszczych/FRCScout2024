@@ -15,11 +15,12 @@ export function sortRegisteredEvents(events) {
     });
 }
 
-export function sortBlueAllianceEvents(events) {
+// Two types of dates because blue alliance stores it as start_date and I do startDate
+export function sortEvents(events) {
     return events.sort((a, b) => {
-        let delta = new Date(a.start_date) - new Date(b.start_date);
+        let delta = new Date(a.start_date || a.startDate) - new Date(b.start_date || b.startDate);
         if (delta === 0) {
-            delta = new Date(a.end_date) - new Date(b.end_date);
+            delta = new Date(a.end_date || a.endDate) - new Date(b.end_date || b.endDate);
             if (delta === 0) {
                 delta = a.name.localeCompare(b.name);
             }
@@ -50,6 +51,8 @@ export function sortMatches(matches, field = 'matchNumber', compareStations = tr
 
 export function convertMatchKeyToString(matchKey) {
     switch (matchKey.substring(0, 2)) {
+        case 'pm':
+            return `Practice ${matchKey.substring(2)}`;
         case 'qm':
             return `Quals ${matchKey.substring(2)}`;
         case 'sf':

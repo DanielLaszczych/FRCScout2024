@@ -36,7 +36,7 @@ import { StarIcon } from '@chakra-ui/icons';
 import { deepEqual, getValueByRange } from '../util/helperFunctions';
 import { AUTO, ENDGAME, TELEOP, createHistoryManager } from '../util/historyManager';
 import '../stylesheets/standformstyle.css';
-import { matchFormStatus, scoutedField } from '../util/helperConstants';
+import { matchFormStatus, gamePieceFields } from '../util/helperConstants';
 import PreAutoRedField from '../images/PreAutoRedField.png';
 import PreAutoBlueField from '../images/PreAutoBlueField.png';
 import AutoRedField from '../images/AutoRedField.png';
@@ -44,8 +44,7 @@ import AutoBlueField from '../images/AutoBlueField.png';
 import QRCode from 'react-qr-code';
 import { GlobalContext } from '../context/globalState';
 import { AiOutlineRotateRight } from 'react-icons/ai';
-import { IoChevronForward } from 'react-icons/io5';
-import { IoChevronBack } from 'react-icons/io5';
+import { IoChevronForward, IoChevronBack } from 'react-icons/io5';
 
 let sections = {
     preAuto: 'Pre-Auto',
@@ -430,7 +429,7 @@ function StandForm() {
             standFormData.autoTimeline.length === 0
                 ? 'n'
                 : standFormData.autoTimeline
-                      .map((element) => [element.piece, element.scored ? scoutedField[element.scored].short : 'n'])
+                      .map((element) => [element.piece, element.scored ? gamePieceFields[element.scored].short : 'n'])
                       .flat()
                       .join('#'),
             standFormData.teleopGP.intakeSource,
@@ -452,11 +451,11 @@ function StandForm() {
             standFormData.standComment.trim() === '' ? 'n' : standFormData.standComment.trim(),
             map[standFormData.standStatus || matchFormStatus.complete],
             isFollowOrNoShow() ? (standFormData.standStatusComment.trim() === '' ? 'n' : standFormData.standStatusComment.trim()) : 'n',
-            standFormData.history.auto.data.length === 0 ? 'n' : standFormData.history.auto.data.map((element) => (isNaN(element) ? scoutedField[element].short : element)).join('#'),
+            standFormData.history.auto.data.length === 0 ? 'n' : standFormData.history.auto.data.map((element) => (isNaN(element) ? gamePieceFields[element].short : element)).join('#'),
             standFormData.history.auto.position,
-            standFormData.history.teleop.data.length === 0 ? 'n' : standFormData.history.teleop.data.map((element) => (isNaN(element) ? scoutedField[element].short : element)).join('#'),
+            standFormData.history.teleop.data.length === 0 ? 'n' : standFormData.history.teleop.data.map((element) => (isNaN(element) ? gamePieceFields[element].short : element)).join('#'),
             standFormData.history.teleop.position,
-            standFormData.history.endGame.data.length === 0 ? 'n' : standFormData.history.endGame.data.map((element) => (isNaN(element) ? scoutedField[element].short : element)).join('#'),
+            standFormData.history.endGame.data.length === 0 ? 'n' : standFormData.history.endGame.data.map((element) => (isNaN(element) ? gamePieceFields[element].short : element)).join('#'),
             standFormData.history.endGame.position
         ].join('$');
     }
@@ -506,11 +505,11 @@ function StandForm() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                ...standFormData,
                 eventKey: eventKeyParam,
                 matchNumber: matchNumberParam,
                 station: stationParam,
                 teamNumber: parseInt(teamNumberParam),
-                ...standFormData,
                 defenseAllocation: standFormData.defenseRating === 0 ? 0 : standFormData.defenseAllocation,
                 standComment: standFormData.standComment.trim(),
                 standStatus: standFormData.standStatus || matchFormStatus.complete,
@@ -766,10 +765,10 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormManagers.auto.doCommand(standFormData, scoutedField.ampScore.field);
+                                            standFormManagers.auto.doCommand(standFormData, gamePieceFields.ampScore.field);
                                         }}
                                     >
-                                        Amp: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === scoutedField.ampScore.field ? ++acc : acc), 0)}
+                                        Amp: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === gamePieceFields.ampScore.field ? ++acc : acc), 0)}
                                     </Button>
                                     <Button
                                         colorScheme={'facebook'}
@@ -778,10 +777,10 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormManagers.auto.doCommand(standFormData, scoutedField.speakerScore.field);
+                                            standFormManagers.auto.doCommand(standFormData, gamePieceFields.speakerScore.field);
                                         }}
                                     >
-                                        Speaker: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === scoutedField.speakerScore.field ? ++acc : acc), 0)}
+                                        Speaker: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === gamePieceFields.speakerScore.field ? ++acc : acc), 0)}
                                     </Button>
                                 </Flex>
                                 <Flex flex={0.3} gap={'15px'}>
@@ -792,10 +791,10 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormManagers.auto.doCommand(standFormData, scoutedField.ampMiss.field);
+                                            standFormManagers.auto.doCommand(standFormData, gamePieceFields.ampMiss.field);
                                         }}
                                     >
-                                        Amp Miss: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === scoutedField.ampMiss.field ? ++acc : acc), 0)}
+                                        Amp Miss: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === gamePieceFields.ampMiss.field ? ++acc : acc), 0)}
                                     </Button>
                                     <Button
                                         colorScheme={'purple'}
@@ -805,10 +804,10 @@ function StandForm() {
                                         height={'100%'}
                                         whiteSpace={'normal'}
                                         onClick={() => {
-                                            standFormManagers.auto.doCommand(standFormData, scoutedField.speakerMiss.field);
+                                            standFormManagers.auto.doCommand(standFormData, gamePieceFields.speakerMiss.field);
                                         }}
                                     >
-                                        Speaker Miss: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === scoutedField.speakerMiss.field ? ++acc : acc), 0)}
+                                        Speaker Miss: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === gamePieceFields.speakerMiss.field ? ++acc : acc), 0)}
                                     </Button>
                                 </Flex>
                                 <Button
@@ -817,10 +816,10 @@ function StandForm() {
                                     fontWeight={'bold'}
                                     flex={0.2}
                                     onClick={() => {
-                                        standFormManagers.auto.doCommand(standFormData, scoutedField.intakeMiss.field);
+                                        standFormManagers.auto.doCommand(standFormData, gamePieceFields.intakeMiss.field);
                                     }}
                                 >
-                                    Intake Miss: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === scoutedField.intakeMiss.field ? ++acc : acc), 0)}
+                                    Intake Miss: {standFormData.autoTimeline.reduce((acc, element) => (element.scored === gamePieceFields.intakeMiss.field ? ++acc : acc), 0)}
                                 </Button>
                             </Flex>
                         )}
@@ -928,7 +927,7 @@ function StandForm() {
                                     flex={1 / 2}
                                     height={'100%'}
                                     onClick={() => {
-                                        standFormManagers.teleop.doCommand(standFormData, scoutedField.intakeSource.field);
+                                        standFormManagers.teleop.doCommand(standFormData, gamePieceFields.intakeSource.field);
                                     }}
                                 >
                                     Source: {standFormData.teleopGP.intakeSource}
@@ -940,7 +939,7 @@ function StandForm() {
                                     flex={1 / 2}
                                     height={'100%'}
                                     onClick={() => {
-                                        standFormManagers.teleop.doCommand(standFormData, scoutedField.intakeGround.field);
+                                        standFormManagers.teleop.doCommand(standFormData, gamePieceFields.intakeGround.field);
                                     }}
                                 >
                                     Ground: {standFormData.teleopGP.intakeGround}
@@ -956,7 +955,7 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormManagers.teleop.doCommand(standFormData, scoutedField.ampScore.field);
+                                            standFormManagers.teleop.doCommand(standFormData, gamePieceFields.ampScore.field);
                                         }}
                                     >
                                         Amp: {standFormData.teleopGP.ampScore}
@@ -968,7 +967,7 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormManagers.teleop.doCommand(standFormData, scoutedField.speakerScore.field);
+                                            standFormManagers.teleop.doCommand(standFormData, gamePieceFields.speakerScore.field);
                                         }}
                                     >
                                         Speaker: {standFormData.teleopGP.speakerScore}
@@ -982,7 +981,7 @@ function StandForm() {
                                         flex={1 / 2}
                                         height={'100%'}
                                         onClick={() => {
-                                            standFormManagers.teleop.doCommand(standFormData, scoutedField.ampMiss.field);
+                                            standFormManagers.teleop.doCommand(standFormData, gamePieceFields.ampMiss.field);
                                         }}
                                     >
                                         Amp Miss: {standFormData.teleopGP.ampMiss}
@@ -995,7 +994,7 @@ function StandForm() {
                                         height={'100%'}
                                         whiteSpace={'normal'}
                                         onClick={() => {
-                                            standFormManagers.teleop.doCommand(standFormData, scoutedField.speakerMiss.field);
+                                            standFormManagers.teleop.doCommand(standFormData, gamePieceFields.speakerMiss.field);
                                         }}
                                     >
                                         Speaker Miss: {standFormData.teleopGP.speakerMiss}
@@ -1007,7 +1006,7 @@ function StandForm() {
                                     fontWeight={'bold'}
                                     flex={0.2}
                                     onClick={() => {
-                                        standFormManagers.teleop.doCommand(standFormData, scoutedField.ferry.field);
+                                        standFormManagers.teleop.doCommand(standFormData, gamePieceFields.ferry.field);
                                     }}
                                 >
                                     Ferry: {standFormData.teleopGP.ferry}
@@ -1172,7 +1171,7 @@ function StandForm() {
                                 isDisabled={standFormData.teleopGP.trap === 3}
                                 key={'Trap'}
                                 onClick={() => {
-                                    standFormManagers.endGame.doCommand(standFormData, scoutedField.trap.field);
+                                    standFormManagers.endGame.doCommand(standFormData, gamePieceFields.trap.field);
                                 }}
                             >
                                 Trap: {standFormData.teleopGP.trap}

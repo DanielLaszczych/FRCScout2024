@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 const Event = require('../models/Event');
 
+router.get('/getEvents', async (req, res) => {
+    if (req.isUnauthenticated()) {
+        res.sendStatus(401);
+        return;
+    }
+    try {
+        const events = await Event.find(JSON.parse(req.headers.filters)).exec();
+        res.status(200).json(events);
+    } catch (err) {
+        res.statusMessage = err.message;
+        res.sendStatus(500);
+    }
+});
+
 router.get('/getCurrentEvent', async (req, res) => {
     if (req.isUnauthenticated()) {
         res.sendStatus(401);
@@ -22,7 +36,7 @@ router.get('/getEventsSimple', async (req, res) => {
         return;
     }
     try {
-        const events = await Event.find().select(['key', 'name', 'currentEvent', 'startDate', 'endDate', 'custom'].join(' ')).exec();
+        const events = await Event.find(JSON.parse(req.headers.filters)).select(['key', 'name', 'currentEvent', 'startDate', 'endDate', 'custom'].join(' ')).exec();
         res.status(200).send(events);
     } catch (err) {
         res.statusMessage = err.message;

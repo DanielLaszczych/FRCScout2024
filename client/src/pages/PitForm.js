@@ -854,9 +854,9 @@ function PitForm() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', imageType: imgHeader },
             body: JSON.stringify({
+                ...pitFormData,
                 eventKey: eventKeyParam,
                 teamNumber: parseInt(teamNumberParam),
-                ...pitFormData,
                 weight: parseFloat(pitFormData.weight),
                 height: parseFloat(pitFormData.height),
                 frameSize: {
@@ -1477,11 +1477,10 @@ function PitForm() {
                     <Center
                         width={`${imageWidth * dimensionRatios.width}px`}
                         height={`${imageHeight * dimensionRatios.height}px`}
-                        pos={'absolute'}
                         backgroundColor={'white'}
                         zIndex={2}
-                        left={'50%'}
-                        transform={'translate(-50%, 0%)'}
+                        margin={'0 auto'}
+                        position={'relative'}
                     >
                         <Spinner />
                     </Center>

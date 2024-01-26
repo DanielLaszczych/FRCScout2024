@@ -1,9 +1,10 @@
-import { ChevronDownIcon, LockIcon, StarIcon, UnlockIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon, StarIcon } from '@chakra-ui/icons';
 import { Box, Button, Center, Flex, IconButton, Menu, MenuButton, MenuItem, MenuList, NumberInput, NumberInputField, Spinner, Text } from '@chakra-ui/react';
 import { React, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { fetchAndCache } from '../util/helperFunctions';
+import { MdOutlineWifi, MdOutlineWifiOff } from 'react-icons/md';
 
 let stations = [
     { label: 'Red Station 1', value: 'r1', id: uuidv4() },
@@ -14,6 +15,7 @@ let stations = [
     { label: 'Blue Station 3', value: 'b3', id: uuidv4() }
 ];
 let matchTypes = [
+    { label: 'Practice', value: 'p', id: uuidv4() },
     { label: 'Quals', value: 'q', id: uuidv4() },
     { label: 'Playoffs', value: 'sf', id: uuidv4() },
     { label: 'Finals', value: 'f', id: uuidv4() }
@@ -68,7 +70,9 @@ function PreStandForm() {
         if (matchNumber === '') {
             return null;
         }
-        if (matchType.value === 'q') {
+        if (matchType.value === 'p') {
+            matchKey = `pm${matchNumber}`;
+        } else if (matchType.value === 'q') {
             matchKey = `qm${matchNumber}`;
         } else if (matchType.value === 'sf') {
             if (matchNumber < 1 || matchNumber > 13) {
@@ -82,11 +86,12 @@ function PreStandForm() {
         return matchKey;
     }, [matchNumber, matchType.value]);
 
+    const enableManualMode = useCallback(() => {
+        return manualMode || matchType.value === 'p';
+    }, [manualMode, matchType.value]);
+
     useEffect(() => {
         function getTeamNumber() {
-            setTeamNumber(null);
-            setTeamName(null);
-            setFutureAlly(null);
             abort.current = new AbortController();
             if (station === '' || matchType === '') return;
             let matchKey = getMatchKey();
@@ -149,17 +154,17 @@ function PreStandForm() {
                 });
         }
         setTeamNumberError('');
-        if (!manualMode) {
-            setTeamNumber(null);
-            setTeamName(null);
-            setFutureAlly(null);
-            abort.current.abort();
+        setTeamNumber(null);
+        setTeamName(null);
+        setFutureAlly(null);
+        abort.current.abort();
+        if (!enableManualMode()) {
             getTeamNumber();
         }
-    }, [station, matchType, matchNumber, currentEvent, getMatchKey, manualMode]);
+    }, [station, matchType, matchNumber, currentEvent, getMatchKey, enableManualMode]);
 
     function validSetup() {
-        return station !== '' && matchType !== '' && matchNumber !== '' && teamNumber && ((teamName && futureAlly !== null) || manualMode);
+        return station !== '' && matchType !== '' && matchNumber !== '' && teamNumber && ((teamName && futureAlly !== null) || enableManualMode());
     }
 
     function doneFetching() {
@@ -187,7 +192,13 @@ function PreStandForm() {
 
     return (
         <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-            <IconButton position={'absolute'} right={'15px'} onClick={() => setManualMode(!manualMode)} icon={!manualMode ? <LockIcon /> : <UnlockIcon />} />
+            <IconButton
+                position={'absolute'}
+                right={'15px'}
+                isDisabled={matchType.value === 'p'}
+                onClick={() => setManualMode(!manualMode)}
+                icon={enableManualMode() ? <MdOutlineWifiOff /> : <MdOutlineWifi />}
+            />
             <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} margin={'0 auto'} marginBottom={'20px'} maxWidth={'calc(100% - 100px)'}>
                 Competition: {currentEvent.name}
             </Text>
@@ -270,18 +281,18 @@ function PreStandForm() {
             ) : null}
             <Flex alignItems={'center'} justifyContent={'center'} marginTop={'20px'} marginBottom={'10px'} columnGap={'10px'}>
                 <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                    Team Number{!manualMode ? (doneFetching() ? `: ${teamNumber || ''}` : ': ') : ''}
+                    Team Number{enableManualMode() ? '' : doneFetching() ? `: ${teamNumber || ''}` : ': '}
                 </Text>
-                {!manualMode && doneFetching() && futureAlly ? <StarIcon stroke={'black'} viewBox={'-1 -1 26 26'} fontSize={'lg'} color={'yellow.300'} /> : null}
-                {!manualMode && teamNumberError !== '' && (
+                {!enableManualMode() && doneFetching() && futureAlly ? <StarIcon stroke={'black'} viewBox={'-1 -1 26 26'} fontSize={'lg'} color={'yellow.300'} /> : null}
+                {!enableManualMode() && teamNumberError !== '' && (
                     //width={'calc(100% - 73px)'} make the px slightly bigger than the width of the text from above
                     <Text color={'red.500'} fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} maxWidth={'calc(100% - 122px)'}>
                         {teamNumberError}
                     </Text>
                 )}
-                {!manualMode && !doneFetching() ? <Spinner fontSize={'lg'} /> : null}
+                {!enableManualMode() && !doneFetching() ? <Spinner fontSize={'lg'} /> : null}
             </Flex>
-            {!manualMode ? (
+            {!enableManualMode() ? (
                 <Flex alignItems={'center'} justifyContent={'center'} marginTop={'10px'} columnGap={'10px'}>
                     <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
                         Team Name: {!doneFetching() ? '' : teamName}
@@ -295,7 +306,7 @@ function PreStandForm() {
                     {!doneFetching() ? <Spinner fontSize={'lg'} /> : null}
                 </Flex>
             ) : null}
-            {manualMode ? (
+            {enableManualMode() ? (
                 <NumberInput
                     margin={'0 auto'}
                     onChange={(value) => setTeamNumber(value)}
