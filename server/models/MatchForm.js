@@ -10,7 +10,31 @@ const autoTimelineSchema = new Schema({
     }
 });
 
-const teleopSchema = new Schema({
+// We need to defaualt in case auto timeline is empty
+const autoGPSchema = new Schema({
+    intakeMiss: {
+        type: Number,
+        default: 0
+    },
+    ampScore: {
+        type: Number,
+        default: 0
+    },
+    speakerScore: {
+        type: Number,
+        default: 0
+    },
+    ampMiss: {
+        type: Number,
+        default: 0
+    },
+    speakerMiss: {
+        type: Number,
+        default: 0
+    }
+});
+
+const teleopGPSchema = new Schema({
     intakeSource: {
         type: Number
     },
@@ -90,8 +114,16 @@ const matchFormSchema = new Schema({
     autoTimeline: {
         type: [autoTimelineSchema]
     },
+    // We need to defaualt in case auto timeline is empty
+    autoGP: {
+        type: autoGPSchema,
+        default: {}
+    },
+    autoPoints: {
+        type: Number
+    },
     teleopGP: {
-        type: teleopSchema
+        type: teleopGPSchema
     },
     wasDefended: {
         type: Boolean
@@ -104,6 +136,12 @@ const matchFormSchema = new Schema({
     },
     climb: {
         type: String
+    },
+    teleopPoints: {
+        type: Number
+    },
+    offensivePoints: {
+        type: Number
     },
     lostCommunication: {
         type: Boolean

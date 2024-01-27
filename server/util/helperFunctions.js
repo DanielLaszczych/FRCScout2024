@@ -11,9 +11,15 @@ class HelperFunctions {
             let typeDifference = matchTypeA - matchTypeB;
             if (typeDifference === 0) {
                 let endIndex = matchTypeA === 0 ? 5 : 4;
-                let matchNumberDifference = a[field].substring(2, endIndex).replace(/[^0-9]/g, '') - b[field].substring(2, endIndex).replace(/[^0-9]/g, '');
+                let matchNumberDifference =
+                    a[field].substring(2, endIndex).replace(/[^0-9]/g, '') -
+                    b[field].substring(2, endIndex).replace(/[^0-9]/g, '');
                 if (matchNumberDifference === 0 && compareStations) {
-                    return a.station.charAt(0) === b.station.charAt(0) ? a.station.charAt(1) - b.station.charAt(1) : a.station.charAt(0) < b.station.charAt(0) ? 1 : -1;
+                    return a.station.charAt(0) === b.station.charAt(0)
+                        ? a.station.charAt(1) - b.station.charAt(1)
+                        : a.station.charAt(0) < b.station.charAt(0)
+                        ? 1
+                        : -1;
                 } else {
                     return matchNumberDifference;
                 }
@@ -91,14 +97,20 @@ class HelperFunctions {
         let sortedx = x.sort((a, b) => a - b);
         let halfIndex = Math.floor(sortedx.length / 2);
 
-        return sortedx.length % 2 ? sortedx[Math.floor(sortedx.length / 2.0)] : (sortedx[halfIndex - 1] + sortedx[halfIndex]) / 2.0;
+        return sortedx.length % 2
+            ? sortedx[Math.floor(sortedx.length / 2.0)]
+            : (sortedx[halfIndex - 1] + sortedx[halfIndex]) / 2.0;
     }
 
     static averageArr(x, round = true, roundToHundredthBoolean = false) {
         if (x.length === 0) {
             return 'N/A';
         }
-        return round ? (roundToHundredthBoolean ? HelperFunctions.roundToHundredth(mean(x)) : HelperFunctions.roundToTenth(mean(x))) : mean(x);
+        return round
+            ? roundToHundredthBoolean
+                ? HelperFunctions.roundToHundredth(mean(x))
+                : HelperFunctions.roundToTenth(mean(x))
+            : mean(x);
     }
 
     static getPercentageForTFField(arr, field) {
@@ -157,6 +169,8 @@ class HelperFunctions {
     static getDefenseRatings(arr) {
         return arr.filter((a) => a.defenseRating > 0).map((a) => a['defenseRating']);
     }
+
+    static leaf = (obj, path) => path.split('.').reduce((value, el) => value[el], obj);
 }
 
 module.exports = HelperFunctions;

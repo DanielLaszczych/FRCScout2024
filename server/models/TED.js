@@ -130,12 +130,32 @@ const TeamEventDataSchema = new Schema({
         type: autoGPSchema,
         default: {}
     },
+    autoPoints: {
+        type: metricsSchema,
+        default: {}
+    },
     teleopGP: {
         type: teleopGPSchema,
         default: {}
     },
     climbCounts: {
         type: climbSchema,
+        default: {}
+    },
+    climbSucessPercentage: {
+        type: Number,
+        default: 0
+    },
+    climbSucessFraction: {
+        type: String,
+        default: ''
+    },
+    teleopPoints: {
+        type: metricsSchema,
+        default: {}
+    },
+    offensivePoints: {
+        type: metricsSchema,
         default: {}
     },
     wasDefended: {
@@ -179,35 +199,7 @@ const TeamEventDataSchema = new Schema({
     fieldAwareness: {
         type: metricsSchema,
         default: {}
-    },
-    teleopPoints: {
-        type: metricsSchema,
-        default: {}
-    },
-    autoPoints: {
-        type: metricsSchema,
-        default: {}
-    },
-    offensivePoints: {
-        type: metricsSchema,
-        default: {}
-    },
-    climbSuccssPercentage: {
-        type: Number,
-        default: 0
-    },
-    climbSucessFraction: {
-        type: String,
-        default: ''
-    },
-    climbPoints: {
-        type: metricsSchema,
-        default: {}
     }
-});
-
-TeamEventDataSchema.post('findOneAndUpdate', async (result) => {
-    console.log(result.autoGP.intakeMiss);
 });
 
 const TED = model('TED', TeamEventDataSchema);

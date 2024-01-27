@@ -5,7 +5,14 @@ const { internalBlueCall, isFutureAlly } = require('./blueAlliance');
 const { internalSendMessage } = require('./groupMeBot');
 const { convertMatchKeyToString } = require('../util/helperFunctions');
 const RTESSIssue = require('../models/RTESSIssue');
-const { matchFormStatus, weekday, rtessIssuesStatus, timeZone } = require('../util/helperConstants');
+const {
+    matchFormStatus,
+    weekday,
+    rtessIssuesStatus,
+    timeZone,
+    gamePieceFields,
+    climbFields
+} = require('../util/helperConstants');
 const { updateTEDStandForm, updateTEDSuperForms } = require('./ted').HelperFunctions;
 
 router.get('/getMatchForms', async (req, res) => {
@@ -44,6 +51,31 @@ router.post('/postStandForm', async (req, res) => {
     try {
         let matchFormInput = req.body;
         matchFormInput.standScouter = req.user.displayName;
+        matchFormInput.autoGP = {};
+        matchFormInput.autoPoints = 0;
+        matchFormInput.teleopPoints = 0;
+
+        for (const element of matchFormInput.autoTimeline) {
+            if (Object.hasOwn(gamePieceFields, element.scored)) {
+                if (Object.hasOwn(matchFormInput.autoGP, element.scored)) {
+                    matchFormInput.autoGP[element.scored] += 1;
+                } else {
+                    matchFormInput.autoGP[element.scored] = 1;
+                }
+                matchFormInput.autoPoints += gamePieceFields[element.scored].autoValue;
+            }
+        }
+        matchFormInput.autoPoints += matchFormInput.leftStart ? 2 : 0;
+
+        for (const element in matchFormInput.teleopGP) {
+            if (Object.hasOwn(gamePieceFields, element)) {
+                matchFormInput.teleopPoints +=
+                    matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
+            }
+        }
+        matchFormInput.teleopPoints += climbFields[matchFormInput.climb]?.teleopValue || 0;
+
+        matchFormInput.offensivePoints = matchFormInput.autoPoints + matchFormInput.teleopPoints;
 
         const prevMatchForm = await MatchForm.findOneAndUpdate(
             {
@@ -57,7 +89,7 @@ router.post('/postStandForm', async (req, res) => {
             }
         ).exec();
 
-        // await updateTEDStandForm(prevMatchForm, matchFormInput);
+        await updateTEDStandForm(prevMatchForm, matchFormInput);
 
         if (
             matchFormInput.lostCommunication ||
@@ -148,6 +180,7 @@ router.post('/postStandForm', async (req, res) => {
 
         res.sendStatus(200);
     } catch (err) {
+        console.log(err);
         res.statusMessage = err.message;
         res.sendStatus(500);
     }
