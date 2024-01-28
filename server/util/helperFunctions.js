@@ -170,7 +170,23 @@ class HelperFunctions {
         return arr.filter((a) => a.defenseRating > 0).map((a) => a['defenseRating']);
     }
 
-    static leaf = (obj, path) => path.split('.').reduce((value, el) => value[el], obj);
+    static leafGet = (obj, path) => path.split('.').reduce((value, el) => value[el], obj);
+
+    static leafSet = (obj, path, value) => {
+        let deepObj = obj;
+        let paths = path.split('.');
+        if (paths.length === 1) {
+            deepObj[paths[0]] = value;
+        } else {
+            for (let i = 0; i < paths.length; i++) {
+                if (i === paths.length - 1) {
+                    deepObj[paths[i]] = value;
+                } else {
+                    deepObj = deepObj[paths[i]];
+                }
+            }
+        }
+    };
 }
 
 module.exports = HelperFunctions;

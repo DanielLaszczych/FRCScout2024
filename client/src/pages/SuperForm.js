@@ -73,7 +73,11 @@ function SuperForm() {
     useEffect(() => {
         if (localStorage.getItem('SuperFormData')) {
             let superForm = JSON.parse(localStorage.getItem('SuperFormData'));
-            if (superForm.eventKeyParam === eventKeyParam && superForm.matchNumberParam === matchNumberParam && superForm.allianceParam === allianceParam) {
+            if (
+                superForm.eventKeyParam === eventKeyParam &&
+                superForm.matchNumberParam === matchNumberParam &&
+                superForm.allianceParam === allianceParam
+            ) {
                 setLoadResponse('Required');
                 setSuperFormDialog(true);
             } else {
@@ -108,7 +112,6 @@ function SuperForm() {
                         }
                     })
                     .then((data) => {
-                        console.log(data);
                         let modified = { ...superFormData };
                         modified.loading = false;
                         for (const matchForm of data) {
@@ -129,7 +132,10 @@ function SuperForm() {
     useEffect(() => {
         if (prevSuperFormData.current !== null) {
             if (!deepEqual(prevSuperFormData.current, superFormData)) {
-                localStorage.setItem('SuperFormData', JSON.stringify({ ...superFormData, eventKeyParam, matchNumberParam, allianceParam }));
+                localStorage.setItem(
+                    'SuperFormData',
+                    JSON.stringify({ ...superFormData, eventKeyParam, matchNumberParam, allianceParam })
+                );
             }
         }
         if (superFormData.loading === false) {
@@ -175,7 +181,9 @@ function SuperForm() {
                     teamNumber: parseInt(teamNumbers[index]),
                     allianceNumbers: [teamNumbers[0], teamNumbers[1], teamNumbers[2]],
                     superStatus: superFormData[station].superStatus || matchFormStatus.complete,
-                    superStatusComment: isFollowOrNoShow(station) ? superFormData[station].superStatusComment.trim() : ''
+                    superStatusComment: isFollowOrNoShow(station)
+                        ? superFormData[station].superStatusComment.trim()
+                        : ''
                 }))
             )
         })
@@ -233,7 +241,11 @@ function SuperForm() {
                     superFormData[station].agility,
                     superFormData[station].fieldAwareness,
                     map[superFormData[station].superStatus || matchFormStatus.complete],
-                    isFollowOrNoShow(station) ? (superFormData[station].superStatusComment.trim() === '' ? 'n' : superFormData[station].superStatusComment.trim()) : 'n'
+                    isFollowOrNoShow(station)
+                        ? superFormData[station].superStatusComment.trim() === ''
+                            ? 'n'
+                            : superFormData[station].superStatusComment.trim()
+                        : 'n'
                 ].join('#')
             )
         ].join('$');
@@ -241,7 +253,13 @@ function SuperForm() {
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box
+                textAlign={'center'}
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                margin={'0 auto'}
+                width={{ base: '85%', md: '66%', lg: '50%' }}
+            >
                 {error}
             </Box>
         );
@@ -263,7 +281,10 @@ function SuperForm() {
                         <AlertDialogHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Unsaved Data
                         </AlertDialogHeader>
-                        <AlertDialogBody>You have unsaved data for this super form. Would you like to load it, delete it, or pull data from the cloud?</AlertDialogBody>
+                        <AlertDialogBody>
+                            You have unsaved data for this super form. Would you like to load it, delete it, or pull
+                            data from the cloud?
+                        </AlertDialogBody>
                         <AlertDialogFooter>
                             <Button
                                 onClick={() => {
@@ -326,7 +347,15 @@ function SuperForm() {
                     key={station} // stupid solution but w/e
                     marginBottom={'15px'}
                 >
-                    <Text textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} borderBottom={'1px solid black'} margin={'0 auto'} marginBottom={'10px'} width={'112px'}>
+                    <Text
+                        textAlign={'center'}
+                        fontSize={'lg'}
+                        fontWeight={'semibold'}
+                        borderBottom={'1px solid black'}
+                        margin={'0 auto'}
+                        marginBottom={'10px'}
+                        width={'112px'}
+                    >
                         {teamNumbers[index]}
                     </Text>
                     <Flex marginBottom={'20px'}>
@@ -377,7 +406,10 @@ function SuperForm() {
                                     isDisabled={superFormData[station].superStatus === matchFormStatus.noShow}
                                     onClick={() => {
                                         let teamData = { ...superFormData };
-                                        teamData[station].fieldAwareness = Math.max(teamData[station].fieldAwareness - 1, 1);
+                                        teamData[station].fieldAwareness = Math.max(
+                                            teamData[station].fieldAwareness - 1,
+                                            1
+                                        );
                                         setSuperFormData(teamData);
                                     }}
                                     icon={<MinusIcon />}
@@ -397,7 +429,10 @@ function SuperForm() {
                                     isDisabled={superFormData[station].superStatus === matchFormStatus.noShow}
                                     onClick={() => {
                                         let teamData = { ...superFormData };
-                                        teamData[station].fieldAwareness = Math.min(teamData[station].fieldAwareness + 1, 3);
+                                        teamData[station].fieldAwareness = Math.min(
+                                            teamData[station].fieldAwareness + 1,
+                                            3
+                                        );
                                         setSuperFormData(teamData);
                                     }}
                                     icon={<AddIcon />}
@@ -407,13 +442,26 @@ function SuperForm() {
                             </HStack>
                         </VStack>
                     </Flex>
-                    <HStack justifyContent={'center'} gap={'25px'} marginBottom={[matchFormStatus.followUp, matchFormStatus.noShow].includes(superFormData[station].superStatus) ? '15px' : '0px'}>
+                    <HStack
+                        justifyContent={'center'}
+                        gap={'25px'}
+                        marginBottom={
+                            [matchFormStatus.followUp, matchFormStatus.noShow].includes(
+                                superFormData[station].superStatus
+                            )
+                                ? '15px'
+                                : '0px'
+                        }
+                    >
                         <Checkbox
                             colorScheme={'yellow'}
                             isChecked={superFormData[station].superStatus === matchFormStatus.followUp}
                             onChange={() => {
                                 let teamData = { ...superFormData };
-                                teamData[station].superStatus = teamData[station].superStatus === matchFormStatus.followUp ? null : matchFormStatus.followUp;
+                                teamData[station].superStatus =
+                                    teamData[station].superStatus === matchFormStatus.followUp
+                                        ? null
+                                        : matchFormStatus.followUp;
                                 setSuperFormData(teamData);
                             }}
                             width={'100px'}
@@ -425,7 +473,10 @@ function SuperForm() {
                             isChecked={superFormData[station].superStatus === matchFormStatus.noShow}
                             onChange={() => {
                                 let teamData = { ...superFormData };
-                                teamData[station].superStatus = teamData[station].superStatus === matchFormStatus.noShow ? null : matchFormStatus.noShow;
+                                teamData[station].superStatus =
+                                    teamData[station].superStatus === matchFormStatus.noShow
+                                        ? null
+                                        : matchFormStatus.noShow;
                                 setSuperFormData(teamData);
                             }}
                             width={'100px'}
@@ -443,7 +494,9 @@ function SuperForm() {
                                     setSuperFormData(teamData);
                                 }}
                                 value={superFormData[station].superStatusComment}
-                                placeholder={`What is the reason for the ${superFormData[station].superStatus.toLowerCase()}?`}
+                                placeholder={`What is the reason for the ${superFormData[
+                                    station
+                                ].superStatus.toLowerCase()}?`}
                                 width={'85%'}
                             />
                         </Center>

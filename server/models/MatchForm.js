@@ -140,6 +140,9 @@ const matchFormSchema = new Schema({
     teleopPoints: {
         type: Number
     },
+    stagePoints: {
+        type: Number
+    },
     offensivePoints: {
         type: Number
     },

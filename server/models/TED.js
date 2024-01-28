@@ -142,15 +142,19 @@ const TeamEventDataSchema = new Schema({
         type: climbSchema,
         default: {}
     },
-    climbSucessPercentage: {
+    climbSuccessPercentage: {
         type: Number,
         default: 0
     },
-    climbSucessFraction: {
+    climbSuccessFraction: {
         type: String,
         default: ''
     },
     teleopPoints: {
+        type: metricsSchema,
+        default: {}
+    },
+    stagePoints: {
         type: metricsSchema,
         default: {}
     },

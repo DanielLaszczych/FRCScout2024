@@ -4,22 +4,42 @@ const TED = require('../models/TED');
 const MatchForm = require('../models/MatchForm');
 const PitForm = require('../models/PitForm');
 const { matchFormStatus, gamePieceFields, climbFields } = require('../util/helperConstants');
-const { leaf } = require('../util/helperFunctions');
+const { leafGet, leafSet } = require('../util/helperFunctions');
 
 router.get('/getAllTeamEventData', async (req, res) => {
     try {
         let filters = JSON.parse(req.headers.filters);
-        Promise.all([
-            PitForm.findOne(filters).exec(),
-            MatchForm.find(filters).exec(),
-            TED.find({ eventKey: filters.eventKey }).exec()
-        ])
+        Promise.all([PitForm.findOne(filters).exec(), MatchForm.find(filters).exec(), TED.findOne(filters).exec()])
             .then((responses) => {
-                res.status(200).json({
+                let data = {
                     pitForm: responses[0],
                     matchForms: responses[1],
                     teamEventData: responses[2]
-                });
+                };
+                let rankQueries = [
+                    'offensivePoints.avg',
+                    'autoPoints.avg',
+                    'teleopGP.speakerScore.avg',
+                    'teleopGP.ampScore.avg',
+                    'stagePoints.avg',
+                    'defenseRating.avg'
+                ].map((field) => HelperFunctions.getRank(data.teamEventData, field));
+                Promise.all(rankQueries)
+                    .then((responses) => {
+                        data.rank = {
+                            offense: responses[0],
+                            auto: responses[1],
+                            teleopSpeaker: responses[2],
+                            teleopAmp: responses[3],
+                            stage: responses[4],
+                            defense: responses[5]
+                        };
+                        res.status(200).json(data);
+                    })
+                    .catch((err) => {
+                        res.statusMessage = err.message;
+                        res.sendStatus(500);
+                    });
             })
             .catch((err) => {
                 res.statusMessage = err.message;
@@ -32,137 +52,110 @@ router.get('/getAllTeamEventData', async (req, res) => {
 });
 
 class HelperFunctions {
-    static getStandFormUpdate(data, removal = false) {
+    static async getRank(ted, field) {
+        let value = leafGet(ted, field);
+        return (
+            (await TED.countDocuments({
+                [field]: { $gt: value }
+            })) + 1
+        );
+    }
+
+    static getStandFormUpdate(data, reverse = false) {
         //Anything that has modify next to it means it probably has to be changed next year
-        let autoUpdates = {};
-        let teleopUpdates = {};
-        let otherUpdates = {};
-        let maxValues = { 'autoPoints.max': 0, 'teleopPoints.max': 0 };
+        let incUpdate = { standForms: 1 };
+        let maxUpdate = {};
 
         for (const element in data.autoGP) {
             // To ignore _id field
-            if (Object.hasOwn(gamePieceFields, element)) {
-                autoUpdates[`autoGP.${element}.total`] = data.autoGP[element] * (removal ? -1 : 1);
-                maxValues[`autoGP.${element}.max`] = data.autoGP[element];
-                maxValues['autoPoints.max'] += data.autoGP[element] * (gamePieceFields[element].autoValue || 0);
+            if (Object.hasOwn(gamePieceFields, element) && data.autoGP[element] > 0) {
+                incUpdate[`autoGP.${element}.total`] = data.autoGP[element];
+                maxUpdate[`autoGP.${element}.max`] = data.autoGP[element];
             }
         }
 
         for (const element in data.teleopGP) {
             // To ignore _id field
-            if (Object.hasOwn(gamePieceFields, element)) {
-                teleopUpdates[`teleopGP.${element}.total`] = data.teleopGP[element] * (removal ? -1 : 1);
-                maxValues[`teleopGP.${element}.max`] = data.teleopGP[element];
-                maxValues['teleopPoints.max'] += data.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
+            if (Object.hasOwn(gamePieceFields, element) && data.teleopGP[element] > 0) {
+                incUpdate[`teleopGP.${element}.total`] = data.teleopGP[element];
+                maxUpdate[`teleopGP.${element}.max`] = data.teleopGP[element];
             }
         }
 
-        otherUpdates[`climbCounts.${climbFields[data.climb].field}`] = removal ? -1 : 1; //Modify the labels to field object
-        maxValues['teleopPoints.max'] += climbFields[data.climb].teleopValue || 0;
+        incUpdate[`climbCounts.${climbFields[data.climb].field}`] = 1; //Modify the labels to field object
 
         if (data.defenseRating !== 0) {
-            otherUpdates.playedDefense = removal ? -1 : 1;
-            otherUpdates[`defenseRating.total`] = data.defenseRating * (removal ? -1 : 1);
-            otherUpdates[`defenseAllocation.total`] = data.defenseAllocation * (removal ? -1 : 1);
-            maxValues[`defenseRating.max`] = data.defenseRating;
-            maxValues[`defenseAllocation.max`] = data.defenseAllocation;
+            incUpdate['playedDefense'] = 1;
+            incUpdate[`defenseRating.total`] = data.defenseRating;
+            incUpdate[`defenseAllocation.total`] = data.defenseAllocation;
+            maxUpdate[`defenseRating.max`] = data.defenseRating;
+            maxUpdate[`defenseAllocation.max`] = data.defenseAllocation;
         }
         // First element is usually crossing starting line (Modify)
         for (const field of ['leftStart', 'wasDefended', 'lostCommunication', 'robotBroke', 'yellowCard', 'redCard']) {
-            otherUpdates[field] = data[field] ? (removal ? -1 : 1) : 0;
-        }
-        maxValues['autoPoints.max'] += data['leftStart'] ? 2 : 0;
-        maxValues['offensivePoints.max'] = maxValues['autoPoints.max'] + maxValues['teleopPoints.max'];
-
-        autoUpdates['autoPoints.total'] = maxValues['autoPoints.max'] * (removal ? -1 : 1);
-        teleopUpdates['teleopPoints.total'] = maxValues['teleopPoints.max'] * (removal ? -1 : 1);
-        otherUpdates['offensivePoints.total'] = maxValues['offensivePoints.max'] * (removal ? -1 : 1);
-
-        return {
-            incUpdate: {
-                standForms: removal ? -1 : 1,
-                ...autoUpdates,
-                ...teleopUpdates,
-                ...otherUpdates
-            },
-            maxValues
-        };
-    }
-
-    static getSuperFormUpdate(data, removal = false) {
-        return {
-            incUpdate: {
-                superForms: removal ? -1 : 1,
-                'agility.total': data.agility * (removal ? -1 : 1),
-                'fieldAwareness.total': data.fieldAwareness * (removal ? -1 : 1)
-            },
-            maxValues: { 'agility.max': data.agility, 'fieldAwareness.max': data.fieldAwareness }
-        };
-    }
-
-    static mergeIncUpdates(update1, update2) {
-        const result = { ...update1 };
-        for (const key in update2) {
-            if (Object.hasOwn(result, key)) {
-                result[key] += update2[key];
-            } else {
-                result[key] = update2[key];
+            if (data[field]) {
+                incUpdate[field] = 1;
             }
         }
 
-        return result;
-    }
-
-    static async getMatchFormMaxValue(prevMatchForm, field, isSuperForms) {
-        let properField = field.slice(0, field.indexOf('.max'));
-        let maxValue = await MatchForm.findOne({
-            eventKey: prevMatchForm.eventKey,
-            teamNumber: prevMatchForm.teamNumber,
-            [isSuperForms ? 'superStatus' : 'standStatus']: matchFormStatus.complete
-        })
-            .sort({ properField: -1 }) // Sort in descending order
-            .limit(1)
-            .select(properField);
-        return maxValue ? leaf(maxValue, properField) : 0;
-    }
-
-    static async getSetAndMaxUpdate(maxValues, prevMaxValues, prevMatchForm, removalUpdate, isSuperForms = false) {
-        let keys1 = Object.keys(maxValues);
-        let keys2 = [];
-        if (prevMaxValues !== null) {
-            keys2 = Object.keys(prevMaxValues);
+        for (const field of ['autoPoints', 'teleopPoints', 'stagePoints', 'offensivePoints']) {
+            if (data[field] > 0) {
+                incUpdate[`${field}.total`] = data[field];
+                maxUpdate[`${field}.max`] = data[field];
+            }
         }
-        // Concatenate the keys and remove duplicates using a Set
-        const mergedKeys = [...new Set([...keys1, ...keys2])];
-        let setUpdate = {};
-        let maxUpdate = {};
 
-        for (const key of mergedKeys) {
-            if (prevMaxValues && Object.hasOwn(prevMaxValues, key)) {
-                if (Object.hasOwn(maxValues, key) && maxValues[key] >= prevMaxValues[key]) {
-                    maxUpdate[key] = maxValues[key];
-                    // No point to try to compare zero to the max
-                } else if (prevMaxValues[key] !== 0) {
-                    // If the max we are removing equals to current max then we need to
-                    // signal to re-evaluate the max by checking past forms
-                    setUpdate[key] = await HelperFunctions.getMatchFormMaxValue(prevMatchForm, key, isSuperForms);
-                    console.log(setUpdate[key]);
+        if (reverse) {
+            for (const key in incUpdate) {
+                if (incUpdate[key] > 0) {
+                    incUpdate[key] *= -1;
                 }
-            } else if (removalUpdate) {
-                setUpdate[key] = await HelperFunctions.getMatchFormMaxValue(prevMatchForm, key, isSuperForms);
-                // No point to try to compare zero to the max
-            } else if (maxUpdate[key] !== 0) {
-                maxUpdate[key] = maxValues[key];
             }
         }
 
         return {
-            setUpdate,
+            incUpdate,
             maxUpdate
         };
     }
 
-    static async updateStandFormAverages(ted) {
+    static getSuperFormUpdate(data, reverse = false) {
+        return {
+            incUpdate: {
+                superForms: reverse ? -1 : 1,
+                'agility.total': data.agility * (reverse ? -1 : 1),
+                'fieldAwareness.total': data.fieldAwareness * (reverse ? -1 : 1)
+            },
+            maxUpdate: { 'agility.max': data.agility, 'fieldAwareness.max': data.fieldAwareness }
+        };
+    }
+
+    static mergeIncUpdates(incUpdateOne, incUpdateTwo) {
+        let incUpdate = { ...incUpdateOne };
+        for (const key in incUpdateTwo) {
+            if (Object.hasOwn(incUpdate, key)) {
+                incUpdate[key] += incUpdateTwo[key];
+            } else {
+                incUpdate[key] = incUpdateTwo[key];
+            }
+        }
+
+        return incUpdate;
+    }
+
+    static compareMaxUpdates(forwardMaxUpdate, reverseMaxUpdate) {
+        for (const key in forwardMaxUpdate) {
+            if (Object.hasOwn(reverseMaxUpdate, key)) {
+                if (forwardMaxUpdate[key] >= reverseMaxUpdate[key]) {
+                    delete reverseMaxUpdate[key];
+                } else {
+                    delete forwardMaxUpdate[key];
+                }
+            }
+        }
+    }
+
+    static updateStandFormAverages(ted) {
         for (const element in gamePieceFields) {
             if (gamePieceFields[element].auto) {
                 if (ted.standForms === 0) {
@@ -181,125 +174,172 @@ class HelperFunctions {
         }
 
         let totalAttempts = ted.climbCounts.success + ted.climbCounts.harmony + ted.climbCounts.fail;
-        ted.climbSucessPercentage =
+        ted.climbSuccessPercentage =
             totalAttempts === 0 ? null : (ted.climbCounts.success + ted.climbCounts.harmony) / totalAttempts;
-        ted.climbSucessFraction =
+        ted.climbSuccessFraction =
             totalAttempts === 0 ? null : `${ted.climbCounts.success + ted.climbCounts.harmony} / ${totalAttempts}`;
 
         ted.defenseRating.avg = ted.playedDefense === 0 ? 0 : ted.defenseRating.total / ted.playedDefense;
         ted.defenseAllocation.avg = ted.playedDefense === 0 ? 0 : ted.defenseAllocation.total / ted.playedDefense;
 
-        ted.autoPoints.avg = ted.standForms === 0 ? 0 : ted.autoPoints.total / ted.standForms;
-        ted.teleopPoints.avg = ted.standForms === 0 ? 0 : ted.teleopPoints.total / ted.standForms;
-        ted.offensivePoints.avg = ted.standForms === 0 ? 0 : ted.offensivePoints.total / ted.standForms;
+        for (const field of ['autoPoints', 'teleopPoints', 'stagePoints', 'offensivePoints']) {
+            ted[field].avg = ted.standForms === 0 ? 0 : ted[field].total / ted.standForms;
+        }
+    }
 
+    static async getMatchFormMaxValue(eventKey, teamNumber, field, isSuperForms) {
+        let maxValue = await MatchForm.findOne({
+            eventKey: eventKey,
+            teamNumber: teamNumber,
+            [isSuperForms ? 'superStatus' : 'standStatus']: matchFormStatus.complete
+        })
+            .sort({ field: -1 }) // Sort in descending order
+            .limit(1)
+            .select(field);
+        return maxValue ? leafGet(maxValue, field) : 0;
+    }
+
+    static async updateMatchFormMaxes(
+        eventKey,
+        teamNumber,
+        ted,
+        forwardMaxUpdate,
+        reverseMaxUpdate,
+        updatingSuperForms
+    ) {
+        for (const key in forwardMaxUpdate) {
+            if (forwardMaxUpdate[key] > leafGet(ted, key)) {
+                leafSet(ted, key, forwardMaxUpdate[key]);
+            }
+        }
+        for (const key in reverseMaxUpdate) {
+            if (reverseMaxUpdate[key] === leafGet(ted, key)) {
+                let newMax = await HelperFunctions.getMatchFormMaxValue(
+                    eventKey,
+                    teamNumber,
+                    key.slice(0, key.indexOf('.max')),
+                    updatingSuperForms
+                );
+                leafSet(ted, key, newMax);
+            }
+        }
+    }
+
+    static async updateStandForm(eventKey, teamNumber, incUpdate, forwardMaxUpdate, reverseMaxUpdate) {
+        const ted = await TED.findOneAndUpdate(
+            {
+                eventKey: eventKey,
+                teamNumber: teamNumber
+            },
+            incUpdate,
+            {
+                new: true,
+                upsert: true
+            }
+        );
+
+        HelperFunctions.updateStandFormAverages(ted);
+        await HelperFunctions.updateMatchFormMaxes(
+            eventKey,
+            teamNumber,
+            ted,
+            forwardMaxUpdate,
+            reverseMaxUpdate,
+            false
+        );
         await ted.save();
     }
 
-    static async updateSuperFormAverages(ted) {
+    static updateSuperFormAverages(ted) {
         ted.agility.avg = ted.superForms === 0 ? 0 : ted.agility.total / ted.superForms;
         ted.fieldAwareness.avg = ted.superForms === 0 ? 0 : ted.fieldAwareness.total / ted.superForms;
+    }
 
-        return ted.save();
+    static async updateSuperForm(eventKey, teamNumber, incUpdate, forwardMaxUpdate, reverseMaxUpdate) {
+        const ted = await TED.findOneAndUpdate(
+            {
+                eventKey: eventKey,
+                teamNumber: teamNumber
+            },
+            incUpdate,
+            {
+                new: true,
+                upsert: true
+            }
+        );
+
+        HelperFunctions.updateSuperFormAverages(ted);
+        await HelperFunctions.updateMatchFormMaxes(eventKey, teamNumber, ted, forwardMaxUpdate, reverseMaxUpdate, true);
+        await ted.save();
     }
 
     static async updateTEDStandForm(prevStandForm, standFormInput) {
-        let prevUpdate = null;
-        // If this is true that means the prev forms data was added to a team ted so we have to remove it
+        let reverseUpdate = null;
         if (prevStandForm !== null) {
             if (prevStandForm.standStatus === matchFormStatus.complete) {
-                prevUpdate = HelperFunctions.getStandFormUpdate(prevStandForm, true);
+                reverseUpdate = HelperFunctions.getStandFormUpdate(prevStandForm, true);
             } else if (prevStandForm.standStatus === matchFormStatus.noShow) {
-                prevUpdate = {
+                reverseUpdate = {
                     incUpdate: { noShows: -1 },
-                    maxValues: {}
+                    maxUpdate: {}
                 };
             }
         }
 
-        let update = null;
+        let forwardUpdate = null;
         if (standFormInput.standStatus === matchFormStatus.complete) {
-            update = HelperFunctions.getStandFormUpdate(standFormInput);
+            forwardUpdate = HelperFunctions.getStandFormUpdate(standFormInput);
         } else if (standFormInput.standStatus === matchFormStatus.noShow) {
-            update = {
+            forwardUpdate = {
                 incUpdate: { noShows: 1 },
-                maxValues: {}
+                maxUpdate: {}
             };
         }
 
-        console.log('Prev Update Pre Max');
-        console.log(prevUpdate);
-        console.log('Update Pre Max');
-        console.log(update);
+        if (
+            reverseUpdate !== null &&
+            forwardUpdate !== null &&
+            prevStandForm.teamNumber === standFormInput.teamNumber
+        ) {
+            let incUpdate = {
+                $inc: HelperFunctions.mergeIncUpdates(forwardUpdate.incUpdate, reverseUpdate.incUpdate)
+            };
+            HelperFunctions.compareMaxUpdates(forwardUpdate.maxUpdate, reverseUpdate.maxUpdate);
 
-        let sameTeamNumber = false;
-        if (prevUpdate !== null) {
-            // We have to check if the update is not null in case its a followUp stand form
-            if (update !== null && prevStandForm.teamNumber === standFormInput.teamNumber) {
-                let setAndMaxUpdate = await HelperFunctions.getSetAndMaxUpdate(
-                    update.maxValues,
-                    prevUpdate.maxValues,
-                    prevStandForm,
-                    false
-                );
-                update = {
-                    $inc: HelperFunctions.mergeIncUpdates(update.incUpdate, prevUpdate.incUpdate),
-                    ...setAndMaxUpdate.setUpdate,
-                    $max: setAndMaxUpdate.maxUpdate
-                };
-                sameTeamNumber = true;
-            } else {
-                let setAndMaxUpdate = await HelperFunctions.getSetAndMaxUpdate(
-                    prevUpdate.maxValues,
-                    null,
-                    prevStandForm,
-                    true
-                );
-                prevUpdate = {
-                    $inc: prevUpdate.incUpdate,
-                    ...setAndMaxUpdate.setUpdate,
-                    $max: setAndMaxUpdate.maxUpdate
-                };
-
-                console.log('Prev Update Post Max');
-                console.log(prevUpdate);
-
-                const ted = await TED.findOneAndUpdate(
-                    {
-                        eventKey: prevStandForm.eventKey,
-                        teamNumber: prevStandForm.teamNumber
-                    },
-                    prevUpdate,
-                    {
-                        new: true,
-                        upsert: true
-                    }
-                );
-                await HelperFunctions.updateStandFormAverages(ted);
-            }
-        }
-
-        if (update !== null) {
-            if (!sameTeamNumber) {
-                let setAndMaxUpdate = await HelperFunctions.getSetAndMaxUpdate(update.maxValues, null, null, false);
-                update = { $inc: update.incUpdate, ...setAndMaxUpdate.setUpdate, $max: setAndMaxUpdate.maxUpdate };
-            }
-
-            console.log('Final Update Post Max');
-            console.log(update);
-
-            const ted = await TED.findOneAndUpdate(
-                {
-                    eventKey: standFormInput.eventKey,
-                    teamNumber: standFormInput.teamNumber
-                },
-                update,
-                {
-                    new: true,
-                    upsert: true
-                }
+            await HelperFunctions.updateStandForm(
+                standFormInput.eventKey,
+                standFormInput.teamNumber,
+                incUpdate,
+                forwardUpdate.maxUpdate,
+                reverseUpdate.maxUpdate
             );
-            await HelperFunctions.updateStandFormAverages(ted);
+            return;
+        }
+        if (reverseUpdate !== null) {
+            let incUpdate = {
+                $inc: reverseUpdate.incUpdate
+            };
+
+            await HelperFunctions.updateStandForm(
+                prevStandForm.eventKey,
+                prevStandForm.teamNumber,
+                incUpdate,
+                null,
+                reverseUpdate.maxUpdate
+            );
+        }
+        if (forwardUpdate !== null) {
+            let incUpdate = {
+                $inc: forwardUpdate.incUpdate
+            };
+
+            await HelperFunctions.updateStandForm(
+                standFormInput.eventKey,
+                standFormInput.teamNumber,
+                incUpdate,
+                forwardUpdate.maxUpdate,
+                null
+            );
         }
     }
 
@@ -307,92 +347,65 @@ class HelperFunctions {
         let updates = [];
         for (const prevSuperForm of prevSuperForms) {
             if (prevSuperForm !== null && prevSuperForm.superStatus === matchFormStatus.complete) {
-                let prevUpdate = HelperFunctions.getSuperFormUpdate(prevSuperForm, true);
+                let reverseUpdate = HelperFunctions.getSuperFormUpdate(prevSuperForm, true);
 
                 let index = superFormInputs.findIndex(
                     (element) =>
                         element.teamNumber === prevSuperForm.teamNumber &&
                         element.superStatus === matchFormStatus.complete
                 );
-                let update;
                 if (index !== -1) {
-                    let input = superFormInputs.splice(index, 1)[0];
-                    update = HelperFunctions.getSuperFormUpdate(input);
-                    let setAndMaxUpdate = await HelperFunctions.getSetAndMaxUpdate(
-                        update.maxValues,
-                        prevUpdate.maxValues,
-                        prevSuperForm,
-                        false,
-                        true
-                    );
-                    update = {
-                        $inc: HelperFunctions.mergeIncUpdates(update.incUpdate, prevUpdate.incUpdate),
-                        ...setAndMaxUpdate.setUpdate,
-                        $max: setAndMaxUpdate.maxUpdate
+                    let superFormInput = superFormInputs.splice(index, 1)[0];
+                    let forwardUpdate = HelperFunctions.getSuperFormUpdate(superFormInput);
+                    HelperFunctions.compareMaxUpdates(forwardUpdate.maxUpdate, reverseUpdate.maxUpdate);
+                    let incUpdate = {
+                        $inc: HelperFunctions.mergeIncUpdates(forwardUpdate.incUpdate, reverseUpdate.incUpdate)
                     };
+                    updates.push(
+                        HelperFunctions.updateSuperForm(
+                            superFormInput.eventKey,
+                            superFormInput.teamNumber,
+                            incUpdate,
+                            forwardUpdate.maxUpdate,
+                            reverseUpdate.maxUpdate
+                        )
+                    );
                 } else {
-                    let setAndMaxUpdate = await HelperFunctions.getSetAndMaxUpdate(
-                        prevUpdate.maxValues,
-                        null,
-                        prevSuperForm,
-                        true,
-                        true
-                    );
-                    update = {
-                        $inc: prevUpdate.incUpdate,
-                        ...setAndMaxUpdate.setUpdate,
-                        $max: setAndMaxUpdate.maxUpdate
+                    let incUpdate = {
+                        $inc: reverseUpdate.incUpdate
                     };
+                    updates.push(
+                        HelperFunctions.updateSuperForm(
+                            prevSuperForm.eventKey,
+                            prevSuperForm.teamNumber,
+                            incUpdate,
+                            null,
+                            reverseUpdate.maxUpdate
+                        )
+                    );
                 }
-
-                updates.push(
-                    TED.findOneAndUpdate(
-                        {
-                            eventKey: prevSuperForm.eventKey,
-                            teamNumber: prevSuperForm.teamNumber
-                        },
-                        update,
-                        {
-                            new: true,
-                            upsert: true
-                        }
-                    )
-                );
             }
         }
 
         for (const superFormInput of superFormInputs) {
             if (superFormInput.superStatus === matchFormStatus.complete) {
-                let update = HelperFunctions.getSuperFormUpdate(superFormInput);
-                let setAndMaxUpdate = await HelperFunctions.getSetAndMaxUpdate(
-                    update.maxValues,
-                    null,
-                    null,
-                    false,
-                    true
-                );
-                update = { $inc: update.incUpdate, ...setAndMaxUpdate.setUpdate, $max: setAndMaxUpdate.maxUpdate };
+                let forwardUpdate = HelperFunctions.getSuperFormUpdate(superFormInput);
+                let incUpdate = { $inc: forwardUpdate.incUpdate };
                 updates.push(
-                    TED.findOneAndUpdate(
-                        {
-                            eventKey: superFormInput.eventKey,
-                            teamNumber: superFormInput.teamNumber
-                        },
-                        update,
-                        {
-                            new: true,
-                            upsert: true
-                        }
+                    HelperFunctions.updateSuperForm(
+                        superFormInput.eventKey,
+                        superFormInput.teamNumber,
+                        incUpdate,
+                        forwardUpdate.maxUpdate,
+                        null
                     )
                 );
             }
         }
 
-        return Promise.all(updates)
-            .then((teds) => Promise.all(teds.map((ted) => HelperFunctions.updateSuperFormAverages(ted))))
-            .catch((err) => {
-                throw new Error(err);
-            });
+        return Promise.all(updates).catch((err) => {
+            throw new Error(err);
+        });
     }
 }
 

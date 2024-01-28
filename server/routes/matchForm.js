@@ -54,28 +54,38 @@ router.post('/postStandForm', async (req, res) => {
         matchFormInput.autoGP = {};
         matchFormInput.autoPoints = 0;
         matchFormInput.teleopPoints = 0;
+        matchFormInput.stagePoints = 0;
 
         for (const element of matchFormInput.autoTimeline) {
+            // To ignore _id field
             if (Object.hasOwn(gamePieceFields, element.scored)) {
                 if (Object.hasOwn(matchFormInput.autoGP, element.scored)) {
                     matchFormInput.autoGP[element.scored] += 1;
                 } else {
                     matchFormInput.autoGP[element.scored] = 1;
                 }
-                matchFormInput.autoPoints += gamePieceFields[element.scored].autoValue;
+                matchFormInput.autoPoints += gamePieceFields[element.scored].autoValue || 0;
             }
         }
         matchFormInput.autoPoints += matchFormInput.leftStart ? 2 : 0;
 
         for (const element in matchFormInput.teleopGP) {
+            // To ignore _id field
             if (Object.hasOwn(gamePieceFields, element)) {
-                matchFormInput.teleopPoints +=
-                    matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
+                if (element === 'trap') {
+                    matchFormInput.stagePoints +=
+                        matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
+                } else {
+                    matchFormInput.teleopPoints +=
+                        matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
+                }
             }
         }
-        matchFormInput.teleopPoints += climbFields[matchFormInput.climb]?.teleopValue || 0;
+        // ?. in case climb is null;
+        matchFormInput.stagePoints += climbFields[matchFormInput.climb]?.teleopValue || 0;
 
-        matchFormInput.offensivePoints = matchFormInput.autoPoints + matchFormInput.teleopPoints;
+        matchFormInput.offensivePoints =
+            matchFormInput.autoPoints + matchFormInput.teleopPoints + matchFormInput.stagePoints;
 
         const prevMatchForm = await MatchForm.findOneAndUpdate(
             {

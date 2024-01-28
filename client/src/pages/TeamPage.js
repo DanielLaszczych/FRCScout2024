@@ -1,7 +1,7 @@
 import { Box, Button, Center, Menu, MenuButton, MenuItem, MenuList, Spinner } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-// import TeamPageTabs from './TeamPageTabs';
+import TeamPageTabs from './TeamPageTabs';
 import { sortEvents } from '../util/helperFunctions';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { year } from '../util/helperConstants';
@@ -19,6 +19,8 @@ function TeamPage({ keyProp }) {
     const [currentEvent, setCurrentEvent] = useState(null);
     const [focusedEvent, setFocusedEvent] = useState(null);
     const [teamData, setTeamData] = useState(null);
+
+    const abort = useRef(new AbortController());
 
     useEffect(() => {
         let storedTeamEvents = fetch('/event/getEventsSimple', {
@@ -41,7 +43,11 @@ function TeamPage({ keyProp }) {
                 if (allTeamEvents.Error) {
                     throw new Error(allTeamEvents.Error);
                 }
-                allTeamEvents = allTeamEvents.filter((event) => event.key !== `${year}cmptx` && !storedTeamEvents.some((storedEvent) => storedEvent.key === event.key));
+                allTeamEvents = allTeamEvents.filter(
+                    (event) =>
+                        event.key !== `${year}cmptx` &&
+                        !storedTeamEvents.some((storedEvent) => storedEvent.key === event.key)
+                );
                 let events = storedTeamEvents.concat(allTeamEvents);
                 console.log(events);
                 setEvents(sortEvents(events));
@@ -74,10 +80,15 @@ function TeamPage({ keyProp }) {
     }, [teamNumberParam]);
 
     useEffect(() => {
+        abort.current.abort();
         setTeamData(null);
         if (currentEvent !== null) {
+            abort.current = new AbortController();
             fetch('/ted/getAllTeamEventData', {
-                headers: { filters: JSON.stringify({ eventKey: currentEvent.key, teamNumber: parseInt(teamNumberParam) }) }
+                signal: abort.current.signal,
+                headers: {
+                    filters: JSON.stringify({ eventKey: currentEvent.key, teamNumber: parseInt(teamNumberParam) })
+                }
             })
                 .then((response) => {
                     if (response.status === 200) {
@@ -90,13 +101,23 @@ function TeamPage({ keyProp }) {
                     console.log(data);
                     setTeamData(data);
                 })
-                .catch((error) => setError(error.message));
+                .catch((error) => {
+                    if (error?.name !== 'AbortError') {
+                        setError(error.message);
+                    }
+                });
         }
     }, [currentEvent, teamNumberParam]);
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box
+                textAlign={'center'}
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                margin={'0 auto'}
+                width={{ base: '85%', md: '66%', lg: '50%' }}
+            >
                 {error}
             </Box>
         );
@@ -104,7 +125,13 @@ function TeamPage({ keyProp }) {
 
     if (events && events.length === 0) {
         return (
-            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box
+                textAlign={'center'}
+                fontSize={'25px'}
+                fontWeight={'medium'}
+                margin={'0 auto'}
+                width={{ base: '85%', md: '66%', lg: '50%' }}
+            >
                 This team is not competing at any events
             </Box>
         );
@@ -122,18 +149,41 @@ function TeamPage({ keyProp }) {
         <Box>
             <div className='tabs'>
                 <div className='tab-header'>
-                    <div onClick={() => navigate(`/team/${teamNumberParam}/overview`, { state: keyProp })}>Overview</div>
+                    <div onClick={() => navigate(`/team/${teamNumberParam}/overview`, { state: keyProp })}>
+                        Overview
+                    </div>
                     <div onClick={() => navigate(`/team/${teamNumberParam}/pit`, { state: keyProp })}>Pit</div>
                     <div onClick={() => navigate(`/team/${teamNumberParam}/stand`, { state: keyProp })}>Stand</div>
                     <div onClick={() => navigate(`/team/${teamNumberParam}/super`, { state: keyProp })}>Super</div>
                     <div onClick={() => navigate(`/team/${teamNumberParam}/other`, { state: keyProp })}>Other</div>
                 </div>
-                <div className='tab-indicator' style={{ left: `calc((calc(100% / 5) * ${['overview', 'pit', 'stand', 'super', 'other'].indexOf(tab)}) + 2.5%)` }}></div>
+                <div
+                    className='tab-indicator'
+                    style={{
+                        left: `calc((calc(100% / 5) * ${['overview', 'pit', 'stand', 'super', 'other'].indexOf(
+                            tab
+                        )}) + 2.5%)`
+                    }}
+                ></div>
             </div>
-            <Box margin={'0 auto'} marginTop={'25px'} width={['pit', 'other'].includes(tab) % 2 !== 0 ? { base: '100%', md: '66%', lg: '66%' } : { base: '100%', md: '100%', lg: '100%' }}>
+            <Box
+                margin={'0 auto'}
+                marginTop={'25px'}
+                width={
+                    ['pit', 'other'].includes(tab) % 2 !== 0
+                        ? { base: '100%', md: '66%', lg: '66%' }
+                        : { base: '100%', md: '100%', lg: '100%' }
+                }
+            >
                 <Center marginBottom={'25px'}>
                     <Menu placement='bottom'>
-                        <MenuButton maxW={'65vw'} onClick={() => setFocusedEvent('')} _focus={{ outline: 'none' }} as={Button} rightIcon={<ChevronDownIcon />}>
+                        <MenuButton
+                            maxW={'65vw'}
+                            onClick={() => setFocusedEvent('')}
+                            _focus={{ outline: 'none' }}
+                            as={Button}
+                            rightIcon={<ChevronDownIcon />}
+                        >
                             <Box overflow={'hidden'} textOverflow={'ellipsis'}>
                                 {currentEvent.name}
                             </Box>
@@ -145,7 +195,12 @@ function TeamPage({ keyProp }) {
                                     justifyContent={'center'}
                                     _focus={{ backgroundColor: 'none' }}
                                     onMouseEnter={() => setFocusedEvent(eventItem.name)}
-                                    backgroundColor={(currentEvent.name === eventItem.name && focusedEvent === '') || focusedEvent === eventItem.name ? 'gray.100' : 'none'}
+                                    backgroundColor={
+                                        (currentEvent.name === eventItem.name && focusedEvent === '') ||
+                                        focusedEvent === eventItem.name
+                                            ? 'gray.100'
+                                            : 'none'
+                                    }
                                     maxW={'65vw'}
                                     key={eventItem.key}
                                     onClick={() => {
@@ -158,18 +213,14 @@ function TeamPage({ keyProp }) {
                         </MenuList>
                     </Menu>
                 </Center>
-                {/* <TeamPageTabs
+                <TeamPageTabs
                     tab={tab}
-                    pitForm={pitForm}
-                    standForms={standForms}
-                    filteredStandForms={filteredStandForms}
-                    superForms={superForms}
-                    filteredSuperForms={filteredSuperForms}
-                    blueAllianceImage={blueAllianceImage}
+                    pitForm={teamData?.pitForm}
+                    matchForms={teamData?.matchForms}
+                    teamEventData={teamData?.teamEventData}
                     teamNumberParam={teamNumberParam}
                     teamName={teamName}
-                    currentEvent={currentEvent}
-                /> */}
+                />
             </Box>
         </Box>
     );
