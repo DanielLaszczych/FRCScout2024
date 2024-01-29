@@ -51,6 +51,7 @@ function TeamPage({ keyProp }) {
                 let events = storedTeamEvents.concat(allTeamEvents);
                 console.log(events);
                 setEvents(sortEvents(events));
+                if (events.length === 0) return;
                 let currentEvent = events.find((event) => event.currentEvent);
                 if (currentEvent) {
                     setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
@@ -109,12 +110,16 @@ function TeamPage({ keyProp }) {
         }
     }, [currentEvent, teamNumberParam]);
 
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [tab]);
+
     if (error) {
         return (
             <Box
-                textAlign={'center'}
                 fontSize={'lg'}
                 fontWeight={'semibold'}
+                textAlign={'center'}
                 margin={'0 auto'}
                 width={{ base: '85%', md: '66%', lg: '50%' }}
             >
@@ -126,9 +131,9 @@ function TeamPage({ keyProp }) {
     if (events && events.length === 0) {
         return (
             <Box
+                fontSize={'lg'}
+                fontWeight={'semibold'}
                 textAlign={'center'}
-                fontSize={'25px'}
-                fontWeight={'medium'}
                 margin={'0 auto'}
                 width={{ base: '85%', md: '66%', lg: '50%' }}
             >
@@ -146,7 +151,7 @@ function TeamPage({ keyProp }) {
     }
 
     return (
-        <Box>
+        <Box marginBottom={'25px'}>
             <div className='tabs'>
                 <div className='tab-header'>
                     <div onClick={() => navigate(`/team/${teamNumberParam}/overview`, { state: keyProp })}>
@@ -166,15 +171,7 @@ function TeamPage({ keyProp }) {
                     }}
                 ></div>
             </div>
-            <Box
-                margin={'0 auto'}
-                marginTop={'25px'}
-                width={
-                    ['pit', 'other'].includes(tab) % 2 !== 0
-                        ? { base: '100%', md: '66%', lg: '66%' }
-                        : { base: '100%', md: '100%', lg: '100%' }
-                }
-            >
+            <Box margin={'0 auto'} marginTop={'25px'}>
                 <Center marginBottom={'25px'}>
                     <Menu placement='bottom'>
                         <MenuButton

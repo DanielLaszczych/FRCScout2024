@@ -40,7 +40,8 @@ import {
     AlertDialogFooter,
     Input,
     Flex,
-    IconButton
+    IconButton,
+    Divider
 } from '@chakra-ui/react';
 import { AddIcon, CloseIcon, DeleteIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import { v4 as uuidv4 } from 'uuid';
@@ -243,8 +244,14 @@ function PitForm() {
                                 id: uuidv4()
                             };
                         });
-                        let modifiedAutoAbilities = modifyDataBaseAbilities(pitFormData.autoAbilities, pitForm.autoAbilities);
-                        let modifiedTeleAbilities = modifyDataBaseAbilities(pitFormData.teleAbilities, pitForm.teleAbilities);
+                        let modifiedAutoAbilities = modifyDataBaseAbilities(
+                            pitFormData.autoAbilities,
+                            pitForm.autoAbilities
+                        );
+                        let modifiedTeleAbilities = modifyDataBaseAbilities(
+                            pitFormData.teleAbilities,
+                            pitForm.teleAbilities
+                        );
                         let modifiedData = {
                             ...pitForm,
                             motors: modifiedMotors,
@@ -339,7 +346,10 @@ function PitForm() {
 
     function handleSetFrameWidth(value) {
         if (value.trim() !== '') {
-            setPitFormData({ ...pitFormData, frameSize: { ...pitFormData.frameSize, width: twoPrecision(parseFloat(value)) } });
+            setPitFormData({
+                ...pitFormData,
+                frameSize: { ...pitFormData.frameSize, width: twoPrecision(parseFloat(value)) }
+            });
         } else if (value.trim() === '') {
             setPitFormData({ ...pitFormData, frameSize: { ...pitFormData.frameSize, width: null } });
         }
@@ -347,7 +357,10 @@ function PitForm() {
 
     function handleSetFrameLength(value) {
         if (value.trim() !== '') {
-            setPitFormData({ ...pitFormData, frameSize: { ...pitFormData.frameSize, length: twoPrecision(parseFloat(value)) } });
+            setPitFormData({
+                ...pitFormData,
+                frameSize: { ...pitFormData.frameSize, length: twoPrecision(parseFloat(value)) }
+            });
         } else if (value.trim() === '') {
             setPitFormData({ ...pitFormData, frameSize: { ...pitFormData.frameSize, length: null } });
         }
@@ -397,6 +410,16 @@ function PitForm() {
     }
 
     function handleIncrementMotor(motorLabel) {
+        if (pitFormData.motors.reduce((prev, curr) => prev + curr.value, 0) === 4) {
+            toast.closeAll();
+            toast({
+                title: 'Motor Limit Reached (4)',
+                status: 'error',
+                duration: 2000,
+                isClosable: true
+            });
+            return;
+        }
         let newMotors = pitFormData.motors.map((motor) => {
             if (motorLabel === motor.label) {
                 return {
@@ -485,7 +508,10 @@ function PitForm() {
                 }
             } else {
                 if (ability.rank < 0) {
-                    return { ...ability, rank: pitFormData[section][containerIndex].abilities.filter((a) => a.rank > 0).length + 1 };
+                    return {
+                        ...ability,
+                        rank: pitFormData[section][containerIndex].abilities.filter((a) => a.rank > 0).length + 1
+                    };
                 } else {
                     return { ...ability, rank: oldRank - 1 };
                 }
@@ -544,7 +570,10 @@ function PitForm() {
                     shouldSwap = true;
                     otherId = ability.id;
                     return { ...ability, rank: oldRank };
-                } else if (ability.rank < 0 && oldRank === pitFormData[section][containerIndex].abilities.filter((a) => a.rank > 0).length) {
+                } else if (
+                    ability.rank < 0 &&
+                    oldRank === pitFormData[section][containerIndex].abilities.filter((a) => a.rank > 0).length
+                ) {
                     return { ...ability, rank: ability.rank - 1 };
                 }
             } else {
@@ -594,7 +623,9 @@ function PitForm() {
     function handleCheckboxAbility(section, containerIndex, abilityLabel) {
         if (pitFormData[section][containerIndex].checked.includes(abilityLabel)) {
             let newAbilities = JSON.parse(JSON.stringify(pitFormData[section]));
-            newAbilities[containerIndex].checked = newAbilities[containerIndex].checked.filter((ability) => ability !== abilityLabel);
+            newAbilities[containerIndex].checked = newAbilities[containerIndex].checked.filter(
+                (ability) => ability !== abilityLabel
+            );
             setPitFormData({
                 ...pitFormData,
                 [section]: newAbilities
@@ -702,7 +733,11 @@ function PitForm() {
                 return false;
             } else if (ability.type === abilityTypes.checkbox) {
                 for (const subAbility of ability.abilities) {
-                    if (subAbility.subType === subAbilityTypes.comment && ability.checked.includes(subAbility.label) && subAbility.subField.trim() === '') {
+                    if (
+                        subAbility.subType === subAbilityTypes.comment &&
+                        ability.checked.includes(subAbility.label) &&
+                        subAbility.subField.trim() === ''
+                    ) {
                         return false;
                     }
                 }
@@ -712,13 +747,21 @@ function PitForm() {
         for (const ability of pitFormData.teleAbilities) {
             if (ability.type === abilityTypes.ranking) {
                 for (const subAbility of ability.abilities) {
-                    if (subAbility.subType === subAbilityTypes.radio && subAbility.rank > 0 && subAbility.subField === null) {
+                    if (
+                        subAbility.subType === subAbilityTypes.radio &&
+                        subAbility.rank > 0 &&
+                        subAbility.subField === null
+                    ) {
                         return false;
                     }
                 }
             } else if (ability.type === abilityTypes.checkbox) {
                 for (const subAbility of ability.abilities) {
-                    if (subAbility.subType === subAbilityTypes.comment && ability.checked.includes(subAbility.label) && subAbility.subField.trim() === '') {
+                    if (
+                        subAbility.subType === subAbilityTypes.comment &&
+                        ability.checked.includes(subAbility.label) &&
+                        subAbility.subField.trim() === ''
+                    ) {
                         return false;
                     }
                 }
@@ -734,7 +777,9 @@ function PitForm() {
             if (clientAbility.type === abilityTypes.ranking) {
                 let negativeRanking = -1;
                 clientAbility.abilities.forEach((subClientAbility) => {
-                    let index = dataBaseAbility.abilities.findIndex((subDataBaseAbility) => subDataBaseAbility.label === subClientAbility.label);
+                    let index = dataBaseAbility.abilities.findIndex(
+                        (subDataBaseAbility) => subDataBaseAbility.label === subClientAbility.label
+                    );
                     if (index !== -1) {
                         subClientAbility.rank = index + 1;
                         if (subClientAbility?.subType === subAbilityTypes.radio) {
@@ -746,7 +791,9 @@ function PitForm() {
                 });
             } else if (clientAbility.type === abilityTypes.checkbox) {
                 clientAbility.abilities.forEach((subClientAbility) => {
-                    let index = dataBaseAbility.abilities.findIndex((subDataBaseAbility) => subDataBaseAbility.label === subClientAbility.label);
+                    let index = dataBaseAbility.abilities.findIndex(
+                        (subDataBaseAbility) => subDataBaseAbility.label === subClientAbility.label
+                    );
                     if (index !== -1) {
                         clientAbility.checked.push(dataBaseAbility.abilities[index].label);
                         if (subClientAbility?.subType === subAbilityTypes.comment) {
@@ -773,7 +820,11 @@ function PitForm() {
                     .sort((a, b) => a.rank - b.rank)
                     .map((subAbility) => {
                         if (subAbility?.subType === subAbilityTypes.radio) {
-                            return { label: subAbility.label, subType: subAbility.subType, subField: subAbility.subField };
+                            return {
+                                label: subAbility.label,
+                                subType: subAbility.subType,
+                                subField: subAbility.subField
+                            };
                         } else {
                             return { label: subAbility.label };
                         }
@@ -784,7 +835,11 @@ function PitForm() {
                     .filter((subAbility) => ability.checked.includes(subAbility.label))
                     .map((subAbility) => {
                         if (subAbility?.subType === subAbilityTypes.comment) {
-                            return { label: subAbility.label, subType: subAbility.subType, subField: subAbility.subField };
+                            return {
+                                label: subAbility.label,
+                                subType: subAbility.subType,
+                                subField: subAbility.subField
+                            };
                         } else {
                             return { label: subAbility.label };
                         }
@@ -795,7 +850,11 @@ function PitForm() {
                     .filter((subAbility) => ability.value === subAbility.label)
                     .map((subAbility) => {
                         if (subAbility?.subType === subAbilityTypes.comment) {
-                            return { label: subAbility.label, subType: subAbility.subType, subField: subAbility.subField };
+                            return {
+                                label: subAbility.label,
+                                subType: subAbility.subType,
+                                subField: subAbility.subField
+                            };
                         } else {
                             return { label: subAbility.label };
                         }
@@ -863,10 +922,16 @@ function PitForm() {
                     width: pitFormData.frameSize.width !== null ? parseFloat(pitFormData.frameSize.width) : null,
                     length: pitFormData.frameSize.length !== null ? parseFloat(pitFormData.frameSize.length) : null
                 },
-                driveTrain: pitFormData.driveTrain === null || pitFormData.driveTrain.trim() === '' ? null : pitFormData.driveTrain.trim(),
+                driveTrain:
+                    pitFormData.driveTrain === null || pitFormData.driveTrain.trim() === ''
+                        ? null
+                        : pitFormData.driveTrain.trim(),
                 motors: modifiedMotors,
                 driveTrainComment: pitFormData.driveTrainComment.trim(),
-                programmingLanguage: pitFormData.programmingLanguage === null || pitFormData.programmingLanguage.trim() === '' ? null : pitFormData.programmingLanguage.trim(),
+                programmingLanguage:
+                    pitFormData.programmingLanguage === null || pitFormData.programmingLanguage.trim() === ''
+                        ? null
+                        : pitFormData.programmingLanguage.trim(),
                 autoAbilities: modifiyClientAbilities(pitFormData.autoAbilities),
                 autoComment: pitFormData.autoComment?.trim(),
                 teleAbilities: modifiyClientAbilities(pitFormData.teleAbilities),
@@ -914,7 +979,13 @@ function PitForm() {
             case abilityTypes.radio:
                 return (
                     <Box key={abilityContainer.id}>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={containerIndex !== 0 && '10px'}>
+                        <Text
+                            fontSize={'md'}
+                            fontWeight={'medium'}
+                            textAlign={'center'}
+                            marginBottom={'5px'}
+                            marginTop={containerIndex !== 0 && '10px'}
+                        >
                             {abilityContainer.label}
                         </Text>
                         <RadioGroup
@@ -925,7 +996,14 @@ function PitForm() {
                         >
                             <Flex flexWrap={'wrap'} rowGap={'5px'} columnGap={'2px'} justifyContent={'space-evenly'}>
                                 {abilityContainer.abilities.map((ability) => (
-                                    <Radio isInvalid={submitAttempted && !pitFormData.followUp && abilityContainer.value === null} key={ability.id} colorScheme={'green'} value={ability.label}>
+                                    <Radio
+                                        isInvalid={
+                                            submitAttempted && !pitFormData.followUp && abilityContainer.value === null
+                                        }
+                                        key={ability.id}
+                                        colorScheme={'green'}
+                                        value={ability.label}
+                                    >
                                         {ability.label}
                                     </Radio>
                                 ))}
@@ -936,7 +1014,13 @@ function PitForm() {
             case abilityTypes.checkbox:
                 return (
                     <Box key={abilityContainer.id}>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={containerIndex !== 0 && '10px'}>
+                        <Text
+                            fontSize={'md'}
+                            fontWeight={'medium'}
+                            textAlign={'center'}
+                            marginBottom={'5px'}
+                            marginTop={containerIndex !== 0 && '10px'}
+                        >
                             {abilityContainer.label}
                         </Text>
                         <Flex flexWrap={'wrap'} rowGap={'5px'} columnGap={'25px'} justifyContent={'center'}>
@@ -960,19 +1044,25 @@ function PitForm() {
                                         <Textarea
                                             onChange={(event) => {
                                                 let newAbilities = JSON.parse(JSON.stringify(pitFormData[section]));
-                                                let newInnerAbilities = newAbilities[containerIndex].abilities.map((abilityField) => {
-                                                    if (ability.id === abilityField.id) {
-                                                        return { ...abilityField, subField: event.target.value };
+                                                let newInnerAbilities = newAbilities[containerIndex].abilities.map(
+                                                    (abilityField) => {
+                                                        if (ability.id === abilityField.id) {
+                                                            return { ...abilityField, subField: event.target.value };
+                                                        }
+                                                        return abilityField;
                                                     }
-                                                    return abilityField;
-                                                });
+                                                );
                                                 newAbilities[containerIndex].abilities = newInnerAbilities;
                                                 setPitFormData({ ...pitFormData, [section]: newAbilities });
                                             }}
                                             value={ability.subField}
                                             placeholder={ability.placeHolder}
                                             w={'85%'}
-                                            isInvalid={submitAttempted && !pitFormData.followUp && ability.subField.trim() === ''}
+                                            isInvalid={
+                                                submitAttempted &&
+                                                !pitFormData.followUp &&
+                                                ability.subField.trim() === ''
+                                            }
                                         ></Textarea>
                                     </Center>
                                 )
@@ -993,20 +1083,35 @@ function PitForm() {
                             ].map((ability) => (
                                 <HStack key={ability.id} spacing={'10px'} id={ability.id} style={ability.style}>
                                     {ability.rank > 0 ? (
-                                        <Text fontWeight={'500'} fontSize={'100%'} minWidth={'25px'} textAlign={'center'}>
+                                        <Text
+                                            fontWeight={'500'}
+                                            fontSize={'100%'}
+                                            minWidth={'25px'}
+                                            textAlign={'center'}
+                                        >
                                             {ability.rank}.
                                         </Text>
                                     ) : (
                                         <CloseIcon minWidth={'25px'} fontSize={'100%'} color={'red.500'} />
                                     )}
-                                    <HStack backgroundColor={swappingElement === ability.id && 'gray.300'} width={'100%'} border={'1px solid black'} borderRadius={'5px'} padding={'5px'}>
+                                    <HStack
+                                        backgroundColor={swappingElement === ability.id && 'gray.300'}
+                                        width={'100%'}
+                                        border={'1px solid black'}
+                                        borderRadius={'5px'}
+                                        padding={'5px'}
+                                    >
                                         <VStack align={'start'} flexGrow={1} spacing={'10px'}>
                                             <Text fontWeight={'500'}>{ability.label}</Text>
                                             {ability.subType === subAbilityTypes.radio && (
                                                 <RadioGroup
                                                     onChange={(value) => {
-                                                        let newAbilities = JSON.parse(JSON.stringify(pitFormData[section]));
-                                                        let newInnerAbilities = newAbilities[containerIndex].abilities.map((abilityField) => {
+                                                        let newAbilities = JSON.parse(
+                                                            JSON.stringify(pitFormData[section])
+                                                        );
+                                                        let newInnerAbilities = newAbilities[
+                                                            containerIndex
+                                                        ].abilities.map((abilityField) => {
                                                             if (ability.id === abilityField.id) {
                                                                 return { ...abilityField, subField: value };
                                                             }
@@ -1021,7 +1126,12 @@ function PitForm() {
                                                         {ability.subFields.map((subField) => (
                                                             <Radio
                                                                 w={'fit-content'}
-                                                                isInvalid={submitAttempted && !pitFormData.followUp && ability.rank > 0 && ability.subField === null}
+                                                                isInvalid={
+                                                                    submitAttempted &&
+                                                                    !pitFormData.followUp &&
+                                                                    ability.rank > 0 &&
+                                                                    ability.subField === null
+                                                                }
                                                                 key={subField.id}
                                                                 colorScheme={'green'}
                                                                 value={subField.label}
@@ -1039,14 +1149,28 @@ function PitForm() {
                                                 disabled={ability.rank === 1}
                                                 as={ChevronUpIcon}
                                                 size={'xs'}
-                                                onClick={() => handleIncreaseAbility(section, containerIndex, ability.id, ability.rank)}
+                                                onClick={() =>
+                                                    handleIncreaseAbility(
+                                                        section,
+                                                        containerIndex,
+                                                        ability.id,
+                                                        ability.rank
+                                                    )
+                                                }
                                             />
                                             <IconButton
                                                 cursor={'pointer'}
                                                 disabled={ability.rank < 0}
                                                 as={ChevronDownIcon}
                                                 size={'xs'}
-                                                onClick={() => handleDecreaseAbility(section, containerIndex, ability.id, ability.rank)}
+                                                onClick={() =>
+                                                    handleDecreaseAbility(
+                                                        section,
+                                                        containerIndex,
+                                                        ability.id,
+                                                        ability.rank
+                                                    )
+                                                }
                                             />
                                         </Flex>
                                     </HStack>
@@ -1062,7 +1186,13 @@ function PitForm() {
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box
+                textAlign={'center'}
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                margin={'0 auto'}
+                width={{ base: '85%', md: '66%', lg: '50%' }}
+            >
                 {error}
             </Box>
         );
@@ -1084,7 +1214,10 @@ function PitForm() {
                         <AlertDialogHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Unsaved Data
                         </AlertDialogHeader>
-                        <AlertDialogBody>You have unsaved data for this pit form. Would you like to load it, delete it, or pull data from the cloud?</AlertDialogBody>
+                        <AlertDialogBody>
+                            You have unsaved data for this pit form. Would you like to load it, delete it, or pull data
+                            from the cloud?
+                        </AlertDialogBody>
                         <AlertDialogFooter>
                             <Button
                                 onClick={() => {
@@ -1160,7 +1293,11 @@ function PitForm() {
                             Write a comment
                         </ModalHeader>
                         <ModalBody maxHeight={'150px'} overflowY={'auto'}>
-                            <Textarea onChange={(event) => setModalComment(event.target.value)} value={modalComment} placeholder='Comment...' />
+                            <Textarea
+                                onChange={(event) => setModalComment(event.target.value)}
+                                value={modalComment}
+                                placeholder='Comment...'
+                            />
                         </ModalBody>
                         <ModalFooter>
                             <Button
@@ -1177,7 +1314,12 @@ function PitForm() {
                                 onClick={() => {
                                     onModalClose();
                                     if (modalComment.trim() !== '') {
-                                        setPitFormData({ ...pitFormData, closingComment: `${pitFormData.closingComment}${pitFormData.closingComment !== '' ? '\n' : ''}${modalComment}` });
+                                        setPitFormData({
+                                            ...pitFormData,
+                                            closingComment: `${pitFormData.closingComment}${
+                                                pitFormData.closingComment !== '' ? '\n' : ''
+                                            }${modalComment}`
+                                        });
                                     }
                                     setModalComment('');
                                 }}
@@ -1247,7 +1389,9 @@ function PitForm() {
             </Text>
             <HStack gap={'0px'}>
                 <NumberInput
-                    onChange={(value) => setPitFormData({ ...pitFormData, frameSize: { ...pitFormData.frameSize, width: value } })}
+                    onChange={(value) =>
+                        setPitFormData({ ...pitFormData, frameSize: { ...pitFormData.frameSize, width: value } })
+                    }
                     onBlur={(event) => handleSetFrameWidth(event.target.value)}
                     value={pitFormData.frameSize.width || ''}
                     marginLeft={'15px'}
@@ -1269,7 +1413,9 @@ function PitForm() {
                     />
                 </NumberInput>
                 <NumberInput
-                    onChange={(value) => setPitFormData({ ...pitFormData, frameSize: { ...pitFormData.frameSize, length: value } })}
+                    onChange={(value) =>
+                        setPitFormData({ ...pitFormData, frameSize: { ...pitFormData.frameSize, length: value } })
+                    }
                     onBlur={(event) => handleSetFrameLength(event.target.value)}
                     value={pitFormData.frameSize.length || ''}
                     marginLeft={'15px'}
@@ -1291,23 +1437,30 @@ function PitForm() {
                     />
                 </NumberInput>
             </HStack>
-            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
+            <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
                 Drive
             </Text>
-            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
+            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
                 Type
             </Text>
             <RadioGroup
                 onChange={(value) => setPitFormData({ ...pitFormData, driveTrain: value === 'Other' ? '' : value })}
                 value={
-                    driveTrainsList.slice(0, driveTrainsList.length - 1).find((e) => e.label?.toLowerCase() === pitFormData.driveTrain?.toLowerCase().trim())?.label ??
+                    driveTrainsList
+                        .slice(0, driveTrainsList.length - 1)
+                        .find((e) => e.label?.toLowerCase() === pitFormData.driveTrain?.toLowerCase().trim())?.label ??
                     (pitFormData.driveTrain === null ? null : 'Other')
                 }
             >
                 <Flex flexWrap={'wrap'} rowGap={'5px'} columnGap={'2px'} justifyContent={'space-around'}>
                     {driveTrainsList.map((driveTrain) => (
                         <Flex key={driveTrain.id}>
-                            <Radio isInvalid={submitAttempted && !pitFormData.followUp && pitFormData.driveTrain === null} colorScheme={'green'} value={driveTrain.label}>
+                            <Radio
+                                isInvalid={submitAttempted && !pitFormData.followUp && pitFormData.driveTrain === null}
+                                colorScheme={'green'}
+                                value={driveTrain.label}
+                            >
                                 {driveTrain.label + (driveTrain.label === 'Other' ? ':' : '')}
                             </Radio>
                             {driveTrain.label === 'Other' && (
@@ -1319,14 +1472,29 @@ function PitForm() {
                                         }
                                     }}
                                     enterKeyHint={'done'}
-                                    isInvalid={submitAttempted && !pitFormData.followUp && pitFormData.driveTrain === ''}
+                                    isInvalid={
+                                        submitAttempted && !pitFormData.followUp && pitFormData.driveTrain === ''
+                                    }
                                     value={
-                                        driveTrainsList.slice(0, driveTrainsList.length - 1).some((e) => e.label?.toLowerCase() === pitFormData.driveTrain?.toLowerCase().trim())
+                                        driveTrainsList
+                                            .slice(0, driveTrainsList.length - 1)
+                                            .some(
+                                                (e) =>
+                                                    e.label?.toLowerCase() ===
+                                                    pitFormData.driveTrain?.toLowerCase().trim()
+                                            )
                                             ? ''
                                             : pitFormData.driveTrain ?? ''
                                     }
-                                    onChange={(event) => setPitFormData({ ...pitFormData, driveTrain: event.target.value })}
-                                    isDisabled={pitFormData.driveTrain === null || driveTrainsList.slice(0, driveTrainsList.length - 1).some((e) => e.label === pitFormData.driveTrain)}
+                                    onChange={(event) =>
+                                        setPitFormData({ ...pitFormData, driveTrain: event.target.value })
+                                    }
+                                    isDisabled={
+                                        pitFormData.driveTrain === null ||
+                                        driveTrainsList
+                                            .slice(0, driveTrainsList.length - 1)
+                                            .some((e) => e.label === pitFormData.driveTrain)
+                                    }
                                     placeholder={'Drive train'}
                                     variant={'flushed'}
                                     width={'90px'}
@@ -1342,16 +1510,32 @@ function PitForm() {
                 </Text>
                 {pitFormData.motors.length > 0 ? (
                     !deletingMotors ? (
-                        <DeleteIcon onClick={() => setDeletingMotors(true)} _hover={{ color: 'red' }} cursor={'pointer'} position={'absolute'} right={0}></DeleteIcon>
+                        <DeleteIcon
+                            onClick={() => setDeletingMotors(true)}
+                            _hover={{ color: 'red' }}
+                            cursor={'pointer'}
+                            position={'absolute'}
+                            right={0}
+                        ></DeleteIcon>
                     ) : (
-                        <CloseIcon onClick={() => setDeletingMotors(false)} _hover={{ color: 'red' }} cursor={'pointer'} position={'absolute'} right={0}></CloseIcon>
+                        <CloseIcon
+                            onClick={() => setDeletingMotors(false)}
+                            _hover={{ color: 'red' }}
+                            cursor={'pointer'}
+                            position={'absolute'}
+                            right={0}
+                        ></CloseIcon>
                     )
                 ) : null}
             </HStack>
             <VStack gap={'8px'}>
                 {pitFormData.motors.map((motor) => (
                     <HStack key={motor.id} position={'relative'} gap={'5px'}>
-                        <Button paddingBottom={'4px'} colorScheme={'red'} onClick={() => handleDecrementMotor(motor.label)}>
+                        <Button
+                            paddingBottom={'4px'}
+                            colorScheme={'red'}
+                            onClick={() => handleDecrementMotor(motor.label)}
+                        >
                             -
                         </Button>
                         <Text
@@ -1374,14 +1558,26 @@ function PitForm() {
                         >
                             {motor.label}: {motor.value}
                         </Text>
-                        <Button paddingBottom={'4px'} maxW={'40px'} colorScheme={'green'} onClick={() => handleIncrementMotor(motor.label)}>
+                        <Button
+                            paddingBottom={'4px'}
+                            maxW={'40px'}
+                            colorScheme={'green'}
+                            onClick={() => handleIncrementMotor(motor.label)}
+                        >
                             +
                         </Button>
                     </HStack>
                 ))}
             </VStack>
             <Center marginTop={pitFormData.motors.length > 0 ? '10px' : '5px'}>
-                <Popover isLazy flip={false} placement='bottom' isOpen={isMotorsOpen} onOpen={onMotorsOpen} onClose={onMotorsClose}>
+                <Popover
+                    isLazy
+                    flip={false}
+                    placement='bottom'
+                    isOpen={isMotorsOpen}
+                    onOpen={onMotorsOpen}
+                    onClose={onMotorsClose}
+                >
                     <PopoverTrigger>
                         <Button>Add Motor</Button>
                     </PopoverTrigger>
@@ -1394,7 +1590,10 @@ function PitForm() {
                         <PopoverBody maxHeight={'160px'} overflowY={'auto'}>
                             <VStack gap={'10px'}>
                                 {motorsList
-                                    .filter((motor) => !pitFormData.motors.some((secondMotor) => secondMotor.label === motor.label))
+                                    .filter(
+                                        (motor) =>
+                                            !pitFormData.motors.some((secondMotor) => secondMotor.label === motor.label)
+                                    )
                                     .map((motor) => (
                                         <Button
                                             key={motor.id}
@@ -1419,23 +1618,34 @@ function PitForm() {
                     width={'85%'}
                 />
             </Center>
-            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
+            <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
                 Autonomous
             </Text>
-            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
+            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
                 Programming Language
             </Text>
             <RadioGroup
-                onChange={(value) => setPitFormData({ ...pitFormData, programmingLanguage: value === 'Other' ? '' : value })}
+                onChange={(value) =>
+                    setPitFormData({ ...pitFormData, programmingLanguage: value === 'Other' ? '' : value })
+                }
                 value={
-                    programmingLanguagesList.slice(0, programmingLanguagesList.length - 1).find((e) => e.label?.toLowerCase() === pitFormData.programmingLanguage?.toLowerCase().trim())?.label ??
-                    (pitFormData.programmingLanguage === null ? null : 'Other')
+                    programmingLanguagesList
+                        .slice(0, programmingLanguagesList.length - 1)
+                        .find((e) => e.label?.toLowerCase() === pitFormData.programmingLanguage?.toLowerCase().trim())
+                        ?.label ?? (pitFormData.programmingLanguage === null ? null : 'Other')
                 }
             >
                 <Flex flexWrap={'wrap'} rowGap={'5px'} columnGap={'2px'} justifyContent={'space-around'}>
                     {programmingLanguagesList.map((programmingLanguage) => (
                         <Flex key={programmingLanguage.id}>
-                            <Radio isInvalid={submitAttempted && !pitFormData.followUp && pitFormData.programmingLanguage === null} colorScheme={'green'} value={programmingLanguage.label}>
+                            <Radio
+                                isInvalid={
+                                    submitAttempted && !pitFormData.followUp && pitFormData.programmingLanguage === null
+                                }
+                                colorScheme={'green'}
+                                value={programmingLanguage.label}
+                            >
                                 {programmingLanguage.label + (programmingLanguage.label === 'Other' ? ':' : '')}
                             </Radio>
                             {programmingLanguage.label === 'Other' && (
@@ -1447,18 +1657,30 @@ function PitForm() {
                                         }
                                     }}
                                     enterKeyHint={'done'}
-                                    isInvalid={submitAttempted && !pitFormData.followUp && pitFormData.programmingLanguage === ''}
+                                    isInvalid={
+                                        submitAttempted &&
+                                        !pitFormData.followUp &&
+                                        pitFormData.programmingLanguage === ''
+                                    }
                                     value={
                                         programmingLanguagesList
                                             .slice(0, programmingLanguagesList.length - 1)
-                                            .some((e) => e.label?.toLowerCase() === pitFormData.programmingLanguage?.toLowerCase().trim())
+                                            .some(
+                                                (e) =>
+                                                    e.label?.toLowerCase() ===
+                                                    pitFormData.programmingLanguage?.toLowerCase().trim()
+                                            )
                                             ? ''
                                             : pitFormData.programmingLanguage ?? ''
                                     }
-                                    onChange={(event) => setPitFormData({ ...pitFormData, programmingLanguage: event.target.value })}
+                                    onChange={(event) =>
+                                        setPitFormData({ ...pitFormData, programmingLanguage: event.target.value })
+                                    }
                                     isDisabled={
                                         pitFormData.programmingLanguage === null ||
-                                        programmingLanguagesList.slice(0, programmingLanguagesList.length - 1).some((e) => e.label === pitFormData.programmingLanguage)
+                                        programmingLanguagesList
+                                            .slice(0, programmingLanguagesList.length - 1)
+                                            .some((e) => e.label === pitFormData.programmingLanguage)
                                     }
                                     placeholder={'Programming language'}
                                     variant={'flushed'}
@@ -1496,14 +1718,22 @@ function PitForm() {
                         height={`${65 * dimensionRatios.height}px`}
                         onClick={() => setPitFormData({ ...pitFormData, startingPosition: index + 1 })}
                         colorScheme={pitFormData.startingPosition === index + 1 ? 'green' : 'gray'}
-                        outline={pitFormData.startingPosition === null && submitAttempted && !pitFormData.followUp ? '2px solid red' : 'none'}
+                        outline={
+                            pitFormData.startingPosition === null && submitAttempted && !pitFormData.followUp
+                                ? '2px solid red'
+                                : 'none'
+                        }
                     >
                         {index + 1}
                     </Button>
                 ))}
-                {preAutoImageSrc && <img src={preAutoImageSrc} style={{ zIndex: 0, margin: '0 auto' }} alt={'Field Map'} />}
+                {preAutoImageSrc && (
+                    <img src={preAutoImageSrc} style={{ zIndex: 0, margin: '0 auto' }} alt={'Field Map'} />
+                )}
             </Box>
-            {pitFormData.autoAbilities.map((abilityContainer, containerIndex) => getAbilityComponent(abilityContainer, containerIndex, 'autoAbilities'))}
+            {pitFormData.autoAbilities.map((abilityContainer, containerIndex) =>
+                getAbilityComponent(abilityContainer, containerIndex, 'autoAbilities')
+            )}
             <Center marginTop={'15px'}>
                 <Textarea
                     onChange={(event) => setPitFormData({ ...pitFormData, autoComment: event.target.value })}
@@ -1512,14 +1742,18 @@ function PitForm() {
                     w={'85%'}
                 />
             </Center>
-            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
+            <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
                 Abilities
             </Text>
-            {pitFormData.teleAbilities.map((abilityContainer, containerIndex) => getAbilityComponent(abilityContainer, containerIndex, 'teleAbilities'))}
-            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
+            {pitFormData.teleAbilities.map((abilityContainer, containerIndex) =>
+                getAbilityComponent(abilityContainer, containerIndex, 'teleAbilities')
+            )}
+            <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
                 Closing
             </Text>
-            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'0px'}>
+            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
                 Total Batteries
             </Text>
             <NumberInput
@@ -1586,14 +1820,28 @@ function PitForm() {
                 />
             </Center>
             <VStack marginTop={'15px'} rowGap={'15px'}>
-                <ChakraImage width={{ base: '60%', md: '35%', lg: '35%' }} display={!pitFormData.image && 'none'} src={pitFormData.image} />
-                <input type='file' accept='image/*' style={{ display: 'none' }} ref={hiddenImageInput} onChange={(event) => updateImage(event)} />
+                <ChakraImage
+                    width={{ base: '60%', md: '35%', lg: '35%' }}
+                    display={!pitFormData.image && 'none'}
+                    src={pitFormData.image}
+                />
+                <input
+                    type='file'
+                    accept='image/*'
+                    style={{ display: 'none' }}
+                    ref={hiddenImageInput}
+                    onChange={(event) => updateImage(event)}
+                />
                 <Button variant='outline' borderColor='gray.300' onClick={() => hiddenImageInput.current.click()}>
                     Upload Image
                 </Button>
             </VStack>
             <Center marginTop={'15px'}>
-                <Checkbox colorScheme={'green'} isChecked={pitFormData.followUp} onChange={() => setPitFormData({ ...pitFormData, followUp: !pitFormData.followUp })}>
+                <Checkbox
+                    colorScheme={'green'}
+                    isChecked={pitFormData.followUp}
+                    onChange={() => setPitFormData({ ...pitFormData, followUp: !pitFormData.followUp })}
+                >
                     Mark For Follow Up
                 </Checkbox>
             </Center>

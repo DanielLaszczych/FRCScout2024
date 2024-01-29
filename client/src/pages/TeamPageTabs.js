@@ -28,6 +28,7 @@ import {
     capitalizeFirstLetter,
     convertMatchKeyToString,
     convertStationKeyToString,
+    getValueByRange,
     roundToHundredth,
     roundToWhole,
     sortMatches
@@ -36,6 +37,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { AuthContext } from '../context/auth';
 import { Link } from 'react-router-dom';
 import { matchFormStatus } from '../util/helperConstants';
+import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend } from 'chart.js';
+import { Radar } from 'react-chartjs-2';
+import PreAutoBlueField from '../images/PreAutoBlueField.png';
+
+ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
 let abilityTypes = {
     ranking: 'ranking',
@@ -46,48 +52,99 @@ let subAbilityTypes = {
     radio: 'radio',
     comment: 'comment'
 };
+let startingPositions = [
+    [28, 35, uuidv4()],
+    [60, 118, uuidv4()],
+    [28, 200, uuidv4()],
+    [28, 300, uuidv4()]
+];
+let imageWidth = 435;
+let imageHeight = 435;
 
 function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam, teamName }) {
     const { user } = useContext(AuthContext);
 
+    const [dimensionRatios, setDimensionRatios] = useState(null);
+    const [whitespace, setWhitespace] = useState(null);
+    const [preAutoImageSrc, setPreAutoImageSrc] = useState(null);
+
+    function getImageVariables() {
+        const viewportWidth = window.innerWidth;
+        // const viewportHeight = window.innerHeight;
+
+        // Calculate image dimensions based on screen size
+        const maxWidth = viewportWidth * getValueByRange(viewportWidth); // Adjust the multiplier as needed
+        const maxHeight = imageHeight;
+
+        const screenAspectRatio = maxWidth / maxHeight;
+        const imageAspectRatio = imageWidth / imageHeight;
+
+        // Calculate the new dimensions to fit the screen while maintaining the aspect ratio
+        let scaledWidth, scaledHeight;
+        if (imageAspectRatio > screenAspectRatio) {
+            // Original image has a wider aspect ratio, so add horizontal whitespace
+            scaledWidth = maxWidth;
+            scaledHeight = maxWidth / imageAspectRatio;
+
+            // Overwriting this because there will never be horizontal whitespace
+            // const extraHorizontalSpace = maxHeight - scaledHeight;
+            // const whitespaceTop = extraHorizontalSpace / 2;
+            // const whitespaceBottom = extraHorizontalSpace / 2;
+            // setWhitespace({ top: whitespaceTop, bottom: whitespaceBottom, left: 0, right: 0 });
+            setWhitespace({ top: 0, bottom: 0, left: 0, right: 0 });
+        } else {
+            // Original image has a taller aspect ratio, so add vertical whitespace
+            scaledHeight = maxHeight;
+            scaledWidth = maxHeight * imageAspectRatio;
+            const extraVerticalSpace = maxWidth - scaledWidth;
+            const whitespaceLeft = extraVerticalSpace / 2;
+            const whitespaceRight = extraVerticalSpace / 2;
+            setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
+        }
+
+        setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
+    }
+
+    useEffect(() => {
+        const preAutoImg = new Image();
+        preAutoImg.src = PreAutoBlueField;
+
+        preAutoImg.onload = () => {
+            setPreAutoImageSrc(preAutoImg.src);
+        };
+
+        getImageVariables();
+        window.addEventListener('resize', getImageVariables);
+
+        return () => window.removeEventListener('resize', getImageVariables);
+    }, []);
+
     function renderAbilities(ability, index) {
         return (
-            <Box key={ability.label + index} marginTop={index > 0 && '5px'}>
-                <Text display={'inline-block'} fontWeight={'600'} fontSize={'110%'}>
-                    {ability.label}:
+            <Box key={ability.label + index} width={'100%'} marginTop={index > 0 && '8px'}>
+                <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                    {ability.label}
+                    {ability.type === abilityTypes.radio ? `: ${ability.abilities[0].label}` : ''}
                 </Text>
                 {(() => {
                     switch (ability.type) {
-                        case abilityTypes.radio:
-                            return (
-                                <Text display={'inline-block'} fontWeight={'600'} fontSize={'110%'}>
-                                    &nbsp;{`${ability.abilities[0].label}`}
-                                </Text>
-                            );
                         case abilityTypes.checkbox:
                             return (
-                                <UnorderedList>
+                                <Flex
+                                    justifyContent={'space-evenly'}
+                                    flexWrap={'wrap'}
+                                    marginTop={'5px'}
+                                    columnGap={'10px'}
+                                    rowGap={'8px'}
+                                >
                                     {ability.abilities.map((subAbility) => {
                                         return (
-                                            <ListItem
-                                                marginLeft={'15px'}
-                                                key={subAbility.label}
-                                                fontWeight={'600'}
-                                                fontSize={'100%'}
-                                            >
-                                                <Text fontWeight={'600'} fontSize={'100%'}>
-                                                    {subAbility.label}
-                                                </Text>
-                                                {subAbility?.subType === subAbilityTypes.comment && (
-                                                    <Text marginLeft={'10px'} fontWeight={'500'} fontSize={'90%'}>
-                                                        Method: {subAbility.subField}
-                                                    </Text>
-                                                )}
-                                            </ListItem>
+                                            <Tag key={subAbility.label} fontSize={'md'} fontWeight={'medium'}>
+                                                {subAbility.label}
+                                            </Tag>
                                         );
                                     })}
-                                    ;
-                                </UnorderedList>
+                                </Flex>
                             );
                         case abilityTypes.ranking:
                             return (
@@ -126,13 +183,8 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
         switch (tab) {
             case 'overview':
                 return (
-                    <Flex flexWrap={'wrap'} justifyContent={'center'} marginBottom={'15px'} rowGap={'15px'}>
-                        <Flex
-                            width={{ base: '100%', lg: '40%' }}
-                            flexDirection={'column'}
-                            alignItems={'center'}
-                            border={'1px solid red'}
-                        >
+                    <Flex flexWrap={'wrap'} justifyContent={'center'} rowGap={'15px'}>
+                        <Flex width={{ base: '100%', lg: '40%' }} flexDirection={'column'} alignItems={'center'}>
                             <Text fontSize={'2xl'} fontWeight={'semibold'} textAlign={'center'}>
                                 Team Number: {teamNumberParam}
                             </Text>
@@ -148,338 +200,373 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                             )}
                         </Flex>
                         <Flex
-                            // flex={{ base: 1, sm: 0.6 }}
                             width={{ base: '100%', lg: '60%' }}
                             flexDirection={'column'}
                             alignItems={'center'}
-                            border={'1px solid blue'}
                             rowGap={'10px'}
                         >
                             {teamEventData && (
-                                <Box width={'100%'} overflowX={'auto'} height={'fit-content'}>
-                                    <Grid
-                                        margin={'0 auto'}
-                                        width={'900px'}
-                                        templateColumns='minmax(auto, 80px) 4fr 2fr 2fr 3fr minmax(auto, 70px) minmax(auto, 80px)'
-                                        border={'1px solid black'}
+                                <Flex
+                                    width={'90%'}
+                                    flexWrap={'wrap'}
+                                    justifyContent={'center'}
+                                    borderLeft={'1px solid black'}
+                                    borderTop={'1px solid black'}
+                                    outline={'1px solid black'}
+                                >
+                                    <Flex
+                                        flex={1}
+                                        flexDirection={'column'}
+                                        minWidth={'80px'}
+                                        borderRight={'1px solid black'}
+                                        borderBottom={'1px solid black'}
                                     >
-                                        <GridItem backgroundColor={'lightgray'} borderRight={'1px solid black'}>
-                                            <Flex
+                                        <Flex
+                                            alignItems={'center'}
+                                            justifyContent={'center'}
+                                            fontSize={'lg'}
+                                            fontWeight={'medium'}
+                                            textAlign={'center'}
+                                            borderBottom={'1px solid black'}
+                                            height={'55px'}
+                                            backgroundColor={'gray.200'}
+                                        >
+                                            Team #
+                                        </Flex>
+                                        <Text
+                                            fontSize={'lg'}
+                                            fontWeight={'medium'}
+                                            textAlign={'center'}
+                                            padding={'2px 0px'}
+                                            backgroundColor={'red.300'}
+                                        >
+                                            {teamNumberParam}
+                                        </Text>
+                                    </Flex>
+                                    <Flex
+                                        flex={1}
+                                        flexDirection={'column'}
+                                        borderRight={'1px solid black'}
+                                        minWidth={'220px'}
+                                        borderBottom={'1px solid black'}
+                                    >
+                                        <Text
+                                            fontSize={'lg'}
+                                            fontWeight={'medium'}
+                                            textAlign={'center'}
+                                            backgroundColor={'gray.200'}
+                                        >
+                                            Total
+                                        </Text>
+                                        <Flex borderBottom={'1px solid black'} backgroundColor={'gray.200'}>
+                                            <Text
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
-                                                justifyContent={'center'}
-                                                alignItems={'center'}
-                                                height={'100%'}
+                                                textAlign={'center'}
                                             >
-                                                Team #
-                                            </Flex>
-                                        </GridItem>
-                                        <GridItem backgroundColor={'lightgray'} borderRight={'1px solid black'}>
-                                            <Flex flexDirection={'column'}>
-                                                <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
-                                                    Total
-                                                </Text>
-                                                <Flex>
-                                                    <Text
-                                                        flex={1 / 4}
-                                                        fontSize={'lg'}
-                                                        fontWeight={'medium'}
-                                                        textAlign={'center'}
-                                                    >
-                                                        Avg
-                                                    </Text>
-                                                    <Text
-                                                        flex={1 / 4}
-                                                        fontSize={'lg'}
-                                                        fontWeight={'medium'}
-                                                        textAlign={'center'}
-                                                    >
-                                                        Max
-                                                    </Text>
-                                                    <Text
-                                                        flex={1 / 4}
-                                                        fontSize={'lg'}
-                                                        fontWeight={'medium'}
-                                                        textAlign={'center'}
-                                                    >
-                                                        IDK
-                                                    </Text>
-                                                    <Text
-                                                        flex={1 / 4}
-                                                        fontSize={'lg'}
-                                                        fontWeight={'medium'}
-                                                        textAlign={'center'}
-                                                    >
-                                                        IDK
-                                                    </Text>
-                                                </Flex>
-                                            </Flex>
-                                        </GridItem>
-                                        <GridItem backgroundColor={'lightgray'} borderRight={'1px solid black'}>
-                                            <Flex flexDirection={'column'}>
-                                                <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
-                                                    Auto
-                                                </Text>
-                                                <Flex>
-                                                    <Text
-                                                        flex={1 / 2}
-                                                        fontSize={'lg'}
-                                                        fontWeight={'medium'}
-                                                        textAlign={'center'}
-                                                    >
-                                                        Avg
-                                                    </Text>
-                                                    <Text
-                                                        flex={1 / 2}
-                                                        fontSize={'lg'}
-                                                        fontWeight={'medium'}
-                                                        textAlign={'center'}
-                                                    >
-                                                        Max
-                                                    </Text>
-                                                </Flex>
-                                            </Flex>
-                                        </GridItem>
-                                        <GridItem backgroundColor={'lightgray'} borderRight={'1px solid black'}>
-                                            <Flex flexDirection={'column'}>
-                                                <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
-                                                    Teleop
-                                                </Text>
-                                                <Flex>
-                                                    <Text
-                                                        flex={1 / 2}
-                                                        fontSize={'lg'}
-                                                        fontWeight={'medium'}
-                                                        textAlign={'center'}
-                                                    >
-                                                        Avg
-                                                    </Text>
-                                                    <Text
-                                                        flex={1 / 2}
-                                                        fontSize={'lg'}
-                                                        fontWeight={'medium'}
-                                                        textAlign={'center'}
-                                                    >
-                                                        Max
-                                                    </Text>
-                                                </Flex>
-                                            </Flex>
-                                        </GridItem>
-                                        <GridItem backgroundColor={'lightgray'} borderRight={'1px solid black'}>
-                                            <Flex flexDirection={'column'}>
-                                                <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
-                                                    Stage
-                                                </Text>
-                                                <Flex>
-                                                    <Text
-                                                        flex={1 / 3}
-                                                        fontSize={'lg'}
-                                                        fontWeight={'medium'}
-                                                        textAlign={'center'}
-                                                    >
-                                                        Avg
-                                                    </Text>
-                                                    <Text
-                                                        flex={1 / 3}
-                                                        fontSize={'lg'}
-                                                        fontWeight={'medium'}
-                                                        textAlign={'center'}
-                                                    >
-                                                        Max
-                                                    </Text>
-                                                    <Text
-                                                        flex={1 / 3}
-                                                        fontSize={'lg'}
-                                                        fontWeight={'medium'}
-                                                        textAlign={'center'}
-                                                    >
-                                                        Hangs
-                                                    </Text>
-                                                </Flex>
-                                            </Flex>
-                                        </GridItem>
-                                        <GridItem backgroundColor={'lightgray'} borderRight={'1px solid black'}>
-                                            <Flex
+                                                Avg
+                                            </Text>
+                                            <Text
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
-                                                justifyContent={'center'}
-                                                alignItems={'center'}
-                                                height={'100%'}
+                                                textAlign={'center'}
                                             >
-                                                Pts
-                                            </Flex>
-                                        </GridItem>
-                                        <GridItem backgroundColor={'lightgray'} borderRight={'1px solid black'}>
-                                            <Flex
+                                                Max
+                                            </Text>
+                                            <Text
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
-                                                justifyContent={'center'}
-                                                alignItems={'center'}
-                                                height={'100%'}
+                                                textAlign={'center'}
                                             >
-                                                Max Pts
-                                            </Flex>
-                                        </GridItem>
-
-                                        <GridItem
-                                            backgroundColor={'red.300'}
-                                            borderRight={'1px solid black'}
-                                            padding={'2px 0px'}
-                                        >
-                                            <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
-                                                {teamNumberParam}
+                                                IDK
                                             </Text>
-                                        </GridItem>
-                                        <GridItem
-                                            backgroundColor={'red.300'}
-                                            borderRight={'1px solid black'}
-                                            padding={'2px 0px'}
-                                        >
-                                            <Flex>
-                                                <Text
-                                                    flex={1 / 4}
-                                                    fontSize={'lg'}
-                                                    fontWeight={'medium'}
-                                                    textAlign={'center'}
-                                                >
-                                                    {teamEventData.offensivePoints.avg}
-                                                </Text>
-                                                <Text
-                                                    flex={1 / 4}
-                                                    fontSize={'lg'}
-                                                    fontWeight={'medium'}
-                                                    textAlign={'center'}
-                                                >
-                                                    {teamEventData.offensivePoints.max}
-                                                </Text>
-                                                <Text
-                                                    flex={1 / 4}
-                                                    fontSize={'lg'}
-                                                    fontWeight={'medium'}
-                                                    textAlign={'center'}
-                                                >
-                                                    {teamEventData.offensivePoints.max}
-                                                </Text>
-                                                <Text
-                                                    flex={1 / 4}
-                                                    fontSize={'lg'}
-                                                    fontWeight={'medium'}
-                                                    textAlign={'center'}
-                                                >
-                                                    {123}
-                                                </Text>
-                                            </Flex>
-                                        </GridItem>
-                                        <GridItem
-                                            backgroundColor={'red.300'}
-                                            borderRight={'1px solid black'}
-                                            padding={'2px 0px'}
-                                        >
-                                            <Flex>
-                                                <Text
-                                                    flex={1 / 2}
-                                                    fontSize={'lg'}
-                                                    fontWeight={'medium'}
-                                                    textAlign={'center'}
-                                                >
-                                                    {teamEventData.autoPoints.avg}
-                                                </Text>
-                                                <Text
-                                                    flex={1 / 2}
-                                                    fontSize={'lg'}
-                                                    fontWeight={'medium'}
-                                                    textAlign={'center'}
-                                                >
-                                                    {teamEventData.autoPoints.max}
-                                                </Text>
-                                            </Flex>
-                                        </GridItem>
-                                        <GridItem
-                                            backgroundColor={'red.300'}
-                                            borderRight={'1px solid black'}
-                                            padding={'2px 0px'}
-                                        >
-                                            <Flex>
-                                                <Text
-                                                    flex={1 / 2}
-                                                    fontSize={'lg'}
-                                                    fontWeight={'medium'}
-                                                    textAlign={'center'}
-                                                >
-                                                    {teamEventData.teleopPoints.avg}
-                                                </Text>
-                                                <Text
-                                                    flex={1 / 2}
-                                                    fontSize={'lg'}
-                                                    fontWeight={'medium'}
-                                                    textAlign={'center'}
-                                                >
-                                                    {teamEventData.teleopPoints.max}
-                                                </Text>
-                                            </Flex>
-                                        </GridItem>
-                                        <GridItem
-                                            backgroundColor={'red.300'}
-                                            borderRight={'1px solid black'}
-                                            padding={'2px 0px'}
-                                        >
-                                            <Flex>
-                                                <Text
-                                                    flex={1 / 3}
-                                                    fontSize={'lg'}
-                                                    fontWeight={'medium'}
-                                                    textAlign={'center'}
-                                                >
-                                                    {teamEventData.stagePoints.avg}
-                                                </Text>
-                                                <Text
-                                                    flex={1 / 3}
-                                                    fontSize={'lg'}
-                                                    fontWeight={'medium'}
-                                                    textAlign={'center'}
-                                                >
-                                                    {teamEventData.stagePoints.max}
-                                                </Text>
-                                                <Text
-                                                    flex={1 / 3}
-                                                    fontSize={'lg'}
-                                                    fontWeight={'medium'}
-                                                    textAlign={'center'}
-                                                >
-                                                    {teamEventData.climbSuccessFraction || 'N/A'}
-                                                </Text>
-                                            </Flex>
-                                        </GridItem>
-                                        <GridItem
-                                            backgroundColor={'red.300'}
-                                            borderRight={'1px solid black'}
-                                            padding={'2px 0px'}
-                                        >
-                                            <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
-                                                Pts
+                                            <Text
+                                                flex={1 / 4}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                IDK
                                             </Text>
-                                        </GridItem>
-                                        <GridItem
-                                            backgroundColor={'red.300'}
-                                            borderRight={'1px solid black'}
-                                            padding={'2px 0px'}
-                                        >
-                                            <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
-                                                Max Pts
+                                        </Flex>
+                                        <Flex padding={'2px 0px'} backgroundColor={'red.300'}>
+                                            <Text
+                                                flex={1 / 4}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {teamEventData.offensivePoints.avg}
                                             </Text>
-                                        </GridItem>
-                                    </Grid>
-                                </Box>
+                                            <Text
+                                                flex={1 / 4}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {teamEventData.offensivePoints.max}
+                                            </Text>
+                                            <Text
+                                                flex={1 / 4}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {teamEventData.offensivePoints.max}
+                                            </Text>
+                                            <Text
+                                                flex={1 / 4}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {123}
+                                            </Text>
+                                        </Flex>
+                                    </Flex>
+                                    <Flex
+                                        flexDirection={'column'}
+                                        flex={1}
+                                        minWidth={'150px'}
+                                        borderRight={'1px solid black'}
+                                        borderBottom={'1px solid black'}
+                                    >
+                                        <Text
+                                            fontSize={'lg'}
+                                            fontWeight={'medium'}
+                                            textAlign={'center'}
+                                            backgroundColor={'gray.200'}
+                                        >
+                                            Auto
+                                        </Text>
+                                        <Flex borderBottom={'1px solid black'} backgroundColor={'gray.200'}>
+                                            <Text
+                                                flex={1 / 2}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                Avg
+                                            </Text>
+                                            <Text
+                                                flex={1 / 2}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                Max
+                                            </Text>
+                                        </Flex>
+                                        <Flex padding={'2px 0px'} backgroundColor={'red.300'}>
+                                            <Text
+                                                flex={1 / 2}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {teamEventData.autoPoints.avg}
+                                            </Text>
+                                            <Text
+                                                flex={1 / 2}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {teamEventData.autoPoints.max}
+                                            </Text>
+                                        </Flex>
+                                    </Flex>
+                                    <Flex
+                                        flexDirection={'column'}
+                                        flex={1}
+                                        minWidth={'150px'}
+                                        borderRight={'1px solid black'}
+                                        borderBottom={'1px solid black'}
+                                    >
+                                        <Text
+                                            fontSize={'lg'}
+                                            fontWeight={'medium'}
+                                            textAlign={'center'}
+                                            backgroundColor={'gray.200'}
+                                        >
+                                            Teleop
+                                        </Text>
+                                        <Flex borderBottom={'1px solid black'} backgroundColor={'gray.200'}>
+                                            <Text
+                                                flex={1 / 2}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                Avg
+                                            </Text>
+                                            <Text
+                                                flex={1 / 2}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                Max
+                                            </Text>
+                                        </Flex>
+                                        <Flex padding={'2px 0px'} backgroundColor={'red.300'}>
+                                            <Text
+                                                flex={1 / 2}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {teamEventData.teleopPoints.avg}
+                                            </Text>
+                                            <Text
+                                                flex={1 / 2}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {teamEventData.teleopPoints.max}
+                                            </Text>
+                                        </Flex>
+                                    </Flex>
+                                    <Flex
+                                        flexDirection={'column'}
+                                        flex={1}
+                                        minWidth={'190px'}
+                                        borderRight={'1px solid black'}
+                                        borderBottom={'1px solid black'}
+                                    >
+                                        <Text
+                                            fontSize={'lg'}
+                                            fontWeight={'medium'}
+                                            textAlign={'center'}
+                                            backgroundColor={'gray.200'}
+                                        >
+                                            Stage
+                                        </Text>
+                                        <Flex borderBottom={'1px solid black'} backgroundColor={'gray.200'}>
+                                            <Text
+                                                flex={1 / 3}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                Avg
+                                            </Text>
+                                            <Text
+                                                flex={1 / 3}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                Max
+                                            </Text>
+                                            <Text
+                                                flex={1 / 3}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                Hangs
+                                            </Text>
+                                        </Flex>
+                                        <Flex padding={'2px 0px'} backgroundColor={'red.300'}>
+                                            <Text
+                                                flex={1 / 3}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {teamEventData.stagePoints.avg}
+                                            </Text>
+                                            <Text
+                                                flex={1 / 3}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {teamEventData.stagePoints.max}
+                                            </Text>
+                                            <Text
+                                                flex={1 / 3}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {teamEventData.climbSuccessFraction || 'N/A'}
+                                            </Text>
+                                        </Flex>
+                                    </Flex>
+                                    <Flex
+                                        flex={1}
+                                        flexDirection={'column'}
+                                        minWidth={'65px'}
+                                        borderRight={'1px solid black'}
+                                        borderBottom={'1px solid black'}
+                                    >
+                                        <Flex
+                                            alignItems={'center'}
+                                            justifyContent={'center'}
+                                            fontSize={'lg'}
+                                            fontWeight={'medium'}
+                                            textAlign={'center'}
+                                            borderBottom={'1px solid black'}
+                                            height={'55px'}
+                                            backgroundColor={'gray.200'}
+                                        >
+                                            Pts
+                                        </Flex>
+                                        <Text
+                                            fontSize={'lg'}
+                                            fontWeight={'medium'}
+                                            textAlign={'center'}
+                                            padding={'2px 0px'}
+                                            backgroundColor={'red.300'}
+                                        >
+                                            IDK
+                                        </Text>
+                                    </Flex>
+                                    <Flex
+                                        flex={1}
+                                        flexDirection={'column'}
+                                        minWidth={'85px'}
+                                        borderRight={'1px solid black'}
+                                        borderBottom={'1px solid black'}
+                                    >
+                                        <Flex
+                                            alignItems={'center'}
+                                            justifyContent={'center'}
+                                            fontSize={'lg'}
+                                            fontWeight={'medium'}
+                                            textAlign={'center'}
+                                            borderBottom={'1px solid black'}
+                                            height={'55px'}
+                                            backgroundColor={'gray.200'}
+                                        >
+                                            Max Pts
+                                        </Flex>
+                                        <Text
+                                            fontSize={'lg'}
+                                            fontWeight={'medium'}
+                                            textAlign={'center'}
+                                            padding={'2px 0px'}
+                                            backgroundColor={'red.300'}
+                                        >
+                                            IDK
+                                        </Text>
+                                    </Flex>
+                                </Flex>
                             )}
                             {!teamEventData && (
-                                <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
                                     No match data
                                 </Text>
                             )}
                             {pitForm && !pitForm.followUp && (
                                 <Flex
-                                    width={'100%'}
-                                    border={'1px solid black'}
+                                    width={'90%'}
                                     flexWrap={'wrap'}
                                     rowGap={'10px'}
                                     columnGap={'40px'}
@@ -487,7 +574,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                 >
                                     <Flex flex={1 / 3} minWidth={'fit-content'} flexDirection={'column'} rowGap={'2px'}>
                                         <Text
-                                            fontSize={'xl'}
+                                            fontSize={'lg'}
                                             fontWeight={'semibold'}
                                             textAlign={'center'}
                                             textDecoration={'underline'}
@@ -506,7 +593,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     </Flex>
                                     <Flex flex={1 / 3} minWidth={'fit-content'} flexDirection={'column'} rowGap={'2px'}>
                                         <Text
-                                            fontSize={'xl'}
+                                            fontSize={'lg'}
                                             fontWeight={'semibold'}
                                             textAlign={'center'}
                                             textDecoration={'underline'}
@@ -525,7 +612,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     </Flex>
                                     <Flex flex={1 / 3} minWidth={'fit-content'} flexDirection={'column'} rowGap={'2px'}>
                                         <Text
-                                            fontSize={'xl'}
+                                            fontSize={'lg'}
                                             fontWeight={'semibold'}
                                             textAlign={'center'}
                                             textDecoration={'underline'}
@@ -542,224 +629,212 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                 </Flex>
                             )}
                             {(!pitForm || pitForm.followUp) && (
-                                <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
                                     No pit data
                                 </Text>
+                            )}
+                            {teamEventData && (
+                                <Text
+                                    fontSize={'xl'}
+                                    fontWeight={'semibold'}
+                                    textAlign={'center'}
+                                    marginBottom={'-15px'}
+                                    textDecoration={'underline'}
+                                >
+                                    Event Ranking
+                                </Text>
+                            )}
+                            {teamEventData && (
+                                // This has to be in its own space
+                                <Flex
+                                    width={{ base: '90vw', md: '60%', lg: '40%' }}
+                                    // Cant use height because it messes up animation for some reason
+                                    minHeight={{ base: '40vw', lg: '40dvh' }}
+                                    padding={'0px 0px 0px 25px'}
+                                    justifyContent={'center'}
+                                >
+                                    <Radar
+                                        data={{
+                                            labels: [
+                                                'Offense',
+                                                ['Speaker', 'Tele'],
+                                                'Stage',
+                                                'Defense',
+                                                'Auto',
+                                                ['Amp', 'Tele']
+                                            ],
+                                            datasets: [
+                                                {
+                                                    data: [
+                                                        'offense',
+                                                        'teleopSpeaker',
+                                                        'stage',
+                                                        'defense',
+                                                        'auto',
+                                                        'teleopAmp'
+                                                    ].map((field) => {
+                                                        if (field === 'defense' && teamEventData.playedDefense === 0) {
+                                                            return teamEventData.rank.totalTeam;
+                                                        }
+                                                        return teamEventData.rank[field];
+                                                    }),
+                                                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                                    borderColor: 'red',
+                                                    borderWidth: 1
+                                                }
+                                            ]
+                                        }}
+                                        options={{
+                                            plugins: {
+                                                legend: {
+                                                    display: false
+                                                }
+                                            },
+                                            scales: {
+                                                r: {
+                                                    reverse: true,
+                                                    min: 1,
+                                                    max: teamEventData.rank.totalTeams || 10,
+                                                    pointLabels: {
+                                                        font: {
+                                                            size: 14
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }}
+                                    />
+                                </Flex>
                             )}
                         </Flex>
                     </Flex>
                 );
             case 'pit':
-                return (
-                    <Box>
-                        {/* pitForm ? (
-                    <Box marginBottom={'25px'}>
-                        <Box
-                            w={{ base: '90%', sm: '75%' }}
-                            margin={'0 auto'}
-                            boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'}
-                            backgroundColor={'white'}
-                            marginBottom={'25px'}
-                            textAlign={'start'}
-                            borderRadius={'10px'}
-                            padding={'10px'}
+                return pitForm && !pitForm.followUp ? (
+                    <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
+                            Weight: {pitForm.weight} lbs
+                        </Text>
+                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
+                            Starting Height: {pitForm.height} inches
+                        </Text>
+                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                            Frame Size: {pitForm.frameSize.width} in. by {pitForm.frameSize.length} in.
+                        </Text>
+                        <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
+                        <Text
+                            fontSize={'lg'}
+                            fontWeight={'semibold'}
+                            textAlign={'center'}
+                            marginBottom={'5px'}
+                            marginTop={'10px'}
                         >
-                            <Text
-                                textAlign={'center'}
-                                marginBottom={'5px'}
-                                textDecoration={'underline'}
-                                fontWeight={'bold'}
-                                fontSize={'125%'}
-                            >
-                                Basics:
-                            </Text>
-                            <Box>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Weight: {pitForm.weight} lbs
-                                </Text>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Height: {pitForm.height} inches
-                                </Text>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Frame Size: {pitForm.frameSize.width} in. by {pitForm.frameSize.length} in.
-                                </Text>
-                            </Box>
-                        </Box>
-                        <Box
-                            w={{ base: '90%', sm: '75%' }}
-                            margin={'0 auto'}
-                            boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'}
-                            backgroundColor={'white'}
-                            marginBottom={'25px'}
-                            textAlign={'start'}
-                            borderRadius={'10px'}
-                            padding={'10px'}
+                            Drive
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
+                            Type: {pitForm.driveTrain}
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
+                            Motors: {pitForm.motors.map((motor) => `${motor.label} (${motor.value})`).join(', ')}
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                            Comment:{' '}
+                            <span style={{ fontWeight: '600', fontSize: '95%' }}>{pitForm.driveTrainComment}</span>
+                        </Text>
+                        <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
+                        <Text
+                            fontSize={'lg'}
+                            fontWeight={'semibold'}
+                            textAlign={'center'}
+                            marginBottom={'5px'}
+                            marginTop={'10px'}
                         >
-                            <Text
-                                textAlign={'center'}
-                                marginBottom={'5px'}
-                                textDecoration={'underline'}
-                                fontWeight={'bold'}
-                                fontSize={'125%'}
-                            >
-                                Drive Train:
-                            </Text>
-                            <Box>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Type: {pitForm.driveTrain}
-                                </Text>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Motors:
-                                </Text>
-                                {pitForm.motors.map((motor) => (
-                                    <Text
-                                        marginLeft={'15px'}
-                                        key={motor._id}
-                                        fontWeight={'600'}
-                                        fontSize={'100%'}
-                                    >{`${motor.label} (${motor.value})`}</Text>
-                                ))}
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Wheel:
-                                </Text>
-                                {pitForm.wheels.map((wheel) => (
-                                    <Text
-                                        marginLeft={'15px'}
-                                        key={wheel._id}
-                                        fontWeight={'600'}
-                                        fontSize={'100%'}
-                                    >{`${wheel.label} (${wheel.value}), ${wheel.size} in`}</Text>
-                                ))}
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Stats:
-                                </Text>
-                                {pitForm.driveStats.map((stat) => (
-                                    <Box key={stat._id}>
-                                        <Text
-                                            marginLeft={'15px'}
-                                            fontWeight={'600'}
-                                            fontSize={'100%'}
-                                            textDecoration={'underline'}
-                                        >{`Ratio - ${roundToHundredth(stat.drivenGear)} : ${stat.drivingGear}`}</Text>
-                                        <Text
-                                            marginLeft={'25px'}
-                                            fontWeight={'600'}
-                                            fontSize={'100%'}
-                                        >{`Free Speed: ${roundToHundredth(stat.freeSpeed)} ft/s`}</Text>
-                                        <Text
-                                            marginLeft={'25px'}
-                                            fontWeight={'600'}
-                                            fontSize={'100%'}
-                                        >{`Pushing Power (0-100): ${roundToHundredth(stat.pushingPower)}`}</Text>
-                                    </Box>
-                                ))}
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Comment:{' '}
-                                    <span style={{ fontWeight: '600', fontSize: '95%' }}>
-                                        {pitForm.driveTrainComment}
-                                    </span>
-                                </Text>
-                            </Box>
-                        </Box>
-                        <Box
-                            w={{ base: '90%', sm: '75%' }}
-                            margin={'0 auto'}
-                            boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'}
-                            backgroundColor={'white'}
-                            marginBottom={'25px'}
-                            textAlign={'start'}
-                            borderRadius={'10px'}
-                            padding={'10px'}
-                        >
-                            <Text
-                                textAlign={'center'}
-                                marginBottom={'5px'}
-                                textDecoration={'underline'}
-                                fontWeight={'bold'}
-                                fontSize={'125%'}
-                            >
-                                Autonomous:
-                            </Text>
-                            <Box>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Programming Language: {pitForm.programmingLanguage}
-                                </Text>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Prefered Starting Position:
-                                </Text>
-                                <Center marginBottom={'5px'}>
-                                    <Spinner fontSize={'50px'} pos={'absolute'} zIndex={0}></Spinner>
-                                    <canvas
-                                        id={pitForm._id}
-                                        width={imageWidth * calculatePopoverImageScale()}
-                                        height={imageHeight * calculatePopoverImageScale()}
-                                        style={{ zIndex: 0 }}
-                                    ></canvas>
+                            Autonomous
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
+                            Programming Language: {pitForm.programmingLanguage}
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
+                            Prefered Starting Position
+                        </Text>
+                        <Box marginBottom={'10px'} position={'relative'}>
+                            {!preAutoImageSrc && (
+                                <Center
+                                    width={`${imageWidth * dimensionRatios.width}px`}
+                                    height={`${imageHeight * dimensionRatios.height}px`}
+                                    backgroundColor={'white'}
+                                    zIndex={2}
+                                    margin={'0 auto'}
+                                    position={'relative'}
+                                >
+                                    <Spinner />
                                 </Center>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Best Auto:{' '}
-                                    <span style={{ fontWeight: '600', fontSize: '95%' }}>{pitForm.autoComment}</span>
-                                </Text>
-                            </Box>
+                            )}
+                            {startingPositions.map((position, index) => (
+                                <Flex
+                                    zIndex={1}
+                                    key={position[2]}
+                                    position={'absolute'}
+                                    left={`${whitespace.left + position[0] * dimensionRatios.width}px`}
+                                    top={`${whitespace.top + position[1] * dimensionRatios.height}px`}
+                                    width={`${65 * dimensionRatios.width}px`}
+                                    height={`${65 * dimensionRatios.height}px`}
+                                    backgroundColor={'gray.500'}
+                                    textColor={'white'}
+                                    justifyContent={'center'}
+                                    alignItems={'center'}
+                                    borderRadius={'5px'}
+                                    hidden={pitForm.startingPosition !== index + 1}
+                                >
+                                    {index + 1}
+                                </Flex>
+                            ))}
+                            {preAutoImageSrc && (
+                                <img src={preAutoImageSrc} style={{ zIndex: 0, margin: '0 auto' }} alt={'Field Map'} />
+                            )}
                         </Box>
-                        <Box
-                            w={{ base: '90%', sm: '75%' }}
-                            margin={'0 auto'}
-                            boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'}
-                            backgroundColor={'white'}
-                            marginBottom={'25px'}
-                            textAlign={'start'}
-                            borderRadius={'10px'}
-                            padding={'10px'}
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                            Comment: <span style={{ fontWeight: '600', fontSize: '95%' }}>{pitForm.autoComment}</span>
+                        </Text>
+                        <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
+                        <Text
+                            fontSize={'lg'}
+                            fontWeight={'semibold'}
+                            textAlign={'center'}
+                            marginBottom={'5px'}
+                            marginTop={'10px'}
                         >
-                            <Text
-                                textAlign={'center'}
-                                marginBottom={'5px'}
-                                textDecoration={'underline'}
-                                fontWeight={'bold'}
-                                fontSize={'125%'}
-                            >
-                                Abilities:
-                            </Text>
-                            <Box marginBottom={'5px'}>
-                                {[...pitForm.autoAbilities, ...pitForm.teleAbilities].map((ability, index) =>
-                                    renderAbilities(ability, index)
-                                )}
-                            </Box>
+                            Abilities
+                        </Text>
+                        <Box>
+                            {[...pitForm.autoAbilities, ...pitForm.teleAbilities].map((ability, index) =>
+                                renderAbilities(ability, index)
+                            )}
                         </Box>
-                        <Box
-                            w={{ base: '90%', sm: '75%' }}
-                            margin={'0 auto'}
-                            boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'}
-                            backgroundColor={'white'}
-                            textAlign={'start'}
-                            borderRadius={'10px'}
-                            padding={'10px'}
+                        <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
+                        <Text
+                            fontSize={'lg'}
+                            fontWeight={'semibold'}
+                            textAlign={'center'}
+                            marginBottom={'5px'}
+                            marginTop={'10px'}
                         >
-                            <Text
-                                textAlign={'center'}
-                                marginBottom={'5px'}
-                                textDecoration={'underline'}
-                                fontWeight={'bold'}
-                                fontSize={'125%'}
-                            >
-                                Closing:
-                            </Text>
-                            <Box>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Total Batteries: {pitForm.batteryCount}
-                                </Text>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Batteries Charging: {pitForm.chargingBatteryCount || 'N/A'}
-                                </Text>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    Working On: {pitForm.workingComment}
-                                </Text>
-                                <Text marginBottom={'5px'} fontWeight={'600'} fontSize={'110%'}>
-                                    End Comment: {pitForm.closingComment}
-                                </Text>
-                            </Box>
-                        </Box>
+                            Closing
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
+                            Total Batteries: {pitForm.batteryCount}
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
+                            Batteries Charging: {pitForm.chargingBatteryCount}
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
+                            Working On:{' '}
+                            <span style={{ fontWeight: '600', fontSize: '95%' }}>{pitForm.workingComment}</span>
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                            End Comment:{' '}
+                            <span style={{ fontWeight: '600', fontSize: '95%' }}>{pitForm.closingComment}</span>
+                        </Text>
                     </Box>
                 ) : (
                     <Box
@@ -770,8 +845,6 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                         width={{ base: '85%', md: '66%', lg: '50%' }}
                     >
                         No Pit Data
-                    </Box>
-                ); */}
                     </Box>
                 );
             case 'stand':

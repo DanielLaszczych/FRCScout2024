@@ -5,11 +5,16 @@ const MatchForm = require('../models/MatchForm');
 const PitForm = require('../models/PitForm');
 const { matchFormStatus, gamePieceFields, climbFields } = require('../util/helperConstants');
 const { leafGet, leafSet } = require('../util/helperFunctions');
+const { internalBlueCall } = require('./blueAlliance');
 
 router.get('/getAllTeamEventData', async (req, res) => {
     try {
         let filters = JSON.parse(req.headers.filters);
-        Promise.all([PitForm.findOne(filters).exec(), MatchForm.find(filters).exec(), TED.findOne(filters).exec()])
+        Promise.all([
+            PitForm.findOne(filters).exec(),
+            MatchForm.find(filters).exec(),
+            TED.findOne(filters).lean().exec()
+        ])
             .then((responses) => {
                 let data = {
                     pitForm: responses[0],
@@ -24,15 +29,23 @@ router.get('/getAllTeamEventData', async (req, res) => {
                     'stagePoints.avg',
                     'defenseRating.avg'
                 ].map((field) => HelperFunctions.getRank(data.teamEventData, field));
-                Promise.all(rankQueries)
+                Promise.all([
+                    ...rankQueries,
+                    internalBlueCall(`event/${filters.eventKey}/teams/keys`)
+                        .then((data) => {
+                            return !data.Error ? data.length : null;
+                        })
+                        .catch((err) => null)
+                ])
                     .then((responses) => {
-                        data.rank = {
+                        data.teamEventData.rank = {
                             offense: responses[0],
                             auto: responses[1],
                             teleopSpeaker: responses[2],
                             teleopAmp: responses[3],
                             stage: responses[4],
-                            defense: responses[5]
+                            defense: responses[5],
+                            totalTeams: responses[6]
                         };
                         res.status(200).json(data);
                     })
@@ -290,10 +303,7 @@ class HelperFunctions {
         if (standFormInput.standStatus === matchFormStatus.complete) {
             forwardUpdate = HelperFunctions.getStandFormUpdate(standFormInput);
         } else if (standFormInput.standStatus === matchFormStatus.noShow) {
-            forwardUpdate = {
-                incUpdate: { noShows: 1 },
-                maxUpdate: {}
-            };
+            forwardUpdate = { incUpdate: { noShows: 1 }, maxUpdate: {} };
         }
 
         if (
@@ -329,9 +339,7 @@ class HelperFunctions {
             );
         }
         if (forwardUpdate !== null) {
-            let incUpdate = {
-                $inc: forwardUpdate.incUpdate
-            };
+            let incUpdate = { $inc: forwardUpdate.incUpdate };
 
             await HelperFunctions.updateStandForm(
                 standFormInput.eventKey,
@@ -371,9 +379,7 @@ class HelperFunctions {
                         )
                     );
                 } else {
-                    let incUpdate = {
-                        $inc: reverseUpdate.incUpdate
-                    };
+                    let incUpdate = { $inc: reverseUpdate.incUpdate };
                     updates.push(
                         HelperFunctions.updateSuperForm(
                             prevSuperForm.eventKey,

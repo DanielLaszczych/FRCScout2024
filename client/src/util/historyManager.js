@@ -7,7 +7,12 @@ const createAutoCommand = () => {
             let newData = JSON.parse(JSON.stringify(data));
             // Since pieces are all numbers if the value is NaN we know its a scoring location
             if (isNaN(value)) {
-                if (canOverWrite && newData.autoTimeline.length > 0 && newData.autoTimeline[0].piece === '0' && newData.autoTimeline[0].scored === null) {
+                if (
+                    canOverWrite &&
+                    newData.autoTimeline.length > 0 &&
+                    newData.autoTimeline[0].piece === '0' &&
+                    newData.autoTimeline[0].scored === null
+                ) {
                     newData.autoTimeline[0].scored = value;
                 } else {
                     newData.autoTimeline[newData.autoTimeline.length - 1].scored = value;
@@ -64,7 +69,7 @@ export const createHistoryManager = (type, setData, prevHistoryData = { data: []
         if (type === AUTO && !isNaN(note)) {
             return 'Note ' + note;
         } else if (type === AUTO && position <= 0 && history[0] === note && isNaN(note)) {
-            return gamePieceFields[note].label + ' (Preloaded)';
+            return gamePieceFields[note].label + ' (Pre)';
         } else {
             return gamePieceFields[note].label;
         }
@@ -94,13 +99,25 @@ export const createHistoryManager = (type, setData, prevHistoryData = { data: []
         doCommand(data, value) {
             if (position < history.length - 1) {
                 // This ensures that when we are scoring the preloaded piece we do not delete any history
-                if (!(type === AUTO && data.autoTimeline.length > 0 && data.autoTimeline[0].piece === '0' && data.autoTimeline[0].scored === null)) {
+                if (
+                    !(
+                        type === AUTO &&
+                        data.autoTimeline.length > 0 &&
+                        data.autoTimeline[0].piece === '0' &&
+                        data.autoTimeline[0].scored === null
+                    )
+                ) {
                     history = history.slice(0, position + 1);
                 }
             }
 
             // When we are scoring the preloaded piece we want to put the data at the beginning of the history
-            if (type === AUTO && data.autoTimeline.length > 0 && data.autoTimeline[0].piece === '0' && data.autoTimeline[0].scored === null) {
+            if (
+                type === AUTO &&
+                data.autoTimeline.length > 0 &&
+                data.autoTimeline[0].piece === '0' &&
+                data.autoTimeline[0].scored === null
+            ) {
                 // This means we already have an existing value for the preloaded piece
                 // so we dont want to shift the history only replace the first element
                 if (history.length > 0 && isNaN(history[0])) {
