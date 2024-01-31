@@ -411,13 +411,15 @@ function PitForm() {
 
     function handleIncrementMotor(motorLabel) {
         if (pitFormData.motors.reduce((prev, curr) => prev + curr.value, 0) === 4) {
-            toast.closeAll();
-            toast({
-                title: 'Motor Limit Reached (4)',
-                status: 'error',
-                duration: 2000,
-                isClosable: true
-            });
+            if (!toast.isActive('motorToast')) {
+                toast({
+                    id: 'motorToast',
+                    title: 'Motor Limit Reached (4)',
+                    status: 'error',
+                    duration: 2000,
+                    isClosable: true
+                });
+            }
             return;
         }
         let newMotors = pitFormData.motors.map((motor) => {

@@ -10,8 +10,12 @@ import {
     Center,
     Checkbox,
     Flex,
-    HStack,
-    IconButton,
+    Grid,
+    GridItem,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuList,
     Modal,
     ModalBody,
     ModalCloseButton,
@@ -22,8 +26,7 @@ import {
     Text,
     Textarea,
     useDisclosure,
-    useToast,
-    VStack
+    useToast
 } from '@chakra-ui/react';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -31,7 +34,6 @@ import { convertMatchKeyToString, deepEqual } from '../util/helperFunctions';
 import { matchFormStatus } from '../util/helperConstants';
 import { GlobalContext } from '../context/globalState';
 import QRCode from 'react-qr-code';
-import { AddIcon, MinusIcon } from '@chakra-ui/icons';
 
 function SuperForm() {
     const location = useLocation();
@@ -49,18 +51,21 @@ function SuperForm() {
     const { offline } = useContext(GlobalContext);
     const { isOpen, onOpen, onClose } = useDisclosure();
 
-    const [teamNumbers] = useState([teamNumber1Param, teamNumber2Param, teamNumber3Param]);
     const [stations] = useState([`${allianceParam}1`, `${allianceParam}2`, `${allianceParam}3`]);
+    const [teamNumbers] = useState([teamNumber1Param, teamNumber2Param, teamNumber3Param]);
     const [submitAttempted, setSubmitAttempted] = useState(false);
     const [superFormDialog, setSuperFormDialog] = useState(false);
     const [loadResponse, setLoadResponse] = useState(null);
+    const [followUp, setFollowUp] = useState(false);
+    const [noShow, setNoShow] = useState(false);
     const prevSuperFormData = useRef(null);
     const [superFormData, setSuperFormData] = useState(() => {
         let obj = { loading: true };
-        for (const station of stations) {
-            obj[station] = {
-                agility: 1,
-                fieldAwareness: 1,
+        for (let i = 0; i < stations.length; i++) {
+            obj[stations[i]] = {
+                teamNumber: teamNumbers[i],
+                agility: null,
+                fieldAwareness: null,
                 superStatus: null,
                 superStatusComment: ''
             };
@@ -115,7 +120,14 @@ function SuperForm() {
                         let modified = { ...superFormData };
                         modified.loading = false;
                         for (const matchForm of data) {
+                            if (matchForm.superStatus === matchFormStatus.noShow) {
+                                setNoShow(true);
+                            }
+                            if (matchForm.superStatus === matchFormStatus.followUp) {
+                                setFollowUp(true);
+                            }
                             modified[matchForm.station] = {
+                                teamNumber: teamNumbers[parseInt(matchForm.station.charAt(1)) - 1],
                                 agility: matchForm.agility,
                                 fieldAwareness: matchForm.fieldAwareness,
                                 superStatus: matchForm.superStatus,
@@ -127,7 +139,7 @@ function SuperForm() {
                     .catch((error) => setError(error.message));
             }
         }
-    }, [loadResponse, eventKeyParam, matchNumberParam, allianceParam, superFormData, offline]);
+    }, [loadResponse, eventKeyParam, matchNumberParam, allianceParam, superFormData, offline, teamNumbers]);
 
     useEffect(() => {
         if (prevSuperFormData.current !== null) {
@@ -143,26 +155,77 @@ function SuperForm() {
         }
     }, [superFormData, eventKeyParam, matchNumberParam, allianceParam]);
 
+    function getTeamFromRank(rank, field) {
+        for (const station of stations) {
+            if (superFormData[station][field] === rank) {
+                return superFormData[station].teamNumber;
+            }
+        }
+        return null;
+    }
+
+    function setRank(rank, field, teamNumber) {
+        let newData = { ...superFormData };
+        let prevRank = null;
+        let prevStation = null;
+        for (const station of stations) {
+            if (newData[station][field] === rank && newData[station].teamNumber !== teamNumber) {
+                newData[station][field] = null;
+                prevStation = station;
+            } else if (newData[station].teamNumber === teamNumber) {
+                prevRank = newData[station][field];
+                newData[station][field] = rank;
+            }
+        }
+        if (prevRank && prevStation) {
+            newData[prevStation][field] = prevRank;
+        }
+        setSuperFormData(newData);
+    }
+
     function isFollowOrNoShow(station) {
         return [matchFormStatus.followUp, matchFormStatus.noShow].includes(superFormData[station].superStatus);
     }
 
-    function isValid(station) {
-        return superFormData[station].superStatusComment.trim() !== '';
-    }
-
     function submit() {
         setSubmitAttempted(true);
+        let agilityText = [];
+        let fieldAwarenessText = [];
+        let followUpText = null;
         for (const station of stations) {
-            if (isFollowOrNoShow(station) && !isValid(station)) {
-                toast({
-                    title: 'Missing fields',
-                    status: 'error',
-                    duration: 3000,
-                    isClosable: true
-                });
-                return;
+            if (
+                superFormData[station].superStatus === matchFormStatus.followUp &&
+                superFormData[station].superStatusComment.trim() === ''
+            ) {
+                followUpText = 'Follow up comment';
+            } else if (!isFollowOrNoShow(station)) {
+                if (superFormData[station].agility === null) {
+                    agilityText.push(superFormData[station].teamNumber);
+                }
+                if (superFormData[station].fieldAwareness === null) {
+                    fieldAwarenessText.push(superFormData[station].teamNumber);
+                }
             }
+        }
+        if (agilityText.length !== 0 || fieldAwarenessText.length !== 0 || followUpText) {
+            toast({
+                title: 'Missing fields',
+                description: (
+                    <Text whiteSpace={'pre-line'}>
+                        {[
+                            agilityText.length !== 0 ? 'Agility: ' + agilityText.join(', ') + '\n' : '',
+                            fieldAwarenessText.length !== 0
+                                ? 'Field Awareness: ' + fieldAwarenessText.join(', ') + '\n'
+                                : '',
+                            followUpText || ''
+                        ].join('')}
+                    </Text>
+                ),
+                status: 'error',
+                duration: 3000,
+                isClosable: true
+            });
+            return;
         }
         if (offline) {
             onOpen();
@@ -173,17 +236,17 @@ function SuperForm() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(
-                stations.map((station, index) => ({
+                stations.map((station) => ({
                     ...superFormData[station],
                     eventKey: eventKeyParam,
                     matchNumber: matchNumberParam,
                     station: station,
-                    teamNumber: parseInt(teamNumbers[index]),
                     allianceNumbers: [teamNumbers[0], teamNumbers[1], teamNumbers[2]],
                     superStatus: superFormData[station].superStatus || matchFormStatus.complete,
-                    superStatusComment: isFollowOrNoShow(station)
-                        ? superFormData[station].superStatusComment.trim()
-                        : ''
+                    superStatusComment:
+                        superFormData[station].superStatus === matchFormStatus.followUp
+                            ? superFormData[station].superStatusComment.trim()
+                            : ''
                 }))
             )
         })
@@ -231,24 +294,27 @@ function SuperForm() {
             'No Show': 'ns',
             Missing: 'ms' //Dont think this is ever needed
         };
-        return [
-            eventKeyParam,
-            matchNumberParam,
-            allianceParam,
-            ...stations.map((station, index) =>
-                [
-                    teamNumbers[index],
-                    superFormData[station].agility,
-                    superFormData[station].fieldAwareness,
-                    map[superFormData[station].superStatus || matchFormStatus.complete],
-                    isFollowOrNoShow(station)
-                        ? superFormData[station].superStatusComment.trim() === ''
-                            ? 'n'
-                            : superFormData[station].superStatusComment.trim()
-                        : 'n'
-                ].join('#')
-            )
-        ].join('$');
+        return (
+            '#' +
+            [
+                eventKeyParam,
+                matchNumberParam,
+                ...stations.map((station) =>
+                    [
+                        station,
+                        superFormData[station].teamNumber,
+                        superFormData[station].agility,
+                        superFormData[station].fieldAwareness,
+                        map[superFormData[station].superStatus || matchFormStatus.complete],
+                        superFormData[station].superStatus === matchFormStatus.followUp
+                            ? superFormData[station].superStatusComment.trim() === ''
+                                ? 'n'
+                                : superFormData[station].superStatusComment.trim()
+                            : 'n'
+                    ].join('#')
+                )
+            ].join('$')
+        );
     }
 
     if (error) {
@@ -317,6 +383,15 @@ function SuperForm() {
                                     setLoadResponse(true);
                                     let matchForm = JSON.parse(localStorage.getItem('SuperFormData'));
                                     matchForm.loading = false;
+                                    for (const station of stations) {
+                                        if (matchForm[station].superStatus === matchFormStatus.noShow) {
+                                            setNoShow(true);
+                                        }
+                                        if (matchForm[station].superStatus === matchFormStatus.followUp) {
+                                            setFollowUp(true);
+                                        }
+                                        matchForm[station].teamNumber = teamNumbers[parseInt(station.charAt(1)) - 1];
+                                    }
                                     setSuperFormData(matchForm);
                                 }}
                             >
@@ -338,173 +413,271 @@ function SuperForm() {
     }
 
     return (
-        <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-            <Text textAlign={'center'} marginBottom={'10px'} fontSize={'xl'} fontWeight={'semibold'}>
+        <Box margin={'0 auto'} width={{ base: '90%', md: '66%', lg: '40%' }}>
+            <Text textAlign={'center'} marginBottom={'25px'} fontSize={'xl'} fontWeight={'semibold'}>
                 {convertMatchKeyToString(matchNumberParam)} • {allianceParam === 'r' ? 'Red' : 'Blue'}
             </Text>
-            {stations.map((station, index) => (
-                <Box
-                    key={station} // stupid solution but w/e
-                    marginBottom={'15px'}
+            <Grid
+                templateColumns={'1fr 1fr 1fr 1fr'}
+                borderLeft={'1px solid black'}
+                borderTop={'1px solid black'}
+                outline={'1px solid black'}
+                marginBottom={'25px'}
+            >
+                <GridItem
+                    fontSize={'md'}
+                    fontWeight={'medium'}
+                    textAlign={'center'}
+                    padding={'5px 0px'}
+                    borderBottom={'1px solid black'}
+                    borderRight={'1px solid black'}
                 >
-                    <Text
+                    Attribute
+                </GridItem>
+                {[...Array(3)].map((_, index) => (
+                    <GridItem
+                        key={index}
+                        fontSize={'md'}
+                        fontWeight={'medium'}
                         textAlign={'center'}
-                        fontSize={'lg'}
-                        fontWeight={'semibold'}
+                        padding={'5px 0px'}
                         borderBottom={'1px solid black'}
-                        margin={'0 auto'}
-                        marginBottom={'10px'}
-                        width={'112px'}
+                        borderRight={'1px solid black'}
                     >
-                        {teamNumbers[index]}
-                    </Text>
-                    <Flex marginBottom={'20px'}>
-                        <VStack flex={'50%'} gap={'5px'}>
-                            <Center textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'}>
-                                Agility
-                            </Center>
-                            <HStack gap={'15px'}>
-                                <IconButton
-                                    isDisabled={superFormData[station].superStatus === matchFormStatus.noShow}
-                                    onClick={() => {
-                                        let teamData = { ...superFormData };
-                                        teamData[station].agility = Math.max(teamData[station].agility - 1, 1);
-                                        setSuperFormData(teamData);
-                                    }}
-                                    icon={<MinusIcon />}
-                                    size={'md'}
-                                    colorScheme={'red'}
-                                />
-                                <Text
-                                    fontSize={'lg'}
-                                    fontWeight={'semibold'}
-                                    textAlign={'center'}
-                                    minWidth={'10px'}
-                                    color={superFormData[station].superStatus === matchFormStatus.noShow && 'gray.400'}
+                        {index + 1}
+                        {index === 0 ? ' (Worst)' : index === 2 ? ' (Best)' : ''}
+                    </GridItem>
+                ))}
+                <GridItem padding={'10px 0px'} borderBottom={'1px solid black'} borderRight={'1px solid black'}>
+                    <Center height={'100%'} fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                        Agility
+                    </Center>
+                </GridItem>
+                {[...Array(3)].map((_, index) => (
+                    <GridItem
+                        key={index}
+                        padding={'10px 0px'}
+                        borderBottom={'1px solid black'}
+                        borderRight={'1px solid black'}
+                    >
+                        <Center height={'100%'}>
+                            <Menu placement={'bottom'} autoSelect={false}>
+                                <MenuButton
+                                    fontSize={'md'}
+                                    fontWeight={'medium'}
+                                    width={'60px'}
+                                    padding={'0px'}
+                                    as={Button}
                                 >
-                                    {superFormData[station].agility}
-                                </Text>
-                                <IconButton
-                                    isDisabled={superFormData[station].superStatus === matchFormStatus.noShow}
-                                    onClick={() => {
-                                        let teamData = { ...superFormData };
-                                        teamData[station].agility = Math.min(teamData[station].agility + 1, 3);
-                                        setSuperFormData(teamData);
-                                    }}
-                                    icon={<AddIcon />}
-                                    size={'md'}
-                                    colorScheme={'green'}
-                                />
-                            </HStack>
-                        </VStack>
-                        <VStack flex={'50%'} gap={'5px'}>
-                            <Text textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'}>
-                                Field Aware
-                            </Text>
-                            <HStack gap={'15px'}>
-                                <IconButton
-                                    isDisabled={superFormData[station].superStatus === matchFormStatus.noShow}
-                                    onClick={() => {
-                                        let teamData = { ...superFormData };
-                                        teamData[station].fieldAwareness = Math.max(
-                                            teamData[station].fieldAwareness - 1,
-                                            1
-                                        );
-                                        setSuperFormData(teamData);
-                                    }}
-                                    icon={<MinusIcon />}
-                                    size={'md'}
-                                    colorScheme={'red'}
-                                />
-                                <Text
-                                    fontSize={'lg'}
-                                    fontWeight={'semibold'}
-                                    textAlign={'center'}
-                                    minWidth={'10px'}
-                                    color={superFormData[station].superStatus === matchFormStatus.noShow && 'gray.400'}
+                                    <Box overflow={'hidden'} textOverflow={'ellipsis'}>
+                                        {getTeamFromRank(index + 1, 'agility') || 'None'}
+                                    </Box>
+                                </MenuButton>
+                                <MenuList minWidth={'fit-content'}>
+                                    {teamNumbers.map((teamNumber) => (
+                                        <MenuItem
+                                            padding={'0.375rem 30px'}
+                                            textAlign={'center'}
+                                            justifyContent={'center'}
+                                            key={teamNumber}
+                                            textDecoration={
+                                                stations.some(
+                                                    (station) =>
+                                                        superFormData[station].teamNumber === teamNumber &&
+                                                        superFormData[station]['agility'] !== null
+                                                ) && 'line-through'
+                                            }
+                                            onClick={() => {
+                                                setRank(index + 1, 'agility', teamNumber);
+                                            }}
+                                        >
+                                            {teamNumber}
+                                        </MenuItem>
+                                    ))}
+                                </MenuList>
+                            </Menu>
+                        </Center>
+                    </GridItem>
+                ))}
+                <GridItem padding={'10px 0px'} borderBottom={'1px solid black'} borderRight={'1px solid black'}>
+                    <Center height={'100%'} fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                        Field Aware.
+                    </Center>
+                </GridItem>
+                {[...Array(3)].map((_, index) => (
+                    <GridItem
+                        key={index}
+                        padding={'10px 0px'}
+                        borderBottom={'1px solid black'}
+                        borderRight={'1px solid black'}
+                    >
+                        <Center height={'100%'}>
+                            <Menu placement={'bottom'} autoSelect={false}>
+                                <MenuButton
+                                    fontSize={'md'}
+                                    fontWeight={'medium'}
+                                    width={'60px'}
+                                    padding={'0px'}
+                                    as={Button}
                                 >
-                                    {superFormData[station].fieldAwareness}
-                                </Text>
-                                <IconButton
-                                    isDisabled={superFormData[station].superStatus === matchFormStatus.noShow}
-                                    onClick={() => {
-                                        let teamData = { ...superFormData };
-                                        teamData[station].fieldAwareness = Math.min(
-                                            teamData[station].fieldAwareness + 1,
-                                            3
-                                        );
-                                        setSuperFormData(teamData);
-                                    }}
-                                    icon={<AddIcon />}
-                                    size={'md'}
-                                    colorScheme={'green'}
-                                />
-                            </HStack>
-                        </VStack>
-                    </Flex>
-                    <HStack
-                        justifyContent={'center'}
-                        gap={'25px'}
-                        marginBottom={
-                            [matchFormStatus.followUp, matchFormStatus.noShow].includes(
-                                superFormData[station].superStatus
-                            )
-                                ? '15px'
-                                : '0px'
+                                    <Box overflow={'hidden'} textOverflow={'ellipsis'}>
+                                        {getTeamFromRank(index + 1, 'fieldAwareness') || 'None'}
+                                    </Box>
+                                </MenuButton>
+                                <MenuList minWidth={'fit-content'}>
+                                    {teamNumbers.map((teamNumber) => (
+                                        <MenuItem
+                                            padding={'0.375rem 30px'}
+                                            textAlign={'center'}
+                                            justifyContent={'center'}
+                                            key={teamNumber}
+                                            textDecoration={
+                                                stations.some(
+                                                    (station) =>
+                                                        superFormData[station].teamNumber === teamNumber &&
+                                                        superFormData[station]['fieldAwareness'] !== null
+                                                ) && 'line-through'
+                                            }
+                                            onClick={() => {
+                                                setRank(index + 1, 'fieldAwareness', teamNumber);
+                                            }}
+                                        >
+                                            {teamNumber}
+                                        </MenuItem>
+                                    ))}
+                                </MenuList>
+                            </Menu>
+                        </Center>
+                    </GridItem>
+                ))}
+            </Grid>
+            <Center>
+                <Checkbox
+                    colorScheme={'red'}
+                    isChecked={noShow}
+                    marginBottom={'15px'}
+                    onChange={() => {
+                        if (noShow) {
+                            let newData = { ...superFormData };
+                            for (const station of stations) {
+                                if (newData[station].superStatus === matchFormStatus.noShow) {
+                                    newData[station].superStatus = null;
+                                }
+                            }
+                            setSuperFormData(newData);
                         }
-                    >
-                        <Checkbox
-                            colorScheme={'yellow'}
-                            isChecked={superFormData[station].superStatus === matchFormStatus.followUp}
-                            onChange={() => {
-                                let teamData = { ...superFormData };
-                                teamData[station].superStatus =
-                                    teamData[station].superStatus === matchFormStatus.followUp
-                                        ? null
-                                        : matchFormStatus.followUp;
-                                setSuperFormData(teamData);
-                            }}
-                            width={'100px'}
-                        >
-                            Mark For Follow Up
-                        </Checkbox>
-                        <Checkbox
-                            colorScheme={'red'}
-                            isChecked={superFormData[station].superStatus === matchFormStatus.noShow}
-                            onChange={() => {
-                                let teamData = { ...superFormData };
-                                teamData[station].superStatus =
-                                    teamData[station].superStatus === matchFormStatus.noShow
+                        setNoShow(!noShow);
+                    }}
+                >
+                    No Show
+                </Checkbox>
+            </Center>
+            <Flex justifyContent={'center'} columnGap={'30px'} marginBottom={noShow && '15px'}>
+                {noShow &&
+                    stations.map((station) => (
+                        <Button
+                            key={station}
+                            colorScheme={superFormData[station].superStatus === matchFormStatus.noShow ? 'red' : 'gray'}
+                            onClick={() => {
+                                let newData = { ...superFormData };
+                                newData[station].superStatus =
+                                    newData[station].superStatus === matchFormStatus.noShow
                                         ? null
                                         : matchFormStatus.noShow;
-                                setSuperFormData(teamData);
+                                setSuperFormData(newData);
                             }}
-                            width={'100px'}
                         >
-                            No Show
-                        </Checkbox>
-                    </HStack>
-                    {isFollowOrNoShow(station) ? (
-                        <Center>
-                            <Textarea
-                                isInvalid={submitAttempted && superFormData[station].superStatusComment.trim() === ''}
-                                onChange={(event) => {
-                                    let teamData = { ...superFormData };
-                                    teamData[station].superStatusComment = event.target.value;
-                                    setSuperFormData(teamData);
-                                }}
-                                value={superFormData[station].superStatusComment}
-                                placeholder={`What is the reason for the ${superFormData[
-                                    station
-                                ].superStatus.toLowerCase()}?`}
-                                width={'85%'}
-                            />
-                        </Center>
-                    ) : null}
-                </Box>
-            ))}
+                            {superFormData[station].teamNumber}
+                        </Button>
+                    ))}
+            </Flex>
             <Center>
-                <Button isLoading={submitting} marginBottom={'15px'} onClick={() => submit()}>
+                <Checkbox
+                    colorScheme={'yellow'}
+                    isChecked={followUp}
+                    marginBottom={'15px'}
+                    onChange={() => {
+                        if (followUp) {
+                            let newData = { ...superFormData };
+                            for (const station of stations) {
+                                if (newData[station].superStatus === matchFormStatus.followUp) {
+                                    newData[station].superStatus = null;
+                                    newData[station].superStatusComment = '';
+                                }
+                            }
+                            setSuperFormData(newData);
+                        }
+                        setFollowUp(!followUp);
+                    }}
+                >
+                    Mark For Follow Up
+                </Checkbox>
+            </Center>
+            <Flex justifyContent={'center'} columnGap={'30px'} marginBottom={followUp && '15px'}>
+                {followUp &&
+                    stations.map((station) => (
+                        <Button
+                            key={station}
+                            colorScheme={
+                                superFormData[station].superStatus === matchFormStatus.followUp ? 'yellow' : 'gray'
+                            }
+                            onClick={() => {
+                                let prevFollowUpTeam = stations.find(
+                                    (station) => superFormData[station].superStatus === matchFormStatus.followUp
+                                );
+
+                                let newData = { ...superFormData };
+                                newData[station].superStatus =
+                                    newData[station].superStatus === matchFormStatus.followUp
+                                        ? null
+                                        : matchFormStatus.followUp;
+                                if (prevFollowUpTeam) {
+                                    newData[station].superStatusComment =
+                                        superFormData[prevFollowUpTeam].superStatusComment;
+                                }
+                                setSuperFormData(newData);
+                            }}
+                        >
+                            {superFormData[station].teamNumber}
+                        </Button>
+                    ))}
+            </Flex>
+            {stations.some((station) => superFormData[station].superStatus === matchFormStatus.followUp) && (
+                <Center marginTop={'15px'} marginBottom={'15px'}>
+                    <Textarea
+                        isInvalid={
+                            submitAttempted &&
+                            superFormData[
+                                stations.find(
+                                    (station) => superFormData[station].superStatus === matchFormStatus.followUp
+                                )
+                            ].superStatusComment.trim() === ''
+                        }
+                        onChange={(event) => {
+                            // Wanted to use onBlur for this but there are some ways
+                            // you can leave the page without triggering onBlur
+                            let newData = { ...superFormData };
+                            for (const station of stations) {
+                                if (newData[station].superStatus === matchFormStatus.followUp) {
+                                    newData[station].superStatusComment = event.target.value;
+                                }
+                            }
+                            setSuperFormData(newData);
+                        }}
+                        value={
+                            superFormData[
+                                stations.find(
+                                    (station) => superFormData[station].superStatus === matchFormStatus.followUp
+                                )
+                            ].superStatusComment
+                        }
+                        placeholder='What is the reason for the follow up?'
+                        width={'85%'}
+                    />
+                </Center>
+            )}
+            <Center>
+                <Button isLoading={submitting} marginTop={'10px'} marginBottom={'15px'} onClick={() => submit()}>
                     Submit
                 </Button>
             </Center>

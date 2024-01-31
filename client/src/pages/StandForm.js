@@ -450,62 +450,68 @@ function StandForm() {
             Missing: 'ms' //Dont think this is ever needed
         };
         // I listed all the fields just as insurance that everything will always be in this order
-        return [
-            eventKeyParam,
-            matchNumberParam,
-            stationParam,
-            parseInt(teamNumberParam),
-            standFormData.startingPosition === null ? 'n' : standFormData.startingPosition,
-            standFormData.preLoadedPiece === null ? 'n' : map[standFormData.preLoadedPiece === 'Note'],
-            map[standFormData.leftStart],
-            standFormData.autoTimeline.length === 0
-                ? 'n'
-                : standFormData.autoTimeline
-                      .map((element) => [element.piece, element.scored ? gamePieceFields[element.scored].short : 'n'])
-                      .flat()
-                      .join('#'),
-            standFormData.teleopGP.intakeSource,
-            standFormData.teleopGP.intakeGround,
-            standFormData.teleopGP.ampScore,
-            standFormData.teleopGP.speakerScore,
-            standFormData.teleopGP.ampMiss,
-            standFormData.teleopGP.speakerMiss,
-            standFormData.teleopGP.ferry,
-            standFormData.teleopGP.trap,
-            map[standFormData.wasDefended],
-            standFormData.defenseRating,
-            standFormData.defenseAllocation,
-            map[standFormData.climb],
-            map[standFormData.lostCommunication],
-            map[standFormData.robotBroke],
-            map[standFormData.yellowCard],
-            map[standFormData.redCard],
-            standFormData.standComment.trim() === '' ? 'n' : standFormData.standComment.trim(),
-            map[standFormData.standStatus || matchFormStatus.complete],
-            isFollowOrNoShow()
-                ? standFormData.standStatusComment.trim() === ''
+        return (
+            '#' +
+            [
+                eventKeyParam,
+                matchNumberParam,
+                stationParam,
+                parseInt(teamNumberParam),
+                standFormData.startingPosition === null ? 'n' : standFormData.startingPosition,
+                standFormData.preLoadedPiece === null ? 'n' : map[standFormData.preLoadedPiece === 'Note'],
+                map[standFormData.leftStart],
+                standFormData.autoTimeline.length === 0
                     ? 'n'
-                    : standFormData.standStatusComment.trim()
-                : 'n',
-            standFormData.history.auto.data.length === 0
-                ? 'n'
-                : standFormData.history.auto.data
-                      .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
-                      .join('#'),
-            standFormData.history.auto.position,
-            standFormData.history.teleop.data.length === 0
-                ? 'n'
-                : standFormData.history.teleop.data
-                      .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
-                      .join('#'),
-            standFormData.history.teleop.position,
-            standFormData.history.endGame.data.length === 0
-                ? 'n'
-                : standFormData.history.endGame.data
-                      .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
-                      .join('#'),
-            standFormData.history.endGame.position
-        ].join('$');
+                    : standFormData.autoTimeline
+                          .map((element) => [
+                              element.piece,
+                              element.scored ? gamePieceFields[element.scored].short : 'n'
+                          ])
+                          .flat()
+                          .join('#'),
+                standFormData.teleopGP.intakeSource,
+                standFormData.teleopGP.intakeGround,
+                standFormData.teleopGP.ampScore,
+                standFormData.teleopGP.speakerScore,
+                standFormData.teleopGP.ampMiss,
+                standFormData.teleopGP.speakerMiss,
+                standFormData.teleopGP.ferry,
+                standFormData.teleopGP.trap,
+                map[standFormData.wasDefended],
+                standFormData.defenseRating,
+                standFormData.defenseAllocation,
+                map[standFormData.climb],
+                map[standFormData.lostCommunication],
+                map[standFormData.robotBroke],
+                map[standFormData.yellowCard],
+                map[standFormData.redCard],
+                standFormData.standComment.trim() === '' ? 'n' : standFormData.standComment.trim(),
+                map[standFormData.standStatus || matchFormStatus.complete],
+                isFollowOrNoShow()
+                    ? standFormData.standStatusComment.trim() === ''
+                        ? 'n'
+                        : standFormData.standStatusComment.trim()
+                    : 'n',
+                standFormData.history.auto.data.length === 0
+                    ? 'n'
+                    : standFormData.history.auto.data
+                          .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
+                          .join('#'),
+                standFormData.history.auto.position,
+                standFormData.history.teleop.data.length === 0
+                    ? 'n'
+                    : standFormData.history.teleop.data
+                          .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
+                          .join('#'),
+                standFormData.history.teleop.position,
+                standFormData.history.endGame.data.length === 0
+                    ? 'n'
+                    : standFormData.history.endGame.data
+                          .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
+                          .join('#'),
+                standFormData.history.endGame.position
+            ].join('$')
+        );
     }
 
     function submit() {

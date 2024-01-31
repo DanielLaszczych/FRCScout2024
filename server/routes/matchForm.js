@@ -21,7 +21,7 @@ router.get('/getMatchForms', async (req, res) => {
         return;
     }
     try {
-        const matchForms = await MatchForm.find(JSON.parse(req.headers.filters)).exec();
+        const matchForms = await MatchForm.find(JSON.parse(req.headers.filters || '{}')).exec();
         res.status(200).json(matchForms);
     } catch (err) {
         res.statusMessage = err.message;
@@ -35,7 +35,7 @@ router.get('/getMatchForm', async (req, res) => {
         return;
     }
     try {
-        const matchForm = await MatchForm.findOne(JSON.parse(req.headers.filters)).exec();
+        const matchForm = await MatchForm.findOne(JSON.parse(req.headers.filters || '{}')).exec();
         res.status(200).json(matchForm);
     } catch (err) {
         res.statusMessage = err.message;

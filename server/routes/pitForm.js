@@ -9,7 +9,7 @@ router.get('/getPitForm', async (req, res) => {
         return;
     }
     try {
-        const pitForm = await PitForm.findOne(JSON.parse(req.headers.filters)).exec();
+        const pitForm = await PitForm.findOne(JSON.parse(req.headers.filters || '{}')).exec();
         res.status(200).json(pitForm);
     } catch (err) {
         res.statusMessage = err.message;
@@ -38,7 +38,11 @@ router.post('/postPitForm', async (req, res) => {
         pitFormInput.image = imageUrl;
         pitFormInput.scouter = req.user.displayName;
 
-        await PitForm.findOneAndUpdate({ eventKey: pitFormInput.eventKey, teamNumber: pitFormInput.teamNumber }, pitFormInput, { new: true, upsert: true }).exec();
+        await PitForm.findOneAndUpdate(
+            { eventKey: pitFormInput.eventKey, teamNumber: pitFormInput.teamNumber },
+            pitFormInput,
+            { new: true, upsert: true }
+        ).exec();
         res.sendStatus(200);
     } catch (err) {
         res.statusMessage = err.message;

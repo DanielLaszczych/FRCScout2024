@@ -8,7 +8,7 @@ router.get('/getEvents', async (req, res) => {
         return;
     }
     try {
-        const events = await Event.find(JSON.parse(req.headers.filters)).exec();
+        const events = await Event.find(JSON.parse(req.headers.filters || '{}')).exec();
         res.status(200).json(events);
     } catch (err) {
         res.statusMessage = err.message;
@@ -36,7 +36,9 @@ router.get('/getEventsSimple', async (req, res) => {
         return;
     }
     try {
-        const events = await Event.find(JSON.parse(req.headers.filters)).select(['key', 'name', 'currentEvent', 'startDate', 'endDate', 'custom'].join(' ')).exec();
+        const events = await Event.find(JSON.parse(req.headers.filters || '{}'))
+            .select(['key', 'name', 'currentEvent', 'startDate', 'endDate', 'custom'].join(' '))
+            .exec();
         res.status(200).send(events);
     } catch (err) {
         res.statusMessage = err.message;
@@ -51,7 +53,10 @@ router.post('/addEvent', async (req, res) => {
     }
     try {
         let eventInput = req.body;
-        const event = await Event.findOneAndUpdate({ key: eventInput.key }, eventInput, { new: true, upsert: true }).exec();
+        const event = await Event.findOneAndUpdate({ key: eventInput.key }, eventInput, {
+            new: true,
+            upsert: true
+        }).exec();
         res.status(200).send(event);
     } catch (err) {
         res.statusMessage = err.message;

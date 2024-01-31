@@ -9,7 +9,7 @@ const { internalBlueCall } = require('./blueAlliance');
 
 router.get('/getAllTeamEventData', async (req, res) => {
     try {
-        let filters = JSON.parse(req.headers.filters);
+        let filters = JSON.parse(req.headers.filters || '{}');
         Promise.all([
             PitForm.findOne(filters).exec(),
             MatchForm.find(filters).exec(),
@@ -21,6 +21,10 @@ router.get('/getAllTeamEventData', async (req, res) => {
                     matchForms: responses[1],
                     teamEventData: responses[2]
                 };
+                if (!data.teamEventData) {
+                    res.status(200).json(data);
+                    return;
+                }
                 let rankQueries = [
                     'offensivePoints.avg',
                     'autoPoints.avg',
@@ -359,7 +363,7 @@ class HelperFunctions {
 
                 let index = superFormInputs.findIndex(
                     (element) =>
-                        element.teamNumber === prevSuperForm.teamNumber &&
+                        parseInt(element.teamNumber) === prevSuperForm.teamNumber &&
                         element.superStatus === matchFormStatus.complete
                 );
                 if (index !== -1) {
