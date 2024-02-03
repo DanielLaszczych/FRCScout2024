@@ -37,9 +37,15 @@ export function sortMatches(matches, field = 'matchNumber', compareStations = tr
         let typeDifference = matchTypeA - matchTypeB;
         if (typeDifference === 0) {
             let endIndex = matchTypeA === 0 ? 5 : 4;
-            let matchNumberDifference = a[field].substring(2, endIndex).replace(/[^0-9]/g, '') - b[field].substring(2, endIndex).replace(/[^0-9]/g, '');
+            let matchNumberDifference =
+                a[field].substring(2, endIndex).replace(/[^0-9]/g, '') -
+                b[field].substring(2, endIndex).replace(/[^0-9]/g, '');
             if (matchNumberDifference === 0 && compareStations) {
-                return a.station.charAt(0) === b.station.charAt(0) ? a.station.charAt(1) - b.station.charAt(1) : a.station.charAt(0) < b.station.charAt(0) ? 1 : -1;
+                return a.station.charAt(0) === b.station.charAt(0)
+                    ? a.station.charAt(1) - b.station.charAt(1)
+                    : a.station.charAt(0) < b.station.charAt(0)
+                    ? 1
+                    : -1;
             } else {
                 return matchNumberDifference;
             }
@@ -78,6 +84,10 @@ export function convertStationKeyToString(stationKey) {
     }
 }
 
+export function shortenScouterName(name) {
+    return `${name.split(' ')[0]} ${name.split(' ')[1].charAt(0)}.`;
+}
+
 export async function fetchAndCache(url) {
     try {
         if (!navigator.onLine || localStorage.getItem('Offline') === 'true') throw Error;
@@ -105,12 +115,13 @@ export async function fetchAndCache(url) {
     }
 }
 
-export function getValueByRange(inputValue) {
+export function getValueByRange(inputValue, values = [0.85, 0.85, 0.66, 0.5]) {
     // Define your ranges and associated values
     const ranges = [
-        { min: 0, max: 767, value: 0.85 },
-        { min: 768, max: 991, value: 0.66 },
-        { min: 992, max: 1920, value: 0.5 }
+        { min: 0, max: 479, value: values[0] },
+        { min: 480, max: 767, value: values[1] },
+        { min: 768, max: 991, value: values[2] },
+        { min: 992, max: 1920, value: values[3] }
     ];
 
     // Find the range for the given input value
@@ -118,7 +129,7 @@ export function getValueByRange(inputValue) {
     const selectedRange = ranges.find((range) => inputValue >= range.min && inputValue <= range.max);
 
     // Return the associated value or a default value if no range is found
-    return selectedRange ? selectedRange.value : 0.5;
+    return selectedRange ? selectedRange.value : values[3];
 }
 
 export function joinStandAndSuperForms(standForms, superForms) {
@@ -128,7 +139,11 @@ export function joinStandAndSuperForms(standForms, superForms) {
         let found = false;
         for (let j = 0; j < superForms.length; ) {
             let superForm = superForms[j];
-            if (standForm.eventKey === superForm.eventKey && standForm.matchNumber === superForm.matchNumber && standForm.station === superForm.station) {
+            if (
+                standForm.eventKey === superForm.eventKey &&
+                standForm.matchNumber === superForm.matchNumber &&
+                standForm.station === superForm.station
+            ) {
                 let combined = { ...standForm, ...superForm };
                 combinedForms.push(combined);
                 standForms.splice(i, 1);
@@ -164,7 +179,9 @@ export const medianArr = (x) => {
     let sortedx = x.sort((a, b) => a - b);
     let halfIndex = Math.floor(sortedx.length / 2);
 
-    return sortedx.length % 2 ? sortedx[Math.floor(sortedx.length / 2.0)] : (sortedx[halfIndex - 1] + sortedx[halfIndex]) / 2.0;
+    return sortedx.length % 2
+        ? sortedx[Math.floor(sortedx.length / 2.0)]
+        : (sortedx[halfIndex - 1] + sortedx[halfIndex]) / 2.0;
 };
 
 export const averageArr = (x, round = true, roundToHundredthBoolean = true) => {
@@ -237,3 +254,5 @@ export function deepEqual(object1, object2) {
 export function isObject(object) {
     return object != null && typeof object === 'object';
 }
+
+export const leafGet = (obj, path) => path.split('.').reduce((value, el) => value[el], obj);

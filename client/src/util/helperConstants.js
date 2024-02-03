@@ -35,4 +35,12 @@ export const gamePieceFields = {
     trap: { field: 'trap', label: 'Trap', short: 't', auto: false, teleop: true }
 };
 
+export const teamPageTabs = {
+    overview: 'overview',
+    pit: 'pit',
+    matchForms: 'matchforms',
+    analysis: 'analysis',
+    other: 'other'
+};
+
 export const timeZone = 'US/Central';

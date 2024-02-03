@@ -193,8 +193,7 @@ function PitForm() {
     const [swapDone, setSwapDone] = useState(true);
     const [swappingElement, setSwappingElement] = useState(null);
     const [dimensionRatios, setDimensionRatios] = useState(null);
-    const [whitespace, setWhitespace] = useState(null);
-    const [preAutoImageSrc, setPreAutoImageSrc] = useState(null);
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     useEffect(() => {
         if (localStorage.getItem('PitFormData')) {
@@ -295,33 +294,29 @@ function PitForm() {
             scaledWidth = maxWidth;
             scaledHeight = maxWidth / imageAspectRatio;
 
-            // Overwriting this because there will never be horizontal whitespace
+            // Commenting this because we will never white space because we
+            // position inside the image
             // const extraHorizontalSpace = maxHeight - scaledHeight;
             // const whitespaceTop = extraHorizontalSpace / 2;
             // const whitespaceBottom = extraHorizontalSpace / 2;
             // setWhitespace({ top: whitespaceTop, bottom: whitespaceBottom, left: 0, right: 0 });
-            setWhitespace({ top: 0, bottom: 0, left: 0, right: 0 });
         } else {
             // Original image has a taller aspect ratio, so add vertical whitespace
             scaledHeight = maxHeight;
             scaledWidth = maxHeight * imageAspectRatio;
-            const extraVerticalSpace = maxWidth - scaledWidth;
-            const whitespaceLeft = extraVerticalSpace / 2;
-            const whitespaceRight = extraVerticalSpace / 2;
-            setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
+
+            // Commenting this because we will never white space because we
+            // position inside the image
+            // const extraVerticalSpace = maxWidth - scaledWidth;
+            // const whitespaceLeft = extraVerticalSpace / 2;
+            // const whitespaceRight = extraVerticalSpace / 2;
+            // setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
         }
 
         setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
     }
 
     useEffect(() => {
-        const preAutoImg = new Image();
-        preAutoImg.src = PreAutoBlueField;
-
-        preAutoImg.onload = () => {
-            setPreAutoImageSrc(preAutoImg.src);
-        };
-
         getImageVariables();
         window.addEventListener('resize', getImageVariables);
 
@@ -1264,7 +1259,7 @@ function PitForm() {
         );
     }
 
-    if (pitFormData.loading || whitespace === null || dimensionRatios === null) {
+    if (pitFormData.loading || dimensionRatios === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -1696,26 +1691,27 @@ function PitForm() {
             <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
                 Prefered Starting Position
             </Text>
-            <Box marginBottom={'10px'} position={'relative'}>
-                {!preAutoImageSrc && (
-                    <Center
-                        width={`${imageWidth * dimensionRatios.width}px`}
-                        height={`${imageHeight * dimensionRatios.height}px`}
-                        backgroundColor={'white'}
-                        zIndex={2}
-                        margin={'0 auto'}
-                        position={'relative'}
-                    >
-                        <Spinner />
-                    </Center>
-                )}
+            <Center
+                margin={'0 auto'}
+                marginBottom={'10px'}
+                width={`${imageWidth * dimensionRatios.width}px`}
+                height={`${imageHeight * dimensionRatios.height}px`}
+                position={'relative'}
+            >
+                <Spinner position={'absolute'} visibility={!imageLoaded ? 'visible' : 'hidden'} />
+                <img
+                    src={PreAutoBlueField}
+                    alt={'Field Map'}
+                    style={{ visibility: imageLoaded ? 'visible' : 'hidden' }}
+                    onLoad={() => setImageLoaded(true)}
+                />
                 {startingPositions.map((position, index) => (
                     <Button
-                        zIndex={1}
                         key={position[2]}
                         position={'absolute'}
-                        left={`${whitespace.left + position[0] * dimensionRatios.width}px`}
-                        top={`${whitespace.top + position[1] * dimensionRatios.height}px`}
+                        visibility={imageLoaded ? 'visible' : 'hidden'}
+                        left={`${position[0] * dimensionRatios.width}px`}
+                        top={`${position[1] * dimensionRatios.height}px`}
                         width={`${65 * dimensionRatios.width}px`}
                         height={`${65 * dimensionRatios.height}px`}
                         onClick={() => setPitFormData({ ...pitFormData, startingPosition: index + 1 })}
@@ -1729,10 +1725,7 @@ function PitForm() {
                         {index + 1}
                     </Button>
                 ))}
-                {preAutoImageSrc && (
-                    <img src={preAutoImageSrc} style={{ zIndex: 0, margin: '0 auto' }} alt={'Field Map'} />
-                )}
-            </Box>
+            </Center>
             {pitFormData.autoAbilities.map((abilityContainer, containerIndex) =>
                 getAbilityComponent(abilityContainer, containerIndex, 'autoAbilities')
             )}

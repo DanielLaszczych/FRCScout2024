@@ -31,7 +31,7 @@ import {
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { convertMatchKeyToString, deepEqual } from '../util/helperFunctions';
-import { matchFormStatus } from '../util/helperConstants';
+import { matchFormStatus, teamPageTabs } from '../util/helperConstants';
 import { GlobalContext } from '../context/globalState';
 import QRCode from 'react-qr-code';
 
@@ -262,7 +262,7 @@ function SuperForm() {
                         if (location.state.previousRoute === 'matches') {
                             navigate('/matches');
                         } else if (location.state.previousRoute === 'team') {
-                            navigate(`/team/${location.state.teamNumber}/super`);
+                            navigate(`/team/${location.state.teamNumber}/${teamPageTabs.matchForms}`);
                         }
                     } else {
                         navigate('/');

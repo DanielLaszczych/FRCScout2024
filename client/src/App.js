@@ -4,6 +4,7 @@ import { AuthContext } from './context/auth';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import NavBar from './components/NavBar';
 import { GlobalContext } from './context/globalState';
+import { teamPageTabs } from './util/helperConstants';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const PitForm = lazy(() => import('./pages/PitForm'));
@@ -83,14 +84,26 @@ function App() {
                         <Route exact path='/pitForm/:eventKey/:teamNumber' element={<PitForm />} />
                         <Route exact path='/preStandForm' element={<PreStandForm />} />
                         <Route exact path='/preSuperForm' element={<PreSuperForm />} />
-                        <Route exact path='/standForm/:eventKey/:matchNumber/:station/:teamNumber' element={<StandForm />} />
-                        <Route exact path='/superForm/:eventKey/:matchNumber/:alliance/:teamNumber1/:teamNumber2/:teamNumber3' element={<SuperForm />} />
-                        {['overview', 'pit', 'stand', 'super', 'other'].map((path) => (
+                        <Route
+                            exact
+                            path='/standForm/:eventKey/:matchNumber/:station/:teamNumber'
+                            element={<StandForm />}
+                        />
+                        <Route
+                            exact
+                            path='/superForm/:eventKey/:matchNumber/:alliance/:teamNumber1/:teamNumber2/:teamNumber3'
+                            element={<SuperForm />}
+                        />
+                        {Object.values(teamPageTabs).map((path) => (
                             <Route path={`/team/:teamNumber/${path}`} key={path} element={<TeamPageHelper />} />
                         ))}
                         {/* <Route exact path='/rtessIssue/:id' element={<RTESSIssuePage />} /> */}
                         {/* <Route exact path='/pitMap' element={<PitMapPage />} /> */}
-                        <Route exact path='/admin' element={offline ? <OfflinePage /> : user.admin ? <AdminPage /> : <AdminErrorPage />} />
+                        <Route
+                            exact
+                            path='/admin'
+                            element={offline ? <OfflinePage /> : user.admin ? <AdminPage /> : <AdminErrorPage />}
+                        />
                         {/* <Route exact path='/tableau' element={<WebDataConnector />} /> */}
                         <Route path='*' element={<NotFoundPage />} />
                     </Routes>

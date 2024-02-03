@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -36,7 +36,7 @@ import { StarIcon } from '@chakra-ui/icons';
 import { deepEqual, getValueByRange } from '../util/helperFunctions';
 import { AUTO, ENDGAME, TELEOP, createHistoryManager } from '../util/historyManager';
 import '../stylesheets/standformstyle.css';
-import { matchFormStatus, gamePieceFields } from '../util/helperConstants';
+import { matchFormStatus, gamePieceFields, teamPageTabs } from '../util/helperConstants';
 import PreAutoRedField from '../images/PreAutoRedField.png';
 import PreAutoBlueField from '../images/PreAutoBlueField.png';
 import AutoRedField from '../images/AutoRedField.png';
@@ -186,9 +186,7 @@ function StandForm() {
     const [submitting, setSubmitting] = useState(false);
     const [standFormManagers, setStandFormManagers] = useState(null);
     const [dimensionRatios, setDimensionRatios] = useState(null);
-    const [whitespace, setWhitespace] = useState(null);
-    const [preAutoImageSrc, setPreAutoImageSrc] = useState(null);
-    const [autoImageSrc, setAutoImageSrc] = useState(null);
+    const [imageLoaded, setImageLoaded] = useState(false);
     const [maxContainerHeight, setMaxContainerHeight] = useState(null);
 
     useEffect(() => {
@@ -315,6 +313,10 @@ function StandForm() {
         }
     }, [standFormData, eventKeyParam, matchNumberParam, stationParam, standFormManagers]);
 
+    useLayoutEffect(() => {
+        setImageLoaded(false);
+    }, [activeSection]);
+
     function getImageVariables() {
         const viewportWidth = window.innerWidth;
         // const viewportHeight = window.innerHeight;
@@ -333,38 +335,29 @@ function StandForm() {
             scaledWidth = maxWidth;
             scaledHeight = maxWidth / imageAspectRatio;
 
-            // Overwriting this because there will never be horizontal whitespace
+            // Commenting this because we will never white space because we
+            // position inside the image
             // const extraHorizontalSpace = maxHeight - scaledHeight;
             // const whitespaceTop = extraHorizontalSpace / 2;
             // const whitespaceBottom = extraHorizontalSpace / 2;
             // setWhitespace({ top: whitespaceTop, bottom: whitespaceBottom, left: 0, right: 0 });
-            setWhitespace({ top: 0, bottom: 0, left: 0, right: 0 });
         } else {
             // Original image has a taller aspect ratio, so add vertical whitespace
             scaledHeight = maxHeight;
             scaledWidth = maxHeight * imageAspectRatio;
-            const extraVerticalSpace = maxWidth - scaledWidth;
-            const whitespaceLeft = extraVerticalSpace / 2;
-            const whitespaceRight = extraVerticalSpace / 2;
-            setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
+
+            // Commenting this because we will never white space because we
+            // position inside the image
+            // const extraVerticalSpace = maxWidth - scaledWidth;
+            // const whitespaceLeft = extraVerticalSpace / 2;
+            // const whitespaceRight = extraVerticalSpace / 2;
+            // setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
         }
         setMaxContainerHeight(scaledHeight + 145);
         setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
     }
 
     useEffect(() => {
-        const preAutoImg = new Image();
-        const autoImg = new Image();
-        preAutoImg.src = stationParam.charAt(0) === 'r' ? PreAutoRedField : PreAutoBlueField;
-        autoImg.src = stationParam.charAt(0) === 'r' ? AutoRedField : AutoBlueField;
-
-        preAutoImg.onload = () => {
-            setPreAutoImageSrc(preAutoImg.src);
-        };
-        autoImg.onload = () => {
-            setAutoImageSrc(autoImg.src);
-        };
-
         getImageVariables();
         window.addEventListener('resize', getImageVariables);
 
@@ -581,7 +574,7 @@ function StandForm() {
                         if (location.state.previousRoute === 'matches') {
                             navigate('/matches', { state: { scoutingError: location.state.scoutingError } });
                         } else if (location.state.previousRoute === 'team') {
-                            navigate(`/team/${teamNumberParam}/stand`);
+                            navigate(`/team/${teamNumberParam}/${teamPageTabs.matchForms}`);
                         }
                     } else {
                         navigate('/');
@@ -623,26 +616,30 @@ function StandForm() {
                         >
                             {activeSection}
                         </Text>
-                        <Box position={'relative'} style={{ transform: `rotate(${fieldRotation}deg)` }}>
-                            {!preAutoImageSrc && (
-                                <Center
-                                    width={`${imageWidth * dimensionRatios.width}px`}
-                                    height={`${imageHeight * dimensionRatios.height}px`}
-                                    backgroundColor={'white'}
-                                    zIndex={2}
-                                    margin={'0 auto'}
-                                    position={'relative'}
-                                >
-                                    <Spinner />
-                                </Center>
-                            )}
+                        <Center
+                            margin={'0 auto'}
+                            width={`${imageWidth * dimensionRatios.width}px`}
+                            height={`${imageHeight * dimensionRatios.height}px`}
+                            position={'relative'}
+                            style={{ transform: `rotate(${fieldRotation}deg)` }}
+                        >
+                            <Spinner position={'absolute'} visibility={!imageLoaded ? 'visible' : 'hidden'} />
+                            <img
+                                src={stationParam.charAt(0) === 'r' ? PreAutoRedField : PreAutoBlueField}
+                                alt={'Field Map'}
+                                style={{
+                                    visibility: imageLoaded ? 'visible' : 'hidden',
+                                    maxHeight: `${Math.max(447 - 145, document.documentElement.clientHeight - 315)}px`
+                                }}
+                                onLoad={() => setImageLoaded(true)}
+                            />
                             {startingPositions.map((position, index) => (
                                 <Button
-                                    zIndex={1}
                                     key={position[2]}
                                     position={'absolute'}
-                                    left={`${whitespace.left + getPoint(position[0]) * dimensionRatios.width}px`}
-                                    top={`${whitespace.top + position[1] * dimensionRatios.height}px`}
+                                    visibility={imageLoaded ? 'visible' : 'hidden'}
+                                    left={`${getPoint(position[0]) * dimensionRatios.width}px`}
+                                    top={`${position[1] * dimensionRatios.height}px`}
                                     width={`${65 * dimensionRatios.width}px`}
                                     height={`${65 * dimensionRatios.height}px`}
                                     style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }}
@@ -659,21 +656,7 @@ function StandForm() {
                                     {index + 1}
                                 </Button>
                             ))}
-                            {preAutoImageSrc && (
-                                <img
-                                    src={preAutoImageSrc}
-                                    style={{
-                                        zIndex: 0,
-                                        margin: '0 auto',
-                                        maxHeight: `${Math.max(
-                                            447 - 145,
-                                            document.documentElement.clientHeight - 315
-                                        )}px`
-                                    }}
-                                    alt={'Field Map'}
-                                />
-                            )}
-                        </Box>
+                        </Center>
                         <Flex flexDir={'column'} rowGap={'15px'} marginTop={'15px'}>
                             <Button
                                 margin={'0 auto'}
@@ -839,26 +822,33 @@ function StandForm() {
                         (standFormData.autoTimeline.slice(-1)[0].scored !== null &&
                             (standFormData.autoTimeline[0].piece !== '0' ||
                                 standFormData.autoTimeline[0].scored !== null)) ? (
-                            <Box position={'relative'} style={{ transform: `rotate(${fieldRotation}deg)` }}>
-                                {!autoImageSrc && (
-                                    <Center
-                                        width={`${imageWidth * dimensionRatios.width}px`}
-                                        height={`${imageHeight * dimensionRatios.height}px`}
-                                        backgroundColor={'white'}
-                                        zIndex={2}
-                                        margin={'0 auto'}
-                                        position={'relative'}
-                                    >
-                                        <Spinner />
-                                    </Center>
-                                )}
+                            <Center
+                                margin={'0 auto'}
+                                width={`${imageWidth * dimensionRatios.width}px`}
+                                height={`${imageHeight * dimensionRatios.height}px`}
+                                position={'relative'}
+                                style={{ transform: `rotate(${fieldRotation}deg)` }}
+                            >
+                                <Spinner position={'absolute'} visibility={!imageLoaded ? 'visible' : 'hidden'} />
+                                <img
+                                    src={stationParam.charAt(0) === 'r' ? AutoRedField : AutoBlueField}
+                                    alt={'Field Map'}
+                                    style={{
+                                        visibility: imageLoaded ? 'visible' : 'hidden',
+                                        maxHeight: `${Math.max(
+                                            447 - 145,
+                                            document.documentElement.clientHeight - 315
+                                        )}px`
+                                    }}
+                                    onLoad={() => setImageLoaded(true)}
+                                />
                                 {notePositions.map((position, index) => (
                                     <Button
-                                        zIndex={1}
                                         key={position[2]}
                                         position={'absolute'}
-                                        left={`${whitespace.left + getPoint(position[0]) * dimensionRatios.width}px`}
-                                        top={`${whitespace.top + position[1] * dimensionRatios.height}px`}
+                                        visibility={imageLoaded ? 'visible' : 'hidden'}
+                                        left={`${getPoint(position[0]) * dimensionRatios.width}px`}
+                                        top={`${position[1] * dimensionRatios.height}px`}
                                         width={`${65 * dimensionRatios.width}px`}
                                         height={`${65 * dimensionRatios.height}px`}
                                         style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }}
@@ -878,21 +868,7 @@ function StandForm() {
                                         {index + 1}
                                     </Button>
                                 ))}
-                                {autoImageSrc && (
-                                    <img
-                                        src={autoImageSrc}
-                                        style={{
-                                            zIndex: 0,
-                                            margin: '0 auto',
-                                            maxHeight: `${Math.max(
-                                                447 - 145,
-                                                document.documentElement.clientHeight - 315
-                                            )}px`
-                                        }}
-                                        alt={'Field Map'}
-                                    />
-                                )}
-                            </Box>
+                            </Center>
                         ) : (
                             <Flex
                                 height={`${imageHeight * dimensionRatios.height}px`}
@@ -1815,7 +1791,6 @@ function StandForm() {
 
     if (
         standFormData.loading ||
-        whitespace === null ||
         dimensionRatios === null ||
         maxContainerHeight === null ||
         standFormManagers === null ||

@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import TeamPageTabs from './TeamPageTabs';
 import { sortEvents } from '../util/helperFunctions';
 import { ChevronDownIcon } from '@chakra-ui/icons';
-import { year } from '../util/helperConstants';
+import { teamPageTabs, year } from '../util/helperConstants';
 import '../stylesheets/teamstyle.css';
 
 function TeamPage({ keyProp }) {
@@ -152,73 +152,89 @@ function TeamPage({ keyProp }) {
 
     return (
         <Box marginBottom={'25px'}>
-            <div className='tabs'>
-                <div className='tab-header'>
-                    <div onClick={() => navigate(`/team/${teamNumberParam}/overview`, { state: keyProp })}>
+            <Box className='tabs'>
+                <Box className='tab-header'>
+                    <Box
+                        onClick={() =>
+                            navigate(`/team/${teamNumberParam}/${teamPageTabs.overview}`, { state: keyProp })
+                        }
+                    >
                         Overview
-                    </div>
-                    <div onClick={() => navigate(`/team/${teamNumberParam}/pit`, { state: keyProp })}>Pit</div>
-                    <div onClick={() => navigate(`/team/${teamNumberParam}/stand`, { state: keyProp })}>Stand</div>
-                    <div onClick={() => navigate(`/team/${teamNumberParam}/super`, { state: keyProp })}>Super</div>
-                    <div onClick={() => navigate(`/team/${teamNumberParam}/other`, { state: keyProp })}>Other</div>
-                </div>
-                <div
+                    </Box>
+                    <Box onClick={() => navigate(`/team/${teamNumberParam}/${teamPageTabs.pit}`, { state: keyProp })}>
+                        Pit
+                    </Box>
+                    <Box
+                        onClick={() =>
+                            navigate(`/team/${teamNumberParam}/${teamPageTabs.matchForms}`, { state: keyProp })
+                        }
+                    >
+                        Match Forms
+                    </Box>
+                    <Box
+                        onClick={() =>
+                            navigate(`/team/${teamNumberParam}/${teamPageTabs.analysis}`, { state: keyProp })
+                        }
+                    >
+                        Analysis
+                    </Box>
+                    <Box onClick={() => navigate(`/team/${teamNumberParam}/${teamPageTabs.other}`, { state: keyProp })}>
+                        Other
+                    </Box>
+                </Box>
+                <Box
                     className='tab-indicator'
                     style={{
-                        left: `calc((calc(100% / 5) * ${['overview', 'pit', 'stand', 'super', 'other'].indexOf(
-                            tab
-                        )}) + 2.5%)`
+                        left: `calc((calc(100% / 5) * ${Object.values(teamPageTabs).indexOf(tab)}) + 2.5%)`
                     }}
-                ></div>
-            </div>
-            <Box margin={'0 auto'} marginTop={'25px'}>
-                <Center marginBottom={'25px'}>
-                    <Menu placement='bottom'>
-                        <MenuButton
-                            maxW={'65vw'}
-                            onClick={() => setFocusedEvent('')}
-                            _focus={{ outline: 'none' }}
-                            as={Button}
-                            rightIcon={<ChevronDownIcon />}
-                        >
-                            <Box overflow={'hidden'} textOverflow={'ellipsis'}>
-                                {currentEvent.name}
-                            </Box>
-                        </MenuButton>
-                        <MenuList>
-                            {events.map((eventItem) => (
-                                <MenuItem
-                                    textAlign={'center'}
-                                    justifyContent={'center'}
-                                    _focus={{ backgroundColor: 'none' }}
-                                    onMouseEnter={() => setFocusedEvent(eventItem.name)}
-                                    backgroundColor={
-                                        (currentEvent.name === eventItem.name && focusedEvent === '') ||
-                                        focusedEvent === eventItem.name
-                                            ? 'gray.100'
-                                            : 'none'
-                                    }
-                                    maxW={'65vw'}
-                                    key={eventItem.key}
-                                    onClick={() => {
-                                        setCurrentEvent({ name: eventItem.name, key: eventItem.key });
-                                    }}
-                                >
-                                    {eventItem.name}
-                                </MenuItem>
-                            ))}
-                        </MenuList>
-                    </Menu>
-                </Center>
-                <TeamPageTabs
-                    tab={tab}
-                    pitForm={teamData?.pitForm}
-                    matchForms={teamData?.matchForms}
-                    teamEventData={teamData?.teamEventData}
-                    teamNumberParam={teamNumberParam}
-                    teamName={teamName}
-                />
+                ></Box>
             </Box>
+            <Center marginBottom={'25px'}>
+                <Menu placement='bottom'>
+                    <MenuButton
+                        maxW={'65vw'}
+                        onClick={() => setFocusedEvent('')}
+                        _focus={{ outline: 'none' }}
+                        as={Button}
+                        rightIcon={<ChevronDownIcon />}
+                    >
+                        <Box overflow={'hidden'} textOverflow={'ellipsis'}>
+                            {currentEvent.name}
+                        </Box>
+                    </MenuButton>
+                    <MenuList>
+                        {events.map((eventItem) => (
+                            <MenuItem
+                                textAlign={'center'}
+                                justifyContent={'center'}
+                                _focus={{ backgroundColor: 'none' }}
+                                onMouseEnter={() => setFocusedEvent(eventItem.name)}
+                                backgroundColor={
+                                    (currentEvent.name === eventItem.name && focusedEvent === '') ||
+                                    focusedEvent === eventItem.name
+                                        ? 'gray.100'
+                                        : 'none'
+                                }
+                                maxW={'65vw'}
+                                key={eventItem.key}
+                                onClick={() => {
+                                    setCurrentEvent({ name: eventItem.name, key: eventItem.key });
+                                }}
+                            >
+                                {eventItem.name}
+                            </MenuItem>
+                        ))}
+                    </MenuList>
+                </Menu>
+            </Center>
+            <TeamPageTabs
+                tab={tab}
+                pitForm={teamData?.pitForm}
+                matchForms={teamData?.matchForms}
+                teamEventData={teamData?.teamEventData}
+                teamNumberParam={teamNumberParam}
+                teamName={teamName}
+            />
         </Box>
     );
 }

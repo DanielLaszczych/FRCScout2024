@@ -1,13 +1,28 @@
 import { React, useContext, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
-import { Button, Icon, HStack, Box, Image, Text, Avatar, Menu, MenuButton, MenuList, MenuItem, Flex, NumberInputField, NumberInput } from '@chakra-ui/react';
+import {
+    Button,
+    Icon,
+    HStack,
+    Box,
+    Image,
+    Text,
+    Avatar,
+    Menu,
+    MenuButton,
+    MenuList,
+    MenuItem,
+    Flex,
+    NumberInputField,
+    NumberInput
+} from '@chakra-ui/react';
 import { BsSearch } from 'react-icons/bs';
 import logo from '../images/RTLogoNoClaws.png';
-import '../stylesheets/navbarstyle.css';
-import { config } from '../util/helperConstants';
+import { config, teamPageTabs } from '../util/helperConstants';
 import { capitalizeFirstLetter } from '../util/helperFunctions';
 import { GlobalContext } from '../context/globalState';
+import '../stylesheets/navbarstyle.css';
 
 let titleMap = [
     { path: '/', title: 'Home' },
@@ -64,7 +79,16 @@ function NavBar() {
     }, [user, offline, switchModes]);
 
     return (
-        <Flex position={'sticky'} zIndex={999} top={0} w={'100%'} className='navbar' minHeight={'75px'} marginBottom={'25px'} backgroundColor={'#212529'}>
+        <Flex
+            position={'sticky'}
+            top={0}
+            zIndex={999}
+            width={'100%'}
+            minHeight={'75px'}
+            marginBottom={'25px'}
+            backgroundColor={'#212529'}
+            className='navbar'
+        >
             <Link to={'/'}>
                 <Box h='75px'>
                     <Image
@@ -83,14 +107,26 @@ function NavBar() {
             </Link>
             {user !== 'NoUser' && (
                 <Box className='search' flex={1} h={'75px'}>
-                    <HStack width={{ base: '75%', sm: '75%', md: '60%', lg: '50%' }} margin={{ base: 'auto', md: '0 0 0 22%' }} pos={'relative'} top='50%' transform={'translateY(-50%)'} spacing={0}>
-                        <NumberInput w={'100%'} value={teamNumber} onChange={(value) => setTeamNumber(value)} precision={0}>
+                    <HStack
+                        width={{ base: '75%', sm: '75%', md: '60%', lg: '50%' }}
+                        margin={{ base: 'auto', md: '0 0 0 22%' }}
+                        pos={'relative'}
+                        top='50%'
+                        transform={'translateY(-50%)'}
+                        spacing={0}
+                    >
+                        <NumberInput
+                            w={'100%'}
+                            value={teamNumber}
+                            onChange={(value) => setTeamNumber(value)}
+                            precision={0}
+                        >
                             <NumberInputField
                                 padding={'0px 0px 0px 16px'}
                                 h='45px'
                                 onKeyDown={(event) => {
                                     if (event.key === 'Enter') {
-                                        navigate(`/team/${teamNumber}/overview`, { state: Date.now() });
+                                        navigate(`/team/${teamNumber}/${teamPageTabs.overview}`, { state: Date.now() });
                                         event.target.blur();
                                     }
                                 }}
@@ -103,7 +139,7 @@ function NavBar() {
                         </NumberInput>
                         <Button
                             h='45px'
-                            onClick={() => navigate(`/team/${teamNumber}/overview`, { state: Date.now() })}
+                            onClick={() => navigate(`/team/${teamNumber}/${teamPageTabs.overview}`, { state: Date.now() })}
                             _hover={{ bgColor: 'white' }}
                             borderRadius='0px 5px 5px 0px'
                             bgColor={'white'}
@@ -117,7 +153,16 @@ function NavBar() {
             {user !== 'NoUser' && (
                 <Menu>
                     <Box h='75px'>
-                        <MenuButton marginRight={'15px'} cursor={'pointer'} position={'relative'} top='50%' transform={'translateY(-50%)'} as={Avatar} src={user.iconImage} border='2px solid white' />
+                        <MenuButton
+                            marginRight={'15px'}
+                            cursor={'pointer'}
+                            position={'relative'}
+                            top='50%'
+                            transform={'translateY(-50%)'}
+                            as={Avatar}
+                            src={user.iconImage}
+                            border='2px solid white'
+                        />
                     </Box>
                     <MenuList
                         backgroundColor={'#2D3339'}
@@ -131,7 +176,13 @@ function NavBar() {
                             <Text marginLeft={'10px'} fontSize={'xl'} fontWeight={'bold'} color={'white'}>
                                 {user.displayName}
                             </Text>
-                            <Text marginLeft={'10px'} marginBottom={'5px'} fontSize={'xl'} fontWeight={'bold'} color={'white'}>
+                            <Text
+                                marginLeft={'10px'}
+                                marginBottom={'5px'}
+                                fontSize={'xl'}
+                                fontWeight={'bold'}
+                                color={'white'}
+                            >
                                 Role: {user.role}
                             </Text>
                         </Box>
@@ -215,7 +266,13 @@ function NavBar() {
                             </MenuItem>
                         </Box>
                         <a href={`${config.API_URL}/auth/logout`}>
-                            <MenuItem backgroundColor={'#2D3339'} _focus={{ backgroundColor: 'none' }} _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }} fontSize={'md'} color={'white'}>
+                            <MenuItem
+                                backgroundColor={'#2D3339'}
+                                _focus={{ backgroundColor: 'none' }}
+                                _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                                fontSize={'md'}
+                                color={'white'}
+                            >
                                 Log Out
                             </MenuItem>
                         </a>

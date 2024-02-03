@@ -125,6 +125,18 @@ const matchFormSchema = new Schema({
     teleopGP: {
         type: teleopGPSchema
     },
+    teleopPoints: {
+        type: Number
+    },
+    climb: {
+        type: String
+    },
+    stagePoints: {
+        type: Number
+    },
+    offensivePoints: {
+        type: Number
+    },
     wasDefended: {
         type: Boolean
     },
@@ -132,18 +144,6 @@ const matchFormSchema = new Schema({
         type: Number
     },
     defenseAllocation: {
-        type: Number
-    },
-    climb: {
-        type: String
-    },
-    teleopPoints: {
-        type: Number
-    },
-    stagePoints: {
-        type: Number
-    },
-    offensivePoints: {
         type: Number
     },
     lostCommunication: {

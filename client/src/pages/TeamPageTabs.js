@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useLayoutEffect, useState } from 'react';
 import {
     Box,
     Center,
@@ -11,35 +11,31 @@ import {
     OrderedList,
     Popover,
     PopoverArrow,
-    PopoverBody,
     PopoverCloseButton,
     PopoverContent,
     PopoverTrigger,
     Spinner,
     Tag,
     Text,
-    UnorderedList,
-    VStack,
-    AbsoluteCenter,
     Divider
 } from '@chakra-ui/react';
 import {
-    averageArr,
-    capitalizeFirstLetter,
     convertMatchKeyToString,
     convertStationKeyToString,
     getValueByRange,
-    roundToHundredth,
-    roundToWhole,
+    shortenScouterName,
     sortMatches
 } from '../util/helperFunctions';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthContext } from '../context/auth';
 import { Link } from 'react-router-dom';
-import { matchFormStatus } from '../util/helperConstants';
+import { matchFormStatus, teamPageTabs } from '../util/helperConstants';
 import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
 import PreAutoBlueField from '../images/PreAutoBlueField.png';
+import PreAutoRedField from '../images/PreAutoRedField.png';
+import { GrMap } from 'react-icons/gr';
+import MatchLineGraphs from '../components/MatchLineGrahps';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -65,16 +61,43 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
     const { user } = useContext(AuthContext);
 
     const [dimensionRatios, setDimensionRatios] = useState(null);
-    const [whitespace, setWhitespace] = useState(null);
-    const [preAutoImageSrc, setPreAutoImageSrc] = useState(null);
+    const [imageLoaded, setImageLoaded] = useState(false);
+    const [commentsToggled, setCommentsToggled] = useState([]);
+    const [oneCompleteMatchForms, setOneCompleteMatchForms] = useState(null);
 
-    function getImageVariables() {
-        const viewportWidth = window.innerWidth;
+    useEffect(() => {
+        if (matchForms) {
+            setOneCompleteMatchForms(
+                matchForms.filter(
+                    (matchForm) =>
+                        matchForm.standStatus === matchFormStatus.complete ||
+                        matchForm.superStatus === matchFormStatus.complete
+                )
+            );
+        } else {
+            setOneCompleteMatchForms(null);
+        }
+    }, [matchForms]);
+
+    useLayoutEffect(() => {
+        setDimensionRatios(null);
+        setImageLoaded(false);
+    }, [tab]);
+
+    const getImageVariables = useCallback(() => {
+        const viewportWidth = document.documentElement.clientWidth;
+        const breakPointWidth = window.innerWidth;
         // const viewportHeight = window.innerHeight;
 
         // Calculate image dimensions based on screen size
-        const maxWidth = viewportWidth * getValueByRange(viewportWidth); // Adjust the multiplier as needed
-        const maxHeight = imageHeight;
+        // We subtract by 50 in this one to account for the 25px of padding on all sides
+        const maxWidth =
+            viewportWidth *
+                (tab !== teamPageTabs.matchForms
+                    ? getValueByRange(breakPointWidth)
+                    : getValueByRange(breakPointWidth, [0.75, 0.6, 0.35, 0.2])) -
+            (tab !== teamPageTabs.matchForms ? 0 : 50); // Adjust the multiplier as needed
+        const maxHeight = imageHeight - (tab !== teamPageTabs.matchForms ? 0 : 50);
 
         const screenAspectRatio = maxWidth / maxHeight;
         const imageAspectRatio = imageWidth / imageHeight;
@@ -86,38 +109,45 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
             scaledWidth = maxWidth;
             scaledHeight = maxWidth / imageAspectRatio;
 
-            // Overwriting this because there will never be horizontal whitespace
+            // Commenting this because we will never white space because we
+            // position inside the image
             // const extraHorizontalSpace = maxHeight - scaledHeight;
             // const whitespaceTop = extraHorizontalSpace / 2;
             // const whitespaceBottom = extraHorizontalSpace / 2;
             // setWhitespace({ top: whitespaceTop, bottom: whitespaceBottom, left: 0, right: 0 });
-            setWhitespace({ top: 0, bottom: 0, left: 0, right: 0 });
         } else {
             // Original image has a taller aspect ratio, so add vertical whitespace
             scaledHeight = maxHeight;
             scaledWidth = maxHeight * imageAspectRatio;
-            const extraVerticalSpace = maxWidth - scaledWidth;
-            const whitespaceLeft = extraVerticalSpace / 2;
-            const whitespaceRight = extraVerticalSpace / 2;
-            setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
-        }
 
+            // Commenting this because we will never white space because we
+            // position inside the image
+            // const extraVerticalSpace = maxWidth - scaledWidth;
+            // const whitespaceLeft = extraVerticalSpace / 2;
+            // const whitespaceRight = extraVerticalSpace / 2;
+            // setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
+        }
         setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
-    }
+    }, [tab]);
 
     useEffect(() => {
-        const preAutoImg = new Image();
-        preAutoImg.src = PreAutoBlueField;
+        if ([teamPageTabs.pit, teamPageTabs.matchForms].includes(tab)) {
+            getImageVariables();
+            window.addEventListener('resize', getImageVariables);
 
-        preAutoImg.onload = () => {
-            setPreAutoImageSrc(preAutoImg.src);
-        };
+            return () => window.removeEventListener('resize', getImageVariables);
+        }
+    }, [getImageVariables, tab]);
 
-        getImageVariables();
-        window.addEventListener('resize', getImageVariables);
-
-        return () => window.removeEventListener('resize', getImageVariables);
-    }, []);
+    function getPoint(pointX, station) {
+        let mirror = 185;
+        if (station.charAt(0) === 'r') {
+            // Calculate mirrored x-coordinate
+            return 2 * mirror - pointX;
+        } else {
+            return pointX;
+        }
+    }
 
     function renderAbilities(ability, index) {
         return (
@@ -137,6 +167,11 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     columnGap={'10px'}
                                     rowGap={'8px'}
                                 >
+                                    {ability.abilities.length === 0 && (
+                                        <Tag fontSize={'md'} fontWeight={'medium'}>
+                                            None
+                                        </Tag>
+                                    )}
                                     {ability.abilities.map((subAbility) => {
                                         return (
                                             <Tag key={subAbility.label} fontSize={'md'} fontWeight={'medium'}>
@@ -181,7 +216,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
 
     function renderTab(tab) {
         switch (tab) {
-            case 'overview':
+            case teamPageTabs.overview:
                 return (
                     <Flex flexWrap={'wrap'} justifyContent={'center'} rowGap={'15px'}>
                         <Flex width={{ base: '100%', lg: '40%' }} flexDirection={'column'} alignItems={'center'}>
@@ -228,7 +263,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             fontWeight={'medium'}
                                             textAlign={'center'}
                                             borderBottom={'1px solid black'}
-                                            height={'55px'}
+                                            height={'54px'}
                                             backgroundColor={'gray.200'}
                                         >
                                             Team #
@@ -238,7 +273,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             fontWeight={'medium'}
                                             textAlign={'center'}
                                             padding={'2px 0px'}
-                                            backgroundColor={'red.300'}
+                                            backgroundColor={'red.200'}
                                         >
                                             {teamNumberParam}
                                         </Text>
@@ -254,11 +289,16 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             fontSize={'lg'}
                                             fontWeight={'medium'}
                                             textAlign={'center'}
+                                            height={'27px'}
                                             backgroundColor={'gray.200'}
                                         >
                                             Total
                                         </Text>
-                                        <Flex borderBottom={'1px solid black'} backgroundColor={'gray.200'}>
+                                        <Flex
+                                            borderBottom={'1px solid black'}
+                                            height={'27px'}
+                                            backgroundColor={'gray.200'}
+                                        >
                                             <Text
                                                 flex={1 / 4}
                                                 fontSize={'lg'}
@@ -281,7 +321,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                IDK
+                                                -
                                             </Text>
                                             <Text
                                                 flex={1 / 4}
@@ -289,10 +329,10 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                IDK
+                                                -
                                             </Text>
                                         </Flex>
-                                        <Flex padding={'2px 0px'} backgroundColor={'red.300'}>
+                                        <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
                                             <Text
                                                 flex={1 / 4}
                                                 fontSize={'lg'}
@@ -315,7 +355,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                {teamEventData.offensivePoints.max}
+                                                -
                                             </Text>
                                             <Text
                                                 flex={1 / 4}
@@ -323,7 +363,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                {123}
+                                                -
                                             </Text>
                                         </Flex>
                                     </Flex>
@@ -338,11 +378,16 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             fontSize={'lg'}
                                             fontWeight={'medium'}
                                             textAlign={'center'}
+                                            height={'27px'}
                                             backgroundColor={'gray.200'}
                                         >
                                             Auto
                                         </Text>
-                                        <Flex borderBottom={'1px solid black'} backgroundColor={'gray.200'}>
+                                        <Flex
+                                            borderBottom={'1px solid black'}
+                                            height={'27px'}
+                                            backgroundColor={'gray.200'}
+                                        >
                                             <Text
                                                 flex={1 / 2}
                                                 fontSize={'lg'}
@@ -360,7 +405,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 Max
                                             </Text>
                                         </Flex>
-                                        <Flex padding={'2px 0px'} backgroundColor={'red.300'}>
+                                        <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
                                             <Text
                                                 flex={1 / 2}
                                                 fontSize={'lg'}
@@ -390,11 +435,16 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             fontSize={'lg'}
                                             fontWeight={'medium'}
                                             textAlign={'center'}
+                                            height={'27px'}
                                             backgroundColor={'gray.200'}
                                         >
                                             Teleop
                                         </Text>
-                                        <Flex borderBottom={'1px solid black'} backgroundColor={'gray.200'}>
+                                        <Flex
+                                            borderBottom={'1px solid black'}
+                                            height={'27px'}
+                                            backgroundColor={'gray.200'}
+                                        >
                                             <Text
                                                 flex={1 / 2}
                                                 fontSize={'lg'}
@@ -412,7 +462,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 Max
                                             </Text>
                                         </Flex>
-                                        <Flex padding={'2px 0px'} backgroundColor={'red.300'}>
+                                        <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
                                             <Text
                                                 flex={1 / 2}
                                                 fontSize={'lg'}
@@ -442,11 +492,16 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             fontSize={'lg'}
                                             fontWeight={'medium'}
                                             textAlign={'center'}
+                                            height={'27px'}
                                             backgroundColor={'gray.200'}
                                         >
                                             Stage
                                         </Text>
-                                        <Flex borderBottom={'1px solid black'} backgroundColor={'gray.200'}>
+                                        <Flex
+                                            borderBottom={'1px solid black'}
+                                            height={'27px'}
+                                            backgroundColor={'gray.200'}
+                                        >
                                             <Text
                                                 flex={1 / 3}
                                                 fontSize={'lg'}
@@ -472,7 +527,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 Hangs
                                             </Text>
                                         </Flex>
-                                        <Flex padding={'2px 0px'} backgroundColor={'red.300'}>
+                                        <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
                                             <Text
                                                 flex={1 / 3}
                                                 fontSize={'lg'}
@@ -513,7 +568,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             fontWeight={'medium'}
                                             textAlign={'center'}
                                             borderBottom={'1px solid black'}
-                                            height={'55px'}
+                                            height={'54px'}
                                             backgroundColor={'gray.200'}
                                         >
                                             Pts
@@ -523,9 +578,9 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             fontWeight={'medium'}
                                             textAlign={'center'}
                                             padding={'2px 0px'}
-                                            backgroundColor={'red.300'}
+                                            backgroundColor={'red.200'}
                                         >
-                                            IDK
+                                            -
                                         </Text>
                                     </Flex>
                                     <Flex
@@ -542,7 +597,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             fontWeight={'medium'}
                                             textAlign={'center'}
                                             borderBottom={'1px solid black'}
-                                            height={'55px'}
+                                            height={'54px'}
                                             backgroundColor={'gray.200'}
                                         >
                                             Max Pts
@@ -552,9 +607,9 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             fontWeight={'medium'}
                                             textAlign={'center'}
                                             padding={'2px 0px'}
-                                            backgroundColor={'red.300'}
+                                            backgroundColor={'red.200'}
                                         >
-                                            IDK
+                                            -
                                         </Text>
                                     </Flex>
                                 </Flex>
@@ -638,7 +693,6 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     fontSize={'xl'}
                                     fontWeight={'semibold'}
                                     textAlign={'center'}
-                                    marginBottom={'-15px'}
                                     textDecoration={'underline'}
                                 >
                                     Event Ranking
@@ -647,21 +701,25 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                             {teamEventData && (
                                 // This has to be in its own space
                                 <Flex
-                                    width={{ base: '90vw', md: '60%', lg: '40%' }}
-                                    // Cant use height because it messes up animation for some reason
-                                    minHeight={{ base: '40vw', lg: '40dvh' }}
-                                    padding={'0px 0px 0px 25px'}
+                                    width={{ base: '90vw', sm: '60vw', md: '40vw' }}
+                                    height={{ base: '90vw', sm: '60vw', md: 'max(40dvh, 300px)' }}
+                                    marginTop={{ base: '-20px', md: '0px' }}
                                     justifyContent={'center'}
+                                    position={'relative'}
                                 >
                                     <Radar
                                         data={{
                                             labels: [
-                                                'Offense',
-                                                ['Speaker', 'Tele'],
-                                                'Stage',
-                                                'Defense',
-                                                'Auto',
-                                                ['Amp', 'Tele']
+                                                `Offense (${teamEventData.rank.offense})`,
+                                                ['Speaker', `Tele (${teamEventData.rank.teleopSpeaker})`],
+                                                `Stage (${teamEventData.rank.stage})`,
+                                                `Defense (${
+                                                    teamEventData.playedDefense === 0
+                                                        ? 'N/A'
+                                                        : teamEventData.rank.defense
+                                                })`,
+                                                `Auto (${teamEventData.rank.auto})`,
+                                                ['Amp', `Tele (${teamEventData.rank.teleopAmp})`]
                                             ],
                                             datasets: [
                                                 {
@@ -685,6 +743,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             ]
                                         }}
                                         options={{
+                                            maintainAspectRatio: false,
                                             plugins: {
                                                 legend: {
                                                     display: false
@@ -709,7 +768,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                         </Flex>
                     </Flex>
                 );
-            case 'pit':
+            case teamPageTabs.pit:
                 return pitForm && !pitForm.followUp ? (
                     <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
                         <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
@@ -757,42 +816,36 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                         <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
                             Prefered Starting Position
                         </Text>
-                        <Box marginBottom={'10px'} position={'relative'}>
-                            {!preAutoImageSrc && (
-                                <Center
-                                    width={`${imageWidth * dimensionRatios.width}px`}
-                                    height={`${imageHeight * dimensionRatios.height}px`}
-                                    backgroundColor={'white'}
-                                    zIndex={2}
-                                    margin={'0 auto'}
-                                    position={'relative'}
-                                >
-                                    <Spinner />
-                                </Center>
-                            )}
-                            {startingPositions.map((position, index) => (
-                                <Flex
-                                    zIndex={1}
-                                    key={position[2]}
-                                    position={'absolute'}
-                                    left={`${whitespace.left + position[0] * dimensionRatios.width}px`}
-                                    top={`${whitespace.top + position[1] * dimensionRatios.height}px`}
-                                    width={`${65 * dimensionRatios.width}px`}
-                                    height={`${65 * dimensionRatios.height}px`}
-                                    backgroundColor={'gray.500'}
-                                    textColor={'white'}
-                                    justifyContent={'center'}
-                                    alignItems={'center'}
-                                    borderRadius={'5px'}
-                                    hidden={pitForm.startingPosition !== index + 1}
-                                >
-                                    {index + 1}
-                                </Flex>
-                            ))}
-                            {preAutoImageSrc && (
-                                <img src={preAutoImageSrc} style={{ zIndex: 0, margin: '0 auto' }} alt={'Field Map'} />
-                            )}
-                        </Box>
+                        <Center
+                            margin={'0 auto'}
+                            marginBottom={'10px'}
+                            width={`${imageWidth * dimensionRatios.width}px`}
+                            height={`${imageHeight * dimensionRatios.height}px`}
+                            position={'relative'}
+                        >
+                            <Spinner position={'absolute'} visibility={!imageLoaded ? 'visible' : 'hidden'} />
+                            <img
+                                src={PreAutoBlueField}
+                                alt={'Field Map'}
+                                style={{ visibility: imageLoaded ? 'visible' : 'hidden' }}
+                                onLoad={() => setImageLoaded(true)}
+                            />
+                            <Flex
+                                position={'absolute'}
+                                visibility={imageLoaded ? 'visible' : 'hidden'}
+                                left={`${startingPositions[pitForm.startingPosition - 1][0] * dimensionRatios.width}px`}
+                                top={`${startingPositions[pitForm.startingPosition - 1][1] * dimensionRatios.height}px`}
+                                width={`${65 * dimensionRatios.width}px`}
+                                height={`${65 * dimensionRatios.height}px`}
+                                backgroundColor={'gray.500'}
+                                textColor={'white'}
+                                justifyContent={'center'}
+                                alignItems={'center'}
+                                borderRadius={'5px'}
+                            >
+                                {pitForm.startingPosition}
+                            </Flex>
+                        </Center>
                         <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
                             Comment: <span style={{ fontWeight: '600', fontSize: '95%' }}>{pitForm.autoComment}</span>
                         </Text>
@@ -837,1128 +890,665 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                         </Text>
                     </Box>
                 ) : (
-                    <Box
-                        textAlign={'center'}
-                        fontSize={'25px'}
-                        fontWeight={'medium'}
-                        margin={'0 auto'}
-                        width={{ base: '85%', md: '66%', lg: '50%' }}
-                    >
-                        No Pit Data
+                    <Box fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                        No pit data
                     </Box>
                 );
-            case 'stand':
+            case teamPageTabs.matchForms:
                 return (
+                    // Match #, Scouter (Both if possible), Starting Position, Pre-loaded, left zone, game piece auto, game piece tele, climb, super scout stats, issues, comment
                     <Box>
-                        {/* standForms.length > 0 ? (
-                    <Box marginBottom={'25px'}>
-                        {!isDesktop ? (
-                            sortMatches(standForms).map((stand) =>
-                                stand.standStatus === matchFormStatus.noShow ? (
-                                    <div key={stand._id} className='grid'>
-                                        <div className='grid-column'>
-                                            <Box
-                                                as={user.admin && Link}
-                                                className='grid-item header'
-                                                to={
-                                                    user.admin
-                                                        ? `/standForm/${currentEvent.key}/${stand.matchNumber}/${stand.station}/${teamNumberParam}`
-                                                        : ''
-                                                }
-                                                textDecoration={user.admin && 'underline'}
-                                                state={{ previousRoute: 'team' }}
-                                                _hover={{ backgroundColor: user.admin && 'gray.400' }}
-                                                _active={{ backgroundColor: user.admin && 'gray.500' }}
-                                            >
-                                                {convertMatchKeyToString(stand.matchNumber)} :{' '}
-                                                {convertStationKeyToString(stand.station)}
-                                            </Box>
-                                            <div className='grid-item header'>{`${
-                                                stand.standScouter.split(' ')[0]
-                                            }  ${stand.standScouter.split(' ')[1].charAt(0)}.`}</div>
-                                        </div>
-                                        <div className='grid-column' style={{ textAlign: 'center' }}>
-                                            <div className='grid-item'>
-                                                <Text
-                                                    className='grid-comment-item'
-                                                    flexBasis={'100px'}
-                                                    flexGrow={1}
-                                                    flexShrink={1}
-                                                    overflowY={'auto'}
-                                                    wordBreak={'break-word'}
-                                                >
-                                                    No Show: {stand.standStatusComment || 'None'}
-                                                </Text>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div key={stand._id} className='grid'>
-                                        <div className='grid-column'>
-                                            <Box
-                                                as={user.admin && Link}
-                                                className='grid-item header'
-                                                to={
-                                                    user.admin
-                                                        ? `/standForm/${currentEvent.key}/${stand.matchNumber}/${stand.station}/${teamNumberParam}`
-                                                        : ''
-                                                }
-                                                textDecoration={user.admin && 'underline'}
-                                                state={{ previousRoute: 'team' }}
-                                                _hover={{ backgroundColor: user.admin && 'gray.400' }}
-                                                _active={{ backgroundColor: user.admin && 'gray.500' }}
-                                            >
-                                                {convertMatchKeyToString(stand.matchNumber)} :{' '}
-                                                {convertStationKeyToString(stand.station)}
-                                            </Box>
-                                            <div className='grid-item header'>{`${
-                                                stand.standScouter.split(' ')[0]
-                                            }  ${stand.standScouter.split(' ')[1].charAt(0)}.`}</div>
-                                        </div>
-                                        <div className='grid-column'>
-                                            <div className='grid-item header'>Pre-Auto</div>
-                                            <div className='grid-item header'>Auto</div>
-                                            <div className='grid-item header'>Post-Auto</div>
-                                        </div>
-                                        <div className='grid-column'>
-                                            <div className='grid-item'>
-                                                <Center
-                                                    paddingTop={'5px'}
-                                                    paddingBottom={'5px'}
-                                                    pos={'relative'}
-                                                    top={'50%'}
-                                                    transform={'translateY(-50%)'}
-                                                >
-                                                    <Spinner pos={'absolute'} zIndex={-1}></Spinner>
-                                                    <canvas
-                                                        id={stand._id}
-                                                        width={imageWidth * calculatePopoverImageScale()}
-                                                        height={imageHeight * calculatePopoverImageScale()}
-                                                        style={{ zIndex: 0 }}
-                                                    ></canvas>
-                                                </Center>
-                                            </div>
-                                            <div className='grid-item'>
-                                                <div className='grid-text-item'>Pre-Loaded: {stand.preLoadedPiece}</div>
-                                                <div className='grid-text-item'>
-                                                    Top Row:{' '}
-                                                    <Flex
-                                                        flexWrap={'wrap'}
-                                                        columnGap={'8px'}
-                                                        rowGap={'8px'}
-                                                        display='inline-flex'
-                                                        marginBottom={'8px'}
-                                                    >
-                                                        <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                            <BsCone />
-                                                            &nbsp;
-                                                            {stand.topAuto.coneScored} (
-                                                            {getAccuarcy(stand, 'auto', 'top', 'cone')})
-                                                        </Tag>
-                                                        <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                            <IoCube />
-                                                            &nbsp;
-                                                            {stand.topAuto.cubeScored} (
-                                                            {getAccuarcy(stand, 'auto', 'top', 'cube')})
-                                                        </Tag>
-                                                    </Flex>
-                                                </div>
-                                                <div className='grid-text-item'>
-                                                    Middle Row:{' '}
-                                                    <Flex
-                                                        flexWrap={'wrap'}
-                                                        columnGap={'8px'}
-                                                        rowGap={'8px'}
-                                                        display='inline-flex'
-                                                        marginBottom={'8px'}
-                                                    >
-                                                        <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                            <BsCone />
-                                                            &nbsp;
-                                                            {stand.middleAuto.coneScored} (
-                                                            {getAccuarcy(stand, 'auto', 'middle', 'cone')})
-                                                        </Tag>
-                                                        <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                            <IoCube />
-                                                            &nbsp;
-                                                            {stand.middleAuto.cubeScored} (
-                                                            {getAccuarcy(stand, 'auto', 'middle', 'cube')})
-                                                        </Tag>
-                                                    </Flex>
-                                                </div>
-                                                <div>
-                                                    Bottom Row:{' '}
-                                                    <Flex
-                                                        flexWrap={'wrap'}
-                                                        columnGap={'8px'}
-                                                        rowGap={'8px'}
-                                                        display='inline-flex'
-                                                        marginBottom={'8px'}
-                                                    >
-                                                        <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                            <BsCone />
-                                                            &nbsp;
-                                                            {stand.bottomAuto.coneScored} (
-                                                            {getAccuarcy(stand, 'auto', 'bottom', 'cone')})
-                                                        </Tag>
-                                                        <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                            <IoCube />
-                                                            &nbsp;
-                                                            {stand.bottomAuto.cubeScored} (
-                                                            {getAccuarcy(stand, 'auto', 'bottom', 'cube')})
-                                                        </Tag>
-                                                    </Flex>
-                                                </div>
-                                            </div>
-                                            <Box className='grid-item'>
-                                                <div className='grid-text-item'>
-                                                    Mobility: {stand.crossCommunity ? 'Yes' : 'No'}
-                                                </div>
-                                                <div className='grid-text-item'>Charge: {stand.chargeAuto}</div>
-                                                <Text
-                                                    className='grid-comment-item'
-                                                    borderBottom={'2px solid black'}
-                                                    flexBasis={'100px'}
-                                                    flexGrow={1}
-                                                    flexShrink={1}
-                                                    overflowY={'auto'}
-                                                    wordBreak={'break-word'}
-                                                >
-                                                    Charge Comment: {stand.autoChargeComment || 'None'}
-                                                </Text>
-                                                <Text
-                                                    className='grid-comment-item'
-                                                    flexBasis={'120px'}
-                                                    flexGrow={1}
-                                                    flexShrink={1}
-                                                    overflowY={'auto'}
-                                                    wordBreak={'break-word'}
-                                                >
-                                                    Auto Comment: {stand.standAutoComment || 'None'}
-                                                </Text>
-                                            </Box>
-                                        </div>
-                                        <div className='grid-column'>
-                                            <div className='grid-item header'>Teleop</div>
-                                            <div className='grid-item header'>End-Game</div>
-                                            <div className='grid-item header'>Post-Game</div>
-                                        </div>
-                                        <div className='grid-column'>
-                                            <div className='grid-item'>
-                                                <div className='grid-text-item'>
-                                                    Top Row:{' '}
-                                                    <Flex
-                                                        flexWrap={'wrap'}
-                                                        columnGap={'8px'}
-                                                        rowGap={'8px'}
-                                                        display='inline-flex'
-                                                        marginBottom={'8px'}
-                                                    >
-                                                        <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                            <BsCone />
-                                                            &nbsp;
-                                                            {stand.topTele.coneScored} (
-                                                            {getAccuarcy(stand, 'tele', 'top', 'cone')})
-                                                        </Tag>
-                                                        <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                            <IoCube />
-                                                            &nbsp;
-                                                            {stand.topTele.cubeScored} (
-                                                            {getAccuarcy(stand, 'tele', 'top', 'cube')})
-                                                        </Tag>
-                                                    </Flex>
-                                                </div>
-                                                <div className='grid-text-item'>
-                                                    Middle Row:{' '}
-                                                    <Flex
-                                                        flexWrap={'wrap'}
-                                                        columnGap={'8px'}
-                                                        rowGap={'8px'}
-                                                        display='inline-flex'
-                                                        marginBottom={'8px'}
-                                                    >
-                                                        <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                            <BsCone />
-                                                            &nbsp;
-                                                            {stand.middleTele.coneScored} (
-                                                            {getAccuarcy(stand, 'tele', 'middle', 'cone')})
-                                                        </Tag>
-                                                        <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                            <IoCube />
-                                                            &nbsp;
-                                                            {stand.middleTele.cubeScored} (
-                                                            {getAccuarcy(stand, 'tele', 'middle', 'cube')})
-                                                        </Tag>
-                                                    </Flex>
-                                                </div>
-                                                <div>
-                                                    Bottom Row:{' '}
-                                                    <Flex
-                                                        flexWrap={'wrap'}
-                                                        columnGap={'8px'}
-                                                        rowGap={'8px'}
-                                                        display='inline-flex'
-                                                        marginBottom={'8px'}
-                                                    >
-                                                        <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                            <BsCone />
-                                                            &nbsp;
-                                                            {stand.bottomTele.coneScored} (
-                                                            {getAccuarcy(stand, 'tele', 'bottom', 'cone')})
-                                                        </Tag>
-                                                        <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                            <IoCube />
-                                                            &nbsp;
-                                                            {stand.bottomTele.cubeScored} (
-                                                            {getAccuarcy(stand, 'tele', 'bottom', 'cube')})
-                                                        </Tag>
-                                                    </Flex>
-                                                </div>
-                                            </div>
-                                            <div className='grid-item'>
-                                                <div className='grid-text-item'>Charge: {stand.chargeTele}</div>
-                                                <div className='grid-text-item'>
-                                                    # on Station: {stand.chargeRobotCount || 'N/A'}
-                                                </div>
-                                                <div className='grid-text-item'>
-                                                    Impaired Partners: {stand.impairedCharge ? 'Yes' : 'No'}
-                                                </div>
-                                                <Text
-                                                    className='grid-comment-item'
-                                                    borderBottom={'2px solid black'}
-                                                    flexBasis={'100px'}
-                                                    flexGrow={1}
-                                                    flexShrink={1}
-                                                    overflowY={'auto'}
-                                                    wordBreak={'break-word'}
-                                                >
-                                                    Charge Comment: {stand.chargeComment || 'None'}
-                                                </Text>
-                                                <Text
-                                                    className='grid-comment-item'
-                                                    flexBasis={'100px'}
-                                                    flexGrow={1}
-                                                    flexShrink={1}
-                                                    overflowY={'auto'}
-                                                    wordBreak={'break-word'}
-                                                >
-                                                    Impaired Comment: {stand.impairedComment || 'None'}
-                                                </Text>
-                                            </div>
-                                            <div className='grid-item'>
-                                                <div className='grid-text-item'>Defended By: {stand.defendedBy}</div>
-                                                <Text
-                                                    className='grid-comment-item'
-                                                    flexBasis={'100px'}
-                                                    flexGrow={1}
-                                                    flexShrink={1}
-                                                    overflowY={'auto'}
-                                                    wordBreak={'break-word'}
-                                                >
-                                                    End Comment: {stand.standEndComment || 'None'}
-                                                </Text>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )
-                            )
-                        ) : (
-                            <Box>
+                        {oneCompleteMatchForms.length > 0 && (
+                            <Box width={'100%'} overflowX={'auto'}>
                                 <Grid
-                                    margin={'0 auto'}
+                                    templateColumns={'repeat(13, 1fr)'}
+                                    borderLeft={'1px solid black'}
                                     borderTop={'1px solid black'}
-                                    backgroundColor={'gray.300'}
-                                    templateColumns='2fr 1fr 1fr 0.5fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr'
-                                    gap={'5px'}
+                                    minWidth={'1900px'}
                                 >
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Match # : Station
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Scouter
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'10px 0px 10px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Starting Position
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'10px 0px 10px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Pre-Loaded
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Mobility
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Bottom Row (Auto)
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Middle Row (Auto)
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Top Row (Auto)
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Charge (Auto)
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Bottom Row (Tele)
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Middle Row (Tele)
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Top Row (Tele)
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Charge (Tele)
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            # on Station
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Impaired Partners
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Charge Comments
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Defended By
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Other Comments
-                                        </Text>
-                                    </GridItem>
-                                </Grid>
-                                {sortMatches(standForms).map((stand, index) => (
-                                    <Grid
-                                        margin={'0 auto'}
-                                        borderTop={'1px solid black'}
-                                        backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
-                                        key={stand._id}
-                                        templateColumns='2fr 1fr 1fr 0.5fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr'
-                                        gap={'5px'}
-                                    >
+                                    {[
+                                        'Match #',
+                                        'Scouters',
+                                        'Starting Position',
+                                        'Pre-loaded',
+                                        'Left Start',
+                                        'Scoring (Auto)',
+                                        'Intaking (Tele)',
+                                        'Scoring (Tele)',
+                                        'Stage',
+                                        'Defense',
+                                        'Attributes',
+                                        'Issues',
+                                        'Comments'
+                                    ].map((label) => (
                                         <GridItem
-                                            as={user.admin && Link}
-                                            to={
-                                                user.admin
-                                                    ? `/standForm/${currentEvent.key}/${stand.matchNumber}/${stand.station}/${teamNumberParam}`
-                                                    : ''
-                                            }
-                                            state={{ previousRoute: 'team' }}
-                                            textDecoration={user.admin && 'underline'}
-                                            padding={'25px 0px 25px 0px'}
-                                            pos={'relative'}
-                                            top={'50%'}
-                                            transform={'translateY(-50%)'}
+                                            key={label}
+                                            fontSize={'lg'}
+                                            fontWeight={'medium'}
                                             textAlign={'center'}
-                                            _hover={{ backgroundColor: user.admin && 'gray.400' }}
-                                            _active={{ backgroundColor: user.admin && 'gray.500' }}
+                                            display={'flex'}
+                                            justifyContent={'center'}
+                                            alignItems={'center'}
+                                            borderBottom={'1px solid black'}
+                                            borderRight={'1px solid black'}
+                                            backgroundColor={'gray.200'}
+                                            padding={'10px 0px'}
+                                            position={label === 'Match #' && 'sticky'}
+                                            left={label === 'Match #' && 0}
+                                            zIndex={label === 'Match #' && 1}
                                         >
-                                            <Text>
-                                                {convertMatchKeyToString(stand.matchNumber)} :{' '}
-                                                {convertStationKeyToString(stand.station)}
-                                            </Text>
+                                            {label}
                                         </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {`${stand.standScouter.split(' ')[0]}  ${stand.standScouter
-                                                    .split(' ')[1]
-                                                    .charAt(0)}.`}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            {stand.standStatus === matchFormStatus.noShow ? (
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    {'NO'}
+                                    ))}
+                                    {sortMatches(oneCompleteMatchForms).map((matchForm) => (
+                                        <React.Fragment key={matchForm.matchNumber}>
+                                            <GridItem
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                                display={'flex'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                                borderBottom={'1px solid black'}
+                                                borderRight={'1px solid black'}
+                                                backgroundColor={
+                                                    matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                }
+                                                minWidth={'180px'}
+                                                minHeight={'100px'}
+                                                position={'sticky'}
+                                                left={0}
+                                                zIndex={1}
+                                            >
+                                                {convertMatchKeyToString(matchForm.matchNumber)} :{' '}
+                                                {convertStationKeyToString(matchForm.station)}
+                                            </GridItem>
+                                            <GridItem
+                                                display={'flex'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                                flexDirection={'column'}
+                                                borderBottom={'1px solid black'}
+                                                borderRight={'1px solid black'}
+                                                backgroundColor={
+                                                    matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                }
+                                                minWidth={'160px'}
+                                            >
+                                                <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
+                                                    {`Stand: ${
+                                                        matchForm.standStatus === matchFormStatus.missing
+                                                            ? 'N/A'
+                                                            : shortenScouterName(matchForm.standScouter)
+                                                    }`}
                                                 </Text>
-                                            ) : (
-                                                <Popover
-                                                    onOpen={() => {
-                                                        prevWidth.current = window.innerWidth;
-                                                        drawPopoverImage(
-                                                            stand.startingPosition,
-                                                            stand.station,
-                                                            stand._id
-                                                        );
-                                                        setCurrentPopoverData({
-                                                            point: stand.startingPosition,
-                                                            station: stand.station,
-                                                            id: stand._id
-                                                        });
-                                                    }}
-                                                    onClose={() => setCurrentPopoverData(null)}
-                                                    flip={false}
-                                                    placement='bottom'
+                                                <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
+                                                    {`Super: ${
+                                                        matchForm.superStatus === matchFormStatus.missing
+                                                            ? 'N/A'
+                                                            : shortenScouterName(matchForm.superScouter)
+                                                    }`}
+                                                </Text>
+                                            </GridItem>
+                                            {[
+                                                matchFormStatus.followUp,
+                                                matchFormStatus.missing,
+                                                matchFormStatus.noShow
+                                            ].includes(matchForm.standStatus) && (
+                                                <GridItem
+                                                    fontSize={'lg'}
+                                                    fontWeight={'medium'}
+                                                    textAlign={'center'}
+                                                    display={'flex'}
+                                                    justifyContent={'center'}
+                                                    alignItems={'center'}
+                                                    borderBottom={'1px solid black'}
+                                                    borderRight={'1px solid black'}
+                                                    colSpan={8}
+                                                    backgroundColor={
+                                                        matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                    }
                                                 >
-                                                    <PopoverTrigger>
-                                                        <IconButton
-                                                            pos={'relative'}
-                                                            top={'50%'}
-                                                            transform={'translateY(-50%)'}
-                                                            backgroundColor={'gray.300'}
-                                                            _hover={{ backgroundColor: 'gray.400' }}
-                                                            icon={<GrMap />}
-                                                            _focus={{ outline: 'none' }}
-                                                            size='sm'
-                                                        />
-                                                    </PopoverTrigger>
-                                                    <PopoverContent
-                                                        padding={'25px'}
-                                                        width={'max-content'}
-                                                        height={'max-content'}
-                                                        _focus={{ outline: 'none' }}
+                                                    {matchForm.standStatus === matchFormStatus.followUp
+                                                        ? 'Marked for follow up'
+                                                        : matchForm.standStatus === matchFormStatus.missing
+                                                        ? 'Not yet completed'
+                                                        : 'No show'}
+                                                </GridItem>
+                                            )}
+                                            {matchForm.standStatus === matchFormStatus.complete && (
+                                                <React.Fragment>
+                                                    <GridItem
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        backgroundColor={
+                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                        }
+                                                        minWidth={'150px'}
                                                     >
-                                                        <PopoverArrow />
-                                                        <PopoverCloseButton />
-                                                        <PopoverBody>
-                                                            <Center>
-                                                                <Spinner pos={'absolute'} zIndex={-1}></Spinner>
-                                                                <canvas
-                                                                    id={stand._id}
-                                                                    width={imageWidth * calculatePopoverImageScale()}
-                                                                    height={imageHeight * calculatePopoverImageScale()}
-                                                                    style={{ zIndex: 0 }}
-                                                                ></canvas>
-                                                            </Center>
-                                                        </PopoverBody>
-                                                    </PopoverContent>
-                                                </Popover>
-                                            )}
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {stand.standStatus === matchFormStatus.noShow
-                                                    ? '-'
-                                                    : stand.preLoadedPiece}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {stand.standStatus === matchFormStatus.noShow
-                                                    ? '-'
-                                                    : stand.crossCommunity
-                                                    ? 'Yes'
-                                                    : 'No'}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            {stand.standStatus === matchFormStatus.noShow ? (
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    -
-                                                </Text>
-                                            ) : (
-                                                <VStack pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                        <BsCone />
-                                                        &nbsp;
-                                                        {stand.bottomAuto.coneScored} (
-                                                        {getAccuarcy(stand, 'auto', 'bottom', 'cone')})
-                                                    </Tag>
-                                                    <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                        <IoCube />
-                                                        &nbsp;
-                                                        {stand.bottomAuto.cubeScored} (
-                                                        {getAccuarcy(stand, 'auto', 'bottom', 'cube')})
-                                                    </Tag>
-                                                </VStack>
-                                            )}
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            {stand.standStatus === matchFormStatus.noShow ? (
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    -
-                                                </Text>
-                                            ) : (
-                                                <VStack pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                        <BsCone />
-                                                        &nbsp;
-                                                        {stand.middleAuto.coneScored} (
-                                                        {getAccuarcy(stand, 'auto', 'middle', 'cone')})
-                                                    </Tag>
-                                                    <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                        <IoCube />
-                                                        &nbsp;
-                                                        {stand.middleAuto.cubeScored} (
-                                                        {getAccuarcy(stand, 'auto', 'middle', 'cube')})
-                                                    </Tag>
-                                                </VStack>
-                                            )}
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            {stand.standStatus === matchFormStatus.noShow ? (
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    -
-                                                </Text>
-                                            ) : (
-                                                <VStack pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                        <BsCone />
-                                                        &nbsp;
-                                                        {stand.topAuto.coneScored} (
-                                                        {getAccuarcy(stand, 'auto', 'top', 'cone')})
-                                                    </Tag>
-                                                    <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                        <IoCube />
-                                                        &nbsp;
-                                                        {stand.topAuto.cubeScored} (
-                                                        {getAccuarcy(stand, 'auto', 'top', 'cube')})
-                                                    </Tag>
-                                                </VStack>
-                                            )}
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {stand.standStatus === matchFormStatus.noShow ? '-' : stand.chargeAuto}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            {stand.standStatus === matchFormStatus.noShow ? (
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    -
-                                                </Text>
-                                            ) : (
-                                                <VStack pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                        <BsCone />
-                                                        &nbsp;
-                                                        {stand.bottomTele.coneScored} (
-                                                        {getAccuarcy(stand, 'tele', 'bottom', 'cone')})
-                                                    </Tag>
-                                                    <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                        <IoCube />
-                                                        &nbsp;
-                                                        {stand.bottomTele.cubeScored} (
-                                                        {getAccuarcy(stand, 'tele', 'bottom', 'cube')})
-                                                    </Tag>
-                                                </VStack>
-                                            )}
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            {stand.standStatus === matchFormStatus.noShow ? (
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    -
-                                                </Text>
-                                            ) : (
-                                                <VStack pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                        <BsCone />
-                                                        &nbsp;
-                                                        {stand.middleTele.coneScored} (
-                                                        {getAccuarcy(stand, 'tele', 'middle', 'cone')})
-                                                    </Tag>
-                                                    <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                        <IoCube />
-                                                        &nbsp;
-                                                        {stand.middleTele.cubeScored} (
-                                                        {getAccuarcy(stand, 'tele', 'middle', 'cube')})
-                                                    </Tag>
-                                                </VStack>
-                                            )}
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            {stand.standStatus === matchFormStatus.noShow ? (
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    -
-                                                </Text>
-                                            ) : (
-                                                <VStack pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    <Tag color={'black'} backgroundColor={'yellow.300'}>
-                                                        <BsCone />
-                                                        &nbsp;
-                                                        {stand.topTele.coneScored} (
-                                                        {getAccuarcy(stand, 'tele', 'top', 'cone')})
-                                                    </Tag>
-                                                    <Tag color={'black'} backgroundColor={'purple.300'}>
-                                                        <IoCube />
-                                                        &nbsp;
-                                                        {stand.topTele.cubeScored} (
-                                                        {getAccuarcy(stand, 'tele', 'top', 'cube')})
-                                                    </Tag>
-                                                </VStack>
-                                            )}
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {stand.standStatus === matchFormStatus.noShow ? '-' : stand.chargeTele}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {stand.standStatus === matchFormStatus.noShow
-                                                    ? '-'
-                                                    : stand.chargeRobotCount || 'N/A'}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {stand.standStatus === matchFormStatus.noShow
-                                                    ? '-'
-                                                    : stand.impairedCharge
-                                                    ? 'Yes'
-                                                    : 'No'}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            {stand.standStatus === matchFormStatus.noShow ? (
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    {'-'}
-                                                </Text>
-                                            ) : (
-                                                <Popover flip={false} placement={'bottom'}>
-                                                    <PopoverTrigger>
-                                                        <IconButton
-                                                            pos={'relative'}
-                                                            backgroundColor={'gray.300'}
-                                                            _hover={{ backgroundColor: 'gray.400' }}
-                                                            top={'50%'}
-                                                            transform={'translateY(-50%)'}
-                                                            icon={<BiCommentEdit />}
-                                                            _focus={{ outline: 'none' }}
-                                                            size='sm'
-                                                        />
-                                                    </PopoverTrigger>
-                                                    <PopoverContent
-                                                        key={uuidv4()}
-                                                        maxWidth={'75vw'}
-                                                        padding={'15px'}
-                                                        _focus={{ outline: 'none' }}
+                                                        <Popover
+                                                            flip={false}
+                                                            placement={'bottom'}
+                                                            onOpen={() => setImageLoaded(false)}
+                                                            isLazy={true}
+                                                        >
+                                                            <PopoverTrigger>
+                                                                <IconButton icon={<GrMap />} size='sm' />
+                                                            </PopoverTrigger>
+                                                            <PopoverContent
+                                                                // Unnessary border that add 1px to all sides
+                                                                border={'none'}
+                                                                width={{
+                                                                    base: '75vw',
+                                                                    sm: '60vw',
+                                                                    md: '35vw',
+                                                                    lg: '20vw'
+                                                                }}
+                                                                position={'relative'}
+                                                                padding={'25px'}
+                                                            >
+                                                                <PopoverArrow />
+                                                                <PopoverCloseButton />
+                                                                <Center
+                                                                    margin={'0 auto'}
+                                                                    width={`${imageWidth * dimensionRatios.width}px`}
+                                                                    height={`${imageHeight * dimensionRatios.height}px`}
+                                                                    position={'relative'}
+                                                                >
+                                                                    <Spinner
+                                                                        position={'absolute'}
+                                                                        visibility={!imageLoaded ? 'visible' : 'hidden'}
+                                                                    />
+                                                                    <img
+                                                                        src={
+                                                                            matchForm.station.charAt(0) === 'r'
+                                                                                ? PreAutoRedField
+                                                                                : PreAutoBlueField
+                                                                        }
+                                                                        style={{
+                                                                            visibility: imageLoaded
+                                                                                ? 'visible'
+                                                                                : 'hidden'
+                                                                        }}
+                                                                        alt={'Field Map'}
+                                                                        onLoad={() => setImageLoaded(true)}
+                                                                    />
+                                                                    <Flex
+                                                                        position={'absolute'}
+                                                                        visibility={imageLoaded ? 'visible' : 'hidden'}
+                                                                        left={`${
+                                                                            getPoint(
+                                                                                startingPositions[
+                                                                                    matchForm.startingPosition - 1
+                                                                                ][0],
+                                                                                matchForm.station
+                                                                            ) * dimensionRatios.width
+                                                                        }px`}
+                                                                        top={`${
+                                                                            startingPositions[
+                                                                                matchForm.startingPosition - 1
+                                                                            ][1] * dimensionRatios.height
+                                                                        }px`}
+                                                                        width={`${65 * dimensionRatios.width}px`}
+                                                                        height={`${65 * dimensionRatios.height}px`}
+                                                                        backgroundColor={'gray.500'}
+                                                                        textColor={'white'}
+                                                                        justifyContent={'center'}
+                                                                        alignItems={'center'}
+                                                                        borderRadius={'5px'}
+                                                                    >
+                                                                        {matchForm.startingPosition}
+                                                                    </Flex>
+                                                                </Center>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    </GridItem>
+                                                    <GridItem
+                                                        fontSize={'lg'}
+                                                        fontWeight={'medium'}
+                                                        textAlign={'center'}
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        backgroundColor={
+                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                        }
                                                     >
-                                                        <PopoverArrow />
-                                                        <PopoverCloseButton />
-                                                        <PopoverBody>
-                                                            <Box>
-                                                                <Text>
-                                                                    Auto Charge Comment:{' '}
-                                                                    {stand.autoChargeComment || 'None'}
-                                                                </Text>
-                                                                <Text>
-                                                                    Tele Charge Comment: {stand.chargeComment || 'None'}
-                                                                </Text>
-                                                                <Text>
-                                                                    Impaired Comment: {stand.impairedComment || 'None'}
-                                                                </Text>
-                                                            </Box>
-                                                        </PopoverBody>
-                                                    </PopoverContent>
-                                                </Popover>
+                                                        {matchForm.preLoadedPiece}
+                                                    </GridItem>
+                                                    <GridItem
+                                                        fontSize={'lg'}
+                                                        fontWeight={'medium'}
+                                                        textAlign={'center'}
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        backgroundColor={
+                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                        }
+                                                    >
+                                                        {matchForm.leftStart ? 'Yes' : 'No'}
+                                                    </GridItem>
+                                                    <GridItem
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        flexDirection={'column'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        backgroundColor={
+                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                        }
+                                                        minWidth={'140px'}
+                                                    >
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Amp: `}
+                                                            <Text
+                                                                fontSize={'lg'}
+                                                                fontWeight={'medium'}
+                                                                textColor={'green'}
+                                                                as={'span'}
+                                                            >
+                                                                {matchForm.autoGP.ampScore}
+                                                            </Text>
+                                                            <Text
+                                                                fontSize={'md'}
+                                                                fontWeight={'medium'}
+                                                                textColor={'red'}
+                                                                as={'span'}
+                                                            >
+                                                                {' '}
+                                                                ({matchForm.autoGP.ampMiss})
+                                                            </Text>
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Speaker: `}
+                                                            <Text
+                                                                fontSize={'lg'}
+                                                                fontWeight={'medium'}
+                                                                textColor={'green'}
+                                                                as={'span'}
+                                                            >
+                                                                {matchForm.autoGP.speakerScore}
+                                                            </Text>
+                                                            <Text
+                                                                fontSize={'md'}
+                                                                fontWeight={'medium'}
+                                                                textColor={'red'}
+                                                                as={'span'}
+                                                            >
+                                                                {' '}
+                                                                ({matchForm.autoGP.speakerMiss})
+                                                            </Text>
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Intake Miss: `}
+                                                            <Text
+                                                                fontSize={'lg'}
+                                                                fontWeight={'medium'}
+                                                                textColor={'red'}
+                                                                as={'span'}
+                                                            >
+                                                                {matchForm.autoGP.intakeMiss}
+                                                            </Text>
+                                                        </Text>
+                                                    </GridItem>
+                                                    <GridItem
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        flexDirection={'column'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        backgroundColor={
+                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                        }
+                                                        minWidth={'140px'}
+                                                    >
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Source: ${matchForm.teleopGP.intakeSource}`}
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Ground: ${matchForm.teleopGP.intakeGround}`}
+                                                        </Text>
+                                                    </GridItem>
+                                                    <GridItem
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        flexDirection={'column'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        backgroundColor={
+                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                        }
+                                                        minWidth={'140px'}
+                                                    >
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Amp: `}
+                                                            <Text
+                                                                fontSize={'lg'}
+                                                                fontWeight={'medium'}
+                                                                textColor={'green'}
+                                                                as={'span'}
+                                                            >
+                                                                {matchForm.teleopGP.ampScore}
+                                                            </Text>
+                                                            <Text
+                                                                fontSize={'md'}
+                                                                fontWeight={'medium'}
+                                                                textColor={'red'}
+                                                                as={'span'}
+                                                            >
+                                                                {' '}
+                                                                ({matchForm.teleopGP.ampMiss})
+                                                            </Text>
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Speaker: `}
+                                                            <Text
+                                                                fontSize={'lg'}
+                                                                fontWeight={'medium'}
+                                                                textColor={'green'}
+                                                                as={'span'}
+                                                            >
+                                                                {matchForm.teleopGP.speakerScore}
+                                                            </Text>
+                                                            <Text
+                                                                fontSize={'md'}
+                                                                fontWeight={'medium'}
+                                                                textColor={'red'}
+                                                                as={'span'}
+                                                            >
+                                                                {' '}
+                                                                ({matchForm.teleopGP.speakerMiss})
+                                                            </Text>
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Ferry: ${matchForm.teleopGP.ferry}`}
+                                                        </Text>
+                                                    </GridItem>
+                                                    <GridItem
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        flexDirection={'column'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        backgroundColor={
+                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                        }
+                                                        minWidth={'150px'}
+                                                    >
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Climb: ${matchForm.climb}`}
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Trap: ${matchForm.teleopGP.trap}`}
+                                                        </Text>
+                                                    </GridItem>
+                                                    <GridItem
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        flexDirection={'column'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        backgroundColor={
+                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                        }
+                                                        minWidth={'170px'}
+                                                    >
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Rating: ${matchForm.defenseRating || 'N/A'}`}
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Allocation: ${
+                                                                matchForm.defenseAllocation * 100 + '%' || 'N/A'
+                                                            }`}
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Was Defended: ${matchForm.wasDefended ? 'Yes' : 'No'}`}
+                                                        </Text>
+                                                    </GridItem>
+                                                </React.Fragment>
                                             )}
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {stand.standStatus === matchFormStatus.noShow
-                                                    ? 'SHOW'
-                                                    : stand.defendedBy}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Popover flip={false} placement='bottom-start'>
-                                                <PopoverTrigger>
-                                                    <IconButton
-                                                        pos={'relative'}
-                                                        backgroundColor={'gray.300'}
-                                                        _hover={{ backgroundColor: 'gray.400' }}
-                                                        top={'50%'}
-                                                        transform={'translateY(-50%)'}
-                                                        icon={<BiCommentEdit />}
-                                                        _focus={{ outline: 'none' }}
-                                                        size='sm'
-                                                    />
-                                                </PopoverTrigger>
-                                                <PopoverContent
-                                                    key={uuidv4()}
-                                                    maxWidth={'75vw'}
-                                                    padding={'15px'}
-                                                    _focus={{ outline: 'none' }}
+                                            <GridItem
+                                                display={'flex'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                                flexDirection={'column'}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                                borderBottom={'1px solid black'}
+                                                borderRight={'1px solid black'}
+                                                backgroundColor={
+                                                    matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                }
+                                                minWidth={'135px'}
+                                            >
+                                                {matchForm.superStatus === matchFormStatus.followUp
+                                                    ? 'Marked for follow up'
+                                                    : matchForm.superStatus === matchFormStatus.missing
+                                                    ? 'Not yet completed'
+                                                    : matchForm.superStatus === matchFormStatus.noShow
+                                                    ? 'No show'
+                                                    : ''}
+                                                {matchForm.superStatus === matchFormStatus.complete && (
+                                                    <React.Fragment>
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Agility: ${matchForm.agility || 'N/A'}`}
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`Field Aware: ${matchForm.fieldAwareness || 'N/A'}`}
+                                                        </Text>
+                                                    </React.Fragment>
+                                                )}
+                                            </GridItem>
+                                            {[
+                                                matchFormStatus.followUp,
+                                                matchFormStatus.missing,
+                                                matchFormStatus.noShow
+                                            ].includes(matchForm.standStatus) && (
+                                                <GridItem
+                                                    fontSize={'lg'}
+                                                    fontWeight={'medium'}
+                                                    textAlign={'center'}
+                                                    display={'flex'}
+                                                    justifyContent={'center'}
+                                                    alignItems={'center'}
+                                                    borderBottom={'1px solid black'}
+                                                    borderRight={'1px solid black'}
+                                                    colSpan={2}
+                                                    backgroundColor={
+                                                        matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                    }
                                                 >
-                                                    <PopoverArrow />
-                                                    <PopoverCloseButton />
-                                                    <PopoverBody>
-                                                        <Box>
-                                                            {stand.standStatus === matchFormStatus.noShow ? (
-                                                                <Text>
-                                                                    Status Comment: {stand.standStatusComment || 'None'}
-                                                                </Text>
-                                                            ) : (
-                                                                <React.Fragment>
-                                                                    <Text>
-                                                                        Auto Comment: {stand.standAutoComment || 'None'}
-                                                                    </Text>
-                                                                    <Text>
-                                                                        End Comment: {stand.standEndComment || 'None'}
-                                                                    </Text>
-                                                                </React.Fragment>
-                                                            )}
-                                                        </Box>
-                                                    </PopoverBody>
-                                                </PopoverContent>
-                                            </Popover>
-                                        </GridItem>
-                                    </Grid>
-                                ))}
+                                                    {matchForm.standStatus === matchFormStatus.followUp
+                                                        ? 'Marked for follow up'
+                                                        : matchForm.standStatus === matchFormStatus.missing
+                                                        ? 'Not yet completed'
+                                                        : 'No show'}
+                                                </GridItem>
+                                            )}
+                                            {matchForm.standStatus === matchFormStatus.complete && (
+                                                <React.Fragment>
+                                                    <GridItem
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        flexDirection={'column'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        backgroundColor={
+                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                        }
+                                                        minWidth={'120px'}
+                                                    >
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {[
+                                                                matchForm.lostCommunication ? 'Lost comms' : false,
+                                                                matchForm.robotBroke ? 'Broke' : false,
+                                                                matchForm.yellowCard ? 'Yellow card' : false,
+                                                                matchForm.redCard ? 'Red card' : false
+                                                            ]
+                                                                .filter((elem) => elem)
+                                                                .join(', ') || 'No issues'}
+                                                        </Text>
+                                                    </GridItem>
+                                                    <GridItem
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        backgroundColor={
+                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
+                                                        }
+                                                        minWidth={'120px'}
+                                                        padding={'0px 10px'}
+                                                        onClick={() => {
+                                                            if (commentsToggled.includes(matchForm.matchNumber)) {
+                                                                setCommentsToggled(
+                                                                    commentsToggled.filter(
+                                                                        (matchNumber) =>
+                                                                            matchNumber !== matchForm.matchNumber
+                                                                    )
+                                                                );
+                                                            } else {
+                                                                setCommentsToggled([
+                                                                    ...commentsToggled,
+                                                                    matchForm.matchNumber
+                                                                ]);
+                                                            }
+                                                        }}
+                                                        cursor={'pointer'}
+                                                        _hover={{
+                                                            backgroundColor:
+                                                                matchForm.station.charAt(0) === 'r'
+                                                                    ? 'red.300'
+                                                                    : 'blue.300'
+                                                        }}
+                                                    >
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                            style={{
+                                                                WebkitLineClamp: commentsToggled.includes(
+                                                                    matchForm.matchNumber
+                                                                )
+                                                                    ? 'unset'
+                                                                    : '3',
+                                                                display: '-webkit-box',
+                                                                WebkitBoxOrient: 'vertical'
+                                                            }}
+                                                            overflow={'hidden'}
+                                                            textOverflow={'ellipsis'}
+                                                        >
+                                                            {matchForm.standComment || 'No comment'}
+                                                        </Text>
+                                                    </GridItem>
+                                                </React.Fragment>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
+                                </Grid>
+                            </Box>
+                        )}
+                        {oneCompleteMatchForms.length === 0 && (
+                            <Box fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                                No match data
                             </Box>
                         )}
                     </Box>
-                ) : (
-                    <Box
-                        textAlign={'center'}
-                        fontSize={'25px'}
-                        fontWeight={'medium'}
-                        margin={'0 auto'}
-                        width={{ base: '85%', md: '66%', lg: '50%' }}
-                    >
-                        No Stand Data
-                    </Box>
-                ); */}
-                    </Box>
                 );
-            case 'super':
+            case teamPageTabs.analysis:
                 return (
                     <Box>
-                        {/* superForms.length > 0 ? (
-                    <Box marginBottom={'25px'}>
-                        {!isDesktop ? (
-                            sortMatches(superForms).map((superForm) =>
-                                superForm.superStatus === matchFormStatus.noShow ? (
-                                    <div key={superForm._id} className='grid'>
-                                        <div className='grid-column'>
-                                            <Box
-                                                as={user.admin && Link}
-                                                className='grid-item header'
-                                                to={
-                                                    user.admin
-                                                        ? `/superForm/${currentEvent.key}/${
-                                                              superForm.matchNumber
-                                                          }/${superForm.station.charAt(0)}/${
-                                                              superForm.allianceNumbers[0]
-                                                          }/${superForm.allianceNumbers[1]}/${
-                                                              superForm.allianceNumbers[2]
-                                                          }`
-                                                        : ''
-                                                }
-                                                textDecoration={user.admin && 'underline'}
-                                                state={{ previousRoute: 'team', teamNumber: teamNumberParam }}
-                                                _hover={{ backgroundColor: user.admin && 'gray.400' }}
-                                                _active={{ backgroundColor: user.admin && 'gray.500' }}
-                                            >
-                                                {convertMatchKeyToString(superForm.matchNumber)} :{' '}
-                                                {convertStationKeyToString(superForm.station)}
-                                            </Box>
-                                            <div className='grid-item header'>{`${
-                                                superForm.superScouter.split(' ')[0]
-                                            }  ${superForm.superScouter.split(' ')[1].charAt(0)}.`}</div>
-                                        </div>
-                                        <div className='grid-column' style={{ textAlign: 'center' }}>
-                                            <div className='grid-item'>
-                                                <Text
-                                                    className='grid-comment-item'
-                                                    flexBasis={'100px'}
-                                                    flexGrow={1}
-                                                    flexShrink={1}
-                                                    overflowY={'auto'}
-                                                    wordBreak={'break-word'}
-                                                >
-                                                    No Show: {superForm.superStatusComment || 'None'}
-                                                </Text>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div key={superForm._id} className='grid'>
-                                        <div className='grid-column'>
-                                            <Box
-                                                as={user.admin && Link}
-                                                className='grid-item header'
-                                                to={
-                                                    user.admin
-                                                        ? `/superForm/${currentEvent.key}/${
-                                                              superForm.matchNumber
-                                                          }/${superForm.station.charAt(0)}/${
-                                                              superForm.allianceNumbers[0]
-                                                          }/${superForm.allianceNumbers[1]}/${
-                                                              superForm.allianceNumbers[2]
-                                                          }`
-                                                        : ''
-                                                }
-                                                textDecoration={user.admin && 'underline'}
-                                                state={{ previousRoute: 'team', teamNumber: teamNumberParam }}
-                                                _hover={{ backgroundColor: user.admin && 'gray.400' }}
-                                                _active={{ backgroundColor: user.admin && 'gray.500' }}
-                                            >
-                                                {convertMatchKeyToString(superForm.matchNumber)} :{' '}
-                                                {convertStationKeyToString(superForm.station)}
-                                            </Box>
-                                            <div className='grid-item header'>{`${
-                                                superForm.superScouter.split(' ')[0]
-                                            }  ${superForm.superScouter.split(' ')[1].charAt(0)}.`}</div>
-                                        </div>
-                                        <div className='grid-column'>
-                                            <div className='grid-item header'>Ratings</div>
-                                            <div className='grid-item header'>Comment</div>
-                                        </div>
-                                        <div className='grid-column'>
-                                            {superForm.superStatus === matchFormStatus.inconclusive ? (
-                                                <div className='grid-item'>N/A (Inconclusive)</div>
-                                            ) : (
-                                                <div className='grid-item'>
-                                                    <div className='grid-text-item'>
-                                                        Defense Rating: {superForm.defenseRating}
-                                                    </div>
-                                                    <div className='grid-text-item'>
-                                                        Defense Allocation:{' '}
-                                                        {superForm.defenseRating > 0
-                                                            ? superForm.defenseAllocation * 100 + '%'
-                                                            : 'N/A'}
-                                                    </div>
-                                                    <div className='grid-text-item'>
-                                                        Quickness: {superForm.quickness}
-                                                    </div>
-                                                    <div>Driver Awareness: {superForm.driverAwareness}</div>{' '}
-                                                </div>
-                                            )}
-
-                                            <div className='grid-item'>
-                                                <Text
-                                                    className='grid-comment-item'
-                                                    flexBasis={'100px'}
-                                                    flexGrow={1}
-                                                    flexShrink={1}
-                                                    overflowY={'auto'}
-                                                    wordBreak={'break-word'}
-                                                >
-                                                    End Comment: {superForm.superEndComment || 'None'}
-                                                </Text>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )
-                            )
-                        ) : (
-                            <Box>
-                                <Grid
-                                    margin={'0 auto'}
-                                    borderTop={'1px solid black'}
-                                    backgroundColor={'gray.300'}
-                                    templateColumns='2fr 1fr 1fr 1fr 1fr 1fr 1fr'
-                                    gap={'5px'}
-                                >
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Match # : Station
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Scouter
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'10px 0px 10px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Defense Rating
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'10px 0px 10px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Defense Allocation
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Quickness
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Driver Awareness
-                                        </Text>
-                                    </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Comment
-                                        </Text>
-                                    </GridItem>
-                                </Grid>
-                                {sortMatches(superForms).map((superForm, index) => (
-                                    <Grid
-                                        margin={'0 auto'}
-                                        borderTop={'1px solid black'}
-                                        backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
-                                        key={superForm._id}
-                                        templateColumns='2fr 1fr 1fr 1fr 1fr 1fr 1fr'
-                                        gap={'5px'}
-                                    >
-                                        <GridItem
-                                            as={user.admin && Link}
-                                            to={
-                                                user.admin
-                                                    ? `/superForm/${currentEvent.key}/${
-                                                          superForm.matchNumber
-                                                      }/${superForm.station.charAt(0)}/${
-                                                          superForm.allianceNumbers[0]
-                                                      }/${superForm.allianceNumbers[1]}/${superForm.allianceNumbers[2]}`
-                                                    : ''
-                                            }
-                                            state={{ previousRoute: 'team', teamNumber: teamNumberParam }}
-                                            textDecoration={user.admin && 'underline'}
-                                            padding={'25px 0px 25px 0px'}
-                                            pos={'relative'}
-                                            top={'50%'}
-                                            transform={'translateY(-50%)'}
-                                            textAlign={'center'}
-                                            _hover={{ backgroundColor: user.admin && 'gray.400' }}
-                                            _active={{ backgroundColor: user.admin && 'gray.500' }}
-                                        >
-                                            <Text>
-                                                {convertMatchKeyToString(superForm.matchNumber)} :{' '}
-                                                {convertStationKeyToString(superForm.station)}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {`${superForm.superScouter.split(' ')[0]}  ${superForm.superScouter
-                                                    .split(' ')[1]
-                                                    .charAt(0)}.`}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            {superForm.superStatus === matchFormStatus.noShow ? (
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    {'NO'}
-                                                </Text>
-                                            ) : superForm.superStatus === matchFormStatus.inconclusive ? (
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    {'Inconclusive'}
-                                                </Text>
-                                            ) : (
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    {superForm.defenseRating}
-                                                </Text>
-                                            )}
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {superForm.superStatus === matchFormStatus.noShow ||
-                                                superForm.superStatus === matchFormStatus.inconclusive
-                                                    ? '-'
-                                                    : superForm.defenseRating > 0
-                                                    ? superForm.defenseAllocation * 100 + '%'
-                                                    : 'N/A'}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {superForm.superStatus === matchFormStatus.noShow ||
-                                                superForm.superStatus === matchFormStatus.inconclusive
-                                                    ? '-'
-                                                    : superForm.quickness}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                {superForm.superStatus === matchFormStatus.noShow
-                                                    ? 'SHOW'
-                                                    : superForm.superStatus === matchFormStatus.inconclusive
-                                                    ? 'Inconclusive'
-                                                    : superForm.driverAwareness}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                            <Popover flip={false} placement='bottom-start'>
-                                                <PopoverTrigger>
-                                                    <IconButton
-                                                        pos={'relative'}
-                                                        backgroundColor={'gray.300'}
-                                                        _hover={{ backgroundColor: 'gray.400' }}
-                                                        top={'50%'}
-                                                        transform={'translateY(-50%)'}
-                                                        icon={<BiCommentEdit />}
-                                                        _focus={{ outline: 'none' }}
-                                                        size='sm'
-                                                    />
-                                                </PopoverTrigger>
-                                                <PopoverContent
-                                                    key={uuidv4()}
-                                                    maxWidth={'75vw'}
-                                                    padding={'15px'}
-                                                    _focus={{ outline: 'none' }}
-                                                >
-                                                    <PopoverArrow />
-                                                    <PopoverCloseButton />
-                                                    <PopoverBody>
-                                                        <Box>
-                                                            {superForm.superStatus === matchFormStatus.noShow ? (
-                                                                <Text>
-                                                                    Status Comment:{' '}
-                                                                    {superForm.superStatusComment || 'None'}
-                                                                </Text>
-                                                            ) : (
-                                                                <React.Fragment>
-                                                                    <Text>
-                                                                        End Comment:{' '}
-                                                                        {superForm.superEndComment || 'None'}
-                                                                    </Text>
-                                                                </React.Fragment>
-                                                            )}
-                                                        </Box>
-                                                    </PopoverBody>
-                                                </PopoverContent>
-                                            </Popover>
-                                        </GridItem>
-                                    </Grid>
-                                ))}
-                            </Box>
-                        )}
-                    </Box>
-                ) : (
-                    <Box
-                        textAlign={'center'}
-                        fontSize={'25px'}
-                        fontWeight={'medium'}
-                        margin={'0 auto'}
-                        width={{ base: '85%', md: '66%', lg: '50%' }}
-                    >
-                        No Super Data
-                    </Box>
-                ); */}
+                        <MatchLineGraphs
+                            teamNumbers={[teamNumberParam]}
+                            multiTeamMatchForms={{
+                                [teamNumberParam]: oneCompleteMatchForms
+                            }}
+                        />
                     </Box>
                 );
-            case 'other':
+            case teamPageTabs.other:
                 return (
-                    <Box marginBottom={'25px'}>
+                    <Box>
                         {/* <Center marginBottom={'25px'}>
                             <HeatMap
                                 data={filteredStandForms}
@@ -2049,10 +1639,18 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
         }
     }
 
-    if (pitForm === undefined || matchForms === undefined || teamEventData === undefined) {
+    if (
+        pitForm === undefined ||
+        matchForms === undefined ||
+        oneCompleteMatchForms === null ||
+        teamEventData === undefined ||
+        ([teamPageTabs.pit, teamPageTabs.matchForms].includes(tab) && dimensionRatios === null)
+    ) {
+        // For some reason these needs a zIndex value other wise a black line
+        // shows up under the tabs bar but only on chrome and mobile inspector display
         return (
             <Center>
-                <Spinner></Spinner>
+                <Spinner zIndex={-1}></Spinner>
             </Center>
         );
     }

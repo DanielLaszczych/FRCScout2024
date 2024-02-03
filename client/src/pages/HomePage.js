@@ -23,7 +23,7 @@ import {
 } from '@chakra-ui/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
-import { config, teamNumber, year, timeZone } from '../util/helperConstants';
+import { config, teamNumber, year, timeZone, teamPageTabs } from '../util/helperConstants';
 import { convertMatchKeyToString, fetchAndCache, sortMatches } from '../util/helperFunctions';
 import { ConditionalWrapper } from '../components/ConditionalWrapper';
 import { GrMapLocation } from 'react-icons/gr';
@@ -444,7 +444,7 @@ function HomePage() {
                                                                                 textDecorationThickness={'2px'}
                                                                                 fontWeight={match.redScore.score > match.blueScore.score ? 'bold' : 'normal'}
                                                                                 as={Link}
-                                                                                to={`/team/${team.substring(3)}/overview`}
+                                                                                to={`/team/${team.substring(3)}/${teamPageTabs.overview}`}
                                                                                 backgroundColor={'red.200'}
                                                                                 _hover={{ backgroundColor: 'red.300' }}
                                                                                 _active={{ backgroundColor: 'red.400' }}
@@ -468,7 +468,7 @@ function HomePage() {
                                                                                 textDecorationThickness={'2px'}
                                                                                 fontWeight={match.redScore.score < match.blueScore.score ? 'bold' : 'normal'}
                                                                                 as={Link}
-                                                                                to={`/team/${team.substring(3)}/overview`}
+                                                                                to={`/team/${team.substring(3)}/${teamPageTabs.overview}`}
                                                                                 backgroundColor={'blue.200'}
                                                                                 _hover={{ backgroundColor: 'blue.300' }}
                                                                                 _active={{ backgroundColor: 'blue.400' }}
