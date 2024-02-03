@@ -38,7 +38,7 @@ export const gamePieceFields = {
 export const teamPageTabs = {
     overview: 'overview',
     pit: 'pit',
-    matchForms: 'matchforms',
+    forms: 'forms',
     analysis: 'analysis',
     other: 'other'
 };

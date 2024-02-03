@@ -262,7 +262,7 @@ function SuperForm() {
                         if (location.state.previousRoute === 'matches') {
                             navigate('/matches');
                         } else if (location.state.previousRoute === 'team') {
-                            navigate(`/team/${location.state.teamNumber}/${teamPageTabs.matchForms}`);
+                            navigate(`/team/${location.state.teamNumber}/${teamPageTabs.forms}`);
                         }
                     } else {
                         navigate('/');

@@ -574,7 +574,7 @@ function StandForm() {
                         if (location.state.previousRoute === 'matches') {
                             navigate('/matches', { state: { scoutingError: location.state.scoutingError } });
                         } else if (location.state.previousRoute === 'team') {
-                            navigate(`/team/${teamNumberParam}/${teamPageTabs.matchForms}`);
+                            navigate(`/team/${teamNumberParam}/${teamPageTabs.forms}`);
                         }
                     } else {
                         navigate('/');

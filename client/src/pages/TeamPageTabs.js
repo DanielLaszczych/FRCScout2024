@@ -93,11 +93,11 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
         // We subtract by 50 in this one to account for the 25px of padding on all sides
         const maxWidth =
             viewportWidth *
-                (tab !== teamPageTabs.matchForms
+                (tab !== teamPageTabs.forms
                     ? getValueByRange(breakPointWidth)
                     : getValueByRange(breakPointWidth, [0.75, 0.6, 0.35, 0.2])) -
-            (tab !== teamPageTabs.matchForms ? 0 : 50); // Adjust the multiplier as needed
-        const maxHeight = imageHeight - (tab !== teamPageTabs.matchForms ? 0 : 50);
+            (tab !== teamPageTabs.forms ? 0 : 50); // Adjust the multiplier as needed
+        const maxHeight = imageHeight - (tab !== teamPageTabs.forms ? 0 : 50);
 
         const screenAspectRatio = maxWidth / maxHeight;
         const imageAspectRatio = imageWidth / imageHeight;
@@ -131,7 +131,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
     }, [tab]);
 
     useEffect(() => {
-        if ([teamPageTabs.pit, teamPageTabs.matchForms].includes(tab)) {
+        if ([teamPageTabs.pit, teamPageTabs.forms].includes(tab)) {
             getImageVariables();
             window.addEventListener('resize', getImageVariables);
 
@@ -894,7 +894,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                         No pit data
                     </Box>
                 );
-            case teamPageTabs.matchForms:
+            case teamPageTabs.forms:
                 return (
                     // Match #, Scouter (Both if possible), Starting Position, Pre-loaded, left zone, game piece auto, game piece tele, climb, super scout stats, issues, comment
                     <Box>
@@ -1644,7 +1644,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
         matchForms === undefined ||
         oneCompleteMatchForms === null ||
         teamEventData === undefined ||
-        ([teamPageTabs.pit, teamPageTabs.matchForms].includes(tab) && dimensionRatios === null)
+        ([teamPageTabs.pit, teamPageTabs.forms].includes(tab) && dimensionRatios === null)
     ) {
         // For some reason these needs a zIndex value other wise a black line
         // shows up under the tabs bar but only on chrome and mobile inspector display

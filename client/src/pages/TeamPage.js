@@ -164,12 +164,8 @@ function TeamPage({ keyProp }) {
                     <Box onClick={() => navigate(`/team/${teamNumberParam}/${teamPageTabs.pit}`, { state: keyProp })}>
                         Pit
                     </Box>
-                    <Box
-                        onClick={() =>
-                            navigate(`/team/${teamNumberParam}/${teamPageTabs.matchForms}`, { state: keyProp })
-                        }
-                    >
-                        Match Forms
+                    <Box onClick={() => navigate(`/team/${teamNumberParam}/${teamPageTabs.forms}`, { state: keyProp })}>
+                        Forms
                     </Box>
                     <Box
                         onClick={() =>
