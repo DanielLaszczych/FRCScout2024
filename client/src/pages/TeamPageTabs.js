@@ -226,13 +226,20 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                             <Text fontSize={'2xl'} fontWeight={'semibold'} textAlign={'center'}>
                                 Team Name: {teamName}
                             </Text>
-                            {pitForm?.image && (
-                                <ChakraImage
-                                    marginTop={'25px'}
-                                    width={{ base: '90%', sm: '70%', md: '50%', lg: '80%' }}
-                                    src={pitForm.image}
-                                />
-                            )}
+                            <Flex
+                                marginTop={'25px'}
+                                width={{ base: '90%', sm: '60%', md: '60%', lg: '90%' }}
+                                justifyContent={'center'}
+                                flexWrap={'wrap'}
+                                rowGap={'15px'}
+                            >
+                                {pitForm?.robotImage && (
+                                    <ChakraImage width={{ base: '90%', md: '70%' }} src={pitForm.robotImage} />
+                                )}
+                                {pitForm?.wiringImage && (
+                                    <ChakraImage width={{ base: '90%', md: '70%' }} src={pitForm.wiringImage} />
+                                )}
+                            </Flex>
                         </Flex>
                         <Flex
                             width={{ base: '100%', lg: '60%' }}
@@ -627,7 +634,15 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     columnGap={'40px'}
                                     justifyContent={'center'}
                                 >
-                                    <Flex flex={1 / 3} minWidth={'fit-content'} flexDirection={'column'} rowGap={'2px'}>
+                                    <Flex
+                                        flex={1 / 3}
+                                        minWidth={'fit-content'}
+                                        flexDirection={'column'}
+                                        rowGap={'2px'}
+                                        border={'2px solid black'}
+                                        borderRadius={'5px'}
+                                        padding={'8px'}
+                                    >
                                         <Text
                                             fontSize={'lg'}
                                             fontWeight={'semibold'}
@@ -646,7 +661,15 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             Frame size: {pitForm.frameSize.width} in. by {pitForm.frameSize.length} in.
                                         </Text>
                                     </Flex>
-                                    <Flex flex={1 / 3} minWidth={'fit-content'} flexDirection={'column'} rowGap={'2px'}>
+                                    <Flex
+                                        flex={1 / 3}
+                                        minWidth={'fit-content'}
+                                        flexDirection={'column'}
+                                        rowGap={'2px'}
+                                        border={'2px solid black'}
+                                        borderRadius={'5px'}
+                                        padding={'8px'}
+                                    >
                                         <Text
                                             fontSize={'lg'}
                                             fontWeight={'semibold'}
@@ -665,7 +688,15 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 .join(', ')}
                                         </Text>
                                     </Flex>
-                                    <Flex flex={1 / 3} minWidth={'fit-content'} flexDirection={'column'} rowGap={'2px'}>
+                                    <Flex
+                                        flex={1 / 3}
+                                        minWidth={'fit-content'}
+                                        flexDirection={'column'}
+                                        rowGap={'2px'}
+                                        border={'2px solid black'}
+                                        borderRadius={'5px'}
+                                        padding={'8px'}
+                                    >
                                         <Text
                                             fontSize={'lg'}
                                             fontWeight={'semibold'}
@@ -679,6 +710,9 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                         </Text>
                                         <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
                                             Charging: {pitForm.chargingBatteryCount}
+                                        </Text>
+                                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                            Wiring: {pitForm.wiringRating.label}
                                         </Text>
                                     </Flex>
                                 </Flex>
@@ -754,9 +788,15 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                     reverse: true,
                                                     min: 1,
                                                     max: teamEventData.rank.totalTeams || 10,
+                                                    ticks: {
+                                                        font: {
+                                                            family: `'Open Sans', sans-serif`
+                                                        }
+                                                    },
                                                     pointLabels: {
                                                         font: {
-                                                            size: 14
+                                                            size: 14,
+                                                            family: `'Open Sans', sans-serif`
                                                         }
                                                     }
                                                 }
@@ -787,6 +827,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                             textAlign={'center'}
                             marginBottom={'5px'}
                             marginTop={'10px'}
+                            textDecoration={'underline'}
                         >
                             Drive
                         </Text>
@@ -798,7 +839,9 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                         </Text>
                         <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
                             Comment:{' '}
-                            <span style={{ fontWeight: '600', fontSize: '95%' }}>{pitForm.driveTrainComment}</span>
+                            <span style={{ fontWeight: '500', fontSize: '95%' }}>
+                                {pitForm.driveTrainComment || 'None'}
+                            </span>
                         </Text>
                         <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
                         <Text
@@ -847,7 +890,8 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                             </Flex>
                         </Center>
                         <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
-                            Comment: <span style={{ fontWeight: '600', fontSize: '95%' }}>{pitForm.autoComment}</span>
+                            Comment:{' '}
+                            <span style={{ fontWeight: '500', fontSize: '95%' }}>{pitForm.autoComment || 'None'}</span>
                         </Text>
                         <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
                         <Text
@@ -881,12 +925,19 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                             Batteries Charging: {pitForm.chargingBatteryCount}
                         </Text>
                         <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
+                            Wiring: {pitForm.wiringRating.label}
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
                             Working On:{' '}
-                            <span style={{ fontWeight: '600', fontSize: '95%' }}>{pitForm.workingComment}</span>
+                            <span style={{ fontWeight: '500', fontSize: '95%' }}>
+                                {pitForm.workingComment || 'None'}
+                            </span>
                         </Text>
                         <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
                             End Comment:{' '}
-                            <span style={{ fontWeight: '600', fontSize: '95%' }}>{pitForm.closingComment}</span>
+                            <span style={{ fontWeight: '500', fontSize: '95%' }}>
+                                {pitForm.closingComment || 'None'}
+                            </span>
                         </Text>
                     </Box>
                 ) : (
@@ -931,7 +982,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             alignItems={'center'}
                                             borderBottom={'1px solid black'}
                                             borderRight={'1px solid black'}
-                                            backgroundColor={'gray.200'}
+                                            backgroundColor={'gray.400'}
                                             padding={'10px 0px'}
                                             position={label === 'Match #' && 'sticky'}
                                             left={label === 'Match #' && 0}
@@ -951,9 +1002,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 alignItems={'center'}
                                                 borderBottom={'1px solid black'}
                                                 borderRight={'1px solid black'}
-                                                backgroundColor={
-                                                    matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                }
+                                                backgroundColor={'gray.200'}
                                                 minWidth={'180px'}
                                                 minHeight={'100px'}
                                                 position={'sticky'}
@@ -970,9 +1019,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 flexDirection={'column'}
                                                 borderBottom={'1px solid black'}
                                                 borderRight={'1px solid black'}
-                                                backgroundColor={
-                                                    matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                }
+                                                backgroundColor={'gray.200'}
                                                 minWidth={'160px'}
                                             >
                                                 <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
@@ -1005,9 +1052,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                     borderBottom={'1px solid black'}
                                                     borderRight={'1px solid black'}
                                                     colSpan={8}
-                                                    backgroundColor={
-                                                        matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                    }
+                                                    backgroundColor={'gray.200'}
                                                 >
                                                     {matchForm.standStatus === matchFormStatus.followUp
                                                         ? 'Marked for follow up'
@@ -1024,9 +1069,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         alignItems={'center'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
-                                                        backgroundColor={
-                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                        }
+                                                        backgroundColor={'gray.200'}
                                                         minWidth={'150px'}
                                                     >
                                                         <Popover
@@ -1115,9 +1158,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         alignItems={'center'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
-                                                        backgroundColor={
-                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                        }
+                                                        backgroundColor={'gray.200'}
                                                     >
                                                         {matchForm.preLoadedPiece}
                                                     </GridItem>
@@ -1130,9 +1171,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         alignItems={'center'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
-                                                        backgroundColor={
-                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                        }
+                                                        backgroundColor={'gray.200'}
                                                     >
                                                         {matchForm.leftStart ? 'Yes' : 'No'}
                                                     </GridItem>
@@ -1143,9 +1182,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         flexDirection={'column'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
-                                                        backgroundColor={
-                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                        }
+                                                        backgroundColor={'gray.200'}
                                                         minWidth={'140px'}
                                                     >
                                                         <Text
@@ -1219,9 +1256,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         flexDirection={'column'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
-                                                        backgroundColor={
-                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                        }
+                                                        backgroundColor={'gray.200'}
                                                         minWidth={'140px'}
                                                     >
                                                         <Text
@@ -1246,9 +1281,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         flexDirection={'column'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
-                                                        backgroundColor={
-                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                        }
+                                                        backgroundColor={'gray.200'}
                                                         minWidth={'140px'}
                                                     >
                                                         <Text
@@ -1314,9 +1347,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         flexDirection={'column'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
-                                                        backgroundColor={
-                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                        }
+                                                        backgroundColor={'gray.200'}
                                                         minWidth={'150px'}
                                                     >
                                                         <Text
@@ -1341,9 +1372,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         flexDirection={'column'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
-                                                        backgroundColor={
-                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                        }
+                                                        backgroundColor={'gray.200'}
                                                         minWidth={'170px'}
                                                     >
                                                         <Text
@@ -1382,9 +1411,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 textAlign={'center'}
                                                 borderBottom={'1px solid black'}
                                                 borderRight={'1px solid black'}
-                                                backgroundColor={
-                                                    matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                }
+                                                backgroundColor={'gray.200'}
                                                 minWidth={'135px'}
                                             >
                                                 {matchForm.superStatus === matchFormStatus.followUp
@@ -1428,9 +1455,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                     borderBottom={'1px solid black'}
                                                     borderRight={'1px solid black'}
                                                     colSpan={2}
-                                                    backgroundColor={
-                                                        matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                    }
+                                                    backgroundColor={'gray.200'}
                                                 >
                                                     {matchForm.standStatus === matchFormStatus.followUp
                                                         ? 'Marked for follow up'
@@ -1448,9 +1473,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         flexDirection={'column'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
-                                                        backgroundColor={
-                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                        }
+                                                        backgroundColor={'gray.200'}
                                                         minWidth={'120px'}
                                                     >
                                                         <Text
@@ -1474,9 +1497,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         alignItems={'center'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
-                                                        backgroundColor={
-                                                            matchForm.station.charAt(0) === 'r' ? 'red.200' : 'blue.200'
-                                                        }
+                                                        backgroundColor={'gray.200'}
                                                         minWidth={'120px'}
                                                         padding={'0px 10px'}
                                                         onClick={() => {
@@ -1496,10 +1517,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         }}
                                                         cursor={'pointer'}
                                                         _hover={{
-                                                            backgroundColor:
-                                                                matchForm.station.charAt(0) === 'r'
-                                                                    ? 'red.300'
-                                                                    : 'blue.300'
+                                                            backgroundColor: 'gray.300'
                                                         }}
                                                     >
                                                         <Text

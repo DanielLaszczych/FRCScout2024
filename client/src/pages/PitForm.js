@@ -41,7 +41,12 @@ import {
     Input,
     Flex,
     IconButton,
-    Divider
+    Divider,
+    Slider,
+    SliderMark,
+    SliderTrack,
+    SliderFilledTrack,
+    SliderThumb
 } from '@chakra-ui/react';
 import { AddIcon, CloseIcon, DeleteIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import { v4 as uuidv4 } from 'uuid';
@@ -94,6 +99,12 @@ let startingPositions = [
     [28, 200, uuidv4()],
     [28, 300, uuidv4()]
 ];
+let wiringRatings = [
+    { label: 'Unanswered', value: 0, id: uuidv4() },
+    { label: 'Messy', value: 1, id: uuidv4() },
+    { label: 'Acceptable', value: 2, id: uuidv4() },
+    { label: 'Perfect', value: 3, id: uuidv4() }
+];
 let imageWidth = 435;
 let imageHeight = 435;
 
@@ -104,13 +115,15 @@ function PitForm() {
     const { eventKey: eventKeyParam, teamNumber: teamNumberParam } = useParams();
     const { offline } = useContext(GlobalContext);
 
-    const hiddenImageInput = useRef(null);
+    const hiddenRobotImageInput = useRef(null);
+    const hiddenWiringImageInput = useRef(null);
     const cancelRef = useRef();
 
     const [error, setError] = useState(null);
     const [pitFormDialog, setPitFormDialog] = useState(false);
     const [loadResponse, setLoadResponse] = useState(null);
-    const [imgHeader, setImgHeader] = useState('Same Image');
+    const [robotImgHeader, setRobotImgHeader] = useState('Same Image');
+    const [wiringImgHeader, setWiringImgHeader] = useState('Same Image');
     const [pitFormData, setPitFormData] = useState({
         weight: null,
         height: null,
@@ -176,9 +189,11 @@ function PitForm() {
         ],
         batteryCount: null,
         chargingBatteryCount: null,
+        wiringRating: { label: wiringRatings[0].label, value: wiringRatings[0].value },
         workingComment: '',
         closingComment: '',
-        image: '',
+        robotImage: '',
+        wiringImage: '',
         followUp: false,
         followUpComment: '',
         loading: true
@@ -312,7 +327,6 @@ function PitForm() {
             // const whitespaceRight = extraVerticalSpace / 2;
             // setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
         }
-
         setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
     }
 
@@ -692,12 +706,16 @@ function PitForm() {
         return canvas.toDataURL('image/jpeg', 0.7); // get the data from canvas as 70% JPG (can be also PNG, etc.)
     }
 
-    function updateImage(event) {
+    function updateImage(event, robotImage) {
         if (event.target.files && event.target.files[0] && event.target.files[0].type.split('/')[0] === 'image') {
             var FR = new FileReader();
             FR.readAsArrayBuffer(event.target.files[0]);
             FR.onload = (e) => {
-                setImgHeader('New Image');
+                if (robotImage) {
+                    setRobotImgHeader('New Image');
+                } else {
+                    setWiringImgHeader('New Image');
+                }
                 var blob = new Blob([e.target.result]); // create blob...
                 window.URL = window.URL || window.webkitURL;
                 var blobURL = window.URL.createObjectURL(blob); // and get it's URL
@@ -708,7 +726,11 @@ function PitForm() {
                 image.onload = function () {
                     // have to wait till it's loaded
                     var resized = resizeMe(image); // send it to canvas
-                    setPitFormData({ ...pitFormData, image: resized });
+                    if (robotImage) {
+                        setPitFormData({ ...pitFormData, robotImage: resized });
+                    } else {
+                        setPitFormData({ ...pitFormData, wiringImage: resized });
+                    }
                 };
                 FR.abort();
             };
@@ -877,7 +899,8 @@ function PitForm() {
             pitFormData.startingPosition !== null &&
             validAbilities() &&
             pitFormData.batteryCount !== null &&
-            pitFormData.chargingBatteryCount !== null
+            pitFormData.chargingBatteryCount !== null &&
+            pitFormData.wiringRating.value !== 0
         );
     }
 
@@ -908,7 +931,11 @@ function PitForm() {
         setSubmitting(true);
         fetch('/pitForm/postPitForm', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', imageType: imgHeader },
+            headers: {
+                'Content-Type': 'application/json',
+                robotImageType: robotImgHeader,
+                wiringImageType: wiringImgHeader
+            },
             body: JSON.stringify({
                 ...pitFormData,
                 eventKey: eventKeyParam,
@@ -1246,6 +1273,12 @@ function PitForm() {
                                     setPitFormDialog(false);
                                     setLoadResponse(true);
                                     let pitForm = JSON.parse(localStorage.getItem('PitFormData'));
+                                    if (pitForm.robotImage.slice(0, 10) === 'data:image') {
+                                        setRobotImgHeader('New Image');
+                                    }
+                                    if (pitForm.wiringImage.slice(0, 10) === 'data:image') {
+                                        setWiringImgHeader('New Image');
+                                    }
                                     pitForm.loading = false;
                                     setPitFormData(pitForm);
                                 }}
@@ -1798,6 +1831,46 @@ function PitForm() {
                     textAlign={'center'}
                 />
             </NumberInput>
+            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
+                Wiring Rating
+            </Text>
+            <Center margin={'0 auto'} marginBottom={'40px'} width={{ base: '100%', md: '65%' }}>
+                <Slider
+                    margin={'0 auto'}
+                    min={0}
+                    max={3}
+                    step={1}
+                    value={pitFormData.wiringRating.value}
+                    onChange={(value) =>
+                        setPitFormData({
+                            ...pitFormData,
+                            wiringRating: { label: wiringRatings[value].label, value: wiringRatings[value].value }
+                        })
+                    }
+                    width={'75%'}
+                    focusThumbOnChange={false}
+                >
+                    {wiringRatings.map((rating) => (
+                        <SliderMark
+                            key={rating.id}
+                            value={rating.value}
+                            marginTop={'5px'}
+                            marginLeft={['-40px', '-20px', '-30px', '-22px'][rating.value]}
+                            fontSize={'sm'}
+                        >
+                            {rating.label}
+                        </SliderMark>
+                    ))}
+                    <SliderTrack
+                        backgroundColor={
+                            submitAttempted && !pitFormData.followUp && pitFormData.wiringRating.value === 0 && 'red'
+                        }
+                    >
+                        <SliderFilledTrack />
+                    </SliderTrack>
+                    <SliderThumb boxSize={4} borderColor={'darkgreen'} />
+                </Slider>
+            </Center>
             <Center marginTop={'15px'}>
                 <Textarea
                     onChange={(event) => setPitFormData({ ...pitFormData, workingComment: event.target.value })}
@@ -1817,23 +1890,40 @@ function PitForm() {
             <VStack marginTop={'15px'} rowGap={'15px'}>
                 <ChakraImage
                     width={{ base: '60%', md: '35%', lg: '35%' }}
-                    display={!pitFormData.image && 'none'}
-                    src={pitFormData.image}
+                    display={!pitFormData.robotImage && 'none'}
+                    src={pitFormData.robotImage}
                 />
                 <input
                     type='file'
                     accept='image/*'
                     style={{ display: 'none' }}
-                    ref={hiddenImageInput}
-                    onChange={(event) => updateImage(event)}
+                    ref={hiddenRobotImageInput}
+                    onChange={(event) => updateImage(event, true)}
                 />
-                <Button variant='outline' borderColor='gray.300' onClick={() => hiddenImageInput.current.click()}>
-                    Upload Image
+                <Button variant='outline' borderColor='gray.300' onClick={() => hiddenRobotImageInput.current.click()}>
+                    Upload Robot Image
+                </Button>
+            </VStack>
+            <VStack marginTop={'15px'} rowGap={'15px'}>
+                <ChakraImage
+                    width={{ base: '60%', md: '35%', lg: '35%' }}
+                    display={!pitFormData.wiringImage && 'none'}
+                    src={pitFormData.wiringImage}
+                />
+                <input
+                    type='file'
+                    accept='image/*'
+                    style={{ display: 'none' }}
+                    ref={hiddenWiringImageInput}
+                    onChange={(event) => updateImage(event, false)}
+                />
+                <Button variant='outline' borderColor='gray.300' onClick={() => hiddenWiringImageInput.current.click()}>
+                    Upload Wiring Image
                 </Button>
             </VStack>
             <Center marginTop={'15px'}>
                 <Checkbox
-                    colorScheme={'green'}
+                    colorScheme={'yellow'}
                     isChecked={pitFormData.followUp}
                     onChange={() => setPitFormData({ ...pitFormData, followUp: !pitFormData.followUp })}
                 >

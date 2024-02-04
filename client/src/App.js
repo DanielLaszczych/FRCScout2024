@@ -1,10 +1,11 @@
-import { React, useContext, lazy, Suspense } from 'react';
-import { Center, ChakraProvider, Spinner, theme } from '@chakra-ui/react';
-import { AuthContext } from './context/auth';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Center, ChakraProvider, Spinner, extendTheme } from '@chakra-ui/react';
+import { React, Suspense, lazy, useContext } from 'react';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import NavBar from './components/NavBar';
+import { AuthContext } from './context/auth';
 import { GlobalContext } from './context/globalState';
 import { teamPageTabs } from './util/helperConstants';
+import '@fontsource/open-sans/400.css';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const PitForm = lazy(() => import('./pages/PitForm'));
@@ -34,10 +35,12 @@ const OfflinePage = lazy(() => import('./pages/OfflinePage'));
 //     xl: '1200px',
 //     '2xl': '1536px',
 // });
-
-const customTheme = {
-    ...theme
-};
+const customTheme = extendTheme({
+    fonts: {
+        heading: `'Open Sans', sans-serif`,
+        body: `'Open Sans', sans-serif`
+    }
+});
 
 function App() {
     const { user } = useContext(AuthContext);
