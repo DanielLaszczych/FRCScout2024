@@ -100,13 +100,24 @@ const pitFormSchema = new Schema(
         chargingBatteryCount: {
             type: Number
         },
+        wiringRating: {
+            label: {
+                type: String
+            },
+            value: {
+                type: Number
+            }
+        },
         workingComment: {
             type: String
         },
         closingComment: {
             type: String
         },
-        image: {
+        robotImage: {
+            type: String
+        },
+        wiringImage: {
             type: String
         },
         followUp: {

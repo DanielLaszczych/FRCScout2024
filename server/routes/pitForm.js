@@ -24,20 +24,33 @@ router.post('/postPitForm', async (req, res) => {
     }
     try {
         let pitFormInput = req.body;
-        let imageUrl;
-        if (req.headers.imagetype === 'Same Image') {
-            imageUrl = pitFormInput.image;
+        let robotImageUrl;
+        if (req.headers.robotimagetype === 'Same Image') {
+            console.log('Same robot image');
+            robotImageUrl = pitFormInput.robotImage;
         } else {
-            await cloudinary.uploader.upload(pitFormInput.image, (error, result) => {
+            await cloudinary.uploader.upload(pitFormInput.robotImage, (error, result) => {
                 if (error) {
                     throw new Error('Could not upload image');
                 }
-                imageUrl = result.secure_url;
+                robotImageUrl = result.secure_url;
             });
         }
-        pitFormInput.image = imageUrl;
+        let wiringImageUrl;
+        if (req.headers.wiringimagetype === 'Same Image') {
+            console.log('Same wiring image');
+            wiringImageUrl = pitFormInput.wiringImage;
+        } else {
+            await cloudinary.uploader.upload(pitFormInput.wiringImage, (error, result) => {
+                if (error) {
+                    throw new Error('Could not upload image');
+                }
+                wiringImageUrl = result.secure_url;
+            });
+        }
+        pitFormInput.robotImage = robotImageUrl;
+        pitFormInput.wiringImage = wiringImageUrl;
         pitFormInput.scouter = req.user.displayName;
-
         await PitForm.findOneAndUpdate(
             { eventKey: pitFormInput.eventKey, teamNumber: pitFormInput.teamNumber },
             pitFormInput,
