@@ -93,7 +93,6 @@ class HelperConstants {
     static climbFields = {
         'No Attempt': { field: 'noAttempt' },
         Success: { field: 'success', teleopValue: 3 },
-        Harmony: { field: 'harmony', teleopValue: 3 },
         Fail: { field: 'fail' }
     };
 }

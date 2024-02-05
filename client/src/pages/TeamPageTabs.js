@@ -17,7 +17,13 @@ import {
     Spinner,
     Tag,
     Text,
-    Divider
+    Divider,
+    Card,
+    CardHeader,
+    CardBody,
+    Stack,
+    StackDivider,
+    Heading
 } from '@chakra-ui/react';
 import {
     convertMatchKeyToString,
@@ -151,8 +157,8 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
 
     function renderAbilities(ability, index) {
         return (
-            <Box key={ability.label + index} width={'100%'} marginTop={index > 0 && '8px'}>
-                <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+            <Box key={ability.label + index} textAlign={'center'}>
+                <Text fontSize={'md'} fontWeight={'semibold'}>
                     {ability.label}
                     {ability.type === abilityTypes.radio ? `: ${ability.abilities[0].label}` : ''}
                 </Text>
@@ -634,87 +640,125 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     columnGap={'40px'}
                                     justifyContent={'center'}
                                 >
-                                    <Flex
-                                        flex={1 / 3}
-                                        minWidth={'fit-content'}
-                                        flexDirection={'column'}
-                                        rowGap={'2px'}
-                                        border={'2px solid black'}
-                                        borderRadius={'5px'}
-                                        padding={'8px'}
+                                    <Card
+                                        width={{ base: '100%', md: 'calc((100% / 3) - 40px)' }}
+                                        size={'sm'}
+                                        margin={'0 auto'}
+                                        boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
                                     >
-                                        <Text
-                                            fontSize={'lg'}
-                                            fontWeight={'semibold'}
-                                            textAlign={'center'}
-                                            textDecoration={'underline'}
-                                        >
-                                            Basic Attr.
-                                        </Text>
-                                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                            Weight: {pitForm.weight} lbs
-                                        </Text>
-                                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                            Height: {pitForm.height} inches
-                                        </Text>
-                                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                            Frame size: {pitForm.frameSize.width} in. by {pitForm.frameSize.length} in.
-                                        </Text>
-                                    </Flex>
-                                    <Flex
-                                        flex={1 / 3}
-                                        minWidth={'fit-content'}
-                                        flexDirection={'column'}
-                                        rowGap={'2px'}
-                                        border={'2px solid black'}
-                                        borderRadius={'5px'}
-                                        padding={'8px'}
+                                        <CardHeader paddingBottom={'2px'}>
+                                            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                                Basics
+                                            </Text>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <Stack divider={<StackDivider />} spacing={'2'}>
+                                                <Box textAlign={'center'}>
+                                                    <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                        Weight
+                                                    </Text>
+                                                    <Text fontSize={'md'} fontWeight={'medium'}>
+                                                        {pitForm.weight} lbs
+                                                    </Text>
+                                                </Box>
+                                                <Box textAlign={'center'}>
+                                                    <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                        Starting Height
+                                                    </Text>
+                                                    <Text fontSize={'md'} fontWeight={'medium'}>
+                                                        {pitForm.height} inches
+                                                    </Text>
+                                                </Box>
+                                                <Box textAlign={'center'}>
+                                                    <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                        Frame Size
+                                                    </Text>
+                                                    <Text fontSize={'md'} fontWeight={'medium'}>
+                                                        {pitForm.frameSize.width} in. by {pitForm.frameSize.length} in.
+                                                    </Text>
+                                                </Box>
+                                            </Stack>
+                                        </CardBody>
+                                    </Card>
+                                    <Card
+                                        width={{ base: '100%', md: 'calc((100% / 3) - 40px)' }}
+                                        size={'sm'}
+                                        margin={'0 auto'}
+                                        boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
                                     >
-                                        <Text
-                                            fontSize={'lg'}
-                                            fontWeight={'semibold'}
-                                            textAlign={'center'}
-                                            textDecoration={'underline'}
-                                        >
-                                            Drive Train
-                                        </Text>
-                                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                            Type: {pitForm.driveTrain}
-                                        </Text>
-                                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                            Motors:{' '}
-                                            {pitForm.motors
-                                                .map((motor) => `${motor.label} (${motor.value})`)
-                                                .join(', ')}
-                                        </Text>
-                                    </Flex>
-                                    <Flex
-                                        flex={1 / 3}
-                                        minWidth={'fit-content'}
-                                        flexDirection={'column'}
-                                        rowGap={'2px'}
-                                        border={'2px solid black'}
-                                        borderRadius={'5px'}
-                                        padding={'8px'}
+                                        <CardHeader paddingBottom={'2px'}>
+                                            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                                Drive Train
+                                            </Text>
+                                        </CardHeader>
+                                        <CardBody display={'flex'}>
+                                            <Stack divider={<StackDivider />} spacing={'2'} width={'100%'}>
+                                                <Box textAlign={'center'}>
+                                                    <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                        Type
+                                                    </Text>
+                                                    <Text fontSize={'md'} fontWeight={'medium'}>
+                                                        {pitForm.driveTrain}
+                                                    </Text>
+                                                </Box>
+                                                <Flex
+                                                    textAlign={'center'}
+                                                    flexDirection={'column'}
+                                                    justifyContent={'center'}
+                                                    flex={1}
+                                                >
+                                                    <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                        Motors
+                                                    </Text>
+                                                    <Text fontSize={'md'} fontWeight={'medium'}>
+                                                        {pitForm.motors
+                                                            .map((motor) => `${motor.label} (${motor.value})`)
+                                                            .join(', ')}
+                                                    </Text>
+                                                </Flex>
+                                            </Stack>
+                                        </CardBody>
+                                    </Card>
+                                    <Card
+                                        width={{ base: '100%', md: 'calc((100% / 3) - 40px)' }}
+                                        size={'sm'}
+                                        margin={'0 auto'}
+                                        boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
                                     >
-                                        <Text
-                                            fontSize={'lg'}
-                                            fontWeight={'semibold'}
-                                            textAlign={'center'}
-                                            textDecoration={'underline'}
-                                        >
-                                            Other
-                                        </Text>
-                                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                            Batteries: {pitForm.batteryCount}
-                                        </Text>
-                                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                            Charging: {pitForm.chargingBatteryCount}
-                                        </Text>
-                                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                            Wiring: {pitForm.wiringRating.label}
-                                        </Text>
-                                    </Flex>
+                                        <CardHeader paddingBottom={'2px'}>
+                                            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                                Other
+                                            </Text>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <Stack divider={<StackDivider />} spacing={'2'}>
+                                                <Box textAlign={'center'}>
+                                                    <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                        Total Batteries
+                                                    </Text>
+                                                    <Text fontSize={'md'} fontWeight={'medium'}>
+                                                        {pitForm.batteryCount}
+                                                    </Text>
+                                                </Box>
+                                                <Box textAlign={'center'}>
+                                                    <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                        Batteries Charging
+                                                    </Text>
+                                                    <Text fontSize={'md'} fontWeight={'medium'}>
+                                                        {pitForm.chargingBatteryCount}
+                                                    </Text>
+                                                </Box>
+                                                <Box textAlign={'center'}>
+                                                    <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                        Wiring
+                                                    </Text>
+                                                    <Text fontSize={'md'} fontWeight={'medium'}>
+                                                        {pitForm.wiringRating.label}
+                                                    </Text>
+                                                </Box>
+                                            </Stack>
+                                        </CardBody>
+                                    </Card>
                                 </Flex>
                             )}
                             {(!pitForm || pitForm.followUp) && (
@@ -810,135 +854,362 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                 );
             case teamPageTabs.pit:
                 return pitForm && !pitForm.followUp ? (
-                    <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
-                            Weight: {pitForm.weight} lbs
-                        </Text>
-                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
-                            Starting Height: {pitForm.height} inches
-                        </Text>
-                        <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                            Frame Size: {pitForm.frameSize.width} in. by {pitForm.frameSize.length} in.
-                        </Text>
-                        <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
-                        <Text
-                            fontSize={'lg'}
-                            fontWeight={'semibold'}
-                            textAlign={'center'}
-                            marginBottom={'5px'}
-                            marginTop={'10px'}
-                            textDecoration={'underline'}
-                        >
-                            Drive
-                        </Text>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
-                            Type: {pitForm.driveTrain}
-                        </Text>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
-                            Motors: {pitForm.motors.map((motor) => `${motor.label} (${motor.value})`).join(', ')}
-                        </Text>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
-                            Comment:{' '}
-                            <span style={{ fontWeight: '500', fontSize: '95%' }}>
-                                {pitForm.driveTrainComment || 'None'}
-                            </span>
-                        </Text>
-                        <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
-                        <Text
-                            fontSize={'lg'}
-                            fontWeight={'semibold'}
-                            textAlign={'center'}
-                            marginBottom={'5px'}
-                            marginTop={'10px'}
-                        >
-                            Autonomous
-                        </Text>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
-                            Programming Language: {pitForm.programmingLanguage}
-                        </Text>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
-                            Prefered Starting Position
-                        </Text>
-                        <Center
-                            margin={'0 auto'}
-                            marginBottom={'10px'}
-                            width={`${imageWidth * dimensionRatios.width}px`}
-                            height={`${imageHeight * dimensionRatios.height}px`}
-                            position={'relative'}
-                        >
-                            <Spinner position={'absolute'} visibility={!imageLoaded ? 'visible' : 'hidden'} />
-                            <img
-                                src={PreAutoBlueField}
-                                alt={'Field Map'}
-                                style={{ visibility: imageLoaded ? 'visible' : 'hidden' }}
-                                onLoad={() => setImageLoaded(true)}
-                            />
-                            <Flex
-                                position={'absolute'}
-                                visibility={imageLoaded ? 'visible' : 'hidden'}
-                                left={`${startingPositions[pitForm.startingPosition - 1][0] * dimensionRatios.width}px`}
-                                top={`${startingPositions[pitForm.startingPosition - 1][1] * dimensionRatios.height}px`}
-                                width={`${65 * dimensionRatios.width}px`}
-                                height={`${65 * dimensionRatios.height}px`}
-                                backgroundColor={'gray.500'}
-                                textColor={'white'}
-                                justifyContent={'center'}
-                                alignItems={'center'}
-                                borderRadius={'5px'}
+                    <Box margin={'0 auto'} width={{ base: '90%', md: '66%', lg: '50%' }}>
+                        <Flex marginBottom={'20px'}>
+                            <Card
+                                flex={1}
+                                size={'sm'}
+                                margin={'0 auto'}
+                                boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
                             >
-                                {pitForm.startingPosition}
+                                <CardHeader paddingBottom={'2px'}>
+                                    <Heading fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                        Basics
+                                    </Heading>
+                                </CardHeader>
+                                <CardBody>
+                                    <Stack divider={<StackDivider />} spacing={'2'}>
+                                        <Box textAlign={'center'}>
+                                            <Heading fontSize={'md'} fontWeight={'semibold'}>
+                                                Weight
+                                            </Heading>
+                                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                                {pitForm.weight} lbs
+                                            </Text>
+                                        </Box>
+                                        <Box textAlign={'center'}>
+                                            <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                Starting Height
+                                            </Text>
+                                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                                {pitForm.height} inches
+                                            </Text>
+                                        </Box>
+                                        <Box textAlign={'center'}>
+                                            <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                Frame Size
+                                            </Text>
+                                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                                {pitForm.frameSize.width} in. by {pitForm.frameSize.length} in.
+                                            </Text>
+                                        </Box>
+                                    </Stack>
+                                </CardBody>
+                            </Card>
+                            <Card
+                                size={'sm'}
+                                flex={1}
+                                margin={'0 auto'}
+                                boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
+                            >
+                                <CardHeader paddingBottom={'2px'}>
+                                    <Heading fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                        Drive Train
+                                    </Heading>
+                                </CardHeader>
+                                <CardBody>
+                                    <Stack divider={<StackDivider />} spacing={'2'}>
+                                        <Box textAlign={'center'}>
+                                            <Heading fontSize={'md'} fontWeight={'semibold'}>
+                                                Type
+                                            </Heading>
+                                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                                {pitForm.driveTrain}
+                                            </Text>
+                                        </Box>
+                                        <Box textAlign={'center'}>
+                                            <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                Motors
+                                            </Text>
+                                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                                {pitForm.motors
+                                                    .map((motor) => `${motor.label} (${motor.value})`)
+                                                    .join(', ')}
+                                            </Text>
+                                        </Box>
+                                        <Box textAlign={'center'}>
+                                            <Text fontSize={'md'} fontWeight={'semibold'}>
+                                                Frame Size
+                                            </Text>
+                                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                                {pitForm.frameSize.width} in. by {pitForm.frameSize.length} in.
+                                            </Text>
+                                        </Box>
+                                    </Stack>
+                                </CardBody>
+                            </Card>
+                        </Flex>
+
+                        <Box marginBottom={'25px'} position={'relative'}>
+                            <Box
+                                position={'absolute'}
+                                height={'100%'}
+                                width={'50%'}
+                                boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
+                                borderRadius={'0.25rem'}
+                            ></Box>
+                            <Box
+                                position={'absolute'}
+                                height={'100%'}
+                                width={'50%'}
+                                boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
+                                borderRadius={'0.25rem'}
+                                left={'50%'}
+                            ></Box>
+                            <Flex padding={'12px'} paddingBottom={'2px'}>
+                                <Text
+                                    flex={1}
+                                    fontSize={'lg'}
+                                    fontWeight={'semibold'}
+                                    textAlign={'center'}
+                                    paddingRight={'12px'}
+                                >
+                                    Basics
+                                </Text>
+                                <Text
+                                    flex={1}
+                                    fontSize={'lg'}
+                                    fontWeight={'semibold'}
+                                    textAlign={'center'}
+                                    paddingLeft={'12px'}
+                                >
+                                    Drive Train
+                                </Text>
                             </Flex>
-                        </Center>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
-                            Comment:{' '}
-                            <span style={{ fontWeight: '500', fontSize: '95%' }}>{pitForm.autoComment || 'None'}</span>
-                        </Text>
-                        <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
-                        <Text
-                            fontSize={'lg'}
-                            fontWeight={'semibold'}
-                            textAlign={'center'}
-                            marginBottom={'5px'}
-                            marginTop={'10px'}
-                        >
-                            Abilities
-                        </Text>
-                        <Box>
-                            {[...pitForm.autoAbilities, ...pitForm.teleAbilities].map((ability, index) =>
-                                renderAbilities(ability, index)
-                            )}
+                            <Flex padding={'12px'} paddingBottom={'0px'}>
+                                <Flex flex={1} flexDirection={'column'}>
+                                    <Box marginBottom={'auto'} marginTop={'auto'} paddingRight={'12px'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                                            Weight
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                                            {pitForm.weight} lbs
+                                        </Text>
+                                    </Box>
+                                    <StackDivider
+                                        borderBottomWidth={'1px'}
+                                        margin={'0.5rem 0px'}
+                                        marginRight={'12px'}
+                                    />
+                                </Flex>
+                                <Flex flex={1} flexDirection={'column'}>
+                                    <Box marginBottom={'auto'} marginTop={'auto'} paddingLeft={'12px'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                                            Type
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                                            {pitForm.driveTrain}
+                                        </Text>
+                                    </Box>
+                                    <StackDivider borderBottomWidth={'1px'} margin={'0.5rem 0px'} marginLeft={'12px'} />
+                                </Flex>
+                            </Flex>
+                            <Flex padding={'0px 12px'}>
+                                <Flex flex={1} flexDirection={'column'} justifyContent={'center'}>
+                                    <Box marginBottom={'auto'} marginTop={'auto'} paddingRight={'12px'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                                            Starting Height
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                                            {pitForm.height} inches
+                                        </Text>
+                                    </Box>
+                                    <StackDivider
+                                        borderBottomWidth={'1px'}
+                                        margin={'0.5rem 0px'}
+                                        marginRight={'12px'}
+                                    />
+                                </Flex>
+                                <Flex flex={1} flexDirection={'column'}>
+                                    <Box marginBottom={'auto'} marginTop={'auto'} paddingLeft={'12px'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                                            Motors
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                                            {pitForm.motors
+                                                .map((motor) => `${motor.label} (${motor.value})`)
+                                                .join(', ')}
+                                        </Text>
+                                    </Box>
+                                    <StackDivider borderBottomWidth={'1px'} margin={'0.5rem 0px'} marginLeft={'12px'} />
+                                </Flex>
+                            </Flex>
+                            <Flex padding={'0px 12px'} paddingBottom={'12px'}>
+                                <Flex flex={1} flexDirection={'column'} justifyContent={'center'}>
+                                    <Box marginBottom={'auto'} marginTop={'auto'} paddingRight={'12px'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                                            Frame Size
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                                            {pitForm.frameSize.width} in. by {pitForm.frameSize.length} in.
+                                        </Text>
+                                    </Box>
+                                </Flex>
+                                <Flex flex={1} flexDirection={'column'}>
+                                    <Box marginBottom={'auto'} marginTop={'auto'} paddingLeft={'12px'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                                            Comment
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                                            {pitForm.driveTrainComment || 'None'}
+                                        </Text>
+                                    </Box>
+                                </Flex>
+                            </Flex>
                         </Box>
-                        <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
-                        <Text
-                            fontSize={'lg'}
-                            fontWeight={'semibold'}
-                            textAlign={'center'}
-                            marginBottom={'5px'}
-                            marginTop={'10px'}
+                        <Card
+                            size={'sm'}
+                            margin={'0 auto'}
+                            boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
+                            marginBottom={'25px'}
                         >
-                            Closing
-                        </Text>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
-                            Total Batteries: {pitForm.batteryCount}
-                        </Text>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
-                            Batteries Charging: {pitForm.chargingBatteryCount}
-                        </Text>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
-                            Wiring: {pitForm.wiringRating.label}
-                        </Text>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
-                            Working On:{' '}
-                            <span style={{ fontWeight: '500', fontSize: '95%' }}>
-                                {pitForm.workingComment || 'None'}
-                            </span>
-                        </Text>
-                        <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
-                            End Comment:{' '}
-                            <span style={{ fontWeight: '500', fontSize: '95%' }}>
-                                {pitForm.closingComment || 'None'}
-                            </span>
-                        </Text>
+                            <CardHeader paddingBottom={'2px'}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                    Autonomous
+                                </Text>
+                            </CardHeader>
+                            <CardBody>
+                                <Stack divider={<StackDivider />} spacing={'2'}>
+                                    <Box textAlign={'center'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'}>
+                                            Programming Lanaguage
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'}>
+                                            {pitForm.programmingLanguage}
+                                        </Text>
+                                    </Box>
+                                    <Box textAlign={'center'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'} marginBottom={'5px'}>
+                                            Prefered Starting Position
+                                        </Text>
+                                        <Center
+                                            margin={'0 auto'}
+                                            marginBottom={'10px'}
+                                            width={`${imageWidth * dimensionRatios.width}px`}
+                                            height={`${imageHeight * dimensionRatios.height}px`}
+                                            position={'relative'}
+                                        >
+                                            <Spinner
+                                                position={'absolute'}
+                                                visibility={!imageLoaded ? 'visible' : 'hidden'}
+                                            />
+                                            <img
+                                                src={PreAutoBlueField}
+                                                alt={'Field Map'}
+                                                style={{ visibility: imageLoaded ? 'visible' : 'hidden' }}
+                                                onLoad={() => setImageLoaded(true)}
+                                            />
+                                            <Flex
+                                                position={'absolute'}
+                                                visibility={imageLoaded ? 'visible' : 'hidden'}
+                                                left={`${
+                                                    startingPositions[pitForm.startingPosition - 1][0] *
+                                                    dimensionRatios.width
+                                                }px`}
+                                                top={`${
+                                                    startingPositions[pitForm.startingPosition - 1][1] *
+                                                    dimensionRatios.height
+                                                }px`}
+                                                width={`${65 * dimensionRatios.width}px`}
+                                                height={`${65 * dimensionRatios.height}px`}
+                                                backgroundColor={'gray.500'}
+                                                textColor={'white'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                                borderRadius={'5px'}
+                                            >
+                                                {pitForm.startingPosition}
+                                            </Flex>
+                                        </Center>
+                                    </Box>
+                                    <Box textAlign={'center'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'}>
+                                            Comment
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'}>
+                                            {pitForm.autoComment || 'None'}
+                                        </Text>
+                                    </Box>
+                                </Stack>
+                            </CardBody>
+                        </Card>
+
+                        <Card
+                            size={'sm'}
+                            margin={'0 auto'}
+                            boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
+                            marginBottom={'25px'}
+                        >
+                            <CardHeader paddingBottom={'2px'}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                    Abilities
+                                </Text>
+                            </CardHeader>
+                            <CardBody>
+                                <Stack divider={<StackDivider />} spacing={'2'}>
+                                    {[...pitForm.autoAbilities, ...pitForm.teleAbilities].map((ability, index) =>
+                                        renderAbilities(ability, index)
+                                    )}
+                                </Stack>
+                            </CardBody>
+                        </Card>
+
+                        <Card
+                            size={'sm'}
+                            margin={'0 auto'}
+                            boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
+                            marginBottom={'25px'}
+                        >
+                            <CardHeader paddingBottom={'2px'}>
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                    Closing
+                                </Text>
+                            </CardHeader>
+                            <CardBody>
+                                <Stack divider={<StackDivider />} spacing={'2'}>
+                                    <Box textAlign={'center'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'}>
+                                            Total Batteries
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'}>
+                                            {pitForm.batteryCount}
+                                        </Text>
+                                    </Box>
+                                    <Box textAlign={'center'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'} marginBottom={'5px'}>
+                                            Batteries Charging
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'}>
+                                            {pitForm.chargingBatteryCount}
+                                        </Text>
+                                    </Box>
+                                    <Box textAlign={'center'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'} marginBottom={'5px'}>
+                                            Wiring
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'}>
+                                            {pitForm.wiringRating.label}
+                                        </Text>
+                                    </Box>
+                                    <Box textAlign={'center'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'}>
+                                            Working On
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'}>
+                                            {pitForm.workingComment || 'None'}
+                                        </Text>
+                                    </Box>
+                                    <Box textAlign={'center'}>
+                                        <Text fontSize={'md'} fontWeight={'semibold'}>
+                                            End Comment
+                                        </Text>
+                                        <Text fontSize={'md'} fontWeight={'medium'}>
+                                            {pitForm.closingComment || 'None'}
+                                        </Text>
+                                    </Box>
+                                </Stack>
+                            </CardBody>
+                        </Card>
                     </Box>
                 ) : (
                     <Box fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
@@ -1661,8 +1932,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
         pitForm === undefined ||
         matchForms === undefined ||
         oneCompleteMatchForms === null ||
-        teamEventData === undefined ||
-        ([teamPageTabs.pit, teamPageTabs.forms].includes(tab) && dimensionRatios === null)
+        teamEventData === undefined
     ) {
         // For some reason these needs a zIndex value other wise a black line
         // shows up under the tabs bar but only on chrome and mobile inspector display
@@ -1671,6 +1941,10 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                 <Spinner zIndex={-1}></Spinner>
             </Center>
         );
+    }
+
+    if ([teamPageTabs.pit, teamPageTabs.forms].includes(tab) && dimensionRatios === null) {
+        return null;
     }
 
     return renderTab(tab);

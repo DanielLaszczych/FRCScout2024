@@ -99,7 +99,7 @@ class HelperFunctions {
             }
         }
 
-        incUpdate[`climbCounts.${climbFields[data.climb].field}`] = 1; //Modify the labels to field object
+        incUpdate[`climbCounts.${climbFields[data.climb.attempt].field}`] = 1; //Modify the labels to field object
 
         if (data.defenseRating !== 0) {
             incUpdate['playedDefense'] = 1;
@@ -190,11 +190,9 @@ class HelperFunctions {
             }
         }
 
-        let totalAttempts = ted.climbCounts.success + ted.climbCounts.harmony + ted.climbCounts.fail;
-        ted.climbSuccessPercentage =
-            totalAttempts === 0 ? null : (ted.climbCounts.success + ted.climbCounts.harmony) / totalAttempts;
-        ted.climbSuccessFraction =
-            totalAttempts === 0 ? null : `${ted.climbCounts.success + ted.climbCounts.harmony} / ${totalAttempts}`;
+        let totalAttempts = ted.climbCounts.success + ted.climbCounts.fail;
+        ted.climbSuccessPercentage = totalAttempts === 0 ? null : ted.climbCounts.success / totalAttempts;
+        ted.climbSuccessFraction = totalAttempts === 0 ? null : `${ted.climbCounts.success} / ${totalAttempts}`;
 
         ted.defenseRating.avg = ted.playedDefense === 0 ? 0 : ted.defenseRating.total / ted.playedDefense;
         ted.defenseAllocation.avg = ted.playedDefense === 0 ? 0 : ted.defenseAllocation.total / ted.playedDefense;

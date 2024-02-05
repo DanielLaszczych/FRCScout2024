@@ -89,10 +89,6 @@ const climbSchema = new Schema({
         type: Number,
         default: 0
     },
-    harmony: {
-        type: Number,
-        default: 0
-    },
     fail: {
         type: Number,
         default: 0

@@ -129,7 +129,15 @@ const matchFormSchema = new Schema({
         type: Number
     },
     climb: {
-        type: String
+        attempt: {
+            type: String
+        },
+        location: {
+            type: String
+        },
+        harmony: {
+            type: Number
+        }
     },
     stagePoints: {
         type: Number

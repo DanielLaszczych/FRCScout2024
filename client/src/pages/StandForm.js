@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -47,11 +47,11 @@ import { AiOutlineRotateRight } from 'react-icons/ai';
 import { IoChevronForward, IoChevronBack } from 'react-icons/io5';
 
 let sections = {
-    preAuto: 'Pre-Auto',
-    auto: 'Auto',
-    teleop: 'Teleop',
-    endGame: 'Endgame',
-    closing: 'Closing'
+    preAuto: { label: 'Pre-Auto', spaceUsed: 100 + 35 + 110 + 70 },
+    auto: { label: 'Auto', spaceUsed: 100 + 40 + 40 + 55 + 70 },
+    teleop: { label: 'Teleop', spaceUsed: 100 + 40 + 40 + 135 + 70 },
+    endGame: { label: 'Endgame', spaceUsed: 100 + 40 + 40 + 157 + 70 },
+    closing: { label: 'Closing', spaceUsed: 100 + 35 + 339 + 70 }
 };
 let startingPositions = [
     [28, 35, uuidv4()],
@@ -96,8 +96,12 @@ let wasDefendedOptions = [
 let climbTypes = [
     { label: 'No Attempt', color: 'blue', id: uuidv4() },
     { label: 'Success', color: 'green', id: uuidv4() },
-    { label: 'Harmony', color: 'green', id: uuidv4() },
     { label: 'Fail', color: 'red', id: uuidv4() }
+];
+let climbLocations = [
+    { label: 'Left Side', color: 'blue', id: uuidv4() },
+    { label: 'Center', color: 'blue', id: uuidv4() },
+    { label: 'Right Side', color: 'blue', id: uuidv4() }
 ];
 let lostCommOptions = [
     { label: 'Yes', value: true, color: 'red', id: uuidv4() },
@@ -157,7 +161,11 @@ function StandForm() {
         wasDefended: null,
         defenseRating: 0,
         defenseAllocation: 0,
-        climb: null,
+        climb: {
+            attempt: null,
+            location: null,
+            harmony: null
+        },
         lostCommunication: null,
         robotBroke: null,
         yellowCard: null,
@@ -187,7 +195,7 @@ function StandForm() {
     const [standFormManagers, setStandFormManagers] = useState(null);
     const [dimensionRatios, setDimensionRatios] = useState(null);
     const [imageLoaded, setImageLoaded] = useState(false);
-    const [maxContainerHeight, setMaxContainerHeight] = useState(null);
+    const [heightDimensions, setHeightDimensions] = useState({ availableScoringSpace: null, max: null });
 
     useEffect(() => {
         if (stationParam.length !== 2 || !/[rb][123]/.test(stationParam)) {
@@ -317,13 +325,34 @@ function StandForm() {
         setImageLoaded(false);
     }, [activeSection]);
 
-    function getImageVariables() {
+    function getHeightDimensions() {
+        let availableSpace = document.documentElement.clientHeight;
+        return {
+            availableScoringSpace: Math.min(
+                imageHeight + sections.preAuto.spaceUsed - sections.teleop.spaceUsed,
+                Math.max(availableSpace - sections.teleop.spaceUsed, 200)
+            ),
+            max: Math.min(availableSpace, imageHeight + sections.preAuto.spaceUsed)
+        };
+    }
+
+    const resizeMaxContainerHeight = useCallback(() => {
+        console.log(getHeightDimensions());
+        setHeightDimensions(getHeightDimensions());
+    }, []);
+
+    const getImageVariables = useCallback(() => {
         const viewportWidth = window.innerWidth;
         // const viewportHeight = window.innerHeight;
 
         // Calculate image dimensions based on screen size
         const maxWidth = viewportWidth * getValueByRange(viewportWidth); // Adjust the multiplier as needed
-        const maxHeight = Math.min(imageHeight, Math.max(447 - 145, document.documentElement.clientHeight - 315));
+        let maxHeight;
+        if (activeSection.label === sections.preAuto.label) {
+            maxHeight = getHeightDimensions().max - sections.preAuto.spaceUsed;
+        } else {
+            maxHeight = getHeightDimensions().availableScoringSpace;
+        }
 
         const screenAspectRatio = maxWidth / maxHeight;
         const imageAspectRatio = imageWidth / imageHeight;
@@ -353,16 +382,20 @@ function StandForm() {
             // const whitespaceRight = extraVerticalSpace / 2;
             // setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
         }
-        setMaxContainerHeight(scaledHeight + 145);
         setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
-    }
+    }, [activeSection]);
 
     useEffect(() => {
         getImageVariables();
+        resizeMaxContainerHeight();
         window.addEventListener('resize', getImageVariables);
+        window.addEventListener('resize', resizeMaxContainerHeight);
 
-        return () => window.removeEventListener('resize', getImageVariables);
-    }, [stationParam]);
+        return () => {
+            window.removeEventListener('resize', getImageVariables);
+            window.removeEventListener('resize', resizeMaxContainerHeight);
+        };
+    }, [resizeMaxContainerHeight, getImageVariables]);
 
     useEffect(() => {
         if (standFormData.defenseRating !== 0 && standFormData.defenseAllocation === 0) {
@@ -400,28 +433,32 @@ function StandForm() {
 
     function validEndGame() {
         return (
-            standFormData.climb !== null &&
-            standFormData.lostCommunication !== null &&
-            standFormData.robotBroke !== null &&
-            standFormData.yellowCard !== null &&
-            standFormData.redCard !== null
+            standFormData.climb.attempt !== null &&
+            (standFormData.climb.attempt !== 'Success' ||
+                (standFormData.climb.location !== null && standFormData.climb.harmony !== null))
         );
     }
 
     function validClosing() {
-        return !isFollowOrNoShow() || standFormData.standStatusComment.trim() !== '';
+        return (
+            standFormData.lostCommunication !== null &&
+            standFormData.robotBroke !== null &&
+            standFormData.yellowCard !== null &&
+            standFormData.redCard !== null &&
+            (!isFollowOrNoShow() || standFormData.standStatusComment.trim() !== '')
+        );
     }
 
     function validateSection(section) {
-        if (section === sections.preAuto) {
+        if (section.label === sections.preAuto.label) {
             return validPreAuto();
-        } else if (section === sections.auto) {
+        } else if (section.label === sections.auto.label) {
             return validAuto();
-        } else if (section === sections.teleop) {
+        } else if (section.label === sections.teleop.label) {
             return validTele();
-        } else if (section === sections.endGame) {
+        } else if (section.label === sections.endGame.label) {
             return validEndGame();
-        } else if (section === sections.closing) {
+        } else if (section.label === sections.closing.label) {
             return validClosing();
         } else {
             return true;
@@ -435,7 +472,6 @@ function StandForm() {
             false: 'f',
             'No Attempt': 'na',
             Success: 'sc',
-            Harmony: 'hm',
             Fail: 'fl',
             Complete: 'cp',
             'Follow Up': 'fu',
@@ -473,7 +509,9 @@ function StandForm() {
                 map[standFormData.wasDefended],
                 standFormData.defenseRating,
                 standFormData.defenseAllocation,
-                map[standFormData.climb],
+                map[standFormData.climb.attempt],
+                standFormData.climb.location === null ? 'n' : standFormData.climb.location.charAt(0).toLowerCase(),
+                standFormData.climb.harmony === null ? 'n' : standFormData.climb.harmony,
                 map[standFormData.lostCommunication],
                 map[standFormData.robotBroke],
                 map[standFormData.yellowCard],
@@ -599,8 +637,8 @@ function StandForm() {
     }
 
     function renderSection() {
-        switch (activeSection) {
-            case sections.preAuto:
+        switch (activeSection.label) {
+            case sections.preAuto.label:
                 return (
                     <Box>
                         <Text
@@ -614,7 +652,7 @@ function StandForm() {
                                     : 'default'
                             }
                         >
-                            {activeSection}
+                            {activeSection.label}
                         </Text>
                         <Center
                             margin={'0 auto'}
@@ -629,7 +667,7 @@ function StandForm() {
                                 alt={'Field Map'}
                                 style={{
                                     visibility: imageLoaded ? 'visible' : 'hidden',
-                                    maxHeight: `${Math.max(447 - 145, document.documentElement.clientHeight - 315)}px`
+                                    maxHeight: `${heightDimensions.max - activeSection.spaceUsed}px`
                                 }}
                                 onLoad={() => setImageLoaded(true)}
                             />
@@ -667,9 +705,6 @@ function StandForm() {
                                             ? null
                                             : matchFormStatus.noShow;
                                     setStandFormData({ ...standFormData, standStatus: nextStatus });
-                                    if (nextStatus === matchFormStatus.noShow) {
-                                        setActiveSection(sections.closing);
-                                    }
                                 }}
                                 colorScheme={standFormData.standStatus === matchFormStatus.noShow ? 'red' : 'gray'}
                             >
@@ -723,7 +758,12 @@ function StandForm() {
                             </HStack>
                         </Flex>
                         <HStack
-                            marginTop={`${15 + maxContainerHeight - imageHeight * dimensionRatios.height - 145}px`}
+                            marginTop={`${
+                                15 +
+                                heightDimensions.max -
+                                imageHeight * dimensionRatios.height -
+                                activeSection.spaceUsed
+                            }px`}
                             marginBottom={'15px'}
                             gap={'15px'}
                         >
@@ -731,6 +771,8 @@ function StandForm() {
                                 flex={2 / 3}
                                 leftIcon={<AiOutlineRotateRight />}
                                 onClick={() => setFieldRotation((fieldRotation + 90) % 360)}
+                                variant={'outline'}
+                                colorScheme={'black'}
                             >
                                 Rotate
                             </Button>
@@ -754,13 +796,15 @@ function StandForm() {
                                 flex={2 / 3}
                                 rightIcon={<IoChevronForward />}
                                 onClick={() => setActiveSection(sections.auto)}
+                                variant={'outline'}
+                                colorScheme={'black'}
                             >
                                 Auto
                             </Button>
                         </HStack>
                     </Box>
                 );
-            case sections.auto:
+            case sections.auto.label:
                 return (
                     <Box>
                         <HStack justifyContent={'center'} gap={'30px'}>
@@ -805,7 +849,7 @@ function StandForm() {
                                     : 'default'
                             }
                         >
-                            {activeSection}:{' '}
+                            {activeSection.label}:{' '}
                             {standFormData.autoTimeline.length === 0 ||
                             (standFormData.autoTimeline.slice(-1)[0].scored !== null &&
                                 (standFormData.autoTimeline[0].piece !== '0' ||
@@ -825,7 +869,7 @@ function StandForm() {
                             <Center
                                 margin={'0 auto'}
                                 width={`${imageWidth * dimensionRatios.width}px`}
-                                height={`${imageHeight * dimensionRatios.height}px`}
+                                height={`${heightDimensions.availableScoringSpace}px`}
                                 position={'relative'}
                                 style={{ transform: `rotate(${fieldRotation}deg)` }}
                             >
@@ -835,10 +879,7 @@ function StandForm() {
                                     alt={'Field Map'}
                                     style={{
                                         visibility: imageLoaded ? 'visible' : 'hidden',
-                                        maxHeight: `${Math.max(
-                                            447 - 145,
-                                            document.documentElement.clientHeight - 315
-                                        )}px`
+                                        maxHeight: `${heightDimensions.availableScoringSpace}px`
                                     }}
                                     onLoad={() => setImageLoaded(true)}
                                 />
@@ -848,7 +889,12 @@ function StandForm() {
                                         position={'absolute'}
                                         visibility={imageLoaded ? 'visible' : 'hidden'}
                                         left={`${getPoint(position[0]) * dimensionRatios.width}px`}
-                                        top={`${position[1] * dimensionRatios.height}px`}
+                                        top={`${
+                                            (heightDimensions.availableScoringSpace -
+                                                imageHeight * dimensionRatios.height) /
+                                                2 +
+                                            position[1] * dimensionRatios.height
+                                        }px`}
                                         width={`${65 * dimensionRatios.width}px`}
                                         height={`${65 * dimensionRatios.height}px`}
                                         style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }}
@@ -871,7 +917,7 @@ function StandForm() {
                             </Center>
                         ) : (
                             <Flex
-                                height={`${imageHeight * dimensionRatios.height}px`}
+                                height={`${heightDimensions.availableScoringSpace}px`}
                                 flexDir={'column'}
                                 margin={'0 auto'}
                                 gap={'15px'}
@@ -1010,7 +1056,12 @@ function StandForm() {
                             </HStack>
                         </Flex>
                         <HStack
-                            marginTop={`${15 + maxContainerHeight - imageHeight * dimensionRatios.height - 135}px`}
+                            marginTop={`${
+                                15 +
+                                heightDimensions.max -
+                                heightDimensions.availableScoringSpace -
+                                activeSection.spaceUsed
+                            }px`}
                             marginBottom={'15px'}
                             gap={'15px'}
                         >
@@ -1018,6 +1069,8 @@ function StandForm() {
                                 flex={2 / 3}
                                 leftIcon={<IoChevronBack />}
                                 onClick={() => setActiveSection(sections.preAuto)}
+                                variant={'outline'}
+                                colorScheme={'black'}
                             >
                                 Pre-Auto
                             </Button>
@@ -1041,13 +1094,15 @@ function StandForm() {
                                 flex={2 / 3}
                                 rightIcon={<IoChevronForward />}
                                 onClick={() => setActiveSection(sections.teleop)}
+                                variant={'outline'}
+                                colorScheme={'black'}
                             >
                                 Teleop
                             </Button>
                         </HStack>
                     </Box>
                 );
-            case sections.teleop:
+            case sections.teleop.label:
                 return (
                     <Box>
                         <HStack justifyContent={'center'} gap={'30px'}>
@@ -1093,7 +1148,7 @@ function StandForm() {
                                     : 'default'
                             }
                         >
-                            {activeSection}:{' '}
+                            {activeSection.label}:{' '}
                             {standFormData.teleopGP.intakeGround + standFormData.teleopGP.intakeSource ===
                             [
                                 standFormData.teleopGP.ampScore,
@@ -1113,7 +1168,7 @@ function StandForm() {
                             standFormData.teleopGP.speakerMiss,
                             standFormData.teleopGP.ferry
                         ].reduce((partialSum, a) => partialSum + a, 0) ? (
-                            <Flex height={`${maxContainerHeight - 215}px`} margin={'0 auto'} gap={'15px'}>
+                            <Flex height={`${heightDimensions.availableScoringSpace}px`} margin={'0 auto'} gap={'15px'}>
                                 <Button
                                     colorScheme={'teal'}
                                     fontSize={'xl'}
@@ -1147,7 +1202,7 @@ function StandForm() {
                             </Flex>
                         ) : (
                             <Flex
-                                height={`${maxContainerHeight - 215}px`}
+                                height={`${heightDimensions.availableScoringSpace}px`}
                                 flexDir={'column'}
                                 margin={'0 auto'}
                                 gap={'15px'}
@@ -1324,7 +1379,13 @@ function StandForm() {
                             </HStack>
                         </Flex>
                         <HStack
-                            marginTop={`${15 + maxContainerHeight - (maxContainerHeight - 215) - 215}px`}
+                            marginTop={`${Math.max(
+                                15,
+                                15 +
+                                    heightDimensions.max -
+                                    heightDimensions.availableScoringSpace -
+                                    activeSection.spaceUsed
+                            )}px`}
                             marginBottom={'15px'}
                             gap={'15px'}
                         >
@@ -1332,6 +1393,8 @@ function StandForm() {
                                 flex={2 / 3}
                                 leftIcon={<IoChevronBack />}
                                 onClick={() => setActiveSection(sections.auto)}
+                                variant={'outline'}
+                                colorScheme={'black'}
                             >
                                 Auto
                             </Button>
@@ -1355,13 +1418,15 @@ function StandForm() {
                                 flex={2 / 3}
                                 rightIcon={<IoChevronForward />}
                                 onClick={() => setActiveSection(sections.endGame)}
+                                variant={'outline'}
+                                colorScheme={'black'}
                             >
                                 End Game
                             </Button>
                         </HStack>
                     </Box>
                 );
-            case sections.endGame:
+            case sections.endGame.label:
                 return (
                     <Box>
                         <HStack justifyContent={'center'} gap={'30px'}>
@@ -1407,7 +1472,7 @@ function StandForm() {
                                     : 'default'
                             }
                         >
-                            {activeSection}
+                            {activeSection.label}
                         </Text>
                         <Flex flexDir={'column'} rowGap={'15px'}>
                             <VStack gap={'5px'}>
@@ -1417,13 +1482,28 @@ function StandForm() {
                                 <Flex columnGap={'10px'} width={'100%'} justifyContent={'center'}>
                                     {climbTypes.map((type) => (
                                         <Button
+                                            flex={1 / 3}
                                             key={type.id}
-                                            onClick={() => setStandFormData({ ...standFormData, climb: type.label })}
-                                            colorScheme={standFormData.climb === type.label ? type.color : 'gray'}
-                                            flexGrow={0}
+                                            onClick={() => {
+                                                let location = standFormData.climb.location;
+                                                let harmony = standFormData.climb.harmony;
+                                                if (type.label !== 'Success') {
+                                                    location = null;
+                                                    harmony = null;
+                                                }
+                                                setStandFormData({
+                                                    ...standFormData,
+                                                    climb: { attempt: type.label, location: location, harmony: harmony }
+                                                });
+                                            }}
+                                            colorScheme={
+                                                standFormData.climb.attempt === type.label ? type.color : 'gray'
+                                            }
                                             whiteSpace={'normal'}
                                             outline={
-                                                standFormData.climb === null && submitAttempted && !isFollowOrNoShow()
+                                                standFormData.climb.attempt === null &&
+                                                submitAttempted &&
+                                                !isFollowOrNoShow()
                                                     ? '2px solid red'
                                                     : 'none'
                                             }
@@ -1433,12 +1513,85 @@ function StandForm() {
                                     ))}
                                 </Flex>
                             </VStack>
+                            {standFormData.climb.attempt === 'Success' && (
+                                <VStack gap={'5px'}>
+                                    <Text fontSize={'lg'} fontWeight={'semibold'}>
+                                        Location
+                                    </Text>
+                                    <Flex columnGap={'10px'} width={'100%'} justifyContent={'center'}>
+                                        {climbLocations.map((location) => (
+                                            <Button
+                                                flex={1 / 3}
+                                                key={location.id}
+                                                onClick={() =>
+                                                    setStandFormData({
+                                                        ...standFormData,
+                                                        climb: { ...standFormData.climb, location: location.label }
+                                                    })
+                                                }
+                                                colorScheme={
+                                                    standFormData.climb.location === location.label
+                                                        ? location.color
+                                                        : 'gray'
+                                                }
+                                                whiteSpace={'normal'}
+                                                outline={
+                                                    standFormData.climb.attempt === 'Success' &&
+                                                    standFormData.climb.location === null &&
+                                                    submitAttempted &&
+                                                    !isFollowOrNoShow()
+                                                        ? '2px solid red'
+                                                        : 'none'
+                                                }
+                                            >
+                                                {location.label}
+                                            </Button>
+                                        ))}
+                                    </Flex>
+                                </VStack>
+                            )}
+                            {standFormData.climb.attempt === 'Success' && (
+                                <VStack gap={'5px'}>
+                                    <Text fontSize={'lg'} fontWeight={'semibold'}>
+                                        Harmony
+                                    </Text>
+                                    <Flex columnGap={'10px'} width={'100%'} justifyContent={'center'}>
+                                        {[0, 1, 2].map((harmonyNumber) => (
+                                            <Button
+                                                flex={1 / 3}
+                                                key={harmonyNumber}
+                                                onClick={() =>
+                                                    setStandFormData({
+                                                        ...standFormData,
+                                                        climb: { ...standFormData.climb, harmony: harmonyNumber }
+                                                    })
+                                                }
+                                                colorScheme={
+                                                    standFormData.climb.harmony === harmonyNumber ? 'blue' : 'gray'
+                                                }
+                                                whiteSpace={'normal'}
+                                                outline={
+                                                    standFormData.climb.attempt === 'Success' &&
+                                                    standFormData.climb.harmony === null &&
+                                                    submitAttempted &&
+                                                    !isFollowOrNoShow()
+                                                        ? '2px solid red'
+                                                        : 'none'
+                                                }
+                                            >
+                                                {harmonyNumber === 0 ? 'No Harmony' : `+${harmonyNumber} Harmony`}
+                                            </Button>
+                                        ))}
+                                    </Flex>
+                                </VStack>
+                            )}
                             <Button
                                 colorScheme={'facebook'}
                                 height={'60px'}
                                 fontWeight={'bold'}
                                 isDisabled={standFormData.teleopGP.trap === 3}
                                 key={'Trap'}
+                                marginTop={'10px'}
                                 onClick={() => {
                                     standFormManagers.endGame.doCommand(standFormData, gamePieceFields.trap.field);
                                 }}
@@ -1446,6 +1599,68 @@ function StandForm() {
                                 Trap: {standFormData.teleopGP.trap}
                                 {standFormData.teleopGP.trap === 3 && '(Max)'}
                             </Button>
+                        </Flex>
+                        <HStack
+                            marginTop={`${Math.max(
+                                15,
+                                15 +
+                                    heightDimensions.max -
+                                    activeSection.spaceUsed -
+                                    (standFormData.climb.attempt === 'Success' ? 174 : 0)
+                            )}px`}
+                            marginBottom={'15px'}
+                            gap={'15px'}
+                        >
+                            <Button
+                                flex={2 / 3}
+                                leftIcon={<IoChevronBack />}
+                                onClick={() => setActiveSection(sections.teleop)}
+                                variant={'outline'}
+                                colorScheme={'black'}
+                            >
+                                Teleop
+                            </Button>
+                            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 3}>
+                                {teamNumberParam}
+                            </Text>
+                            {futureAlly ? (
+                                <StarIcon
+                                    position={'absolute'}
+                                    left={'50%'}
+                                    transform={'translate(-50%, 0%)'}
+                                    zIndex={-1}
+                                    opacity={1}
+                                    // stroke={'black'}
+                                    viewBox={'-1 -1 26 26'}
+                                    fontSize={'xl'}
+                                    color={'yellow.300'}
+                                />
+                            ) : null}
+                            <Button
+                                flex={2 / 3}
+                                rightIcon={<IoChevronForward />}
+                                onClick={() => setActiveSection(sections.closing)}
+                                variant={'outline'}
+                                colorScheme={'black'}
+                            >
+                                Closing
+                            </Button>
+                        </HStack>
+                    </Box>
+                );
+            case sections.closing.label:
+                return (
+                    <Box>
+                        <Text
+                            fontSize={'xl'}
+                            fontWeight={'semibold'}
+                            textAlign={'center'}
+                            marginBottom={'5px'}
+                            color={submitAttempted && !validateSection(activeSection) ? 'red' : 'default'}
+                        >
+                            {activeSection.label}
+                        </Text>
+                        <Flex flexDir={'column'} rowGap={'15px'}>
                             <HStack gap={0}>
                                 <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 2}>
                                     Lost Comms:
@@ -1550,58 +1765,6 @@ function StandForm() {
                                     ))}
                                 </HStack>
                             </HStack>
-                        </Flex>
-                        <HStack
-                            marginTop={`${Math.max(15, 15 + maxContainerHeight - 447)}px`}
-                            marginBottom={'15px'}
-                            gap={'15px'}
-                        >
-                            <Button
-                                flex={2 / 3}
-                                leftIcon={<IoChevronBack />}
-                                onClick={() => setActiveSection(sections.teleop)}
-                            >
-                                Teleop
-                            </Button>
-                            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} flex={1 / 3}>
-                                {teamNumberParam}
-                            </Text>
-                            {futureAlly ? (
-                                <StarIcon
-                                    position={'absolute'}
-                                    left={'50%'}
-                                    transform={'translate(-50%, 0%)'}
-                                    zIndex={-1}
-                                    opacity={1}
-                                    // stroke={'black'}
-                                    viewBox={'-1 -1 26 26'}
-                                    fontSize={'xl'}
-                                    color={'yellow.300'}
-                                />
-                            ) : null}
-                            <Button
-                                flex={2 / 3}
-                                rightIcon={<IoChevronForward />}
-                                onClick={() => setActiveSection(sections.closing)}
-                            >
-                                Closing
-                            </Button>
-                        </HStack>
-                    </Box>
-                );
-            case sections.closing:
-                return (
-                    <Box>
-                        <Text
-                            fontSize={'xl'}
-                            fontWeight={'semibold'}
-                            textAlign={'center'}
-                            marginBottom={'5px'}
-                            color={submitAttempted && !validateSection(activeSection) ? 'red' : 'default'}
-                        >
-                            {activeSection}
-                        </Text>
-                        <Flex flexDir={'column'} rowGap={'15px'}>
                             <Center>
                                 <Textarea
                                     onChange={(event) =>
@@ -1668,11 +1831,7 @@ function StandForm() {
                         </Flex>
                         <HStack
                             marginTop={`${
-                                15 +
-                                maxContainerHeight -
-                                115 -
-                                (standFormData.standStatus !== matchFormStatus.noShow && 39) -
-                                (isFollowOrNoShow() && 95)
+                                15 + heightDimensions.max - activeSection.spaceUsed - (isFollowOrNoShow() ? 95 : 0)
                             }px`}
                             marginBottom={'15px'}
                             gap={'15px'}
@@ -1681,6 +1840,8 @@ function StandForm() {
                                 flex={2 / 3}
                                 leftIcon={<IoChevronBack />}
                                 onClick={() => setActiveSection(sections.endGame)}
+                                variant={'outline'}
+                                colorScheme={'black'}
                             >
                                 End Game
                             </Button>
@@ -1700,7 +1861,7 @@ function StandForm() {
                                     color={'yellow.300'}
                                 />
                             ) : null}
-                            <Button flex={2 / 3} isLoading={submitting} onClick={() => submit()}>
+                            <Button flex={2 / 3} isLoading={submitting} onClick={() => submit()} colorScheme={'green'}>
                                 Submit
                             </Button>
                         </HStack>
@@ -1792,7 +1953,7 @@ function StandForm() {
     if (
         standFormData.loading ||
         dimensionRatios === null ||
-        maxContainerHeight === null ||
+        heightDimensions.max === null ||
         standFormManagers === null ||
         futureAlly === null
     ) {

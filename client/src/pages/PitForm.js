@@ -1005,10 +1005,10 @@ function PitForm() {
                     <Box key={abilityContainer.id}>
                         <Text
                             fontSize={'md'}
-                            fontWeight={'medium'}
+                            fontWeight={'semibold'}
                             textAlign={'center'}
                             marginBottom={'5px'}
-                            marginTop={containerIndex !== 0 && '10px'}
+                            marginTop={containerIndex !== 0 && '15px'}
                         >
                             {abilityContainer.label}
                         </Text>
@@ -1040,10 +1040,10 @@ function PitForm() {
                     <Box key={abilityContainer.id}>
                         <Text
                             fontSize={'md'}
-                            fontWeight={'medium'}
+                            fontWeight={'semibold'}
                             textAlign={'center'}
                             marginBottom={'5px'}
-                            marginTop={containerIndex !== 0 && '10px'}
+                            marginTop={containerIndex !== 0 && '15px'}
                         >
                             {abilityContainer.label}
                         </Text>
@@ -1360,10 +1360,10 @@ function PitForm() {
                     </ModalContent>
                 </ModalOverlay>
             </Modal>
-            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'10px'}>
                 Team Number: {teamNumberParam}
             </Text>
-            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginTop={'15px'} marginBottom={'5px'}>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
                 Weight
             </Text>
             <NumberInput
@@ -1468,10 +1468,17 @@ function PitForm() {
                 </NumberInput>
             </HStack>
             <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
-            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
+            <Text
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                textAlign={'center'}
+                marginBottom={'10px'}
+                marginTop={'10px'}
+                textDecoration={'underline'}
+            >
                 Drive
             </Text>
-            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
+            <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
                 Type
             </Text>
             <RadioGroup
@@ -1534,8 +1541,8 @@ function PitForm() {
                     ))}
                 </Flex>
             </RadioGroup>
-            <HStack gap={'0px'} pos={'relative'} marginBottom={'5px'} marginTop={'10px'} justifyContent={'center'}>
-                <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+            <HStack gap={'0px'} pos={'relative'} marginBottom={'5px'} marginTop={'15px'} justifyContent={'center'}>
+                <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
                     Motors (Drive Only!)
                 </Text>
                 {pitFormData.motors.length > 0 ? (
@@ -1644,15 +1651,22 @@ function PitForm() {
                 <Textarea
                     onChange={(event) => setPitFormData({ ...pitFormData, driveTrainComment: event.target.value })}
                     value={pitFormData.driveTrainComment}
-                    placeholder='Any additional comments about drive train'
+                    placeholder='Any additional comments about the drive train'
                     width={'85%'}
                 />
             </Center>
             <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
-            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
+            <Text
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                textAlign={'center'}
+                marginBottom={'10px'}
+                marginTop={'10px'}
+                textDecoration={'underline'}
+            >
                 Autonomous
             </Text>
-            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
+            <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
                 Programming Language
             </Text>
             <RadioGroup
@@ -1721,12 +1735,12 @@ function PitForm() {
                     ))}
                 </Flex>
             </RadioGroup>
-            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
+            <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
                 Prefered Starting Position
             </Text>
             <Center
                 margin={'0 auto'}
-                marginBottom={'10px'}
+                marginBottom={'15px'}
                 width={`${imageWidth * dimensionRatios.width}px`}
                 height={`${imageHeight * dimensionRatios.height}px`}
                 position={'relative'}
@@ -1771,17 +1785,31 @@ function PitForm() {
                 />
             </Center>
             <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
-            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
+            <Text
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                textAlign={'center'}
+                marginBottom={'10px'}
+                marginTop={'10px'}
+                textDecoration={'underline'}
+            >
                 Abilities
             </Text>
             {pitFormData.teleAbilities.map((abilityContainer, containerIndex) =>
                 getAbilityComponent(abilityContainer, containerIndex, 'teleAbilities')
             )}
             <Divider borderStyle={'dashed'} borderColor={'black'} marginTop={'15px'} />
-            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
+            <Text
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                textAlign={'center'}
+                marginBottom={'10px'}
+                marginTop={'10px'}
+                textDecoration={'underline'}
+            >
                 Closing
             </Text>
-            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'}>
+            <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
                 Total Batteries
             </Text>
             <NumberInput
@@ -1806,7 +1834,7 @@ function PitForm() {
                     textAlign={'center'}
                 />
             </NumberInput>
-            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
+            <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
                 Batteries Charging
             </Text>
             <NumberInput
@@ -1831,7 +1859,7 @@ function PitForm() {
                     textAlign={'center'}
                 />
             </NumberInput>
-            <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'} marginBottom={'5px'} marginTop={'10px'}>
+            <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'} marginTop={'15px'}>
                 Wiring Rating
             </Text>
             <Center margin={'0 auto'} marginBottom={'40px'} width={{ base: '100%', md: '65%' }}>

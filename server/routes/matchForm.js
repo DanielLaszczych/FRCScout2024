@@ -82,7 +82,7 @@ router.post('/postStandForm', async (req, res) => {
             }
         }
         // ?. in case climb is null;
-        matchFormInput.stagePoints += climbFields[matchFormInput.climb]?.teleopValue || 0;
+        matchFormInput.stagePoints += climbFields[matchFormInput.climb.attempt]?.teleopValue || 0;
 
         matchFormInput.offensivePoints =
             matchFormInput.autoPoints + matchFormInput.teleopPoints + matchFormInput.stagePoints;
