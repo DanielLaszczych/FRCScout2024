@@ -426,11 +426,12 @@ function SuperForm() {
             >
                 <GridItem
                     fontSize={'md'}
-                    fontWeight={'medium'}
+                    fontWeight={'semibold'}
                     textAlign={'center'}
                     padding={'5px 0px'}
                     borderBottom={'1px solid black'}
                     borderRight={'1px solid black'}
+                    backgroundColor={'gray.400'}
                 >
                     Attribute
                 </GridItem>
@@ -438,18 +439,24 @@ function SuperForm() {
                     <GridItem
                         key={index}
                         fontSize={'md'}
-                        fontWeight={'medium'}
+                        fontWeight={'semibold'}
                         textAlign={'center'}
                         padding={'5px 0px'}
                         borderBottom={'1px solid black'}
                         borderRight={'1px solid black'}
+                        backgroundColor={'gray.400'}
                     >
                         {index + 1}
                         {index === 0 ? ' (Worst)' : index === 2 ? ' (Best)' : ''}
                     </GridItem>
                 ))}
-                <GridItem padding={'10px 0px'} borderBottom={'1px solid black'} borderRight={'1px solid black'}>
-                    <Center height={'100%'} fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                <GridItem
+                    padding={'10px 0px'}
+                    borderBottom={'1px solid black'}
+                    borderRight={'1px solid black'}
+                    backgroundColor={'gray.200'}
+                >
+                    <Center height={'100%'} fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
                         Agility
                     </Center>
                 </GridItem>
@@ -459,6 +466,7 @@ function SuperForm() {
                         padding={'10px 0px'}
                         borderBottom={'1px solid black'}
                         borderRight={'1px solid black'}
+                        backgroundColor={'gray.200'}
                     >
                         <Center height={'100%'}>
                             <Menu placement={'bottom'} autoSelect={false}>
@@ -468,6 +476,7 @@ function SuperForm() {
                                     width={'60px'}
                                     padding={'0px'}
                                     as={Button}
+                                    colorScheme='teal'
                                 >
                                     <Box overflow={'hidden'} textOverflow={'ellipsis'}>
                                         {getTeamFromRank(index + 1, 'agility') || 'None'}
@@ -480,6 +489,13 @@ function SuperForm() {
                                             textAlign={'center'}
                                             justifyContent={'center'}
                                             key={teamNumber}
+                                            isDisabled={stations.some(
+                                                (station) =>
+                                                    superFormData[station].teamNumber === teamNumber &&
+                                                    [matchFormStatus.noShow].includes(
+                                                        superFormData[station].superStatus
+                                                    )
+                                            )}
                                             textDecoration={
                                                 stations.some(
                                                     (station) =>
@@ -499,8 +515,13 @@ function SuperForm() {
                         </Center>
                     </GridItem>
                 ))}
-                <GridItem padding={'10px 0px'} borderBottom={'1px solid black'} borderRight={'1px solid black'}>
-                    <Center height={'100%'} fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                <GridItem
+                    padding={'10px 0px'}
+                    borderBottom={'1px solid black'}
+                    borderRight={'1px solid black'}
+                    backgroundColor={'gray.200'}
+                >
+                    <Center height={'100%'} fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
                         Field Aware.
                     </Center>
                 </GridItem>
@@ -510,6 +531,7 @@ function SuperForm() {
                         padding={'10px 0px'}
                         borderBottom={'1px solid black'}
                         borderRight={'1px solid black'}
+                        backgroundColor={'gray.200'}
                     >
                         <Center height={'100%'}>
                             <Menu placement={'bottom'} autoSelect={false}>
@@ -519,6 +541,7 @@ function SuperForm() {
                                     width={'60px'}
                                     padding={'0px'}
                                     as={Button}
+                                    colorScheme='teal'
                                 >
                                     <Box overflow={'hidden'} textOverflow={'ellipsis'}>
                                         {getTeamFromRank(index + 1, 'fieldAwareness') || 'None'}
@@ -531,6 +554,13 @@ function SuperForm() {
                                             textAlign={'center'}
                                             justifyContent={'center'}
                                             key={teamNumber}
+                                            isDisabled={stations.some(
+                                                (station) =>
+                                                    superFormData[station].teamNumber === teamNumber &&
+                                                    [matchFormStatus.noShow].includes(
+                                                        superFormData[station].superStatus
+                                                    )
+                                            )}
                                             textDecoration={
                                                 stations.some(
                                                     (station) =>
@@ -580,10 +610,13 @@ function SuperForm() {
                             colorScheme={superFormData[station].superStatus === matchFormStatus.noShow ? 'red' : 'gray'}
                             onClick={() => {
                                 let newData = { ...superFormData };
-                                newData[station].superStatus =
-                                    newData[station].superStatus === matchFormStatus.noShow
-                                        ? null
-                                        : matchFormStatus.noShow;
+                                if (newData[station].superStatus === matchFormStatus.noShow) {
+                                    newData[station].superStatus = null;
+                                } else {
+                                    newData[station].superStatus = matchFormStatus.noShow;
+                                    newData[station].agility = null;
+                                    newData[station].fieldAwareness = null;
+                                }
                                 setSuperFormData(newData);
                             }}
                         >
@@ -627,13 +660,14 @@ function SuperForm() {
                                 );
 
                                 let newData = { ...superFormData };
-                                newData[station].superStatus =
-                                    newData[station].superStatus === matchFormStatus.followUp
-                                        ? null
-                                        : matchFormStatus.followUp;
-                                if (prevFollowUpTeam) {
-                                    newData[station].superStatusComment =
-                                        superFormData[prevFollowUpTeam].superStatusComment;
+                                if (newData[station].superStatus === matchFormStatus.followUp) {
+                                    newData[station].superStatus = null;
+                                } else {
+                                    newData[station].superStatus = matchFormStatus.followUp;
+                                    if (prevFollowUpTeam) {
+                                        newData[station].superStatusComment =
+                                            superFormData[prevFollowUpTeam].superStatusComment;
+                                    }
                                 }
                                 setSuperFormData(newData);
                             }}

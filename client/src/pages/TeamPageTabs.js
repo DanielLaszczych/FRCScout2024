@@ -17,13 +17,11 @@ import {
     Spinner,
     Tag,
     Text,
-    Divider,
     Card,
     CardHeader,
     CardBody,
     Stack,
-    StackDivider,
-    Heading
+    StackDivider
 } from '@chakra-ui/react';
 import {
     convertMatchKeyToString,
@@ -69,19 +67,19 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
     const [dimensionRatios, setDimensionRatios] = useState(null);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [commentsToggled, setCommentsToggled] = useState([]);
-    const [oneCompleteMatchForms, setOneCompleteMatchForms] = useState(null);
+    const [oneValidMatchForms, setOneValidMatchForms] = useState(null);
 
     useEffect(() => {
         if (matchForms) {
-            setOneCompleteMatchForms(
+            setOneValidMatchForms(
                 matchForms.filter(
                     (matchForm) =>
-                        matchForm.standStatus === matchFormStatus.complete ||
-                        matchForm.superStatus === matchFormStatus.complete
+                        [matchFormStatus.complete, matchFormStatus.noShow].includes(matchForm.standStatus) ||
+                        [matchFormStatus.complete, matchFormStatus.noShow].includes(matchForm.superStatus)
                 )
             );
         } else {
-            setOneCompleteMatchForms(null);
+            setOneValidMatchForms(null);
         }
     }, [matchForms]);
 
@@ -180,7 +178,12 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     )}
                                     {ability.abilities.map((subAbility) => {
                                         return (
-                                            <Tag key={subAbility.label} fontSize={'md'} fontWeight={'medium'}>
+                                            <Tag
+                                                key={subAbility.label}
+                                                fontSize={'md'}
+                                                fontWeight={'medium'}
+                                                colorScheme='green'
+                                            >
                                                 {subAbility.label}
                                             </Tag>
                                         );
@@ -855,91 +858,6 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
             case teamPageTabs.pit:
                 return pitForm && !pitForm.followUp ? (
                     <Box margin={'0 auto'} width={{ base: '90%', md: '66%', lg: '50%' }}>
-                        <Flex marginBottom={'20px'}>
-                            <Card
-                                flex={1}
-                                size={'sm'}
-                                margin={'0 auto'}
-                                boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
-                            >
-                                <CardHeader paddingBottom={'2px'}>
-                                    <Heading fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                        Basics
-                                    </Heading>
-                                </CardHeader>
-                                <CardBody>
-                                    <Stack divider={<StackDivider />} spacing={'2'}>
-                                        <Box textAlign={'center'}>
-                                            <Heading fontSize={'md'} fontWeight={'semibold'}>
-                                                Weight
-                                            </Heading>
-                                            <Text fontSize={'md'} fontWeight={'medium'}>
-                                                {pitForm.weight} lbs
-                                            </Text>
-                                        </Box>
-                                        <Box textAlign={'center'}>
-                                            <Text fontSize={'md'} fontWeight={'semibold'}>
-                                                Starting Height
-                                            </Text>
-                                            <Text fontSize={'md'} fontWeight={'medium'}>
-                                                {pitForm.height} inches
-                                            </Text>
-                                        </Box>
-                                        <Box textAlign={'center'}>
-                                            <Text fontSize={'md'} fontWeight={'semibold'}>
-                                                Frame Size
-                                            </Text>
-                                            <Text fontSize={'md'} fontWeight={'medium'}>
-                                                {pitForm.frameSize.width} in. by {pitForm.frameSize.length} in.
-                                            </Text>
-                                        </Box>
-                                    </Stack>
-                                </CardBody>
-                            </Card>
-                            <Card
-                                size={'sm'}
-                                flex={1}
-                                margin={'0 auto'}
-                                boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
-                            >
-                                <CardHeader paddingBottom={'2px'}>
-                                    <Heading fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                        Drive Train
-                                    </Heading>
-                                </CardHeader>
-                                <CardBody>
-                                    <Stack divider={<StackDivider />} spacing={'2'}>
-                                        <Box textAlign={'center'}>
-                                            <Heading fontSize={'md'} fontWeight={'semibold'}>
-                                                Type
-                                            </Heading>
-                                            <Text fontSize={'md'} fontWeight={'medium'}>
-                                                {pitForm.driveTrain}
-                                            </Text>
-                                        </Box>
-                                        <Box textAlign={'center'}>
-                                            <Text fontSize={'md'} fontWeight={'semibold'}>
-                                                Motors
-                                            </Text>
-                                            <Text fontSize={'md'} fontWeight={'medium'}>
-                                                {pitForm.motors
-                                                    .map((motor) => `${motor.label} (${motor.value})`)
-                                                    .join(', ')}
-                                            </Text>
-                                        </Box>
-                                        <Box textAlign={'center'}>
-                                            <Text fontSize={'md'} fontWeight={'semibold'}>
-                                                Frame Size
-                                            </Text>
-                                            <Text fontSize={'md'} fontWeight={'medium'}>
-                                                {pitForm.frameSize.width} in. by {pitForm.frameSize.length} in.
-                                            </Text>
-                                        </Box>
-                                    </Stack>
-                                </CardBody>
-                            </Card>
-                        </Flex>
-
                         <Box marginBottom={'25px'} position={'relative'}>
                             <Box
                                 position={'absolute'}
@@ -1220,11 +1138,10 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                 return (
                     // Match #, Scouter (Both if possible), Starting Position, Pre-loaded, left zone, game piece auto, game piece tele, climb, super scout stats, issues, comment
                     <Box>
-                        {oneCompleteMatchForms.length > 0 && (
+                        {oneValidMatchForms.length > 0 && (
                             <Box width={'100%'} overflowX={'auto'}>
                                 <Grid
-                                    templateColumns={'repeat(13, 1fr)'}
-                                    borderLeft={'1px solid black'}
+                                    templateColumns={'0.75fr repeat(12, 1fr)'}
                                     borderTop={'1px solid black'}
                                     minWidth={'1900px'}
                                 >
@@ -1246,7 +1163,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                         <GridItem
                                             key={label}
                                             fontSize={'lg'}
-                                            fontWeight={'medium'}
+                                            fontWeight={'semibold'}
                                             textAlign={'center'}
                                             display={'flex'}
                                             justifyContent={'center'}
@@ -1258,11 +1175,12 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             position={label === 'Match #' && 'sticky'}
                                             left={label === 'Match #' && 0}
                                             zIndex={label === 'Match #' && 1}
+                                            borderLeft={label === 'Match #' && '1px solid black'}
                                         >
                                             {label}
                                         </GridItem>
                                     ))}
-                                    {sortMatches(oneCompleteMatchForms).map((matchForm) => (
+                                    {sortMatches(oneValidMatchForms).map((matchForm) => (
                                         <React.Fragment key={matchForm.matchNumber}>
                                             <GridItem
                                                 fontSize={'lg'}
@@ -1274,13 +1192,15 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 borderBottom={'1px solid black'}
                                                 borderRight={'1px solid black'}
                                                 backgroundColor={'gray.200'}
-                                                minWidth={'180px'}
                                                 minHeight={'100px'}
                                                 position={'sticky'}
                                                 left={0}
                                                 zIndex={1}
+                                                whiteSpace={'pre-line'}
+                                                borderLeft={'1px solid black'}
                                             >
-                                                {convertMatchKeyToString(matchForm.matchNumber)} :{' '}
+                                                {convertMatchKeyToString(matchForm.matchNumber, true)}
+                                                {'\n'}
                                                 {convertStationKeyToString(matchForm.station)}
                                             </GridItem>
                                             <GridItem
@@ -1619,15 +1539,28 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
                                                         backgroundColor={'gray.200'}
-                                                        minWidth={'150px'}
+                                                        minWidth={'175px'}
                                                     >
                                                         <Text
                                                             fontSize={'lg'}
                                                             fontWeight={'medium'}
                                                             textAlign={'center'}
                                                         >
-                                                            {`Climb: ${matchForm.climb}`}
+                                                            {`Climb: ${matchForm.climb.attempt}${
+                                                                matchForm.climb.attempt === 'Success'
+                                                                    ? ` (+${matchForm.climb.harmony})`
+                                                                    : ''
+                                                            }`}
                                                         </Text>
+                                                        {matchForm.climb.attempt === 'Success' && (
+                                                            <Text
+                                                                fontSize={'lg'}
+                                                                fontWeight={'medium'}
+                                                                textAlign={'center'}
+                                                            >
+                                                                {`Location: ${matchForm.climb.location}`}
+                                                            </Text>
+                                                        )}
                                                         <Text
                                                             fontSize={'lg'}
                                                             fontWeight={'medium'}
@@ -1653,15 +1586,17 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         >
                                                             {`Rating: ${matchForm.defenseRating || 'N/A'}`}
                                                         </Text>
-                                                        <Text
-                                                            fontSize={'lg'}
-                                                            fontWeight={'medium'}
-                                                            textAlign={'center'}
-                                                        >
-                                                            {`Allocation: ${
-                                                                matchForm.defenseAllocation * 100 + '%' || 'N/A'
-                                                            }`}
-                                                        </Text>
+                                                        {matchForm.defenseRating > 0 && (
+                                                            <Text
+                                                                fontSize={'lg'}
+                                                                fontWeight={'medium'}
+                                                                textAlign={'center'}
+                                                            >
+                                                                {`Allocation: ${
+                                                                    matchForm.defenseAllocation * 100 + '%' || 'N/A'
+                                                                }`}
+                                                            </Text>
+                                                        )}
                                                         <Text
                                                             fontSize={'lg'}
                                                             fontWeight={'medium'}
@@ -1817,7 +1752,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                 </Grid>
                             </Box>
                         )}
-                        {oneCompleteMatchForms.length === 0 && (
+                        {oneValidMatchForms.length === 0 && (
                             <Box fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
                                 No match data
                             </Box>
@@ -1830,7 +1765,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                         <MatchLineGraphs
                             teamNumbers={[teamNumberParam]}
                             multiTeamMatchForms={{
-                                [teamNumberParam]: oneCompleteMatchForms
+                                [teamNumberParam]: oneValidMatchForms
                             }}
                         />
                     </Box>
@@ -1931,7 +1866,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
     if (
         pitForm === undefined ||
         matchForms === undefined ||
-        oneCompleteMatchForms === null ||
+        oneValidMatchForms === null ||
         teamEventData === undefined
     ) {
         // For some reason these needs a zIndex value other wise a black line

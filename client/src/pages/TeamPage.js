@@ -186,7 +186,7 @@ function TeamPage({ keyProp }) {
                 ></Box>
             </Box>
             <Center marginBottom={'25px'}>
-                <Menu placement='bottom'>
+                <Menu placement={'bottom'}>
                     <MenuButton
                         maxW={'65vw'}
                         onClick={() => setFocusedEvent('')}
@@ -198,7 +198,7 @@ function TeamPage({ keyProp }) {
                             {currentEvent.name}
                         </Box>
                     </MenuButton>
-                    <MenuList>
+                    <MenuList zIndex={2}>
                         {events.map((eventItem) => (
                             <MenuItem
                                 textAlign={'center'}

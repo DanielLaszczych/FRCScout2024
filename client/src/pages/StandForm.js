@@ -1597,7 +1597,7 @@ function StandForm() {
                                 }}
                             >
                                 Trap: {standFormData.teleopGP.trap}
-                                {standFormData.teleopGP.trap === 3 && '(Max)'}
+                                {standFormData.teleopGP.trap === 3 && ' (Max)'}
                             </Button>
                         </Flex>
                         <HStack
@@ -1830,9 +1830,10 @@ function StandForm() {
                             </Modal>
                         </Flex>
                         <HStack
-                            marginTop={`${
+                            marginTop={`${Math.max(
+                                15,
                                 15 + heightDimensions.max - activeSection.spaceUsed - (isFollowOrNoShow() ? 95 : 0)
-                            }px`}
+                            )}px`}
                             marginBottom={'15px'}
                             gap={'15px'}
                         >
