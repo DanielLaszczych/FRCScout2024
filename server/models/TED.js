@@ -7,93 +7,119 @@
 
 const { model, Schema } = require('mongoose');
 
-const metricsSchema = new Schema({
-    total: {
-        type: Number,
-        default: 0
+const metricsSchema = new Schema(
+    {
+        total: {
+            type: Number,
+            default: 0
+        },
+        avg: {
+            type: Number,
+            default: 0
+        },
+        max: {
+            type: Number,
+            default: 0
+        }
     },
-    avg: {
-        type: Number,
-        default: 0
-    },
-    max: {
-        type: Number,
-        default: 0
-    }
-});
+    { _id: false }
+);
 
-const autoGPSchema = new Schema({
-    intakeMiss: {
-        type: metricsSchema,
-        default: {}
+const autoGPSchema = new Schema(
+    {
+        intakeMiss: {
+            type: metricsSchema,
+            default: {}
+        },
+        ampScore: {
+            type: metricsSchema,
+            default: {}
+        },
+        speakerScore: {
+            type: metricsSchema,
+            default: {}
+        },
+        ampMiss: {
+            type: metricsSchema,
+            default: {}
+        },
+        speakerMiss: {
+            type: metricsSchema,
+            default: {}
+        }
     },
-    ampScore: {
-        type: metricsSchema,
-        default: {}
-    },
-    speakerScore: {
-        type: metricsSchema,
-        default: {}
-    },
-    ampMiss: {
-        type: metricsSchema,
-        default: {}
-    },
-    speakerMiss: {
-        type: metricsSchema,
-        default: {}
-    }
-});
+    { _id: false }
+);
 
-const teleopGPSchema = new Schema({
-    intakeSource: {
-        type: metricsSchema,
-        default: {}
+const teleopGPSchema = new Schema(
+    {
+        intakeSource: {
+            type: metricsSchema,
+            default: {}
+        },
+        intakeGround: {
+            type: metricsSchema,
+            default: {}
+        },
+        ampScore: {
+            type: metricsSchema,
+            default: {}
+        },
+        speakerScore: {
+            type: metricsSchema,
+            default: {}
+        },
+        ampMiss: {
+            type: metricsSchema,
+            default: {}
+        },
+        speakerMiss: {
+            type: metricsSchema,
+            default: {}
+        },
+        ferry: {
+            type: metricsSchema,
+            default: {}
+        },
+        trap: {
+            type: metricsSchema,
+            default: {}
+        }
     },
-    intakeGround: {
-        type: metricsSchema,
-        default: {}
-    },
-    ampScore: {
-        type: metricsSchema,
-        default: {}
-    },
-    speakerScore: {
-        type: metricsSchema,
-        default: {}
-    },
-    ampMiss: {
-        type: metricsSchema,
-        default: {}
-    },
-    speakerMiss: {
-        type: metricsSchema,
-        default: {}
-    },
-    ferry: {
-        type: metricsSchema,
-        default: {}
-    },
-    trap: {
-        type: metricsSchema,
-        default: {}
-    }
-});
+    { _id: false }
+);
 
-const climbSchema = new Schema({
-    noAttempt: {
-        type: Number,
-        default: 0
+const ampPlayerGPSchema = new Schema(
+    {
+        highNoteScore: {
+            type: metricsSchema,
+            default: {}
+        },
+        highNoteMiss: {
+            type: metricsSchema,
+            default: {}
+        }
     },
-    success: {
-        type: Number,
-        default: 0
+    { _id: false }
+);
+
+const climbSchema = new Schema(
+    {
+        noAttempt: {
+            type: Number,
+            default: 0
+        },
+        success: {
+            type: Number,
+            default: 0
+        },
+        fail: {
+            type: Number,
+            default: 0
+        }
     },
-    fail: {
-        type: Number,
-        default: 0
-    }
-});
+    { _id: false }
+);
 
 const TeamEventDataSchema = new Schema({
     eventKey: {
@@ -199,6 +225,22 @@ const TeamEventDataSchema = new Schema({
     fieldAwareness: {
         type: metricsSchema,
         default: {}
+    },
+    ampPlayer: {
+        type: Number,
+        default: 0
+    },
+    ampPlayerGP: {
+        type: ampPlayerGPSchema,
+        default: {}
+    },
+    highNoteScorePercentage: {
+        type: Number,
+        default: 0
+    },
+    highNoteScoreFraction: {
+        type: String,
+        default: ''
     }
 });
 

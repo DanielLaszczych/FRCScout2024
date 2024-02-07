@@ -34,23 +34,11 @@ import { matchFormStatus } from '../util/helperConstants';
 import { convertMatchKeyToString, leafGet, sortMatches } from '../util/helperFunctions';
 import { AiFillFilter } from 'react-icons/ai';
 import { GiBrickWall } from 'react-icons/gi';
-import { MdOutlineSignalWifiStatusbarConnectedNoInternet4 } from 'react-icons/md';
+import { MdOutlineSignalWifiStatusbarConnectedNoInternet4, MdDisabledVisible } from 'react-icons/md';
 import { FaScrewdriverWrench } from 'react-icons/fa6';
 import { TbCards } from 'react-icons/tb';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Colors);
-
-const teleopPreset = [
-    'teleopGP.ampScore',
-    'teleopGP.speakerScore',
-    'teleopGP.ferry',
-    'defenseRating',
-    'wasDefended',
-    'lostCommunication',
-    'robotBroke',
-    'yellowCard',
-    'redCard'
-];
 
 function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -59,100 +47,112 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
     const [superForms, setSuperForms] = useState(null);
     const [bothCompleteForms, setBothCompleteForms] = useState(null);
     const [graphWidth, setGraphWidth] = useState(false);
-    const [fields, setFields] = useState([
-        {
+    const [fields, setFields] = useState({
+        auto: {
             label: 'Auto',
-            fields: [
-                { label: 'Left Start', field: 'leftStart', value: false },
-                { label: 'Intake Miss', field: 'autoGP.intakeMiss', value: false, mainLabel: true },
-                { label: 'Amp', field: 'autoGP.ampScore', value: false, mainLabel: true },
-                { label: 'Speaker', field: 'autoGP.speakerScore', value: false, mainLabel: true },
-                { label: 'Amp Miss', field: 'autoGP.ampMiss', value: false, mainLabel: true },
-                { label: 'Speaker Miss', field: 'autoGP.speakerMiss', value: false, mainLabel: true },
-                { label: 'Auto Points', field: 'autoPoints', value: false }
-            ]
+            fields: {
+                leftStart: { label: 'Left Start', field: 'leftStart', value: false },
+                intakeMiss: { label: 'Intake Miss', field: 'autoGP.intakeMiss', value: false, mainLabel: true },
+                ampScore: { label: 'Amp', field: 'autoGP.ampScore', value: false, mainLabel: true },
+                speakerScore: { label: 'Speaker', field: 'autoGP.speakerScore', value: false, mainLabel: true },
+                ampMiss: { label: 'Amp Miss', field: 'autoGP.ampMiss', value: false, mainLabel: true },
+                speakerMiss: { label: 'Speaker Miss', field: 'autoGP.speakerMiss', value: false, mainLabel: true },
+                autoPoints: { label: 'Auto Points', field: 'autoPoints', value: false }
+            }
         },
-        {
+        teleop: {
             label: 'Teleop',
-            fields: [
-                { label: 'Intake Source', field: 'teleopGP.intakeSource', value: false, mainLabel: true },
-                { label: 'Intake Ground', field: 'teleopGP.intakeGround', value: false, mainLabel: true },
-                { label: 'Amp', field: 'teleopGP.ampScore', value: false, mainLabel: true },
-                { label: 'Speaker', field: 'teleopGP.speakerScore', value: false, mainLabel: true },
-                { label: 'Amp Miss', field: 'teleopGP.ampMiss', value: false, mainLabel: true },
-                { label: 'Speaker Miss', field: 'teleopGP.speakerMiss', value: false, mainLabel: true },
-                { label: 'Ferry', field: 'teleopGP.ferry', value: false, mainLabel: true },
-                { label: 'Defense Rating', field: 'defenseRating', value: false },
-                { label: 'Defense Allocation', field: 'defenseAllocation', value: false },
-                { label: 'Was Defended', field: 'wasDefended', value: false, icon: GiBrickWall },
-                { label: 'Teleop Points', field: 'teleopPoints', value: false }
-            ]
+            fields: {
+                intakeSource: { label: 'Intake Source', field: 'teleopGP.intakeSource', value: false, mainLabel: true },
+                intakeGround: { label: 'Intake Ground', field: 'teleopGP.intakeGround', value: false, mainLabel: true },
+                ampScore: { label: 'Amp', field: 'teleopGP.ampScore', value: false, mainLabel: true },
+                speakerScore: { label: 'Speaker', field: 'teleopGP.speakerScore', value: false, mainLabel: true },
+                ampMiss: { label: 'Amp Miss', field: 'teleopGP.ampMiss', value: false, mainLabel: true },
+                speakerMiss: { label: 'Speaker Miss', field: 'teleopGP.speakerMiss', value: false, mainLabel: true },
+                ferry: { label: 'Ferry', field: 'teleopGP.ferry', value: false, mainLabel: true },
+                defenseRating: { label: 'Defense Rating', field: 'defenseRating', value: false },
+                defenseAllocation: { label: 'Defense Allocation', field: 'defenseAllocation', value: false },
+                wasDefended: { label: 'Was Defended', field: 'wasDefended', value: false, icon: GiBrickWall },
+                teleopPoints: { label: 'Teleop Points', field: 'teleopPoints', value: false }
+            }
         },
-        {
+        endGame: {
             label: 'Stage/End Game',
-            fields: [
-                { label: 'Trap', field: 'teleopGP.trap', value: false },
-                { label: 'Stage Points', field: 'stagePoints', value: false }
-            ]
+            fields: {
+                climb: { label: 'Climb', field: 'climb', value: false, specialField: true },
+                harmony: { label: 'Harmony', field: 'climb.harmony', value: false },
+                trap: { label: 'Trap', field: 'teleopGP.trap', value: false },
+                stagePoints: { label: 'Stage Points', field: 'stagePoints', value: false }
+            }
         },
-        {
+        superScout: {
             label: 'Super Scout',
-            fields: [
-                { label: 'Agility', field: 'agility', value: false },
-                { label: 'Field Awareness', field: 'fieldAwareness', value: false }
-            ]
+            fields: {
+                agility: { label: 'Agility', field: 'agility', value: false, superField: true },
+                fieldAwareness: {
+                    label: 'Field Awareness',
+                    field: 'fieldAwareness',
+                    value: false,
+                    superField: true
+                },
+                highNoteScore: {
+                    label: 'High Note',
+                    field: 'ampPlayerGP.highNoteScore',
+                    value: false,
+                    superField: true
+                },
+                highNoteMiss: {
+                    label: 'High Note Miss',
+                    field: 'ampPlayerGP.highNoteMiss',
+                    value: false,
+                    superField: true
+                }
+            }
         },
-        {
+        other: {
             label: 'Other',
-            fields: [
-                { label: 'Offensive Points', field: 'offensivePoints', value: false },
-                {
+            fields: {
+                offensivePoints: { label: 'Offensive Points', field: 'offensivePoints', value: false },
+                noShow: {
+                    label: 'No Show',
+                    field: 'noShow',
+                    value: false,
+                    icon: MdDisabledVisible,
+                    note: 'Include/Exclude No Show Matches',
+                    specialField: true
+                },
+                lossCommunication: {
                     label: 'Lost Comms.',
                     field: 'lostCommunication',
                     value: false,
                     icon: MdOutlineSignalWifiStatusbarConnectedNoInternet4
                 },
-                { label: 'Robot Broke', field: 'robotBroke', value: false, icon: FaScrewdriverWrench },
-                { label: 'Yellow Card', field: 'yellowCard', value: false, icon: TbCards, color: 'orange' },
-                { label: 'Red Card', field: 'redCard', value: false, icon: TbCards, color: 'red' }
-            ]
-        }
-    ]);
-
-    useEffect(() => {
-        let standForms = {};
-        let superForms = {};
-        let bothCompleteForms = {};
-        for (const teamNumber of teamNumbers) {
-            let matchForms = sortMatches(multiTeamMatchForms[teamNumber]);
-            standForms[teamNumber] = [];
-            superForms[teamNumber] = [];
-            bothCompleteForms[teamNumber] = [];
-            for (const matchForm of matchForms) {
-                if (
-                    matchForm.standStatus === matchFormStatus.complete &&
-                    matchForm.superStatus === matchFormStatus.complete
-                ) {
-                    standForms[teamNumber].push(matchForm);
-                    superForms[teamNumber].push(matchForm);
-                    bothCompleteForms[teamNumber].push(matchForm);
-                } else if (matchForm.standStatus === matchFormStatus.complete) {
-                    standForms[teamNumber].push(matchForm);
-                } else if (matchForm.superStatus === matchFormStatus.complete) {
-                    superForms[teamNumber].push(matchForm);
-                }
+                robotBroke: { label: 'Robot Broke', field: 'robotBroke', value: false, icon: FaScrewdriverWrench },
+                yellowCard: { label: 'Yellow Card', field: 'yellowCard', value: false, icon: TbCards, color: 'orange' },
+                redCard: { label: 'Red Card', field: 'redCard', value: false, icon: TbCards, color: 'red' }
             }
         }
-        setStandForms(standForms);
-        setSuperForms(superForms);
-        setBothCompleteForms(bothCompleteForms);
-    }, [teamNumbers, multiTeamMatchForms]);
+    });
+    const [teleopPreset] = useState([
+        fields.teleop.fields.ampScore.field,
+        fields.teleop.fields.speakerScore.field,
+        fields.teleop.fields.ferry.field,
+        fields.teleop.fields.defenseRating.field,
+        fields.teleop.fields.wasDefended.field,
+        fields.other.fields.noShow.field,
+        fields.other.fields.lossCommunication.field,
+        fields.other.fields.robotBroke.field,
+        fields.other.fields.yellowCard.field,
+        fields.other.fields.redCard.field
+    ]);
 
     const setPreset = useCallback(
         (preset) => {
-            let newFields = [...fields];
-            for (const mainField of newFields) {
-                for (const subField of mainField.fields) {
+            let newFields = { ...fields };
+            for (const mainFieldKey in newFields) {
+                let subFields = newFields[mainFieldKey].fields;
+                for (const subFieldKey in subFields) {
+                    let subField = subFields[subFieldKey];
                     if (preset.includes(subField.field)) {
                         subField.value = true;
                     } else {
@@ -170,7 +170,45 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
             setPreset(teleopPreset);
             setFirstPreset(true);
         }
-    }, [setPreset, firstPreset]);
+    }, [setPreset, firstPreset, teleopPreset]);
+
+    useEffect(() => {
+        let standForms = {};
+        let superForms = {};
+        let bothCompleteForms = {};
+        for (const teamNumber of teamNumbers) {
+            let matchForms = sortMatches(multiTeamMatchForms[teamNumber]);
+            standForms[teamNumber] = [];
+            superForms[teamNumber] = [];
+            bothCompleteForms[teamNumber] = [];
+            for (const matchForm of matchForms) {
+                if (
+                    (fields.other.fields.noShow.value &&
+                        matchForm.standStatus === matchFormStatus.noShow &&
+                        matchForm.superStatus === matchFormStatus.noShow) ||
+                    (matchForm.standStatus === matchFormStatus.complete &&
+                        matchForm.superStatus === matchFormStatus.complete)
+                ) {
+                    standForms[teamNumber].push(matchForm);
+                    superForms[teamNumber].push(matchForm);
+                    bothCompleteForms[teamNumber].push(matchForm);
+                } else if (
+                    (fields.other.fields.noShow.value && matchForm.standStatus === matchFormStatus.noShow) ||
+                    matchForm.standStatus === matchFormStatus.complete
+                ) {
+                    standForms[teamNumber].push(matchForm);
+                } else if (
+                    (fields.other.fields.noShow.value && matchForm.superStatus === matchFormStatus.noShow) ||
+                    matchForm.superStatus === matchFormStatus.complete
+                ) {
+                    superForms[teamNumber].push(matchForm);
+                }
+            }
+        }
+        setStandForms(standForms);
+        setSuperForms(superForms);
+        setBothCompleteForms(bothCompleteForms);
+    }, [teamNumbers, multiTeamMatchForms, fields.other.fields.noShow.value]);
 
     const getGraphWidth = useCallback(() => {
         const viewportWidth = document.documentElement.clientWidth;
@@ -190,34 +228,48 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
     }, [getGraphWidth]);
 
     function clearFields() {
-        let newFields = [...fields];
-        for (const mainField of newFields) {
-            for (const subField of mainField.fields) {
+        let newFields = { ...fields };
+        for (const mainFieldKey in newFields) {
+            let subFields = newFields[mainFieldKey].fields;
+            for (const subFieldKey in subFields) {
+                let subField = subFields[subFieldKey];
                 subField.value = false;
             }
         }
         setFields(newFields);
     }
+
+    function noFieldsSelected() {
+        return !Object.values(fields).some((mainField) =>
+            Object.values(mainField.fields).some((subField) => subField.value)
+        );
+    }
+
+    function isOnlyStandData() {
+        return !Object.keys(fields).some((mainField) =>
+            Object.keys(fields[mainField].fields).some(
+                (subField) => fields[mainField].fields[subField].superField && fields[mainField].fields[subField].value
+            )
+        );
+    }
+
+    function isOnlySuperData() {
+        return !Object.keys(fields).some((mainField) =>
+            Object.keys(fields[mainField].fields).some(
+                (subField) => !fields[mainField].fields[subField].superField && fields[mainField].fields[subField].value
+            )
+        );
+    }
+
     function getFormsToUse(teamNumber) {
-        if (
-            !fields.some((mainField) =>
-                mainField.fields.some(
-                    (subField) =>
-                        (subField.field === 'agility' || subField.field === 'fieldAwareness') && subField.value
-                )
-            )
-        ) {
+        if (noFieldsSelected()) {
+            return [];
+        } else if (isOnlyStandData()) {
             return standForms[teamNumber];
-        } else if (
-            fields.some((mainField) =>
-                mainField.fields.some(
-                    (subField) => subField.field !== 'agility' && subField.field !== 'fieldAwareness' && subField.value
-                )
-            )
-        ) {
-            return bothCompleteForms[teamNumber];
-        } else {
+        } else if (isOnlySuperData()) {
             return superForms[teamNumber];
+        } else {
+            return bothCompleteForms[teamNumber];
         }
     }
 
@@ -225,15 +277,49 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
         return getFormsToUse(teamNumber).map((matchForm) => convertMatchKeyToString(matchForm.matchNumber));
     }
 
+    function getSpecialFieldValue(matchForm, field) {
+        switch (field) {
+            case fields.other.fields.noShow.field:
+                if (isOnlyStandData() && matchForm.standStatus === matchFormStatus.noShow) {
+                    return true;
+                } else if (matchForm.superStatus === matchFormStatus.noShow) {
+                    return true;
+                } else {
+                    return false;
+                }
+            case fields.endGame.fields.climb.field:
+                if (matchForm.climb.attempt === 'Success') {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            default:
+                return null;
+        }
+    }
+
     function getDatasets(teamNumber) {
         let formsToUse = getFormsToUse(teamNumber);
         let datasets = [];
-        for (const mainField of fields) {
-            for (const subField of mainField.fields) {
+        for (const mainFieldKey in fields) {
+            let mainField = fields[mainFieldKey];
+            let subFields = mainField.fields;
+            for (const subFieldKey in subFields) {
+                let subField = subFields[subFieldKey];
                 if (subField.value && !subField.icon) {
                     let dataset = {};
                     dataset.label = `${subField.label}${subField.mainLabel ? ` (${mainField.label})` : ''}`;
-                    dataset.data = formsToUse.map((matchForm) => leafGet(matchForm, subField.field));
+                    dataset.data = formsToUse.map((matchForm) => {
+                        if (subField.superField && matchForm.superStatus === matchFormStatus.noShow) {
+                            return subField.noShowValue || 0;
+                        } else if (!subField.superField && matchForm.standStatus === matchFormStatus.noShow) {
+                            return subField.noShowValue || 0;
+                        } else if (subField.specialField) {
+                            return getSpecialFieldValue(matchForm, subField.field);
+                        } else {
+                            return leafGet(matchForm, subField.field);
+                        }
+                    });
                     // dataset.borderColor = 'rgb(255, 99, 132)';
                     // dataset.backgroundColor = 'rgba(255, 99, 132, 0.5)';
                     datasets.push(dataset);
@@ -241,6 +327,24 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
             }
         }
         return datasets;
+    }
+
+    function getNumberOfIcons(matchForm) {
+        let icons = 0;
+        for (const mainFieldKey in fields) {
+            let subFields = fields[mainFieldKey].fields;
+            for (const subFieldKey in subFields) {
+                let subField = subFields[subFieldKey];
+                if (subField.value && subField.icon) {
+                    if (subField.specialField && getSpecialFieldValue(matchForm, subField.field)) {
+                        icons += 1;
+                    } else if (leafGet(matchForm, subField.field)) {
+                        icons += 1;
+                    }
+                }
+            }
+        }
+        return icons;
     }
 
     function getIcons(teamNumber) {
@@ -263,28 +367,17 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
                         top={{ base: 'calc(50vh)', lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2})` }}
                         left={
                             firstPoint +
-                            ([].concat(
-                                ...fields
-                                    .map((mainField) =>
-                                        mainField.fields
-                                            .map(
-                                                (subField) =>
-                                                    subField.icon &&
-                                                    subField.value &&
-                                                    leafGet(matchForm, subField.field)
-                                            )
-                                            .filter((e) => e)
-                                    )
-                                    .filter((e) => e.length > 0)
-                            ).length > 1
-                                ? 0
-                                : iconSize / 2) +
+                            (getNumberOfIcons(matchForm) > 1 ? 0 : iconSize / 2) +
                             index * (offset - offsetAdjustment)
                         }
                     >
-                        {fields.map((mainField) =>
-                            mainField.fields.map((subField) =>
-                                subField.icon && subField.value && leafGet(matchForm, subField.field) ? (
+                        {Object.values(fields).map((mainField) =>
+                            Object.values(mainField.fields).map((subField) =>
+                                subField.icon &&
+                                subField.value &&
+                                (subField.specialField
+                                    ? getSpecialFieldValue(matchForm, subField.field)
+                                    : leafGet(matchForm, subField.field)) ? (
                                     <ChakraTooltip key={subField.field} label={subField.label}>
                                         <span>
                                             <Icon boxSize={5} as={subField.icon} color={subField.color}></Icon>
@@ -303,15 +396,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
         let formsToUse = getFormsToUse(teamNumber);
         let maxIcons = 0;
         for (const matchForm of formsToUse) {
-            let icons = 0;
-            for (const mainField of fields) {
-                for (const subField of mainField.fields) {
-                    if (subField.icon && subField.value && leafGet(matchForm, subField.field)) {
-                        icons += 1;
-                    }
-                }
-            }
-            maxIcons = Math.max(maxIcons, icons);
+            maxIcons = Math.max(maxIcons, getNumberOfIcons(matchForm));
         }
         if (maxIcons === 0) {
             return 0;
@@ -332,7 +417,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
         <Box position={'relative'}>
             <Drawer placement={'left'} onClose={onClose} isOpen={isOpen}>
                 <DrawerOverlay />
-                <DrawerContent maxWidth={{ base: '65vw', sm: '40vw', md: '35vw', lg: '20vw' }}>
+                <DrawerContent maxWidth={{ base: '75vw', sm: '55vw', md: '35vw', lg: '20vw' }}>
                     <DrawerCloseButton color={'white'} />
                     <DrawerHeader borderBottom={'3px solid green'} backgroundColor={'#212529'} textColor={'white'}>
                         Data points
@@ -353,31 +438,44 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
                             </Button>
                         </Flex>
                         <Flex flexDirection={'column'} rowGap={'5px'}>
-                            {fields.map((mainField, mainIndex) => (
-                                <Box key={mainField.label}>
+                            {Object.keys(fields).map((mainFieldKey) => (
+                                <Box key={fields[mainFieldKey].label}>
                                     <Text fontSize={'lg'} fontWeight={'medium'} marginBottom={'2px'}>
-                                        {mainField.label}
+                                        {fields[mainFieldKey].label}
                                     </Text>
                                     <Flex flexDirection={'column'} rowGap={'2px'}>
-                                        {mainField.fields.map((subField, subIndex) => (
+                                        {Object.keys(fields[mainFieldKey].fields).map((subFieldKey) => (
                                             <Flex
-                                                key={mainField.label + subField.label}
+                                                key={
+                                                    fields[mainFieldKey].label +
+                                                    fields[mainFieldKey].fields[subFieldKey].label
+                                                }
                                                 paddingLeft={'15px'}
                                                 alignItems={'center'}
                                                 columnGap={'8px'}
                                             >
                                                 <Checkbox
-                                                    isChecked={subField.value}
+                                                    isChecked={fields[mainFieldKey].fields[subFieldKey].value}
                                                     onChange={(e) => {
-                                                        let newFields = [...fields];
-                                                        newFields[mainIndex].fields[subIndex].value = e.target.checked;
+                                                        let newFields = { ...fields };
+                                                        newFields[mainFieldKey].fields[subFieldKey].value =
+                                                            e.target.checked;
                                                         setFields(newFields);
                                                     }}
                                                 >
-                                                    {subField.label}
+                                                    {fields[mainFieldKey].fields[subFieldKey].label}
                                                 </Checkbox>
-                                                {subField.icon && (
-                                                    <Icon boxSize={5} as={subField.icon} color={subField.color}></Icon>
+                                                {fields[mainFieldKey].fields[subFieldKey].icon && (
+                                                    <Icon
+                                                        boxSize={5}
+                                                        as={fields[mainFieldKey].fields[subFieldKey].icon}
+                                                        color={fields[mainFieldKey].fields[subFieldKey].color}
+                                                    ></Icon>
+                                                )}
+                                                {fields[mainFieldKey].fields[subFieldKey].note && (
+                                                    <Text
+                                                        fontSize={'xs'}
+                                                    >{` (${fields[mainFieldKey].fields[subFieldKey].note})`}</Text>
                                                 )}
                                             </Flex>
                                         ))}

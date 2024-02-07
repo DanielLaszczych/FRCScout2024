@@ -84,16 +84,14 @@ class HelperFunctions {
         let maxUpdate = {};
 
         for (const element in data.autoGP) {
-            // To ignore _id field
-            if (Object.hasOwn(gamePieceFields, element) && data.autoGP[element] > 0) {
+            if (data.autoGP[element] > 0) {
                 incUpdate[`autoGP.${element}.total`] = data.autoGP[element];
                 maxUpdate[`autoGP.${element}.max`] = data.autoGP[element];
             }
         }
 
         for (const element in data.teleopGP) {
-            // To ignore _id field
-            if (Object.hasOwn(gamePieceFields, element) && data.teleopGP[element] > 0) {
+            if (data.teleopGP[element] > 0) {
                 incUpdate[`teleopGP.${element}.total`] = data.teleopGP[element];
                 maxUpdate[`teleopGP.${element}.max`] = data.teleopGP[element];
             }
@@ -141,9 +139,17 @@ class HelperFunctions {
             incUpdate: {
                 superForms: reverse ? -1 : 1,
                 'agility.total': data.agility * (reverse ? -1 : 1),
-                'fieldAwareness.total': data.fieldAwareness * (reverse ? -1 : 1)
+                'fieldAwareness.total': data.fieldAwareness * (reverse ? -1 : 1),
+                ampPlayer: data.ampPlayer ? (reverse ? -1 : 1) : 0,
+                'ampPlayerGP.highNoteScore.total': data.ampPlayerGP.highNoteScore * (reverse ? -1 : 1),
+                'ampPlayerGP.highNoteMiss.total': data.ampPlayerGP.highNoteMiss * (reverse ? -1 : 1)
             },
-            maxUpdate: { 'agility.max': data.agility, 'fieldAwareness.max': data.fieldAwareness }
+            maxUpdate: {
+                'agility.max': data.agility,
+                'fieldAwareness.max': data.fieldAwareness,
+                'ampPlayerGP.highNoteScore.max': data.ampPlayerGP.highNoteScore,
+                'ampPlayerGP.highNoteMiss.max': data.ampPlayerGP.highNoteMiss
+            }
         };
     }
 
@@ -266,8 +272,23 @@ class HelperFunctions {
     }
 
     static updateSuperFormAverages(ted) {
-        ted.agility.avg = ted.superForms === 0 ? 0 : ted.agility.total / ted.superForms;
-        ted.fieldAwareness.avg = ted.superForms === 0 ? 0 : ted.fieldAwareness.total / ted.superForms;
+        ted.agility.avg =
+            ted.superForms === 0 && ted.noShows === 0
+                ? 0
+                : (ted.agility.total + ted.noShows) / (ted.superForms + ted.noShows);
+        ted.fieldAwareness.avg =
+            ted.superForms === 0 && ted.noShows === 0
+                ? 0
+                : (ted.fieldAwareness.total + ted.noShows) / (ted.superForms + ted.noShows);
+
+        ted.ampPlayerGP.highNoteScore.avg =
+            ted.ampPlayer === 0 ? 0 : ted.ampPlayerGP.highNoteScore.total / ted.ampPlayer;
+        ted.ampPlayerGP.highNoteMiss.avg = ted.ampPlayer === 0 ? 0 : ted.ampPlayerGP.highNoteMiss.total / ted.ampPlayer;
+
+        let totalAttempts = ted.ampPlayerGP.highNoteScore.total + ted.ampPlayerGP.highNoteMiss.total;
+        ted.highNoteScorePercentage = totalAttempts === 0 ? null : ted.ampPlayerGP.highNoteScore.total / totalAttempts;
+        ted.highNoteScoreFraction =
+            totalAttempts === 0 ? null : `${ted.ampPlayerGP.highNoteScore.total} / ${totalAttempts}`;
     }
 
     static async updateSuperForm(eventKey, teamNumber, incUpdate, forwardMaxUpdate, reverseMaxUpdate) {

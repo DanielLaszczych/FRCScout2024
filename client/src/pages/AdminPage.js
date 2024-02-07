@@ -27,7 +27,8 @@ import {
     Icon,
     Tag,
     NumberInput,
-    NumberInputField
+    NumberInputField,
+    GridItem
 } from '@chakra-ui/react';
 import { TransitionGroup } from 'react-transition-group';
 import CSSTransition from '../components/CSSTransition';
@@ -56,7 +57,16 @@ function AdminPage() {
     const { isOpen, onOpen, onClose } = useDisclosure();
 
     const [customEventDialog, setCustomEventDialog] = useState({ open: false });
-    const [customEventData, setCustomEventData] = useState({ key: '', name: '', eventType: '', focusedEventType: '', startDate: '', endDate: '', teams: [], inputTeam: '' });
+    const [customEventData, setCustomEventData] = useState({
+        key: '',
+        name: '',
+        eventType: '',
+        focusedEventType: '',
+        startDate: '',
+        endDate: '',
+        teams: [],
+        inputTeam: ''
+    });
     const [submitAttempted, setSubmitAttempted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
@@ -162,7 +172,11 @@ function AdminPage() {
             let week = parseInt(eventTypeName.substring(5));
             filteredEvents = events.filter((event) => (event.week !== null ? event.week + 1 === week : false));
         } else if (eventTypeName === 'Championship') {
-            filteredEvents = events.filter((event) => event.event_type_string === 'Championship Division' || event.event_type_string === 'Championship Finals');
+            filteredEvents = events.filter(
+                (event) =>
+                    event.event_type_string === 'Championship Division' ||
+                    event.event_type_string === 'Championship Finals'
+            );
         } else if (eventTypeName === 'Preseason') {
             filteredEvents = events.filter((event) => event.event_type_string === 'Preseason');
         } else {
@@ -208,7 +222,16 @@ function AdminPage() {
                     setEvents((prevEvents) => sortRegisteredEvents([...prevEvents, createdEvent]));
                 }, 300);
                 setCustomEventDialog({ open: false });
-                setCustomEventData({ key: '', name: '', eventType: '', focusedEventType: '', startDate: '', endDate: '', teams: [], inputTeam: '' });
+                setCustomEventData({
+                    key: '',
+                    name: '',
+                    eventType: '',
+                    focusedEventType: '',
+                    startDate: '',
+                    endDate: '',
+                    teams: [],
+                    inputTeam: ''
+                });
                 setSubmitAttempted(false);
                 setSubmitting(false);
             })
@@ -235,13 +258,6 @@ function AdminPage() {
                         let teams = data.map((team) => {
                             return { name: team.nickname, number: team.team_number, key: team.key };
                         });
-                        let pickList = {
-                            firstPick: teams.map((team) => team.key.substring(3)),
-                            secondPick: [],
-                            thirdPick: [],
-                            doNotPick: [],
-                            picked: []
-                        };
                         let event = {
                             name: name,
                             year: year,
@@ -250,8 +266,7 @@ function AdminPage() {
                             startDate: startDate,
                             endDate: endDate,
                             key: key,
-                            teams: teams,
-                            pickList: pickList
+                            teams: teams
                         };
                         addEvent(event);
                     } else {
@@ -285,17 +300,12 @@ function AdminPage() {
                 fetches.push(fetch(`/blueAlliance/team/frc${team}/simple`));
             }
             let responses = await Promise.all(fetches).catch((error) => console.log(error));
-            let jsonResponses = await Promise.all(responses.map((response) => response.json())).catch((error) => console.log(error));
+            let jsonResponses = await Promise.all(responses.map((response) => response.json())).catch((error) =>
+                console.log(error)
+            );
             teams = jsonResponses.map((team) => {
                 return { name: team.nickname, number: team.team_number, key: team.key };
             });
-            let pickList = {
-                firstPick: teams.map((team) => team.key.substring(3)),
-                secondPick: [],
-                thirdPick: [],
-                doNotPick: [],
-                picked: []
-            };
             let event = {
                 name: name,
                 year: year,
@@ -305,7 +315,6 @@ function AdminPage() {
                 endDate: endDate,
                 key: key,
                 teams: teams,
-                pickList: pickList,
                 custom: true
             };
             addEvent(event);
@@ -423,7 +432,13 @@ function AdminPage() {
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box
+                textAlign={'center'}
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                margin={'0 auto'}
+                width={{ base: '85%', md: '66%', lg: '50%' }}
+            >
                 {error}
             </Box>
         );
@@ -441,13 +456,20 @@ function AdminPage() {
         <Box margin={'0 auto'} width={{ base: '90%', md: '66%', lg: '66%' }}>
             <Modal closeOnEsc={true} isOpen={isOpen} onClose={onClose}>
                 <ModalOverlay>
-                    <ModalContent width={{ base: '75%', md: '40%', lg: '30%' }} marginTop={'10dvh'} marginBottom={'10dvh'}>
+                    <ModalContent
+                        width={{ base: '75%', md: '40%', lg: '30%' }}
+                        marginTop={'10dvh'}
+                        marginBottom={'10dvh'}
+                    >
                         <ModalHeader fontSize={'lg'} fontWeight={'semibold'}>
                             Select an Event
                         </ModalHeader>
                         <ModalBody maxHeight={'calc(80dvh - 59px - 72px)'} overflowY={'auto'}>
                             <VStack spacing={'10px'}>
-                                <Button colorScheme={focusedEvent.key === 'None' ? 'green' : 'gray'} onClick={() => setFocusedEvent({ name: 'None', key: 'None' })}>
+                                <Button
+                                    colorScheme={focusedEvent.key === 'None' ? 'green' : 'gray'}
+                                    onClick={() => setFocusedEvent({ name: 'None', key: 'None' })}
+                                >
                                     None
                                 </Button>
                                 {events.map((event) => (
@@ -487,13 +509,28 @@ function AdminPage() {
                 isOpen={customEventDialog.open}
                 onClose={() => {
                     setCustomEventDialog({ open: false });
-                    setCustomEventData({ key: '', name: '', eventType: '', focusedEventType: '', startDate: '', endDate: '', teams: [], inputTeam: '' });
+                    setCustomEventData({
+                        key: '',
+                        name: '',
+                        eventType: '',
+                        focusedEventType: '',
+                        startDate: '',
+                        endDate: '',
+                        teams: [],
+                        inputTeam: ''
+                    });
                     setSubmitAttempted(false);
                     setSubmitting(false);
                 }}
             >
                 <ModalOverlay>
-                    <ModalContent width={{ base: '75%', md: '40%', lg: '30%' }} marginTop={'10dvh'} marginBottom={'10dvh'} maxHeight={'80dvh'} overflowY={'auto'}>
+                    <ModalContent
+                        width={{ base: '75%', md: '40%', lg: '30%' }}
+                        marginTop={'10dvh'}
+                        marginBottom={'10dvh'}
+                        maxHeight={'80dvh'}
+                        overflowY={'auto'}
+                    >
                         <ModalHeader fontSize={'lg'} fontWeight={'semibold'} paddingBottom={'5px'}>
                             Custom Event
                         </ModalHeader>
@@ -509,7 +546,9 @@ function AdminPage() {
                                 marginBottom={'20px'}
                                 maxWidth={'175px'}
                                 placeholder={'Event Key'}
-                                outline={customEventData.key.trim() === '' && submitAttempted ? '2px solid red' : 'none'}
+                                outline={
+                                    customEventData.key.trim() === '' && submitAttempted ? '2px solid red' : 'none'
+                                }
                                 marginLeft={'15px'}
                             />
                             <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
@@ -523,7 +562,9 @@ function AdminPage() {
                                 marginBottom={'20px'}
                                 maxWidth={'175px'}
                                 placeholder={'Event Name'}
-                                outline={customEventData.name.trim() === '' && submitAttempted ? '2px solid red' : 'none'}
+                                outline={
+                                    customEventData.name.trim() === '' && submitAttempted ? '2px solid red' : 'none'
+                                }
                                 marginLeft={'15px'}
                             />
                             <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
@@ -535,7 +576,9 @@ function AdminPage() {
                                     onClick={() => setCustomEventData({ ...customEventData, focusedEventType: '' })}
                                     as={Button}
                                     rightIcon={<ChevronDownIcon />}
-                                    outline={customEventData.eventType === '' && submitAttempted ? '2px solid red' : 'none'}
+                                    outline={
+                                        customEventData.eventType === '' && submitAttempted ? '2px solid red' : 'none'
+                                    }
                                     marginLeft={'15px'}
                                     marginBottom={'20px'}
                                 >
@@ -548,9 +591,16 @@ function AdminPage() {
                                         <MenuItem
                                             paddingLeft={'25px'}
                                             _focus={{ backgroundColor: 'none' }}
-                                            onMouseEnter={() => setCustomEventData({ ...customEventData, focusedEventType: eventType.name })}
+                                            onMouseEnter={() =>
+                                                setCustomEventData({
+                                                    ...customEventData,
+                                                    focusedEventType: eventType.name
+                                                })
+                                            }
                                             backgroundColor={
-                                                (customEventData.eventType === eventType.name && customEventData.focusedEventType === '') || customEventData.focusedEventType === eventType.name
+                                                (customEventData.eventType === eventType.name &&
+                                                    customEventData.focusedEventType === '') ||
+                                                customEventData.focusedEventType === eventType.name
                                                     ? 'gray.100'
                                                     : 'none'
                                             }
@@ -576,7 +626,11 @@ function AdminPage() {
                                 marginBottom={'20px'}
                                 maxWidth={'175px'}
                                 placeholder={'Select Date'}
-                                outline={customEventData.startDate.trim() === '' && submitAttempted ? '2px solid red' : 'none'}
+                                outline={
+                                    customEventData.startDate.trim() === '' && submitAttempted
+                                        ? '2px solid red'
+                                        : 'none'
+                                }
                                 marginLeft={'15px'}
                             />
                             <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
@@ -590,13 +644,19 @@ function AdminPage() {
                                 marginBottom={'20px'}
                                 maxWidth={'175px'}
                                 placeholder={'Select Date'}
-                                outline={customEventData.endDate.trim() === '' && submitAttempted ? '2px solid red' : 'none'}
+                                outline={
+                                    customEventData.endDate.trim() === '' && submitAttempted ? '2px solid red' : 'none'
+                                }
                                 marginLeft={'15px'}
                             />
                             <Text marginBottom={'10px'} fontSize={'md'} fontWeight={'medium'}>
                                 Teams:
                             </Text>
-                            <HStack spacing={0} marginLeft={'15px'} marginBottom={customEventData.teams.length > 0 && '20px'}>
+                            <HStack
+                                spacing={0}
+                                marginLeft={'15px'}
+                                marginBottom={customEventData.teams.length > 0 && '20px'}
+                            >
                                 <NumberInput
                                     onChange={(value) => setCustomEventData({ ...customEventData, inputTeam: value })}
                                     value={customEventData.inputTeam}
@@ -671,7 +731,16 @@ function AdminPage() {
                             <Button
                                 onClick={() => {
                                     setCustomEventDialog({ open: false });
-                                    setCustomEventData({ key: '', name: '', eventType: '', focusedEventType: '', startDate: '', endDate: '', teams: [], inputTeam: '' });
+                                    setCustomEventData({
+                                        key: '',
+                                        name: '',
+                                        eventType: '',
+                                        focusedEventType: '',
+                                        startDate: '',
+                                        endDate: '',
+                                        teams: [],
+                                        inputTeam: ''
+                                    });
                                     setSubmitAttempted(false);
                                     setSubmitting(false);
                                 }}
@@ -733,12 +802,19 @@ function AdminPage() {
                 <Text fontSize={'3xl'} fontWeight={'semibold'} lineHeight={'1.1'} marginBottom={'10px'}>
                     Current Event: {currentEvent.name}
                 </Text>
-                {changingCurrentEvent ? <Spinner></Spinner> : <IconButton size='sm' icon={<EditIcon />} onClick={onOpen} />}
+                {changingCurrentEvent ? (
+                    <Spinner></Spinner>
+                ) : (
+                    <IconButton size='sm' icon={<EditIcon />} onClick={onOpen} />
+                )}
             </Box>
             <Box margin='0 auto' marginBottom={'15px'}>
                 <Box marginBottom={'10px'}>
                     <Text fontSize={'3xl'} fontWeight={'semibold'} lineHeight={'1.1'}>
-                        Registered Events <small style={{ fontSize: '65%', color: '#777', lineHeight: '1' }}>{events.length} Events</small>
+                        Registered Events{' '}
+                        <small style={{ fontSize: '65%', color: '#777', lineHeight: '1' }}>
+                            {events.length} Events
+                        </small>
                     </Text>
                 </Box>
                 <TransitionGroup>
@@ -750,22 +826,32 @@ function AdminPage() {
                                 borderBottom={index === events.length - 1 && '1px solid black'}
                                 backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
                                 templateColumns='2fr 1fr'
-                                gap={'15px'}
                             >
-                                <Flex justifyContent={'center'} paddingLeft={'5px'} alignItems={'center'}>
+                                <GridItem
+                                    display={'flex'}
+                                    justifyContent={'center'}
+                                    padding={'0px 10px'}
+                                    alignItems={'center'}
+                                >
                                     <Text textAlign={'center'}>{event.name}</Text>
-                                </Flex>
-                                <Flex justifyContent={'center'} alignItems={'center'}>
+                                </GridItem>
+                                <GridItem display={'flex'} justifyContent={'center'} alignItems={'center'}>
                                     {mutatingEventKey === event.key ? (
                                         <Flex justifyContent={'center'} alignItems={'center'} minW={'110.27px'}>
                                             <Spinner></Spinner>
                                         </Flex>
                                     ) : (
-                                        <Button isDisabled={mutatingEventKey !== null} onClick={() => handleRemoveEvent(event.key)} marginLeft={'10px'} marginRight={'10px'}>
+                                        <Button
+                                            isDisabled={mutatingEventKey !== null}
+                                            onClick={() => handleRemoveEvent(event.key)}
+                                            marginLeft={'10px'}
+                                            marginRight={'10px'}
+                                            colorScheme={'red'}
+                                        >
                                             Remove
                                         </Button>
                                     )}
-                                </Flex>
+                                </GridItem>
                             </Grid>
                         </CSSTransition>
                     ))}
@@ -777,7 +863,14 @@ function AdminPage() {
             <Center>
                 <Flex flexWrap={'wrap'} marginBottom={'25px'} justifyContent={'center'}>
                     {eventTypes.map((eventType) => (
-                        <Button key={eventType.id} ref={eventType.name === 'Week 1' ? linkRef : null} maxW={'125px'} minW={'125px'} margin={'8px'} onClick={() => handleScrollAction(eventType.ref)}>
+                        <Button
+                            key={eventType.id}
+                            ref={eventType.name === 'Week 1' ? linkRef : null}
+                            maxW={'125px'}
+                            minW={'125px'}
+                            margin={'8px'}
+                            onClick={() => handleScrollAction(eventType.ref)}
+                        >
                             {eventType.name}
                         </Button>
                     ))}
@@ -785,7 +878,13 @@ function AdminPage() {
             </Center>
             <Box>
                 {eventTypes.map((eventType) => (
-                    <TBAEventsMemo key={eventType.id} eventType={eventType} mutatingEventKey={mutatingEventKey} handleAddEvent={handleAddEvent} version={version}></TBAEventsMemo>
+                    <TBAEventsMemo
+                        key={eventType.id}
+                        eventType={eventType}
+                        mutatingEventKey={mutatingEventKey}
+                        handleAddEvent={handleAddEvent}
+                        version={version}
+                    ></TBAEventsMemo>
                 ))}
             </Box>
         </Box>

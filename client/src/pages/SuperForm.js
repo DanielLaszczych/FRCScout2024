@@ -67,7 +67,12 @@ function SuperForm() {
                 agility: null,
                 fieldAwareness: null,
                 superStatus: null,
-                superStatusComment: ''
+                superStatusComment: '',
+                ampPlayer: false,
+                ampPlayerGP: {
+                    highNoteScore: 0,
+                    highNoteMiss: 0
+                }
             };
         }
         return obj;
@@ -127,11 +132,8 @@ function SuperForm() {
                                 setFollowUp(true);
                             }
                             modified[matchForm.station] = {
-                                teamNumber: teamNumbers[parseInt(matchForm.station.charAt(1)) - 1],
-                                agility: matchForm.agility,
-                                fieldAwareness: matchForm.fieldAwareness,
-                                superStatus: matchForm.superStatus,
-                                superStatusComment: matchForm.superStatusComment
+                                ...matchForm,
+                                teamNumber: teamNumbers[parseInt(matchForm.station.charAt(1)) - 1]
                             };
                         }
                         setSuperFormData(modified);
@@ -181,6 +183,43 @@ function SuperForm() {
             newData[prevStation][field] = prevRank;
         }
         setSuperFormData(newData);
+    }
+
+    function setAmpPlayer(newStation) {
+        let newData = { ...superFormData };
+        let prevStation = null;
+        for (const station of stations) {
+            if (newData[station].ampPlayer) {
+                if (station !== newStation) {
+                    newData[station].ampPlayer = false;
+                    prevStation = station;
+                } else {
+                    newData[station].ampPlayer = false;
+                    newData[station].ampPlayerGP.highNoteScore = 0;
+                    newData[station].ampPlayerGP.highNoteMiss = 0;
+                }
+            } else if (station === newStation) {
+                newData[station].ampPlayer = true;
+            }
+        }
+        if (prevStation) {
+            newData[newStation].ampPlayerGP.highNoteScore = newData[prevStation].ampPlayerGP.highNoteScore;
+            newData[newStation].ampPlayerGP.highNoteMiss = newData[prevStation].ampPlayerGP.highNoteMiss;
+            newData[prevStation].ampPlayerGP.highNoteScore = 0;
+            newData[prevStation].ampPlayerGP.highNoteMiss = 0;
+        }
+        setSuperFormData(newData);
+    }
+
+    function getAmpPlayerScore() {
+        for (const station of stations) {
+            if (superFormData[station].ampPlayer) {
+                return {
+                    score: superFormData[station].ampPlayerGP.highNoteScore,
+                    miss: superFormData[station].ampPlayerGP.highNoteMiss
+                };
+            }
+        }
     }
 
     function isFollowOrNoShow(station) {
@@ -414,7 +453,7 @@ function SuperForm() {
 
     return (
         <Box margin={'0 auto'} width={{ base: '90%', md: '66%', lg: '40%' }}>
-            <Text textAlign={'center'} marginBottom={'25px'} fontSize={'xl'} fontWeight={'semibold'}>
+            <Text textAlign={'center'} marginBottom={'20px'} fontSize={'xl'} fontWeight={'semibold'}>
                 {convertMatchKeyToString(matchNumberParam)} • {allianceParam === 'r' ? 'Red' : 'Blue'}
             </Text>
             <Grid
@@ -422,7 +461,7 @@ function SuperForm() {
                 borderLeft={'1px solid black'}
                 borderTop={'1px solid black'}
                 outline={'1px solid black'}
-                marginBottom={'25px'}
+                marginBottom={'15px'}
             >
                 <GridItem
                     fontSize={'md'}
@@ -581,6 +620,73 @@ function SuperForm() {
                     </GridItem>
                 ))}
             </Grid>
+            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'10px'}>
+                Amp Player
+            </Text>
+            <Flex justifyContent={'center'} columnGap={'25px'} marginBottom={'15px'}>
+                {stations.map((station) => (
+                    <Button
+                        key={station}
+                        onClick={() => setAmpPlayer(station)}
+                        colorScheme={superFormData[station].ampPlayer ? 'blue' : 'gray'}
+                        isDisabled={superFormData[station].superStatus === matchFormStatus.noShow}
+                    >
+                        {superFormData[station].teamNumber}
+                    </Button>
+                ))}
+            </Flex>
+            {stations.some((station) => superFormData[station].ampPlayer) && (
+                <Flex
+                    margin={'0 auto'}
+                    flexDirection={'column'}
+                    width={'fit-content'}
+                    rowGap={'15px'}
+                    marginBottom={'20px'}
+                >
+                    <Button
+                        colorScheme={'green'}
+                        onClick={() => {
+                            let ampPlayerStation = stations.find((station) => superFormData[station].ampPlayer);
+                            let newData = { ...superFormData };
+                            if (
+                                newData[ampPlayerStation].ampPlayerGP.highNoteScore !== 3 &&
+                                newData[ampPlayerStation].ampPlayerGP.highNoteScore +
+                                    newData[ampPlayerStation].ampPlayerGP.highNoteMiss ===
+                                    3
+                            ) {
+                                newData[ampPlayerStation].ampPlayerGP.highNoteScore += 1;
+                                newData[ampPlayerStation].ampPlayerGP.highNoteMiss -= 1;
+                            } else if (newData[ampPlayerStation].ampPlayerGP.highNoteScore < 3) {
+                                newData[ampPlayerStation].ampPlayerGP.highNoteScore += 1;
+                            }
+                            setSuperFormData(newData);
+                        }}
+                    >
+                        High Note Score: {getAmpPlayerScore().score}
+                    </Button>
+                    <Button
+                        colorScheme={'red'}
+                        onClick={() => {
+                            let ampPlayerStation = stations.find((station) => superFormData[station].ampPlayer);
+                            let newData = { ...superFormData };
+                            if (
+                                newData[ampPlayerStation].ampPlayerGP.highNoteMiss !== 3 &&
+                                newData[ampPlayerStation].ampPlayerGP.highNoteScore +
+                                    newData[ampPlayerStation].ampPlayerGP.highNoteMiss ===
+                                    3
+                            ) {
+                                newData[ampPlayerStation].ampPlayerGP.highNoteScore -= 1;
+                                newData[ampPlayerStation].ampPlayerGP.highNoteMiss += 1;
+                            } else if (newData[ampPlayerStation].ampPlayerGP.highNoteMiss < 3) {
+                                newData[ampPlayerStation].ampPlayerGP.highNoteMiss += 1;
+                            }
+                            setSuperFormData(newData);
+                        }}
+                    >
+                        High Note Miss: {getAmpPlayerScore().miss}
+                    </Button>
+                </Flex>
+            )}
             <Center>
                 <Checkbox
                     colorScheme={'red'}
@@ -616,6 +722,9 @@ function SuperForm() {
                                     newData[station].superStatus = matchFormStatus.noShow;
                                     newData[station].agility = null;
                                     newData[station].fieldAwareness = null;
+                                    newData[station].ampPlayer = false;
+                                    newData[station].ampPlayerGP.highNoteScore = 0;
+                                    newData[station].ampPlayerGP.highNoteMiss = 0;
                                 }
                                 setSuperFormData(newData);
                             }}

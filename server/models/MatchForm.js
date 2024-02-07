@@ -1,86 +1,128 @@
 const { model, Schema } = require('mongoose');
 const { matchFormStatus } = require('../util/helperConstants');
 
-const autoTimelineSchema = new Schema({
-    piece: {
-        type: String
+const autoTimelineSchema = new Schema(
+    {
+        piece: {
+            type: String
+        },
+        scored: {
+            type: String
+        }
     },
-    scored: {
-        type: String
-    }
-});
+    { _id: false }
+);
 
 // We need to defaualt in case auto timeline is empty
-const autoGPSchema = new Schema({
-    intakeMiss: {
-        type: Number,
-        default: 0
+const autoGPSchema = new Schema(
+    {
+        intakeMiss: {
+            type: Number,
+            default: 0
+        },
+        ampScore: {
+            type: Number,
+            default: 0
+        },
+        speakerScore: {
+            type: Number,
+            default: 0
+        },
+        ampMiss: {
+            type: Number,
+            default: 0
+        },
+        speakerMiss: {
+            type: Number,
+            default: 0
+        }
     },
-    ampScore: {
-        type: Number,
-        default: 0
-    },
-    speakerScore: {
-        type: Number,
-        default: 0
-    },
-    ampMiss: {
-        type: Number,
-        default: 0
-    },
-    speakerMiss: {
-        type: Number,
-        default: 0
-    }
-});
+    { _id: false }
+);
 
-const teleopGPSchema = new Schema({
-    intakeSource: {
-        type: Number
+const teleopGPSchema = new Schema(
+    {
+        intakeSource: {
+            type: Number
+        },
+        intakeGround: {
+            type: Number
+        },
+        ampScore: {
+            type: Number
+        },
+        speakerScore: {
+            type: Number
+        },
+        ampMiss: {
+            type: Number
+        },
+        speakerMiss: {
+            type: Number
+        },
+        ferry: {
+            type: Number
+        },
+        trap: {
+            type: Number
+        }
     },
-    intakeGround: {
-        type: Number
-    },
-    ampScore: {
-        type: Number
-    },
-    speakerScore: {
-        type: Number
-    },
-    ampMiss: {
-        type: Number
-    },
-    speakerMiss: {
-        type: Number
-    },
-    ferry: {
-        type: Number
-    },
-    trap: {
-        type: Number
-    }
-});
+    { _id: false }
+);
 
-const historyDataSchema = new Schema({
-    data: {
-        type: [String]
+const historyDataSchema = new Schema(
+    {
+        data: {
+            type: [String]
+        },
+        position: {
+            type: Number
+        }
     },
-    position: {
-        type: Number
-    }
-});
+    { _id: false }
+);
 
-const historySchema = new Schema({
-    auto: {
-        type: historyDataSchema
+const climbSchema = new Schema(
+    {
+        attempt: {
+            type: String
+        },
+        location: {
+            type: String
+        },
+        harmony: {
+            type: Number
+        }
     },
-    teleop: {
-        type: historyDataSchema
+    { _id: false }
+);
+
+const historySchema = new Schema(
+    {
+        auto: {
+            type: historyDataSchema
+        },
+        teleop: {
+            type: historyDataSchema
+        },
+        endGame: {
+            type: historyDataSchema
+        }
     },
-    endGame: {
-        type: historyDataSchema
-    }
-});
+    { _id: false }
+);
+
+const ampPlayerGPSchema = new Schema(
+    {
+        highNoteScore: {
+            type: Number
+        },
+        highNoteMiss: {
+            type: Number
+        }
+    },
+    { _id: false }
+);
 
 const matchFormSchema = new Schema({
     eventKey: {
@@ -129,15 +171,7 @@ const matchFormSchema = new Schema({
         type: Number
     },
     climb: {
-        attempt: {
-            type: String
-        },
-        location: {
-            type: String
-        },
-        harmony: {
-            type: Number
-        }
+        type: climbSchema
     },
     stagePoints: {
         type: Number
@@ -192,6 +226,12 @@ const matchFormSchema = new Schema({
     },
     fieldAwareness: {
         type: Number
+    },
+    ampPlayer: {
+        type: Boolean
+    },
+    ampPlayerGP: {
+        type: ampPlayerGPSchema
     },
     superStatus: {
         type: String,

@@ -47,11 +47,11 @@ import { AiOutlineRotateRight } from 'react-icons/ai';
 import { IoChevronForward, IoChevronBack } from 'react-icons/io5';
 
 let sections = {
-    preAuto: { label: 'Pre-Auto', spaceUsed: 100 + 35 + 110 + 70 },
-    auto: { label: 'Auto', spaceUsed: 100 + 40 + 40 + 55 + 70 },
-    teleop: { label: 'Teleop', spaceUsed: 100 + 40 + 40 + 135 + 70 },
-    endGame: { label: 'Endgame', spaceUsed: 100 + 40 + 40 + 157 + 70 },
-    closing: { label: 'Closing', spaceUsed: 100 + 35 + 339 + 70 }
+    preAuto: { label: 'Pre-Auto', spaceUsed: 100 + 35 + 110 + 85 },
+    auto: { label: 'Auto', spaceUsed: 100 + 40 + 40 + 55 + 85 },
+    teleop: { label: 'Teleop', spaceUsed: 100 + 40 + 40 + 135 + 85 },
+    endGame: { label: 'Endgame', spaceUsed: 100 + 40 + 40 + 157 + 85 },
+    closing: { label: 'Closing', spaceUsed: 100 + 35 + 339 + 85 }
 };
 let startingPositions = [
     [28, 35, uuidv4()],
@@ -64,14 +64,14 @@ let preLoadedPieces = [
     { label: 'Note', id: uuidv4() }
 ];
 let notePositions = [
-    [31, 21, uuidv4()],
-    [31, 103, uuidv4()],
-    [31, 185, uuidv4()],
-    [336, 5, uuidv4()],
-    [336, 95, uuidv4()],
-    [336, 185, uuidv4()],
-    [336, 275, uuidv4()],
-    [336, 365, uuidv4()]
+    [119, 31, uuidv4()],
+    [119, 107, uuidv4()],
+    [119, 185, uuidv4()],
+    [405, 5, uuidv4()],
+    [405, 95, uuidv4()],
+    [405, 185, uuidv4()],
+    [405, 275, uuidv4()],
+    [405, 365, uuidv4()]
 ];
 let leaveAutoOptions = [
     { label: 'Yes', value: true, id: uuidv4() },
@@ -119,8 +119,16 @@ let redCardOptions = [
     { label: 'Yes', value: true, color: 'red', id: uuidv4() },
     { label: 'No', value: false, color: 'green', id: uuidv4() }
 ];
-let imageWidth = 435;
-let imageHeight = 435;
+let imageDimensions = {
+    preAuto: {
+        width: 435,
+        height: 435
+    },
+    auto: {
+        width: 503,
+        height: 435
+    }
+};
 
 function StandForm() {
     const location = useLocation();
@@ -193,7 +201,7 @@ function StandForm() {
     const [futureAlly, setFutureAlly] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [standFormManagers, setStandFormManagers] = useState(null);
-    const [dimensionRatios, setDimensionRatios] = useState(null);
+    const [imageDimensionRatios, setImageDimensionRatios] = useState(null);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [heightDimensions, setHeightDimensions] = useState({ availableScoringSpace: null, max: null });
 
@@ -329,15 +337,14 @@ function StandForm() {
         let availableSpace = document.documentElement.clientHeight;
         return {
             availableScoringSpace: Math.min(
-                imageHeight + sections.preAuto.spaceUsed - sections.teleop.spaceUsed,
+                imageDimensions.preAuto.height + sections.preAuto.spaceUsed - sections.teleop.spaceUsed,
                 Math.max(availableSpace - sections.teleop.spaceUsed, 200)
             ),
-            max: Math.min(availableSpace, imageHeight + sections.preAuto.spaceUsed)
+            max: Math.min(availableSpace, imageDimensions.preAuto.height + sections.preAuto.spaceUsed)
         };
     }
 
     const resizeMaxContainerHeight = useCallback(() => {
-        console.log(getHeightDimensions());
         setHeightDimensions(getHeightDimensions());
     }, []);
 
@@ -345,8 +352,7 @@ function StandForm() {
         const viewportWidth = window.innerWidth;
         // const viewportHeight = window.innerHeight;
 
-        // Calculate image dimensions based on screen size
-        const maxWidth = viewportWidth * getValueByRange(viewportWidth); // Adjust the multiplier as needed
+        let maxWidth = viewportWidth * getValueByRange(viewportWidth);
         let maxHeight;
         if (activeSection.label === sections.preAuto.label) {
             maxHeight = getHeightDimensions().max - sections.preAuto.spaceUsed;
@@ -354,35 +360,43 @@ function StandForm() {
             maxHeight = getHeightDimensions().availableScoringSpace;
         }
 
-        const screenAspectRatio = maxWidth / maxHeight;
-        const imageAspectRatio = imageWidth / imageHeight;
+        let newDimensionsRatios = {};
+        for (const imageKey in imageDimensions) {
+            let imageWidth = imageDimensions[imageKey].width;
+            let imageHeight = imageDimensions[imageKey].height;
 
-        // Calculate the new dimensions to fit the screen while maintaining the aspect ratio
-        let scaledWidth, scaledHeight;
-        if (imageAspectRatio > screenAspectRatio) {
-            // Original image has a wider aspect ratio, so add horizontal whitespace
-            scaledWidth = maxWidth;
-            scaledHeight = maxWidth / imageAspectRatio;
+            let screenAspectRatio = maxWidth / maxHeight;
+            let imageAspectRatio = imageWidth / imageHeight;
 
-            // Commenting this because we will never white space because we
-            // position inside the image
-            // const extraHorizontalSpace = maxHeight - scaledHeight;
-            // const whitespaceTop = extraHorizontalSpace / 2;
-            // const whitespaceBottom = extraHorizontalSpace / 2;
-            // setWhitespace({ top: whitespaceTop, bottom: whitespaceBottom, left: 0, right: 0 });
-        } else {
-            // Original image has a taller aspect ratio, so add vertical whitespace
-            scaledHeight = maxHeight;
-            scaledWidth = maxHeight * imageAspectRatio;
+            let scaledWidth, scaledHeight;
+            if (imageAspectRatio > screenAspectRatio) {
+                // Original image has a wider aspect ratio, so add horizontal whitespace
+                scaledWidth = maxWidth;
+                scaledHeight = maxWidth / imageAspectRatio;
 
-            // Commenting this because we will never white space because we
-            // position inside the image
-            // const extraVerticalSpace = maxWidth - scaledWidth;
-            // const whitespaceLeft = extraVerticalSpace / 2;
-            // const whitespaceRight = extraVerticalSpace / 2;
-            // setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
+                // Commenting this because we will never white space because we
+                // position inside the image
+                // const extraHorizontalSpace = maxHeight - scaledHeight;
+                // const whitespaceTop = extraHorizontalSpace / 2;
+                // const whitespaceBottom = extraHorizontalSpace / 2;
+                // setWhitespace({ top: whitespaceTop, bottom: whitespaceBottom, left: 0, right: 0 });
+            } else {
+                // Original image has a taller aspect ratio, so add vertical whitespace
+                scaledHeight = maxHeight;
+                scaledWidth = maxHeight * imageAspectRatio;
+
+                // Commenting this because we will never white space because we
+                // position inside the image
+                // const extraVerticalSpace = maxWidth - scaledWidth;
+                // const whitespaceLeft = extraVerticalSpace / 2;
+                // const whitespaceRight = extraVerticalSpace / 2;
+                // setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
+            }
+
+            // Calculate the new dimensions to fit the screen while maintaining the aspect ratio
+            newDimensionsRatios[imageKey] = { width: scaledWidth / imageWidth, height: scaledHeight / imageHeight };
         }
-        setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
+        setImageDimensionRatios(newDimensionsRatios);
     }, [activeSection]);
 
     useEffect(() => {
@@ -406,7 +420,12 @@ function StandForm() {
     }, [standFormData.defenseRating, standFormData.defenseAllocation, standFormData]);
 
     function getPoint(pointX) {
-        let mirror = 185;
+        let mirror;
+        if (activeSection.label === sections.preAuto.label) {
+            mirror = 185;
+        } else {
+            mirror = 217;
+        }
         if (stationParam.charAt(0) === 'r') {
             // Calculate mirrored x-coordinate
             return 2 * mirror - pointX;
@@ -561,6 +580,9 @@ function StandForm() {
             if (!validEndGame()) {
                 toastText.push('End Game');
             }
+            if (!validClosing()) {
+                toastText.push('Closing');
+            }
             if (toastText.length !== 0) {
                 toast({
                     title: 'Missing fields at:',
@@ -656,8 +678,8 @@ function StandForm() {
                         </Text>
                         <Center
                             margin={'0 auto'}
-                            width={`${imageWidth * dimensionRatios.width}px`}
-                            height={`${imageHeight * dimensionRatios.height}px`}
+                            width={`${imageDimensions.preAuto.width * imageDimensionRatios.preAuto.width}px`}
+                            height={`${imageDimensions.preAuto.height * imageDimensionRatios.preAuto.height}px`}
                             position={'relative'}
                             style={{ transform: `rotate(${fieldRotation}deg)` }}
                         >
@@ -676,10 +698,10 @@ function StandForm() {
                                     key={position[2]}
                                     position={'absolute'}
                                     visibility={imageLoaded ? 'visible' : 'hidden'}
-                                    left={`${getPoint(position[0]) * dimensionRatios.width}px`}
-                                    top={`${position[1] * dimensionRatios.height}px`}
-                                    width={`${65 * dimensionRatios.width}px`}
-                                    height={`${65 * dimensionRatios.height}px`}
+                                    left={`${getPoint(position[0]) * imageDimensionRatios.preAuto.width}px`}
+                                    top={`${position[1] * imageDimensionRatios.preAuto.height}px`}
+                                    width={`${65 * imageDimensionRatios.preAuto.width}px`}
+                                    height={`${65 * imageDimensionRatios.preAuto.height}px`}
                                     style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }}
                                     onClick={() => setStandFormData({ ...standFormData, startingPosition: index + 1 })}
                                     colorScheme={standFormData.startingPosition === index + 1 ? 'blue' : 'gray'}
@@ -761,10 +783,10 @@ function StandForm() {
                             marginTop={`${
                                 15 +
                                 heightDimensions.max -
-                                imageHeight * dimensionRatios.height -
+                                imageDimensions.preAuto.height * imageDimensionRatios.preAuto.height -
                                 activeSection.spaceUsed
                             }px`}
-                            marginBottom={'15px'}
+                            marginBottom={'30px'}
                             gap={'15px'}
                         >
                             <Button
@@ -859,7 +881,7 @@ function StandForm() {
                             {standFormData.autoTimeline.length > 0 &&
                             standFormData.autoTimeline[0].piece === '0' &&
                             standFormData.autoTimeline[0].scored === null
-                                ? '(Preloaded)'
+                                ? ' (Preloaded)'
                                 : ''}
                         </Text>
                         {standFormData.autoTimeline.length === 0 ||
@@ -868,18 +890,21 @@ function StandForm() {
                                 standFormData.autoTimeline[0].scored !== null)) ? (
                             <Center
                                 margin={'0 auto'}
-                                width={`${imageWidth * dimensionRatios.width}px`}
+                                width={`${imageDimensions.auto.width * imageDimensionRatios.auto.width}px`}
                                 height={`${heightDimensions.availableScoringSpace}px`}
                                 position={'relative'}
                                 style={{ transform: `rotate(${fieldRotation}deg)` }}
                             >
                                 <Spinner position={'absolute'} visibility={!imageLoaded ? 'visible' : 'hidden'} />
+
                                 <img
                                     src={stationParam.charAt(0) === 'r' ? AutoRedField : AutoBlueField}
                                     alt={'Field Map'}
                                     style={{
                                         visibility: imageLoaded ? 'visible' : 'hidden',
-                                        maxHeight: `${heightDimensions.availableScoringSpace}px`
+                                        maxHeight: `${heightDimensions.availableScoringSpace}px`,
+                                        objectFit: 'contain',
+                                        margin: '0 auto'
                                     }}
                                     onLoad={() => setImageLoaded(true)}
                                 />
@@ -888,15 +913,15 @@ function StandForm() {
                                         key={position[2]}
                                         position={'absolute'}
                                         visibility={imageLoaded ? 'visible' : 'hidden'}
-                                        left={`${getPoint(position[0]) * dimensionRatios.width}px`}
+                                        left={`${getPoint(position[0]) * imageDimensionRatios.auto.width}px`}
                                         top={`${
                                             (heightDimensions.availableScoringSpace -
-                                                imageHeight * dimensionRatios.height) /
+                                                imageDimensions.auto.height * imageDimensionRatios.auto.height) /
                                                 2 +
-                                            position[1] * dimensionRatios.height
+                                            position[1] * imageDimensionRatios.auto.height
                                         }px`}
-                                        width={`${65 * dimensionRatios.width}px`}
-                                        height={`${65 * dimensionRatios.height}px`}
+                                        width={`${65 * imageDimensionRatios.auto.width}px`}
+                                        height={`${65 * imageDimensionRatios.auto.height}px`}
                                         style={{ transform: `rotate(${360 - fieldRotation}deg)`, transition: 'none' }}
                                         onClick={() => {
                                             standFormManagers.auto.doCommand(standFormData, (index + 1).toString());
@@ -1062,7 +1087,7 @@ function StandForm() {
                                 heightDimensions.availableScoringSpace -
                                 activeSection.spaceUsed
                             }px`}
-                            marginBottom={'15px'}
+                            marginBottom={'30px'}
                             gap={'15px'}
                         >
                             <Button
@@ -1386,7 +1411,7 @@ function StandForm() {
                                     heightDimensions.availableScoringSpace -
                                     activeSection.spaceUsed
                             )}px`}
-                            marginBottom={'15px'}
+                            marginBottom={'30px'}
                             gap={'15px'}
                         >
                             <Button
@@ -1608,7 +1633,7 @@ function StandForm() {
                                     activeSection.spaceUsed -
                                     (standFormData.climb.attempt === 'Success' ? 174 : 0)
                             )}px`}
-                            marginBottom={'15px'}
+                            marginBottom={'30px'}
                             gap={'15px'}
                         >
                             <Button
@@ -1832,9 +1857,16 @@ function StandForm() {
                         <HStack
                             marginTop={`${Math.max(
                                 15,
-                                15 + heightDimensions.max - activeSection.spaceUsed - (isFollowOrNoShow() ? 95 : 0)
+                                15 +
+                                    heightDimensions.max -
+                                    activeSection.spaceUsed -
+                                    (standFormData.standStatus === matchFormStatus.followUp
+                                        ? 95
+                                        : standFormData.standStatus === matchFormStatus.noShow
+                                        ? 56
+                                        : 0)
                             )}px`}
-                            marginBottom={'15px'}
+                            marginBottom={'30px'}
                             gap={'15px'}
                         >
                             <Button
@@ -1953,7 +1985,7 @@ function StandForm() {
 
     if (
         standFormData.loading ||
-        dimensionRatios === null ||
+        imageDimensionRatios === null ||
         heightDimensions.max === null ||
         standFormManagers === null ||
         futureAlly === null

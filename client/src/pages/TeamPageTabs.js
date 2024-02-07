@@ -21,12 +21,19 @@ import {
     CardHeader,
     CardBody,
     Stack,
-    StackDivider
+    StackDivider,
+    Button,
+    PopoverBody,
+    useDisclosure,
+    Modal,
+    ModalOverlay,
+    ModalContent
 } from '@chakra-ui/react';
 import {
     convertMatchKeyToString,
     convertStationKeyToString,
     getValueByRange,
+    roundToWhole,
     shortenScouterName,
     sortMatches
 } from '../util/helperFunctions';
@@ -64,10 +71,13 @@ let imageHeight = 435;
 function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam, teamName }) {
     const { user } = useContext(AuthContext);
 
+    const { isOpen, onOpen, onClose } = useDisclosure();
+
     const [dimensionRatios, setDimensionRatios] = useState(null);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [commentsToggled, setCommentsToggled] = useState([]);
     const [oneValidMatchForms, setOneValidMatchForms] = useState(null);
+    const [modalImage, setModalImage] = useState(null);
 
     useEffect(() => {
         if (matchForms) {
@@ -241,14 +251,48 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                 justifyContent={'center'}
                                 flexWrap={'wrap'}
                                 rowGap={'15px'}
+                                columnGap={'15px'}
                             >
                                 {pitForm?.robotImage && (
-                                    <ChakraImage width={{ base: '90%', md: '70%' }} src={pitForm.robotImage} />
+                                    <ChakraImage
+                                        width={{ base: '90%', md: '45%' }}
+                                        src={pitForm.robotImage}
+                                        onClick={() => {
+                                            setModalImage(pitForm.robotImage);
+                                            onOpen();
+                                        }}
+                                    />
                                 )}
                                 {pitForm?.wiringImage && (
-                                    <ChakraImage width={{ base: '90%', md: '70%' }} src={pitForm.wiringImage} />
+                                    <ChakraImage
+                                        width={{ base: '90%', md: '45%' }}
+                                        src={pitForm.wiringImage}
+                                        onClick={() => {
+                                            setModalImage(pitForm.wiringImage);
+                                            onOpen();
+                                        }}
+                                    />
                                 )}
                             </Flex>
+                            <Modal isOpen={isOpen} onClose={onClose} closeOnEsc={true} closeOnOverlayClick={true}>
+                                <ModalOverlay>
+                                    <ModalContent
+                                        margin={'auto'}
+                                        maxWidth={'none'}
+                                        backgroundColor={'transparent'}
+                                        border={'1px solid red'}
+                                        boxShadow={'none'}
+                                        width={'fit-content'}
+                                    >
+                                        <ChakraImage
+                                            width={'min(90vw, 90dvh)'}
+                                            height={'min(90vw, 90dvh)'}
+                                            fit={'contain'}
+                                            src={modalImage}
+                                        />
+                                    </ModalContent>
+                                </ModalOverlay>
+                            </Modal>
                         </Flex>
                         <Flex
                             width={{ base: '100%', lg: '60%' }}
@@ -1141,7 +1185,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                         {oneValidMatchForms.length > 0 && (
                             <Box width={'100%'} overflowX={'auto'}>
                                 <Grid
-                                    templateColumns={'0.75fr repeat(12, 1fr)'}
+                                    templateColumns={'0.75fr 1fr 1fr 0.75fr 0.75fr repeat(8, 1fr)'}
                                     borderTop={'1px solid black'}
                                     minWidth={'1900px'}
                                 >
@@ -1156,7 +1200,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                         'Scoring (Tele)',
                                         'Stage',
                                         'Defense',
-                                        'Attributes',
+                                        'Super Form',
                                         'Issues',
                                         'Comments'
                                     ].map((label) => (
@@ -1182,27 +1226,118 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     ))}
                                     {sortMatches(oneValidMatchForms).map((matchForm) => (
                                         <React.Fragment key={matchForm.matchNumber}>
-                                            <GridItem
-                                                fontSize={'lg'}
-                                                fontWeight={'medium'}
-                                                textAlign={'center'}
-                                                display={'flex'}
-                                                justifyContent={'center'}
-                                                alignItems={'center'}
-                                                borderBottom={'1px solid black'}
-                                                borderRight={'1px solid black'}
-                                                backgroundColor={'gray.200'}
-                                                minHeight={'100px'}
-                                                position={'sticky'}
-                                                left={0}
-                                                zIndex={1}
-                                                whiteSpace={'pre-line'}
-                                                borderLeft={'1px solid black'}
-                                            >
-                                                {convertMatchKeyToString(matchForm.matchNumber, true)}
-                                                {'\n'}
-                                                {convertStationKeyToString(matchForm.station)}
-                                            </GridItem>
+                                            {user.admin ? (
+                                                <Popover isLazy={true}>
+                                                    <PopoverTrigger>
+                                                        <GridItem
+                                                            borderBottom={'1px solid black'}
+                                                            borderRight={'1px solid black'}
+                                                            backgroundColor={'gray.200'}
+                                                            minHeight={'100px'}
+                                                            position={'sticky'}
+                                                            left={0}
+                                                            zIndex={1}
+                                                            borderLeft={'1px solid black'}
+                                                        >
+                                                            <Button
+                                                                fontSize={'lg'}
+                                                                fontWeight={'medium'}
+                                                                textAlign={'center'}
+                                                                whiteSpace={'pre-line'}
+                                                                height={'100%'}
+                                                                width={'100%'}
+                                                                backgroundColor={'transparent'}
+                                                                borderRadius={'0px'}
+                                                                lineHeight={'unset'}
+                                                                _hover={{ backgroundColor: 'gray.300' }}
+                                                            >
+                                                                {convertMatchKeyToString(matchForm.matchNumber, true)}
+                                                                {'\n'}
+                                                                {convertStationKeyToString(matchForm.station)}
+                                                            </Button>
+                                                        </GridItem>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent width={'fit-content'}>
+                                                        <PopoverArrow />
+                                                        <PopoverCloseButton />
+                                                        <PopoverBody
+                                                            display={'flex'}
+                                                            flexDirection={'column'}
+                                                            rowGap={'10px'}
+                                                        >
+                                                            <Button
+                                                                as={
+                                                                    matchForm.standStatus !== matchFormStatus.missing &&
+                                                                    Link
+                                                                }
+                                                                to={
+                                                                    matchForm.standStatus !== matchFormStatus.missing
+                                                                        ? `/standForm/${matchForm.eventKey}/${matchForm.matchNumber}/${matchForm.station}/${teamNumberParam}`
+                                                                        : null
+                                                                }
+                                                                state={{ previousRoute: 'team' }}
+                                                                isDisabled={
+                                                                    matchForm.standStatus === matchFormStatus.missing
+                                                                }
+                                                            >
+                                                                {matchForm.standStatus !== matchFormStatus.missing
+                                                                    ? 'Stand Form'
+                                                                    : 'No Stand Form'}
+                                                            </Button>
+                                                            <Button
+                                                                as={
+                                                                    matchForm.superStatus !== matchFormStatus.missing &&
+                                                                    Link
+                                                                }
+                                                                to={
+                                                                    matchForm.superStatus !== matchFormStatus.missing
+                                                                        ? `/superForm/${matchForm.eventKey}/${
+                                                                              matchForm.matchNumber
+                                                                          }/${matchForm.station.charAt(0)}/${
+                                                                              matchForm.allianceNumbers[0]
+                                                                          }/${matchForm.allianceNumbers[1]}/${
+                                                                              matchForm.allianceNumbers[2]
+                                                                          }`
+                                                                        : null
+                                                                }
+                                                                state={{
+                                                                    previousRoute: 'team',
+                                                                    teamNumber: teamNumberParam
+                                                                }}
+                                                                isDisabled={
+                                                                    matchForm.superStatus === matchFormStatus.missing
+                                                                }
+                                                            >
+                                                                {matchForm.superStatus !== matchFormStatus.missing
+                                                                    ? 'Super Form'
+                                                                    : 'No Super Form'}
+                                                            </Button>
+                                                        </PopoverBody>
+                                                    </PopoverContent>
+                                                </Popover>
+                                            ) : (
+                                                <GridItem
+                                                    fontSize={'lg'}
+                                                    fontWeight={'medium'}
+                                                    textAlign={'center'}
+                                                    display={'flex'}
+                                                    justifyContent={'center'}
+                                                    alignItems={'center'}
+                                                    borderBottom={'1px solid black'}
+                                                    borderRight={'1px solid black'}
+                                                    backgroundColor={'gray.200'}
+                                                    minHeight={'100px'}
+                                                    position={'sticky'}
+                                                    left={0}
+                                                    zIndex={1}
+                                                    whiteSpace={'pre-line'}
+                                                    borderLeft={'1px solid black'}
+                                                >
+                                                    {convertMatchKeyToString(matchForm.matchNumber, true)}
+                                                    {'\n'}
+                                                    {convertStationKeyToString(matchForm.station)}
+                                                </GridItem>
+                                            )}
                                             <GridItem
                                                 display={'flex'}
                                                 justifyContent={'center'}
@@ -1374,7 +1509,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
                                                         backgroundColor={'gray.200'}
-                                                        minWidth={'140px'}
+                                                        minWidth={'180px'}
                                                     >
                                                         <Text
                                                             fontSize={'lg'}
@@ -1399,6 +1534,17 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                                 {' '}
                                                                 ({matchForm.autoGP.ampMiss})
                                                             </Text>
+                                                            {matchForm.autoGP.ampScore + matchForm.autoGP.ampMiss >
+                                                                0 && (
+                                                                <Text fontSize={'md'} fontWeight={'medium'} as={'span'}>
+                                                                    {` ${roundToWhole(
+                                                                        (matchForm.autoGP.ampScore /
+                                                                            (matchForm.autoGP.ampScore +
+                                                                                matchForm.autoGP.ampMiss)) *
+                                                                            100
+                                                                    )}%`}
+                                                                </Text>
+                                                            )}
                                                         </Text>
                                                         <Text
                                                             fontSize={'lg'}
@@ -1423,6 +1569,18 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                                 {' '}
                                                                 ({matchForm.autoGP.speakerMiss})
                                                             </Text>
+                                                            {matchForm.autoGP.speakerScore +
+                                                                matchForm.autoGP.speakerMiss >
+                                                                0 && (
+                                                                <Text fontSize={'md'} fontWeight={'medium'} as={'span'}>
+                                                                    {` ${roundToWhole(
+                                                                        (matchForm.autoGP.speakerScore /
+                                                                            (matchForm.autoGP.speakerScore +
+                                                                                matchForm.autoGP.speakerMiss)) *
+                                                                            100
+                                                                    )}%`}
+                                                                </Text>
+                                                            )}
                                                         </Text>
                                                         <Text
                                                             fontSize={'lg'}
@@ -1473,7 +1631,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
                                                         backgroundColor={'gray.200'}
-                                                        minWidth={'140px'}
+                                                        minWidth={'180px'}
                                                     >
                                                         <Text
                                                             fontSize={'lg'}
@@ -1498,6 +1656,17 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                                 {' '}
                                                                 ({matchForm.teleopGP.ampMiss})
                                                             </Text>
+                                                            {matchForm.teleopGP.ampScore + matchForm.teleopGP.ampMiss >
+                                                                0 && (
+                                                                <Text fontSize={'md'} fontWeight={'medium'} as={'span'}>
+                                                                    {` ${roundToWhole(
+                                                                        (matchForm.teleopGP.ampScore /
+                                                                            (matchForm.teleopGP.ampScore +
+                                                                                matchForm.teleopGP.ampMiss)) *
+                                                                            100
+                                                                    )}%`}
+                                                                </Text>
+                                                            )}
                                                         </Text>
                                                         <Text
                                                             fontSize={'lg'}
@@ -1522,6 +1691,18 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                                 {' '}
                                                                 ({matchForm.teleopGP.speakerMiss})
                                                             </Text>
+                                                            {matchForm.teleopGP.speakerScore +
+                                                                matchForm.teleopGP.speakerMiss >
+                                                                0 && (
+                                                                <Text fontSize={'md'} fontWeight={'medium'} as={'span'}>
+                                                                    {` ${roundToWhole(
+                                                                        (matchForm.teleopGP.speakerScore /
+                                                                            (matchForm.teleopGP.speakerScore +
+                                                                                matchForm.teleopGP.speakerMiss)) *
+                                                                            100
+                                                                    )}%`}
+                                                                </Text>
+                                                            )}
                                                         </Text>
                                                         <Text
                                                             fontSize={'lg'}
@@ -1642,6 +1823,36 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                             textAlign={'center'}
                                                         >
                                                             {`Field Aware: ${matchForm.fieldAwareness || 'N/A'}`}
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {`High Note: `}
+                                                            {matchForm.ampPlayer ? (
+                                                                <React.Fragment>
+                                                                    <Text
+                                                                        fontSize={'lg'}
+                                                                        fontWeight={'medium'}
+                                                                        textColor={'green'}
+                                                                        as={'span'}
+                                                                    >
+                                                                        {matchForm.ampPlayerGP.highNoteScore}
+                                                                    </Text>
+                                                                    <Text
+                                                                        fontSize={'md'}
+                                                                        fontWeight={'medium'}
+                                                                        textColor={'red'}
+                                                                        as={'span'}
+                                                                    >
+                                                                        {' '}
+                                                                        ({matchForm.ampPlayerGP.highNoteMiss})
+                                                                    </Text>
+                                                                </React.Fragment>
+                                                            ) : (
+                                                                'N/A'
+                                                            )}
                                                         </Text>
                                                     </React.Fragment>
                                                 )}

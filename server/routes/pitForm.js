@@ -26,7 +26,6 @@ router.post('/postPitForm', async (req, res) => {
         let pitFormInput = req.body;
         let robotImageUrl;
         if (req.headers.robotimagetype === 'Same Image') {
-            console.log('Same robot image');
             robotImageUrl = pitFormInput.robotImage;
         } else {
             await cloudinary.uploader.upload(pitFormInput.robotImage, (error, result) => {
@@ -38,7 +37,6 @@ router.post('/postPitForm', async (req, res) => {
         }
         let wiringImageUrl;
         if (req.headers.wiringimagetype === 'Same Image') {
-            console.log('Same wiring image');
             wiringImageUrl = pitFormInput.wiringImage;
         } else {
             await cloudinary.uploader.upload(pitFormInput.wiringImage, (error, result) => {

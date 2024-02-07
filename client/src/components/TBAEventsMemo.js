@@ -8,13 +8,20 @@ function TBAEventsMemo({ eventType, mutatingEventKey, handleAddEvent }) {
         <Box margin='0 auto' marginBottom={'25px'}>
             <Box marginBottom={'10px'}>
                 <Text ref={eventType.ref} fontSize={'3xl'} fontWeight={'semibold'} lineHeight={'1.1'}>
-                    {eventType.name} <small style={{ fontSize: '65%', color: '#777', lineHeight: '1' }}>{eventType.count} Events</small>
+                    {eventType.name}{' '}
+                    <small style={{ fontSize: '65%', color: '#777', lineHeight: '1' }}>{eventType.count} Events</small>
                 </Text>
             </Box>
             <TransitionGroup>
                 {eventType.events.map((event, index) => (
                     <CSSTransition key={event.key} timeout={500} classNames='shrink'>
-                        <Grid minHeight={'60px'} borderTop={'1px solid black'} backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'} templateColumns='2fr 1fr' gap={'15px'}>
+                        <Grid
+                            minHeight={'60px'}
+                            borderTop={'1px solid black'}
+                            backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                            templateColumns='2fr 1fr'
+                            gap={'15px'}
+                        >
                             <Flex justifyContent={'center'} paddingLeft={'5px'} alignItems={'center'}>
                                 <Text textAlign={'center'}>{event.name}</Text>
                             </Flex>
@@ -24,7 +31,18 @@ function TBAEventsMemo({ eventType, mutatingEventKey, handleAddEvent }) {
                                 ) : (
                                     <Button
                                         isDisabled={mutatingEventKey !== null}
-                                        onClick={() => handleAddEvent(event.name, event.year, event.week, eventType.name, event.key, event.start_date, event.end_date)}
+                                        colorScheme={'green'}
+                                        onClick={() =>
+                                            handleAddEvent(
+                                                event.name,
+                                                event.year,
+                                                event.week,
+                                                eventType.name,
+                                                event.key,
+                                                event.start_date,
+                                                event.end_date
+                                            )
+                                        }
                                     >
                                         Add
                                     </Button>
