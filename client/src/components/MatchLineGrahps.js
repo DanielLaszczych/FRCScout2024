@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import {
     Box,
     Button,
@@ -172,7 +172,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
         }
     }, [setPreset, firstPreset, teleopPreset]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         let standForms = {};
         let superForms = {};
         let bothCompleteForms = {};

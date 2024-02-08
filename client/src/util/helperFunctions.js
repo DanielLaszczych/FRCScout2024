@@ -256,3 +256,20 @@ export function isObject(object) {
 }
 
 export const leafGet = (obj, path) => path.split('.').reduce((value, el) => value[el], obj);
+
+// https://gist.github.com/mlocati/7210513
+export function perc2color(perc) {
+    perc = perc * 100;
+    var r,
+        g,
+        b = 0;
+    if (perc < 50) {
+        r = 255;
+        g = Math.round(5.1 * perc);
+    } else {
+        g = 255;
+        r = Math.round(510 - 5.1 * perc);
+    }
+    var h = r * 0x10000 + g * 0x100 + b * 0x1;
+    return '#' + ('000000' + h.toString(16)).slice(-6);
+}

@@ -21,6 +21,11 @@ router.get('/getAllTeamEventData', async (req, res) => {
                     matchForms: responses[1],
                     teamEventData: responses[2]
                 };
+                if (data.teamEventData) {
+                    data.teamEventData.autoPaths = HelperFunctions.getAutoPaths(data.matchForms);
+                } else {
+                    data.teamEventData.autoPaths = [];
+                }
                 if (!data.teamEventData) {
                     res.status(200).json(data);
                     return;
@@ -76,6 +81,86 @@ class HelperFunctions {
                 [field]: { $gt: value }
             })) + 1
         );
+    }
+
+    static getAutoPaths(matchForms) {
+        let map = {
+            ampScore: 'amp',
+            ampMiss: 'amp',
+            speakerScore: 'speaker',
+            speakerMiss: 'speaker',
+            intakeMiss: 'intake',
+            null: 'n'
+        };
+
+        let paths = {};
+        for (const matchForm of matchForms) {
+            if (matchForm.standStatus !== matchFormStatus.complete) {
+                continue;
+            }
+
+            let timeline = matchForm.startingPosition.toString();
+            let count = { speaker: 0, amp: 0, intake: 0, null: 0 };
+            for (const action of matchForm.autoTimeline) {
+                timeline += action.piece + map[action.scored];
+                count[map[action.scored]] += 1;
+            }
+
+            let pathData;
+            let newPath = false;
+            if (Object.hasOwn(paths, timeline.replaceAll('intake', 'speaker'))) {
+                pathData = paths[timeline.replaceAll('intake', 'speaker')];
+            } else if (Object.hasOwn(paths, timeline.replaceAll('intake', 'amp'))) {
+                pathData = paths[timeline.replaceAll('intake', 'amp')];
+            } else {
+                newPath = true;
+                if (count.amp > count.speaker) {
+                    timeline = timeline.replaceAll('intake', 'amp');
+                } else {
+                    timeline = timeline.replaceAll('intake', 'speaker');
+                }
+                pathData = {
+                    runs: 0,
+                    startingPosition: matchForm.startingPosition,
+                    leftStart: 0,
+                    path: {},
+                    totalPoints: 0
+                };
+                let order = 1;
+                for (const action of matchForm.autoTimeline) {
+                    let label = map[action.scored];
+                    if (label === 'intake') {
+                        if (count.amp > count.speaker) {
+                            label = 'amp';
+                        } else {
+                            label = 'speaker';
+                        }
+                    }
+                    pathData.path[order++] = { piece: action.piece, label: label, score: 0, miss: 0 };
+                }
+            }
+
+            pathData.runs += 1;
+            pathData.leftStart += matchForm.leftStart ? 1 : 0;
+            pathData.totalPoints += matchForm.leftStart ? 2 : 0;
+            let order = 1;
+            for (const action of matchForm.autoTimeline) {
+                if (action.scored !== null) {
+                    if (action.scored.includes('Score')) {
+                        pathData.path[order].score += 1;
+                        pathData.totalPoints += gamePieceFields[action.scored].autoValue;
+                    } else if (action.scored.includes('Miss')) {
+                        pathData.path[order].miss += 1;
+                    }
+                }
+                order += 1;
+            }
+            if (newPath) {
+                paths[timeline] = pathData;
+            }
+        }
+
+        return Object.values(paths).sort((path1, path2) => path2.runs - path1.runs);
     }
 
     static getStandFormUpdate(data, reverse = false) {

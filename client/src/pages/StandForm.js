@@ -126,7 +126,7 @@ let imageDimensions = {
     },
     auto: {
         width: 503,
-        height: 435
+        height: 436
     }
 };
 

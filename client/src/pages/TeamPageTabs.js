@@ -33,6 +33,7 @@ import {
     convertMatchKeyToString,
     convertStationKeyToString,
     getValueByRange,
+    roundToTenth,
     roundToWhole,
     shortenScouterName,
     sortMatches
@@ -47,6 +48,7 @@ import PreAutoBlueField from '../images/PreAutoBlueField.png';
 import PreAutoRedField from '../images/PreAutoRedField.png';
 import { GrMap } from 'react-icons/gr';
 import MatchLineGraphs from '../components/MatchLineGrahps';
+import AutoPaths from '../components/AutoPaths';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -144,7 +146,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
         setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
     }, [tab]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if ([teamPageTabs.pit, teamPageTabs.forms].includes(tab)) {
             getImageVariables();
             window.addEventListener('resize', getImageVariables);
@@ -399,7 +401,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                {teamEventData.offensivePoints.avg}
+                                                {roundToTenth(teamEventData.offensivePoints.avg)}
                                             </Text>
                                             <Text
                                                 flex={1 / 4}
@@ -472,7 +474,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                {teamEventData.autoPoints.avg}
+                                                {roundToTenth(teamEventData.autoPoints.avg)}
                                             </Text>
                                             <Text
                                                 flex={1 / 2}
@@ -529,7 +531,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                {teamEventData.teleopPoints.avg}
+                                                {roundToTenth(teamEventData.teleopPoints.avg)}
                                             </Text>
                                             <Text
                                                 flex={1 / 2}
@@ -594,7 +596,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                {teamEventData.stagePoints.avg}
+                                                {roundToTenth(teamEventData.stagePoints.avg)}
                                             </Text>
                                             <Text
                                                 flex={1 / 3}
@@ -1973,12 +1975,28 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
             case teamPageTabs.analysis:
                 return (
                     <Box>
-                        <MatchLineGraphs
-                            teamNumbers={[teamNumberParam]}
-                            multiTeamMatchForms={{
-                                [teamNumberParam]: oneValidMatchForms
-                            }}
-                        />
+                        {oneValidMatchForms.length > 0 ? (
+                            <MatchLineGraphs
+                                teamNumbers={[teamNumberParam]}
+                                multiTeamMatchForms={{
+                                    [teamNumberParam]: oneValidMatchForms
+                                }}
+                            />
+                        ) : (
+                            <Box fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                                No match data
+                            </Box>
+                        )}
+                        {teamEventData && teamEventData.autoPaths.length > 0 ? (
+                            <AutoPaths
+                                teamNumbers={[teamNumberParam]}
+                                autoPaths={{ [teamNumberParam]: teamEventData.autoPaths }}
+                            />
+                        ) : (
+                            <Box fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                                No auto data
+                            </Box>
+                        )}
                     </Box>
                 );
             case teamPageTabs.other:
