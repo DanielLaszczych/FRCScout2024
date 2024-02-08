@@ -39,9 +39,8 @@ function AutoPaths({ teamNumbers, autoPaths }) {
         // const viewportHeight = window.innerHeight;
 
         // Calculate image dimensions based on screen size
-        // We subtract by 50 in this one to account for the 25px of padding on all sides
         const maxWidth =
-            breakPointWidth >= 991 ? (viewportWidth * 0.9) / Math.min(teamNumbers.length, 3) : viewportWidth * 0.9; // Adjust the multiplier as needed
+            breakPointWidth >= 992 ? (viewportWidth * 0.9) / Math.min(teamNumbers.length, 3) : viewportWidth * 0.9; // Adjust the multiplier as needed
         const maxHeight = imageHeight;
 
         const screenAspectRatio = maxWidth / maxHeight;
