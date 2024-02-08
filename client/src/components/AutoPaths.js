@@ -8,12 +8,12 @@ import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 let startingPositions = [
     [20, 36, uuidv4()],
     [55, 115, uuidv4()],
-    [20, 191, uuidv4()],
+    [20, 189, uuidv4()],
     [20, 285, uuidv4()]
 ];
 let notePositions = [
-    [125, 34, uuidv4()],
-    [125, 111, uuidv4()],
+    [125, 36, uuidv4()],
+    [125, 115, uuidv4()],
     [125, 189, uuidv4()],
     [413, 9, uuidv4()],
     [413, 99, uuidv4()],
