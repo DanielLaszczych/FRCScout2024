@@ -47,8 +47,9 @@ import { Radar } from 'react-chartjs-2';
 import PreAutoBlueField from '../images/PreAutoBlueField.png';
 import PreAutoRedField from '../images/PreAutoRedField.png';
 import { GrMap } from 'react-icons/gr';
-import MatchLineGraphs from '../components/MatchLineGrahps';
+import MatchLineGraphs from '../components/MatchLineGraphs';
 import AutoPaths from '../components/AutoPaths';
+import TeamStatsList from '../components/TeamStatsList';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -1530,7 +1531,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                             <Text
                                                                 fontSize={'md'}
                                                                 fontWeight={'medium'}
-                                                                textColor={'red'}
+                                                                textColor={'crimson'}
                                                                 as={'span'}
                                                             >
                                                                 {' '}
@@ -1565,7 +1566,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                             <Text
                                                                 fontSize={'md'}
                                                                 fontWeight={'medium'}
-                                                                textColor={'red'}
+                                                                textColor={'crimson'}
                                                                 as={'span'}
                                                             >
                                                                 {' '}
@@ -1593,7 +1594,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                             <Text
                                                                 fontSize={'lg'}
                                                                 fontWeight={'medium'}
-                                                                textColor={'red'}
+                                                                textColor={'crimson'}
                                                                 as={'span'}
                                                             >
                                                                 {matchForm.autoGP.intakeMiss}
@@ -1652,7 +1653,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                             <Text
                                                                 fontSize={'md'}
                                                                 fontWeight={'medium'}
-                                                                textColor={'red'}
+                                                                textColor={'crimson'}
                                                                 as={'span'}
                                                             >
                                                                 {' '}
@@ -1687,7 +1688,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                             <Text
                                                                 fontSize={'md'}
                                                                 fontWeight={'medium'}
-                                                                textColor={'red'}
+                                                                textColor={'crimson'}
                                                                 as={'span'}
                                                             >
                                                                 {' '}
@@ -1845,7 +1846,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                                     <Text
                                                                         fontSize={'md'}
                                                                         fontWeight={'medium'}
-                                                                        textColor={'red'}
+                                                                        textColor={'crimson'}
                                                                         as={'span'}
                                                                     >
                                                                         {' '}
@@ -1975,28 +1976,23 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
             case teamPageTabs.analysis:
                 return (
                     <Box>
-                        {oneValidMatchForms.length > 0 ? (
-                            <MatchLineGraphs
-                                teamNumbers={[teamNumberParam]}
-                                multiTeamMatchForms={{
-                                    [teamNumberParam]: oneValidMatchForms
-                                }}
-                            />
-                        ) : (
-                            <Box fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
-                                No match data
-                            </Box>
-                        )}
-                        {teamEventData && teamEventData.autoPaths.length > 0 ? (
-                            <AutoPaths
-                                teamNumbers={[teamNumberParam]}
-                                autoPaths={{ [teamNumberParam]: teamEventData.autoPaths }}
-                            />
-                        ) : (
-                            <Box fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
-                                No auto data
-                            </Box>
-                        )}
+                        <MatchLineGraphs
+                            teamNumbers={[teamNumberParam]}
+                            multiTeamMatchForms={{
+                                [teamNumberParam]: oneValidMatchForms
+                            }}
+                        />
+                        <AutoPaths
+                            teamNumbers={[teamNumberParam]}
+                            autoPaths={{ [teamNumberParam]: teamEventData?.autoPaths }}
+                        />
+                        <TeamStatsList
+                            teamNumbers={[teamNumberParam]}
+                            multiTeamEventsDatas={{ [teamNumberParam]: teamEventData }}
+                            multiTeamMatchForms={{
+                                [teamNumberParam]: oneValidMatchForms
+                            }}
+                        />
                     </Box>
                 );
             case teamPageTabs.other:

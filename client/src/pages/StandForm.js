@@ -754,11 +754,12 @@ function StandForm() {
                                                     piece.label === 'None' &&
                                                     standFormData.preLoadedPiece === 'Note'
                                                 ) {
-                                                    standFormManagers.auto.removePreloadedEntry(standFormData);
+                                                    let newData =
+                                                        standFormManagers.auto.removePreloadedEntry(standFormData);
                                                     setStandFormData({
-                                                        ...standFormData,
+                                                        ...newData,
                                                         preLoadedPiece: piece.label,
-                                                        autoTimeline: standFormData.autoTimeline.slice(1)
+                                                        autoTimeline: newData.autoTimeline.slice(1)
                                                     });
                                                 } else {
                                                     setStandFormData({ ...standFormData, preLoadedPiece: piece.label });

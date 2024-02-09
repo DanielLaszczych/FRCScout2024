@@ -145,7 +145,7 @@ export const createHistoryManager = (type, setData, prevHistoryData = { data: []
                 }
                 let newData = JSON.parse(JSON.stringify(data));
                 newData.history[type] = { data: history, position: position };
-                setData(newData);
+                return newData;
             }
         },
 

@@ -90,10 +90,14 @@ class HelperConstants {
         }
     };
 
+    // The keys are named after the label in the standform maybe next year change how this is done
     static climbFields = {
         'No Attempt': { field: 'noAttempt' },
         Success: { field: 'success', teleopValue: 3 },
-        Fail: { field: 'fail' }
+        Fail: { field: 'fail' },
+        'Left Side': { field: 'left' },
+        Center: { field: 'center' },
+        'Right Side': { field: 'right' }
     };
 }
 

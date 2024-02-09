@@ -112,22 +112,21 @@ function AutoPaths({ teamNumbers, autoPaths }) {
     }
 
     return (
-        <Box>
-            <Flex
-                margin={'0 auto'}
-                marginTop={'10px'}
-                width={'100%'}
-                flexWrap={'wrap'}
-                columnGap={'50px'}
-                rowGap={'20px'}
-                justifyContent={'center'}
-            >
-                {teamNumbers.map((teamNumber) => (
-                    <Flex
-                        key={teamNumber}
-                        justifyContent={'center'}
-                        width={{ base: '90%', lg: `calc(90% / ${Math.min(teamNumbers.length, 3)})` }}
-                    >
+        <Flex
+            margin={'0 auto'}
+            width={'100%'}
+            flexWrap={'wrap'}
+            columnGap={'50px'}
+            rowGap={'20px'}
+            justifyContent={'center'}
+        >
+            {teamNumbers.map((teamNumber) => (
+                <Flex
+                    key={teamNumber}
+                    justifyContent={'center'}
+                    width={{ base: '90%', lg: `calc(90% / ${Math.min(teamNumbers.length, 3)})` }}
+                >
+                    {autoPaths[teamNumber] && autoPaths[teamNumber].length > 0 ? (
                         <Box>
                             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
                                 {teamNumber}
@@ -238,7 +237,10 @@ function AutoPaths({ teamNumbers, autoPaths }) {
                                     icon={<IoChevronBack />}
                                     isDisabled={pathsVisible[teamNumber] === 0}
                                     onClick={() =>
-                                        setPathsVisible({ ...pathsVisible, [teamNumber]: pathsVisible[teamNumber] - 1 })
+                                        setPathsVisible({
+                                            ...pathsVisible,
+                                            [teamNumber]: pathsVisible[teamNumber] - 1
+                                        })
                                     }
                                 />
                                 <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
@@ -248,15 +250,22 @@ function AutoPaths({ teamNumbers, autoPaths }) {
                                     icon={<IoChevronForward />}
                                     isDisabled={pathsVisible[teamNumber] === autoPaths[teamNumber].length - 1}
                                     onClick={() =>
-                                        setPathsVisible({ ...pathsVisible, [teamNumber]: pathsVisible[teamNumber] + 1 })
+                                        setPathsVisible({
+                                            ...pathsVisible,
+                                            [teamNumber]: pathsVisible[teamNumber] + 1
+                                        })
                                     }
                                 />
                             </Flex>
                         </Box>
-                    </Flex>
-                ))}
-            </Flex>
-        </Box>
+                    ) : (
+                        <Box key={teamNumber} fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                            No auto data
+                        </Box>
+                    )}
+                </Flex>
+            ))}
+        </Flex>
     );
 }
 

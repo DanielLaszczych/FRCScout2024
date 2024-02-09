@@ -116,6 +116,22 @@ const climbSchema = new Schema(
         fail: {
             type: Number,
             default: 0
+        },
+        harmony: {
+            type: metricsSchema,
+            default: {}
+        },
+        left: {
+            type: Number,
+            default: 0
+        },
+        center: {
+            type: Number,
+            default: 0
+        },
+        right: {
+            type: Number,
+            default: 0
         }
     },
     { _id: false }
@@ -160,7 +176,7 @@ const TeamEventDataSchema = new Schema({
         type: teleopGPSchema,
         default: {}
     },
-    climbCounts: {
+    climb: {
         type: climbSchema,
         default: {}
     },

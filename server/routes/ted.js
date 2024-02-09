@@ -23,8 +23,6 @@ router.get('/getAllTeamEventData', async (req, res) => {
                 };
                 if (data.teamEventData) {
                     data.teamEventData.autoPaths = HelperFunctions.getAutoPaths(data.matchForms);
-                } else {
-                    data.teamEventData.autoPaths = [];
                 }
                 if (!data.teamEventData) {
                     res.status(200).json(data);
@@ -182,7 +180,12 @@ class HelperFunctions {
             }
         }
 
-        incUpdate[`climbCounts.${climbFields[data.climb.attempt].field}`] = 1; //Modify the labels to field object
+        incUpdate[`climb.${climbFields[data.climb.attempt].field}`] = 1; //Modify the labels to field object
+        if (climbFields[data.climb.attempt].field === climbFields.Success.field) {
+            incUpdate[`climb.${climbFields[data.climb.location].field}`] = 1;
+            incUpdate[`climb.harmony.total`] = data.climb.harmony;
+            maxUpdate[`climb.harmony.max`] = data.climb.harmony;
+        }
 
         if (data.defenseRating !== 0) {
             incUpdate['playedDefense'] = 1;
@@ -281,9 +284,11 @@ class HelperFunctions {
             }
         }
 
-        let totalAttempts = ted.climbCounts.success + ted.climbCounts.fail;
-        ted.climbSuccessPercentage = totalAttempts === 0 ? null : ted.climbCounts.success / totalAttempts;
-        ted.climbSuccessFraction = totalAttempts === 0 ? null : `${ted.climbCounts.success} / ${totalAttempts}`;
+        let totalAttempts = ted.climb.success + ted.climb.fail;
+        ted.climbSuccessPercentage = totalAttempts === 0 ? null : ted.climb.success / totalAttempts;
+        ted.climbSuccessFraction = totalAttempts === 0 ? null : `${ted.climb.success} / ${totalAttempts}`;
+
+        ted.climb.harmony.avg = ted.climb.success === 0 ? 0 : ted.climb.harmony.total / ted.climb.success;
 
         ted.defenseRating.avg = ted.playedDefense === 0 ? 0 : ted.defenseRating.total / ted.playedDefense;
         ted.defenseAllocation.avg = ted.playedDefense === 0 ? 0 : ted.defenseAllocation.total / ted.playedDefense;

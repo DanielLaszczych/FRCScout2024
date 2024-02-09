@@ -489,7 +489,14 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
             <IconButton icon={<AiFillFilter />} position={'absolute'} left={'25px'} top={'-75px'} onClick={onOpen}>
                 Open settings
             </IconButton>
-            <Flex margin={'0 auto'} width={'100%'} flexWrap={'wrap'} columnGap={'50px'} justifyContent={'center'}>
+            <Flex
+                margin={'0 auto'}
+                width={'100%'}
+                flexWrap={'wrap'}
+                columnGap={'50px'}
+                rowGap={'20px'}
+                justifyContent={'center'}
+            >
                 {teamNumbers.map((teamNumber) => (
                     <Flex
                         position={'relative'}
@@ -499,76 +506,86 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
                         height={{ base: '50vh', lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2})` }}
                         marginBottom={`${getMarginBottom(teamNumber)}px`}
                     >
-                        <Line
-                            data={{
-                                labels: getLabels(teamNumber),
-                                datasets: getDatasets(teamNumber)
-                            }}
-                            options={{
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    colors: {
-                                        forceOverride: true,
-                                        enabled: true
-                                    },
-                                    title: {
-                                        display: true,
-                                        text: `${teamNumber}`,
-                                        font: {
-                                            size: 20
-                                        }
-                                    },
-                                    legend: {
-                                        labels: {
-                                            font: {
-                                                size: 14
+                        {multiTeamMatchForms[teamNumber].length === 0 ? (
+                            <Box key={teamNumber} fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                                No match data
+                            </Box>
+                        ) : (
+                            <React.Fragment>
+                                <Line
+                                    data={{
+                                        labels: getLabels(teamNumber),
+                                        datasets: getDatasets(teamNumber)
+                                    }}
+                                    options={{
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            colors: {
+                                                forceOverride: true,
+                                                enabled: true
+                                            },
+                                            title: {
+                                                display: true,
+                                                text: `${teamNumber}`,
+                                                font: {
+                                                    size: 20
+                                                }
+                                            },
+                                            legend: {
+                                                labels: {
+                                                    font: {
+                                                        size: 14
+                                                    }
+                                                }
                                             }
-                                        }
-                                    }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        suggestedMax:
-                                            Math.max(
-                                                ...[].concat(...getDatasets(teamNumber).map((dataset) => dataset.data))
-                                            ) + 2,
-                                        ticks: {
-                                            font: {
-                                                size: 16
-                                            }
-                                        }
-                                    },
-                                    x: {
-                                        offset: true,
-                                        grid: {
-                                            offset: true
                                         },
-                                        ticks: {
-                                            font: {
-                                                size: 16
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                suggestedMax:
+                                                    Math.max(
+                                                        ...[].concat(
+                                                            ...getDatasets(teamNumber).map((dataset) => dataset.data)
+                                                        )
+                                                    ) + 2,
+                                                ticks: {
+                                                    font: {
+                                                        size: 16
+                                                    }
+                                                }
+                                            },
+                                            x: {
+                                                offset: true,
+                                                grid: {
+                                                    offset: true
+                                                },
+                                                ticks: {
+                                                    font: {
+                                                        size: 16
+                                                    }
+                                                }
                                             }
                                         }
-                                    }
-                                }
-                            }}
-                            plugins={[
-                                {
-                                    id: 'increase-legend-spacing',
-                                    beforeInit(chart) {
-                                        // Get reference to the original fit function
-                                        const originalFit = chart.legend.fit;
-                                        // Override the fit function
-                                        chart.legend.fit = function fit() {
-                                            // Call original function and bind scope in order to use `this` correctly inside it
-                                            originalFit.bind(chart.legend)();
-                                            this.height += 15;
-                                        };
-                                    }
-                                }
-                            ]}
-                        ></Line>
-                        {getIcons(teamNumber)}
+                                    }}
+                                    plugins={[
+                                        {
+                                            id: 'increase-legend-spacing',
+                                            beforeInit(chart) {
+                                                // Get reference to the original fit function
+                                                const originalFit = chart.legend.fit;
+                                                // Override the fit function
+                                                chart.legend.fit = function fit() {
+                                                    // Call original function and bind scope in order to use `this` correctly inside it
+                                                    originalFit.bind(chart.legend)();
+                                                    this.height += 15;
+                                                };
+                                            }
+                                        }
+                                    ]}
+                                ></Line>
+                                {getIcons(teamNumber)}
+                            </React.Fragment>
+                        )}
                     </Flex>
                 ))}
             </Flex>
