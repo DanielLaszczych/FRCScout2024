@@ -1,9 +1,8 @@
 import React, { useLayoutEffect, useState } from 'react';
 import { leafGet, roundToWhole, sortMatches } from '../util/helperFunctions';
-import { matchFormStatus } from '../util/helperConstants';
+import { climbFields, matchFormStatus } from '../util/helperConstants';
 import { Box, Center, Flex, Grid, GridItem, Icon, Spinner, Text } from '@chakra-ui/react';
-import { FaCircleArrowDown, FaCircleArrowUp } from 'react-icons/fa6';
-import { climbFields } from '../../../server/util/helperConstants';
+import { FaCircleArrowDown, FaCircleArrowRight, FaCircleArrowUp } from 'react-icons/fa6';
 
 const fields = [
     {
@@ -50,29 +49,26 @@ const fields = [
     {
         label: 'Super Scout',
         fields: [
-            { label: 'Agility', field: 'agility', superField: true, noShowValue: 1 },
+            { label: 'Agility', field: 'agility', noShowValue: 1, superField: true },
             {
                 label: 'Field Awareness',
                 field: 'fieldAwareness',
-                superField: true,
-                noShowValue: 1
+                noShowValue: 1,
+                superField: true
             },
             {
                 label: 'High Note Percentage',
                 field: 'highNotePercentage',
-                superField: true,
                 specialField: true
             },
             {
                 label: 'High Note',
                 field: 'ampPlayerGP.highNoteScore',
-                superField: true,
                 specialField: true
             },
             {
                 label: 'High Note Miss',
                 field: 'ampPlayerGP.highNoteMiss',
-                superField: true,
                 specialField: true
             }
         ]
@@ -81,12 +77,12 @@ const fields = [
         label: 'Other',
         fields: [
             { label: 'Offensive Points', field: 'offensivePoints' },
-            { label: '# of Stand Forms', field: 'standForms', simple: true },
-            { label: '# of Super Forms', field: 'superForms', simple: true },
+
             {
                 label: '# of No Shows',
                 field: 'noShows',
-                simple: true
+                simple: true,
+                specialL4MField: true
             },
             {
                 label: '# of Lost Comms.',
@@ -95,7 +91,9 @@ const fields = [
             },
             { label: 'Robot Broke', field: 'robotBroke', simple: true },
             { label: 'Yellow Card', field: 'yellowCard', simple: true },
-            { label: 'Red Card', field: 'redCard', simple: true }
+            { label: 'Red Card', field: 'redCard', simple: true },
+            { label: '# of Stand Forms', field: 'standForms', simple: true, specialL4MField: true },
+            { label: '# of Super Forms', field: 'superForms', simple: true, specialL4MField: true }
         ]
     }
 ];
@@ -154,7 +152,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                     }
                     return (
                         <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                            {roundToWhole(leafGet(teamEventData, `${field.field}`) * 100)}
+                            {roundToWhole(leafGet(teamEventData, `${field.field}`) * 100)}%
                         </Text>
                     );
                 case 'climbLocationCounts':
@@ -166,7 +164,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                             {`Left: ${teamEventData.climb.left}, Center: ${teamEventData.climb.center}, Right: ${teamEventData.climb.right}`}
                         </Text>
                     );
-                case 'harmony':
+                case 'climb.harmony':
                     if (teamEventData.climb.success === 0) {
                         return getNAComponent();
                     }
@@ -178,11 +176,12 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                     return (
                         <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
                             {roundToWhole(
-                                (teamEventData.ampPlayerGP.highNoteScore /
-                                    (teamEventData.ampPlayerGP.highNoteScore +
-                                        teamEventData.ampPlayerGP.highNoteMiss)) *
+                                (teamEventData.ampPlayerGP.highNoteScore.total /
+                                    (teamEventData.ampPlayerGP.highNoteScore.total +
+                                        teamEventData.ampPlayerGP.highNoteMiss.total)) *
                                     100
                             )}
+                            %
                         </Text>
                     );
                 case 'ampPlayerGP.highNoteScore':
@@ -214,32 +213,51 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
         }
     }
 
+    function getLastFourMatchIndex(matchForms) {
+        if (matchForms.length > 8) {
+            //This is the breakpoint when we can actually get the last four matches
+            return matchForms.length - 4;
+        } else {
+            return Math.ceil(matchForms.length / 2);
+        }
+    }
+
     function getL4MValues(field, matchForms) {
         let prevFourTotal = 0;
+        let prevFourMatchCount = 0;
         let lastFourTotal = 0;
         let lastFourMax = 0;
+        let lastFourMatchCount = 0;
+        let lastFourMatchIndex = getLastFourMatchIndex(matchForms);
         for (let i = 0; i < matchForms.length; i++) {
             let value;
             if (field.superField && matchForms[i].superStatus === matchFormStatus.noShow) {
-                value = field.noShowValue || 0;
+                // This is really only for agility and field awareness since we want to count a noShow as 1 rating
+                if (field.noShowValue) {
+                    value = field.noShowValue;
+                } else {
+                    continue;
+                }
             } else if (matchForms[i].standStatus === matchFormStatus.noShow) {
-                value = field.noShowValue || 0;
+                continue;
             } else {
                 value = leafGet(matchForms[i], field.field);
             }
-            if (i < Math.max(1, matchForms.length - 4)) {
+            if (i < lastFourMatchIndex) {
                 prevFourTotal += value;
+                prevFourMatchCount += 1;
             }
-            if (i >= Math.max(0, matchForms.length - 4)) {
+            if (i >= lastFourMatchIndex || matchForms.length === 1) {
                 lastFourTotal += value;
                 if (!field.simple) {
                     lastFourMax = Math.max(lastFourMax, leafGet(matchForms[i], field.field));
                 }
+                lastFourMatchCount += 1;
             }
         }
         if (!field.simple) {
-            prevFourTotal /= Math.max(1, matchForms.length - 4);
-            lastFourTotal /= Math.min(matchForms.length, 4);
+            prevFourTotal /= prevFourMatchCount;
+            lastFourTotal /= lastFourMatchCount;
             return { prevFourTotal, lastFourTotal, lastFourMax };
         } else {
             return { prevFourTotal, lastFourTotal };
@@ -250,9 +268,14 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
         let prevFourTotal = 0;
         let lastFourTotal = 0;
         let lastFourMax = 0;
+        let prevFourPercentage;
+        let lastFourPercentage;
+        let lastFourMatchIndex = getLastFourMatchIndex(matchForms);
         switch (field.field) {
             case 'defenseRating':
             case 'defenseAllocation':
+                let prevFourPlayedDefense = 0;
+                let lastFourPlayedDefense = 0;
                 for (let i = 0; i < matchForms.length; i++) {
                     let value;
                     if (matchForms[i].standStatus === matchFormStatus.noShow) {
@@ -260,38 +283,47 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                     } else {
                         value = leafGet(matchForms[i], field.field);
                     }
-                    if (i < Math.max(1, matchForms.length - 4)) {
-                        prevFourTotal += value;
+                    if (i < lastFourMatchIndex) {
+                        if (matchForms[i].defenseRating > 0) {
+                            prevFourTotal += value;
+                            prevFourPlayedDefense += 1;
+                        }
                     }
-                    if (i >= Math.max(0, matchForms.length - 4)) {
-                        lastFourTotal += value;
-                        lastFourMax = Math.max(lastFourMax, leafGet(matchForms[i], field.field));
+                    if (i >= lastFourMatchIndex || matchForms.length === 1) {
+                        if (matchForms[i].defenseRating > 0) {
+                            lastFourTotal += value;
+                            lastFourMax = Math.max(lastFourMax, leafGet(matchForms[i], field.field));
+                            lastFourPlayedDefense += 1;
+                        }
                     }
                 }
 
-                if (lastFourTotal === 0) {
+                if (lastFourPlayedDefense === 0) {
                     return getNAComponent();
                 }
-                prevFourTotal /= Math.max(1, matchForms.length - 4);
-                lastFourTotal /= Math.min(matchForms.length, 4);
+                prevFourTotal /= prevFourPlayedDefense;
+                lastFourTotal /= lastFourPlayedDefense;
                 return (
-                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                        Avg: {lastFourTotal}{' '}
-                        <Text fontSize={'80%'} fontWeight={'semibold'} textAlign={'center'} as={'span'}>
-                            Max: {lastFourMax}
+                    <Flex>
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            Avg: {lastFourTotal}{' '}
+                            <Text fontSize={'80%'} fontWeight={'semibold'} textAlign={'center'} as={'span'}>
+                                Max: {lastFourMax}
+                            </Text>
                         </Text>
-                        {prevFourTotal > 0 && (
-                            <span>
+                        {prevFourPlayedDefense > 0 && field.field !== 'defenseAllocation' && (
+                            <Center>
                                 {lastFourTotal >= prevFourTotal * 1.25 ? (
                                     <Icon as={FaCircleArrowUp} color={'green'} />
                                 ) : lastFourTotal <= prevFourTotal * 0.75 ? (
                                     <Icon as={FaCircleArrowDown} color={'red'} />
-                                ) : null}
-                            </span>
+                                ) : (
+                                    <Icon as={FaCircleArrowRight} color={'gray'} />
+                                )}
+                            </Center>
                         )}
-                    </Text>
+                    </Flex>
                 );
-                break;
             case 'climbSuccessPercentage':
                 let prevFourSuccess = 0;
                 let prevFourFail = 0;
@@ -301,35 +333,197 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                     if (matchForms[i].standStatus === matchFormStatus.noShow) {
                         continue;
                     }
-                    if (i >= Math.max(0, matchForms.length - 4)) {
-                        lastFourSuccess += climbFields[matchForms[i].climb.attempt].field === climbFields.Success.field;
-                        lastFourFail += climbFields[matchForms[i].climb.attempt].field === climbFields.Fail.field;
-                    }
-                    if (i < Math.max(1, matchForms.length - 4)) {
+                    if (i < lastFourMatchIndex) {
                         prevFourSuccess += climbFields[matchForms[i].climb.attempt].field === climbFields.Success.field;
                         prevFourFail += climbFields[matchForms[i].climb.attempt].field === climbFields.Fail.field;
+                    }
+                    if (i >= lastFourMatchIndex || matchForms.length === 1) {
+                        lastFourSuccess += climbFields[matchForms[i].climb.attempt].field === climbFields.Success.field;
+                        lastFourFail += climbFields[matchForms[i].climb.attempt].field === climbFields.Fail.field;
                     }
                 }
                 if (lastFourSuccess + lastFourFail === 0) {
                     return getNAComponent();
                 }
-                let prevFourPercentage = roundToWhole((prevFourSuccess / (prevFourSuccess + prevFourFail)) * 100);
-                let lastFourPercentage = roundToWhole((lastFourSuccess / (lastFourSuccess + lastFourFail)) * 100);
+                prevFourPercentage =
+                    prevFourSuccess + prevFourFail === 0
+                        ? 0
+                        : roundToWhole((prevFourSuccess / (prevFourSuccess + prevFourFail)) * 100);
+                lastFourPercentage = roundToWhole((lastFourSuccess / (lastFourSuccess + lastFourFail)) * 100);
+                return (
+                    <Flex>
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            {lastFourPercentage}%
+                        </Text>
+                        <Center>
+                            {lastFourPercentage >= prevFourPercentage * 1.25 ? (
+                                <Icon as={FaCircleArrowUp} color={'green'} />
+                            ) : lastFourPercentage <= prevFourPercentage * 0.75 ? (
+                                <Icon as={FaCircleArrowDown} color={'red'} />
+                            ) : (
+                                <Icon as={FaCircleArrowRight} color={'gray'} />
+                            )}
+                        </Center>
+                    </Flex>
+                );
+            case 'climb.success':
+            case 'climb.fail':
+            case 'climb.noAttempt':
+                let climbFieldToCount;
+                if (field.field === 'climb.success') {
+                    climbFieldToCount = climbFields.Success.field;
+                } else if (field.field === 'climb.fail') {
+                    climbFieldToCount = climbFields.Fail.field;
+                } else {
+                    climbFieldToCount = climbFields['No Attempt'].field;
+                }
+                for (let i = 0; i < matchForms.length; i++) {
+                    let value;
+                    if (matchForms[i].standStatus === matchFormStatus.noShow) {
+                        continue;
+                    } else {
+                        value = climbFields[matchForms[i].climb.attempt] === climbFieldToCount;
+                    }
+                    if (i >= lastFourMatchIndex || matchForms.length === 1) {
+                        lastFourTotal += value;
+                    }
+                }
                 return (
                     <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                        {roundToWhole(leafGet(teamEventData, `${field.field}`) * 100)}
-
-                        {prevFourTotal > 0 && (
-                            <span>
-                                {lastFourTotal >= prevFourTotal * 1.25 ? (
-                                    <Icon as={FaCircleArrowUp} color={'green'} />
-                                ) : lastFourTotal <= prevFourTotal * 0.75 ? (
-                                    <Icon as={FaCircleArrowDown} color={'red'} />
-                                ) : null}
-                            </span>
-                        )}
+                        {lastFourTotal}
                     </Text>
                 );
+            case 'climbLocationCounts':
+                let climbCounts = { left: 0, center: 0, right: 0 };
+                for (let i = 0; i < matchForms.length; i++) {
+                    if (matchForms[i].standStatus === matchFormStatus.noShow) {
+                        continue;
+                    }
+                    if (i >= lastFourMatchIndex || matchForms.length === 1) {
+                        if (matchForms[i].climb.location !== null) {
+                            climbCounts[climbFields[matchForms[i].climb.location].field] += 1;
+                        }
+                    }
+                }
+                if (climbCounts.left + climbCounts.center + climbCounts.right === 0) {
+                    return getNAComponent();
+                } else {
+                    return (
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            {`Left: ${climbCounts.left}, Center: ${climbCounts.center}, Right: ${climbCounts.right}`}
+                        </Text>
+                    );
+                }
+            case 'climb.harmony':
+                let lastFourSuccessfulClimbs = 0;
+                for (let i = 0; i < matchForms.length; i++) {
+                    if (matchForms[i].standStatus === matchFormStatus.noShow) {
+                        continue;
+                    }
+                    if (i >= lastFourMatchIndex || matchForms.length === 1) {
+                        if (matchForms[i].climb.harmony !== null) {
+                            lastFourTotal += matchForms[i].climb.harmony;
+                            lastFourMax = Math.max(lastFourMax, matchForms[i].climb.harmony);
+                            lastFourSuccessfulClimbs += 1;
+                        }
+                    }
+                }
+
+                if (lastFourSuccessfulClimbs === 0) {
+                    return getNAComponent();
+                }
+                lastFourTotal /= lastFourSuccessfulClimbs;
+                return (
+                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                        Avg: {lastFourTotal}{' '}
+                        <Text fontSize={'80%'} fontWeight={'semibold'} textAlign={'center'} as={'span'}>
+                            Max: {lastFourMax}
+                        </Text>
+                    </Text>
+                );
+            case 'highNotePercentage':
+                let prevFourScore = 0;
+                let prevFourMiss = 0;
+                let lastFourScore = 0;
+                let lastFourMiss = 0;
+                for (let i = 0; i < matchForms.length; i++) {
+                    if (matchForms[i].superStatus === matchFormStatus.noShow) {
+                        continue;
+                    }
+                    if (i < lastFourMatchIndex) {
+                        prevFourScore += matchForms[i].ampPlayerGP.highNoteScore;
+                        prevFourMiss += matchForms[i].ampPlayerGP.highNoteMiss;
+                    }
+                    if (i >= lastFourMatchIndex || matchForms.length === 1) {
+                        lastFourScore += matchForms[i].ampPlayerGP.highNoteScore;
+                        lastFourMiss += matchForms[i].ampPlayerGP.highNoteMiss;
+                    }
+                }
+                if (lastFourScore + lastFourMiss === 0) {
+                    return getNAComponent();
+                }
+                prevFourPercentage =
+                    prevFourScore + prevFourMiss === 0
+                        ? 0
+                        : roundToWhole((prevFourSuccess / (prevFourSuccess + prevFourFail)) * 100);
+                lastFourPercentage = roundToWhole((lastFourScore / (lastFourScore + lastFourMiss)) * 100);
+                return (
+                    <Flex>
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            {lastFourPercentage}%
+                        </Text>
+                        <Center>
+                            {lastFourPercentage >= prevFourPercentage * 1.25 ? (
+                                <Icon as={FaCircleArrowUp} color={'green'} />
+                            ) : lastFourPercentage <= prevFourPercentage * 0.75 ? (
+                                <Icon as={FaCircleArrowDown} color={'red'} />
+                            ) : (
+                                <Icon as={FaCircleArrowRight} color={'gray'} />
+                            )}
+                        </Center>
+                    </Flex>
+                );
+            case 'ampPlayerGP.highNoteScore':
+            case 'ampPlayerGP.highNoteMiss':
+                let ampPlayerCount = 0;
+                for (let i = 0; i < matchForms.length; i++) {
+                    if (matchForms[i].superStatus === matchFormStatus.noShow) {
+                        continue;
+                    }
+                    if (i >= lastFourMatchIndex || matchForms.length === 1) {
+                        if (matchForms[i].ampPlayer) {
+                            lastFourTotal += leafGet(matchForms[i], field.field);
+                            ampPlayerCount += 1;
+                        }
+                    }
+                }
+
+                if (ampPlayerCount === 0) {
+                    return getNAComponent();
+                }
+                return (
+                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                        {lastFourTotal}
+                    </Text>
+                );
+            case 'noShows':
+                for (let i = 0; i < matchForms.length; i++) {
+                    let value = 0;
+                    if (matchForms[i].standStatus === matchFormStatus.noShow) {
+                        value = 1;
+                    }
+                    if (i >= lastFourMatchIndex || matchForms.length === 1) {
+                        lastFourTotal += value;
+                    }
+                }
+                return (
+                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                        {lastFourTotal}
+                    </Text>
+                );
+            case 'standForms':
+            case 'superForms':
+                return getNAComponent();
             default:
                 return (
                     <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
@@ -343,59 +537,47 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
         let values = getL4MValues(field, matchForms);
         if (!field.simple) {
             return (
-                <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                    Avg: {values.lastFourTotal}{' '}
-                    <Text fontSize={'80%'} fontWeight={'semibold'} textAlign={'center'} as={'span'}>
-                        Max: {values.lastFourMax}
+                <Flex>
+                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                        Avg: {values.lastFourTotal}{' '}
+                        <Text fontSize={'80%'} fontWeight={'semibold'} textAlign={'center'} as={'span'}>
+                            Max: {values.lastFourMax}
+                        </Text>
                     </Text>
-                    <span>
-                        {values.lastFourTotal >= values.prevFourTotal * 1.25 ? (
+                    <Center>
+                        {values.lastFourTotal > values.prevFourTotal * 1.25 ? (
                             <Icon as={FaCircleArrowUp} color={'green'} />
-                        ) : values.lastFourTotal <= values.prevFourTotal * 0.75 ? (
+                        ) : values.lastFourTotal < values.prevFourTotal * 0.75 ? (
                             <Icon as={FaCircleArrowDown} color={'red'} />
-                        ) : null}
-                    </span>
-                </Text>
+                        ) : (
+                            <Icon as={FaCircleArrowRight} color={'gray'} />
+                        )}
+                    </Center>
+                </Flex>
             );
         } else {
             return (
-                <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                    {values.lastFourTotal}
-                    <span>
-                        {values.lastFourTotal >= values.prevFourTotal * 1.25 ? (
+                <Flex>
+                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                        {values.lastFourTotal}
+                    </Text>
+                    <Center>
+                        {values.lastFourTotal > values.prevFourTotal * 1.25 ? (
                             <Icon as={FaCircleArrowUp} color={'green'} />
-                        ) : values.lastFourTotal <= values.prevFourTotal * 0.75 ? (
+                        ) : values.lastFourTotal < values.prevFourTotal * 0.75 ? (
                             <Icon as={FaCircleArrowDown} color={'red'} />
-                        ) : null}
-                    </span>
-                </Text>
+                        ) : (
+                            <Icon as={FaCircleArrowRight} color={'gray'} />
+                        )}
+                    </Center>
+                </Flex>
             );
         }
     }
 
     function getL4MCompoenent(field, matchForms) {
-        let lastFourForms = matchForms.slice(-4);
         if (field.specialField || field.specialL4MField) {
-            switch (field.field) {
-                case 'defenseRating':
-                case 'defenseAllocation':
-                    let playedDefense = 0;
-                    for (const matchForm of lastFourForms) {
-                        playedDefense += matchForm.defenseRating !== 0;
-                    }
-                    if (playedDefense === 0) {
-                        return getNAComponent();
-                    } else {
-                        return getL4MSpecialComponentHelper();
-                    }
-
-                default:
-                    return (
-                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                            Error getting field component
-                        </Text>
-                    );
-            }
+            return getL4MSpecialComponentHelper(field, matchForms);
         } else {
             return getL4MComponentHelper(field, matchForms);
         }
@@ -491,7 +673,12 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                                             zIndex={index + 1}
                                         >
                                             <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                                                Last 4 Matches
+                                                Last{' '}
+                                                {matchForms[teamNumber].length === 1
+                                                    ? 1
+                                                    : matchForms[teamNumber].length -
+                                                      getLastFourMatchIndex(matchForms[teamNumber])}{' '}
+                                                Matches
                                             </Text>
                                         </GridItem>
                                         {mainField.fields.map((subField) => (
@@ -517,12 +704,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                                                     borderBottom={'1px solid black'}
                                                     borderRight={'1px solid black'}
                                                 >
-                                                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                                                        {getOverallComponent(
-                                                            subField,
-                                                            multiTeamEventsDatas[teamNumber]
-                                                        )}
-                                                    </Text>
+                                                    {getOverallComponent(subField, multiTeamEventsDatas[teamNumber])}
                                                 </GridItem>
                                                 <GridItem
                                                     display={'flex'}
@@ -531,12 +713,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                                                     backgroundColor={'gray.200'}
                                                     borderBottom={'1px solid black'}
                                                 >
-                                                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                                                        {getOverallComponent(
-                                                            subField,
-                                                            multiTeamEventsDatas[teamNumber]
-                                                        )}
-                                                    </Text>
+                                                    {getL4MCompoenent(subField, matchForms[teamNumber])}
                                                 </GridItem>
                                             </React.Fragment>
                                         ))}

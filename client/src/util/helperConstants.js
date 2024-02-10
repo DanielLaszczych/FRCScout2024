@@ -35,6 +35,15 @@ export const gamePieceFields = {
     trap: { field: 'trap', label: 'Trap', short: 't', auto: false, teleop: true }
 };
 
+export const climbFields = {
+    'No Attempt': { field: 'noAttempt' },
+    Success: { field: 'success', teleopValue: 3 },
+    Fail: { field: 'fail' },
+    'Left Side': { field: 'left' },
+    Center: { field: 'center' },
+    'Right Side': { field: 'right' }
+};
+
 export const teamPageTabs = {
     overview: 'overview',
     pit: 'pit',

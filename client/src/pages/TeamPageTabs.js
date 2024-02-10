@@ -260,6 +260,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     <ChakraImage
                                         width={{ base: '90%', md: '45%' }}
                                         src={pitForm.robotImage}
+                                        objectFit={'contain'}
                                         onClick={() => {
                                             setModalImage(pitForm.robotImage);
                                             onOpen();
@@ -270,6 +271,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     <ChakraImage
                                         width={{ base: '90%', md: '45%' }}
                                         src={pitForm.wiringImage}
+                                        objectFit={'contain'}
                                         onClick={() => {
                                             setModalImage(pitForm.wiringImage);
                                             onOpen();
@@ -286,6 +288,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                         border={'1px solid red'}
                                         boxShadow={'none'}
                                         width={'fit-content'}
+                                        onClick={onClose}
                                     >
                                         <ChakraImage
                                             width={'min(90vw, 90dvh)'}

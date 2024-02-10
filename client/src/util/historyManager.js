@@ -138,15 +138,15 @@ export const createHistoryManager = (type, setData, prevHistoryData = { data: []
         // Only needed in case we need to remove the preloaded piece but we have to make sure that if
         // our position is at the beginning we do not set it back even more
         removePreloadedEntry(data) {
+            let newData = JSON.parse(JSON.stringify(data));
             if (history.length > 0 && isNaN(history[0])) {
                 history.splice(0, 1);
                 if (position > -1) {
                     position -= 1;
                 }
-                let newData = JSON.parse(JSON.stringify(data));
                 newData.history[type] = { data: history, position: position };
-                return newData;
             }
+            return newData;
         },
 
         undo(data) {
