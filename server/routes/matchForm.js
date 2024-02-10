@@ -94,7 +94,9 @@ router.post('/postStandForm', async (req, res) => {
             {
                 upsert: true
             }
-        ).exec();
+        )
+            .lean()
+            .exec();
 
         await updateTEDStandForm(prevMatchForm, matchFormInput);
 
@@ -213,7 +215,9 @@ router.post('/postSuperForm', async (req, res) => {
                 {
                     upsert: true
                 }
-            ).exec()
+            )
+                .lean()
+                .exec()
         );
 
         Promise.all(updates)

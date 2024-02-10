@@ -304,7 +304,7 @@ class HelperFunctions {
             teamNumber: teamNumber,
             [isSuperForms ? 'superStatus' : 'standStatus']: matchFormStatus.complete
         })
-            .sort({ field: -1 }) // Sort in descending order
+            .sort({ [field]: -1 }) // Sort in descending order
             .limit(1)
             .select(field);
         return maxValue ? leafGet(maxValue, field) : 0;
