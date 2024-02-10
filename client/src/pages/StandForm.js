@@ -14,6 +14,7 @@ import {
     Checkbox,
     Flex,
     HStack,
+    IconButton,
     Modal,
     ModalBody,
     ModalCloseButton,
@@ -45,6 +46,7 @@ import QRCode from 'react-qr-code';
 import { GlobalContext } from '../context/globalState';
 import { AiOutlineRotateRight } from 'react-icons/ai';
 import { IoChevronForward, IoChevronBack } from 'react-icons/io5';
+import { LiaHotdogSolid } from 'react-icons/lia';
 
 let sections = {
     preAuto: { label: 'Pre-Auto', spaceUsed: 100 + 35 + 110 + 85 },
@@ -910,8 +912,9 @@ function StandForm() {
                                     onLoad={() => setImageLoaded(true)}
                                 />
                                 {notePositions.map((position, index) => (
-                                    <Button
+                                    <IconButton
                                         key={position[2]}
+                                        icon={<LiaHotdogSolid />}
                                         position={'absolute'}
                                         visibility={imageLoaded ? 'visible' : 'hidden'}
                                         left={`${getPoint(position[0]) * imageDimensionRatios.auto.width}px`}
@@ -936,9 +939,7 @@ function StandForm() {
                                             _hover: { backgroundColor: '#3182ce' },
                                             cursor: 'default'
                                         }}
-                                    >
-                                        {index + 1}
-                                    </Button>
+                                    />
                                 ))}
                             </Center>
                         ) : (

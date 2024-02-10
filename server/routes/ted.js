@@ -158,7 +158,9 @@ class HelperFunctions {
             }
         }
 
-        return Object.values(paths).sort((path1, path2) => path2.runs - path1.runs);
+        return Object.values(paths).sort(
+            (path1, path2) => path2.runs - path1.runs || path2.totalPoints / path2.runs - path1.totalPoints / path1.runs
+        );
     }
 
     static getStandFormUpdate(data, reverse = false) {

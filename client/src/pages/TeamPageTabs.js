@@ -261,6 +261,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                         width={{ base: '90%', md: '45%' }}
                                         src={pitForm.robotImage}
                                         objectFit={'contain'}
+                                        cursor={'pointer'}
                                         onClick={() => {
                                             setModalImage(pitForm.robotImage);
                                             onOpen();
@@ -272,6 +273,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                         width={{ base: '90%', md: '45%' }}
                                         src={pitForm.wiringImage}
                                         objectFit={'contain'}
+                                        cursor={'pointer'}
                                         onClick={() => {
                                             setModalImage(pitForm.wiringImage);
                                             onOpen();
@@ -285,7 +287,6 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                         margin={'auto'}
                                         maxWidth={'none'}
                                         backgroundColor={'transparent'}
-                                        border={'1px solid red'}
                                         boxShadow={'none'}
                                         width={'fit-content'}
                                         onClick={onClose}
@@ -1978,7 +1979,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                 );
             case teamPageTabs.analysis:
                 return (
-                    <Box>
+                    <Flex flexDirection={'column'} rowGap={'15px'}>
                         <MatchLineGraphs
                             teamNumbers={[teamNumberParam]}
                             multiTeamMatchForms={{
@@ -1988,6 +1989,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                         <AutoPaths
                             teamNumbers={[teamNumberParam]}
                             autoPaths={{ [teamNumberParam]: teamEventData?.autoPaths }}
+                            showTeamNumber={false}
                         />
                         <TeamStatsList
                             teamNumbers={[teamNumberParam]}
@@ -1995,8 +1997,9 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                             multiTeamMatchForms={{
                                 [teamNumberParam]: oneValidMatchForms
                             }}
+                            showTeamNumber={false}
                         />
-                    </Box>
+                    </Flex>
                 );
             case teamPageTabs.other:
                 return (

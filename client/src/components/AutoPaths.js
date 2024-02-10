@@ -24,7 +24,7 @@ let notePositions = [
 let imageWidth = 503;
 let imageHeight = 436;
 
-function AutoPaths({ teamNumbers, autoPaths }) {
+function AutoPaths({ teamNumbers, autoPaths, showTeamNumber = true }) {
     const [imagesLoaded, setImagesLoaded] = useState(
         Object.fromEntries(teamNumbers.map((teamNumber) => [teamNumber, false]))
     );
@@ -83,12 +83,12 @@ function AutoPaths({ teamNumbers, autoPaths }) {
         };
     }, [getImageVariables]);
 
-    function getPathPieceValue(pathPiece, index) {
+    function getPathPieceValue(pathPiece) {
         if (pathPiece.score + pathPiece.miss === 0) {
-            return 'Hold';
+            return `Hold`;
         } else {
             let label = pathPiece.label.length > 5 ? `${pathPiece.label.slice(0, 4)}.` : pathPiece.label;
-            return `(${index}) ${pathPiece.score}/${pathPiece.score + pathPiece.miss}\n${capitalizeFirstLetter(label)}`;
+            return `${pathPiece.score}/${pathPiece.score + pathPiece.miss}\n${capitalizeFirstLetter(label)}`;
         }
     }
 
@@ -128,9 +128,11 @@ function AutoPaths({ teamNumbers, autoPaths }) {
                 >
                     {autoPaths[teamNumber] && autoPaths[teamNumber].length > 0 ? (
                         <Box>
-                            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                {teamNumber}
-                            </Text>
+                            {showTeamNumber && (
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                    {teamNumber}
+                                </Text>
+                            )}
                             <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'start'}>
                                 Ran {autoPaths[teamNumber][pathsVisible[teamNumber]].runs} time(s)
                             </Text>
@@ -184,7 +186,7 @@ function AutoPaths({ teamNumbers, autoPaths }) {
                                                 width={`${55 * dimensionRatios.width}px`}
                                                 height={`${55 * dimensionRatios.height}px`}
                                                 backgroundColor={
-                                                    Object.keys(autoPath.path).length > 0
+                                                    Object.keys(autoPath.path).length > 1
                                                         ? perc2color(0)
                                                         : perc2color(1)
                                                 }
@@ -196,10 +198,24 @@ function AutoPaths({ teamNumbers, autoPaths }) {
                                                 borderRadius={'5px'}
                                                 whiteSpace={'pre-line'}
                                                 fontSize={{ base: 'xs', md: 'sm' }}
+                                                lineHeight={'12px'}
                                             >
-                                                {autoPath.path[1]?.piece !== '0'
-                                                    ? '(1)\nNoPre'
-                                                    : getPathPieceValue(autoPath.path[1], 1)}
+                                                <Text
+                                                    lineHeight={'normal'}
+                                                    position={'absolute'}
+                                                    top={'0px'}
+                                                    left={'-8px'}
+                                                    backgroundColor={'white'}
+                                                    borderRadius={'2px'}
+                                                    padding={'0px 2px'}
+                                                >
+                                                    {'1'}
+                                                </Text>
+                                                <Text>
+                                                    {autoPath.path[1]?.piece !== '0'
+                                                        ? 'NoPre'
+                                                        : getPathPieceValue(autoPath.path[1])}
+                                                </Text>
                                             </Flex>
                                             {convertPathToArray(autoPath.path).map((pathPiece, pathPieceIndex) => (
                                                 <Flex
@@ -225,8 +241,20 @@ function AutoPaths({ teamNumbers, autoPaths }) {
                                                     borderRadius={'5px'}
                                                     whiteSpace={'pre-line'}
                                                     fontSize={{ base: 'xs', md: 'sm' }}
+                                                    lineHeight={'14px'}
                                                 >
-                                                    {getPathPieceValue(pathPiece, pathPieceIndex + 2)}
+                                                    <Text
+                                                        lineHeight={'normal'}
+                                                        position={'absolute'}
+                                                        top={'0px'}
+                                                        left={'-8px'}
+                                                        backgroundColor={'white'}
+                                                        borderRadius={'2px'}
+                                                        padding={'0px 2px'}
+                                                    >
+                                                        {`${pathPieceIndex + 2}`}
+                                                    </Text>
+                                                    {getPathPieceValue(pathPiece)}
                                                 </Flex>
                                             ))}
                                         </React.Fragment>

@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useState } from 'react';
-import { leafGet, roundToWhole, sortMatches } from '../util/helperFunctions';
+import { leafGet, roundToTenth, roundToWhole, sortMatches } from '../util/helperFunctions';
 import { climbFields, matchFormStatus } from '../util/helperConstants';
-import { Box, Center, Flex, Grid, GridItem, Icon, Spinner, Text } from '@chakra-ui/react';
+import { Box, Button, Center, Flex, Grid, GridItem, Icon, Spinner, Text } from '@chakra-ui/react';
 import { FaCircleArrowDown, FaCircleArrowRight, FaCircleArrowUp } from 'react-icons/fa6';
 
 const fields = [
@@ -98,8 +98,11 @@ const fields = [
     }
 ];
 
-function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms }) {
+function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms, showTeamNumber = true }) {
     const [matchForms, setMatchForms] = useState(null);
+    const [lastFourMatchesVisible, setlastFourMatchesVisible] = useState(
+        Object.fromEntries(teamNumbers.map((teamNumber) => [teamNumber, false]))
+    );
 
     useLayoutEffect(() => {
         let newMatchForms = {};
@@ -121,7 +124,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
     function getAverageMaxComponent(field, teamEventData) {
         return (
             <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                Avg: {leafGet(teamEventData, `${field.field}.avg`)}{' '}
+                Avg: {roundToTenth(leafGet(teamEventData, `${field.field}.avg`))}{' '}
                 <Text fontSize={'80%'} fontWeight={'semibold'} textAlign={'center'} as={'span'}>
                     Max: {leafGet(teamEventData, `${field.field}.max`)}
                 </Text>
@@ -304,9 +307,9 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                 prevFourTotal /= prevFourPlayedDefense;
                 lastFourTotal /= lastFourPlayedDefense;
                 return (
-                    <Flex>
+                    <Flex columnGap={'10px'}>
                         <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                            Avg: {lastFourTotal}{' '}
+                            Avg: {roundToTenth(lastFourTotal)}{' '}
                             <Text fontSize={'80%'} fontWeight={'semibold'} textAlign={'center'} as={'span'}>
                                 Max: {lastFourMax}
                             </Text>
@@ -314,11 +317,11 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                         {prevFourPlayedDefense > 0 && field.field !== 'defenseAllocation' && (
                             <Center>
                                 {lastFourTotal >= prevFourTotal * 1.25 ? (
-                                    <Icon as={FaCircleArrowUp} color={'green'} />
+                                    <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                                 ) : lastFourTotal <= prevFourTotal * 0.75 ? (
-                                    <Icon as={FaCircleArrowDown} color={'red'} />
+                                    <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
                                 ) : (
-                                    <Icon as={FaCircleArrowRight} color={'gray'} />
+                                    <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                                 )}
                             </Center>
                         )}
@@ -351,17 +354,17 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                         : roundToWhole((prevFourSuccess / (prevFourSuccess + prevFourFail)) * 100);
                 lastFourPercentage = roundToWhole((lastFourSuccess / (lastFourSuccess + lastFourFail)) * 100);
                 return (
-                    <Flex>
+                    <Flex columnGap={'10px'}>
                         <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
                             {lastFourPercentage}%
                         </Text>
                         <Center>
                             {lastFourPercentage >= prevFourPercentage * 1.25 ? (
-                                <Icon as={FaCircleArrowUp} color={'green'} />
+                                <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                             ) : lastFourPercentage <= prevFourPercentage * 0.75 ? (
-                                <Icon as={FaCircleArrowDown} color={'red'} />
+                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
                             ) : (
-                                <Icon as={FaCircleArrowRight} color={'gray'} />
+                                <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                             )}
                         </Center>
                     </Flex>
@@ -416,9 +419,16 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                 }
             case 'climb.harmony':
                 let lastFourSuccessfulClimbs = 0;
+                let prevFourSuccessfulClimbs = 0;
                 for (let i = 0; i < matchForms.length; i++) {
                     if (matchForms[i].standStatus === matchFormStatus.noShow) {
                         continue;
+                    }
+                    if (i < lastFourMatchIndex) {
+                        if (matchForms[i].climb.harmony !== null) {
+                            prevFourTotal += matchForms[i].climb.harmony;
+                            prevFourSuccessfulClimbs += 1;
+                        }
                     }
                     if (i >= lastFourMatchIndex || matchForms.length === 1) {
                         if (matchForms[i].climb.harmony !== null) {
@@ -432,14 +442,26 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                 if (lastFourSuccessfulClimbs === 0) {
                     return getNAComponent();
                 }
+                prevFourTotal = prevFourSuccessfulClimbs === 0 ? 0 : prevFourTotal / prevFourSuccessfulClimbs;
                 lastFourTotal /= lastFourSuccessfulClimbs;
                 return (
-                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                        Avg: {lastFourTotal}{' '}
-                        <Text fontSize={'80%'} fontWeight={'semibold'} textAlign={'center'} as={'span'}>
-                            Max: {lastFourMax}
+                    <Flex columnGap={'10px'}>
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            Avg: {roundToTenth(lastFourTotal)}{' '}
+                            <Text fontSize={'80%'} fontWeight={'semibold'} textAlign={'center'} as={'span'}>
+                                Max: {lastFourMax}
+                            </Text>
                         </Text>
-                    </Text>
+                        <Center>
+                            {lastFourTotal > prevFourTotal * 1.25 ? (
+                                <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
+                            ) : lastFourTotal < prevFourTotal * 0.75 ? (
+                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
+                            ) : (
+                                <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
+                            )}
+                        </Center>
+                    </Flex>
                 );
             case 'highNotePercentage':
                 let prevFourScore = 0;
@@ -468,17 +490,17 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                         : roundToWhole((prevFourSuccess / (prevFourSuccess + prevFourFail)) * 100);
                 lastFourPercentage = roundToWhole((lastFourScore / (lastFourScore + lastFourMiss)) * 100);
                 return (
-                    <Flex>
+                    <Flex columnGap={'10px'}>
                         <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
                             {lastFourPercentage}%
                         </Text>
                         <Center>
                             {lastFourPercentage >= prevFourPercentage * 1.25 ? (
-                                <Icon as={FaCircleArrowUp} color={'green'} />
+                                <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                             ) : lastFourPercentage <= prevFourPercentage * 0.75 ? (
-                                <Icon as={FaCircleArrowDown} color={'red'} />
+                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
                             ) : (
-                                <Icon as={FaCircleArrowRight} color={'gray'} />
+                                <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                             )}
                         </Center>
                     </Flex>
@@ -512,14 +534,28 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                     if (matchForms[i].standStatus === matchFormStatus.noShow) {
                         value = 1;
                     }
+                    if (i < lastFourMatchIndex) {
+                        prevFourTotal += value;
+                    }
                     if (i >= lastFourMatchIndex || matchForms.length === 1) {
                         lastFourTotal += value;
                     }
                 }
                 return (
-                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                        {lastFourTotal}
-                    </Text>
+                    <Flex columnGap={'10px'}>
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            {lastFourTotal}
+                        </Text>
+                        <Center>
+                            {lastFourTotal > prevFourTotal * 1.25 ? (
+                                <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
+                            ) : lastFourTotal < prevFourTotal * 0.75 ? (
+                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
+                            ) : (
+                                <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
+                            )}
+                        </Center>
+                    </Flex>
                 );
             case 'standForms':
             case 'superForms':
@@ -537,37 +573,37 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
         let values = getL4MValues(field, matchForms);
         if (!field.simple) {
             return (
-                <Flex>
+                <Flex columnGap={'10px'}>
                     <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                        Avg: {values.lastFourTotal}{' '}
+                        Avg: {roundToTenth(values.lastFourTotal)}{' '}
                         <Text fontSize={'80%'} fontWeight={'semibold'} textAlign={'center'} as={'span'}>
                             Max: {values.lastFourMax}
                         </Text>
                     </Text>
                     <Center>
                         {values.lastFourTotal > values.prevFourTotal * 1.25 ? (
-                            <Icon as={FaCircleArrowUp} color={'green'} />
+                            <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                         ) : values.lastFourTotal < values.prevFourTotal * 0.75 ? (
-                            <Icon as={FaCircleArrowDown} color={'red'} />
+                            <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
                         ) : (
-                            <Icon as={FaCircleArrowRight} color={'gray'} />
+                            <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                         )}
                     </Center>
                 </Flex>
             );
         } else {
             return (
-                <Flex>
+                <Flex columnGap={'10px'}>
                     <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
                         {values.lastFourTotal}
                     </Text>
                     <Center>
                         {values.lastFourTotal > values.prevFourTotal * 1.25 ? (
-                            <Icon as={FaCircleArrowUp} color={'green'} />
+                            <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                         ) : values.lastFourTotal < values.prevFourTotal * 0.75 ? (
-                            <Icon as={FaCircleArrowDown} color={'red'} />
+                            <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
                         ) : (
-                            <Icon as={FaCircleArrowRight} color={'gray'} />
+                            <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                         )}
                     </Center>
                 </Flex>
@@ -605,121 +641,157 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms 
                     key={teamNumber}
                     justifyContent={'center'}
                     width={{ base: '90%', lg: `calc(90% / ${Math.min(teamNumbers.length, 3)})` }}
-                    height={{ base: '50vh', lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2})` }}
+                    height={{ base: '60vh', lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2})` }}
                 >
                     {multiTeamEventsDatas[teamNumber] && matchForms[teamNumber].length > 0 ? (
-                        <Box
-                            height={{ base: '50vh', lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2})` }}
-                            overflowY={'auto'}
-                        >
-                            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                {teamNumber}
-                            </Text>
-                            <Grid templateColumns={'2fr 5fr 5fr'}>
-                                {fields.map((mainField, index) => (
-                                    <React.Fragment key={mainField.label}>
-                                        <GridItem
-                                            colSpan={3}
-                                            backgroundColor={'gray.300'}
-                                            padding={'5px 0px'}
-                                            borderBottom={'1px solid black'}
-                                            position={'sticky'}
-                                            top={0}
-                                            zIndex={index + 1}
-                                        >
-                                            <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                                {mainField.label}
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem
-                                            display={'flex'}
-                                            justifyContent={'center'}
-                                            alignItems={'center'}
-                                            backgroundColor={'gray.300'}
-                                            borderBottom={'1px solid black'}
-                                            borderRight={'1px solid black'}
-                                            padding={'5px 5px'}
-                                            position={'sticky'}
-                                            top={'38px'}
-                                            zIndex={index + 1}
-                                        >
-                                            <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                                                Field
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem
-                                            display={'flex'}
-                                            justifyContent={'center'}
-                                            alignItems={'center'}
-                                            backgroundColor={'gray.300'}
-                                            borderBottom={'1px solid black'}
-                                            borderRight={'1px solid black'}
-                                            position={'sticky'}
-                                            top={'38px'}
-                                            zIndex={index + 1}
-                                        >
-                                            <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                                                Event
-                                            </Text>
-                                        </GridItem>
-                                        <GridItem
-                                            display={'flex'}
-                                            justifyContent={'center'}
-                                            alignItems={'center'}
-                                            backgroundColor={'gray.300'}
-                                            borderBottom={'1px solid black'}
-                                            position={'sticky'}
-                                            top={'38px'}
-                                            zIndex={index + 1}
-                                        >
-                                            <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                                                Last{' '}
-                                                {matchForms[teamNumber].length === 1
-                                                    ? 1
-                                                    : matchForms[teamNumber].length -
-                                                      getLastFourMatchIndex(matchForms[teamNumber])}{' '}
-                                                Matches
-                                            </Text>
-                                        </GridItem>
-                                        {mainField.fields.map((subField) => (
-                                            <React.Fragment key={mainField.label + subField.label}>
-                                                <GridItem
-                                                    display={'flex'}
-                                                    justifyContent={'center'}
-                                                    alignItems={'center'}
-                                                    backgroundColor={'gray.100'}
-                                                    borderBottom={'1px solid black'}
-                                                    borderRight={'1px solid black'}
-                                                    padding={'5px 5px'}
-                                                >
-                                                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                                                        {subField.label}
-                                                    </Text>
-                                                </GridItem>
-                                                <GridItem
-                                                    display={'flex'}
-                                                    justifyContent={'center'}
-                                                    alignItems={'center'}
-                                                    backgroundColor={'gray.200'}
-                                                    borderBottom={'1px solid black'}
-                                                    borderRight={'1px solid black'}
-                                                >
-                                                    {getOverallComponent(subField, multiTeamEventsDatas[teamNumber])}
-                                                </GridItem>
-                                                <GridItem
-                                                    display={'flex'}
-                                                    justifyContent={'center'}
-                                                    alignItems={'center'}
-                                                    backgroundColor={'gray.200'}
-                                                    borderBottom={'1px solid black'}
-                                                >
-                                                    {getL4MCompoenent(subField, matchForms[teamNumber])}
-                                                </GridItem>
-                                            </React.Fragment>
-                                        ))}
-                                    </React.Fragment>
-                                ))}
-                            </Grid>
+                        <Box width={{ base: '100%', lg: '50%' }}>
+                            {showTeamNumber && (
+                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                    {teamNumber}
+                                </Text>
+                            )}
+                            <Flex justifyContent={'center'} columnGap={'25px'} marginBottom={'10px'}>
+                                <Button
+                                    width={'125px'}
+                                    colorScheme={!lastFourMatchesVisible[teamNumber] ? 'green' : 'gray'}
+                                    onClick={() =>
+                                        setlastFourMatchesVisible({
+                                            ...lastFourMatchesVisible,
+                                            [teamNumber]: false
+                                        })
+                                    }
+                                >
+                                    Event
+                                </Button>
+                                <Button
+                                    width={'125px'}
+                                    colorScheme={lastFourMatchesVisible[teamNumber] ? 'green' : 'gray'}
+                                    onClick={() =>
+                                        setlastFourMatchesVisible({ ...lastFourMatchesVisible, [teamNumber]: true })
+                                    }
+                                >
+                                    Most Recent
+                                </Button>
+                            </Flex>
+                            <Box
+                                height={{
+                                    base: `calc(60vh - ${50 + (showTeamNumber ? 27 : 0)}px)`,
+                                    lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2} - ${
+                                        50 + (showTeamNumber ? 27 : 0)
+                                    }px)`
+                                }}
+                                overflowY={'auto'}
+                            >
+                                <Grid templateColumns={'2fr 5fr'}>
+                                    {fields.map((mainField, index) => (
+                                        <React.Fragment key={mainField.label}>
+                                            <GridItem
+                                                colSpan={2}
+                                                backgroundColor={'gray.400'}
+                                                padding={'4px 0px'}
+                                                borderBottom={'1px solid black'}
+                                                position={'sticky'}
+                                                top={0}
+                                                zIndex={index + 1}
+                                            >
+                                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                                                    {mainField.label}
+                                                </Text>
+                                            </GridItem>
+                                            {index === 0 && (
+                                                <React.Fragment>
+                                                    <GridItem
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        backgroundColor={'gray.400'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        padding={'4px 0px'}
+                                                    >
+                                                        <Text
+                                                            fontSize={'md'}
+                                                            fontWeight={'semibold'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            Field
+                                                        </Text>
+                                                    </GridItem>
+                                                    <GridItem
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        backgroundColor={'gray.400'}
+                                                        borderBottom={'1px solid black'}
+                                                    >
+                                                        <Text
+                                                            fontSize={'md'}
+                                                            fontWeight={'semibold'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {lastFourMatchesVisible[teamNumber]
+                                                                ? `Last ${
+                                                                      matchForms[teamNumber].length === 1
+                                                                          ? 1
+                                                                          : matchForms[teamNumber].length -
+                                                                            getLastFourMatchIndex(
+                                                                                matchForms[teamNumber]
+                                                                            )
+                                                                  } Match(s)`
+                                                                : 'Event'}
+                                                        </Text>
+                                                    </GridItem>
+                                                </React.Fragment>
+                                            )}
+                                            {mainField.fields.map((subField) => (
+                                                <React.Fragment key={mainField.label + subField.label}>
+                                                    <GridItem
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        backgroundColor={'gray.200'}
+                                                        borderBottom={'1px solid black'}
+                                                        borderRight={'1px solid black'}
+                                                        padding={'10px 5px'}
+                                                    >
+                                                        <Text
+                                                            fontSize={'md'}
+                                                            fontWeight={'semibold'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {subField.label}
+                                                        </Text>
+                                                    </GridItem>
+                                                    {!lastFourMatchesVisible[teamNumber] ? (
+                                                        <GridItem
+                                                            display={'flex'}
+                                                            justifyContent={'center'}
+                                                            alignItems={'center'}
+                                                            backgroundColor={'gray.200'}
+                                                            borderBottom={'1px solid black'}
+                                                        >
+                                                            {getOverallComponent(
+                                                                subField,
+                                                                multiTeamEventsDatas[teamNumber]
+                                                            )}
+                                                        </GridItem>
+                                                    ) : (
+                                                        <GridItem
+                                                            display={'flex'}
+                                                            justifyContent={'center'}
+                                                            alignItems={'center'}
+                                                            backgroundColor={'gray.200'}
+                                                            borderBottom={'1px solid black'}
+                                                        >
+                                                            {getL4MCompoenent(subField, matchForms[teamNumber])}
+                                                        </GridItem>
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                        </React.Fragment>
+                                    ))}
+                                </Grid>
+                            </Box>
                         </Box>
                     ) : (
                         <Box key={teamNumber} fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
