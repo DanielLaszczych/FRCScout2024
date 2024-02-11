@@ -12,6 +12,7 @@ import {
     Flex,
     Grid,
     GridItem,
+    IconButton,
     Menu,
     MenuButton,
     MenuItem,
@@ -34,6 +35,7 @@ import { convertMatchKeyToString, deepEqual } from '../util/helperFunctions';
 import { matchFormStatus, teamPageTabs } from '../util/helperConstants';
 import { GlobalContext } from '../context/globalState';
 import QRCode from 'react-qr-code';
+import { GrPowerReset } from 'react-icons/gr';
 
 function SuperForm() {
     const location = useLocation();
@@ -642,6 +644,7 @@ function SuperForm() {
                     width={'fit-content'}
                     rowGap={'15px'}
                     marginBottom={'20px'}
+                    position={'relative'}
                 >
                     <Button
                         colorScheme={'green'}
@@ -685,6 +688,21 @@ function SuperForm() {
                     >
                         High Note Miss: {getAmpPlayerScore().miss}
                     </Button>
+                    <IconButton
+                        icon={<GrPowerReset />}
+                        width={'fit-content'}
+                        position={'absolute'}
+                        top={'50%'}
+                        right={'0px'}
+                        transform={'translate(150%, -50%)'}
+                        onClick={() => {
+                            let ampPlayerStation = stations.find((station) => superFormData[station].ampPlayer);
+                            let newData = { ...superFormData };
+                            newData[ampPlayerStation].ampPlayerGP.highNoteScore = 0;
+                            newData[ampPlayerStation].ampPlayerGP.highNoteMiss = 0;
+                            setSuperFormData(newData);
+                        }}
+                    />
                 </Flex>
             )}
             <Center>

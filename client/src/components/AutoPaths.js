@@ -24,7 +24,7 @@ let notePositions = [
 let imageWidth = 503;
 let imageHeight = 436;
 
-function AutoPaths({ teamNumbers, autoPaths, showTeamNumber = true }) {
+function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
     const [imagesLoaded, setImagesLoaded] = useState(
         Object.fromEntries(teamNumbers.map((teamNumber) => [teamNumber, false]))
     );
@@ -120,7 +120,7 @@ function AutoPaths({ teamNumbers, autoPaths, showTeamNumber = true }) {
             rowGap={'20px'}
             justifyContent={'center'}
         >
-            {teamNumbers.map((teamNumber) => (
+            {teamNumbers.map((teamNumber, index) => (
                 <Flex
                     key={teamNumber}
                     justifyContent={'center'}
@@ -128,9 +128,14 @@ function AutoPaths({ teamNumbers, autoPaths, showTeamNumber = true }) {
                 >
                     {autoPaths[teamNumber] && autoPaths[teamNumber].length > 0 ? (
                         <Box>
-                            {showTeamNumber && (
-                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                    {teamNumber}
+                            {!onTeamPage && (
+                                <Text
+                                    fontSize={'xl'}
+                                    fontWeight={'semibold'}
+                                    textAlign={'center'}
+                                    color={index > 2 ? 'blue.500' : 'red.500'}
+                                >
+                                    {index > 2 ? `Blue ${index - 2}: ${teamNumber}` : `Red ${index + 1}: ${teamNumber}`}
                                 </Text>
                             )}
                             <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'start'}>
@@ -287,8 +292,20 @@ function AutoPaths({ teamNumbers, autoPaths, showTeamNumber = true }) {
                             </Flex>
                         </Box>
                     ) : (
-                        <Box key={teamNumber} fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
-                            No auto data
+                        <Box key={teamNumber}>
+                            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                                No auto data
+                            </Text>
+                            {!onTeamPage && (
+                                <Text
+                                    fontSize={'xl'}
+                                    fontWeight={'semibold'}
+                                    textAlign={'center'}
+                                    color={index > 2 ? 'blue.500' : 'red.500'}
+                                >
+                                    {index > 2 ? `Blue ${index - 2}: ${teamNumber}` : `Red ${index + 1}: ${teamNumber}`}
+                                </Text>
+                            )}
                         </Box>
                     )}
                 </Flex>

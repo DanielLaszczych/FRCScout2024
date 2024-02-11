@@ -317,7 +317,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     outline={'1px solid black'}
                                 >
                                     <Flex
-                                        flex={1}
+                                        flex={0.75}
                                         flexDirection={'column'}
                                         minWidth={'80px'}
                                         borderRight={'1px solid black'}
@@ -349,7 +349,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                         flex={1}
                                         flexDirection={'column'}
                                         borderRight={'1px solid black'}
-                                        minWidth={'220px'}
+                                        minWidth={'165px'}
                                         borderBottom={'1px solid black'}
                                     >
                                         <Text
@@ -367,7 +367,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             backgroundColor={'gray.200'}
                                         >
                                             <Text
-                                                flex={1 / 4}
+                                                flex={1 / 3}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -375,7 +375,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 Avg
                                             </Text>
                                             <Text
-                                                flex={1 / 4}
+                                                flex={1 / 3}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -383,25 +383,17 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 Max
                                             </Text>
                                             <Text
-                                                flex={1 / 4}
+                                                flex={1 / 3}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                -
-                                            </Text>
-                                            <Text
-                                                flex={1 / 4}
-                                                fontSize={'lg'}
-                                                fontWeight={'medium'}
-                                                textAlign={'center'}
-                                            >
-                                                -
+                                                GPCS
                                             </Text>
                                         </Flex>
                                         <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
                                             <Text
-                                                flex={1 / 4}
+                                                flex={1 / 3}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -409,7 +401,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 {roundToTenth(teamEventData.offensivePoints.avg)}
                                             </Text>
                                             <Text
-                                                flex={1 / 4}
+                                                flex={1 / 3}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -417,27 +409,24 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 {teamEventData.offensivePoints.max}
                                             </Text>
                                             <Text
-                                                flex={1 / 4}
+                                                flex={1 / 3}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                -
-                                            </Text>
-                                            <Text
-                                                flex={1 / 4}
-                                                fontSize={'lg'}
-                                                fontWeight={'medium'}
-                                                textAlign={'center'}
-                                            >
-                                                -
+                                                {roundToTenth(
+                                                    teamEventData.autoGP.ampScore.avg +
+                                                        teamEventData.autoGP.speakerScore.avg +
+                                                        teamEventData.teleopGP.ampScore.avg +
+                                                        teamEventData.teleopGP.speakerScore.avg
+                                                )}
                                             </Text>
                                         </Flex>
                                     </Flex>
                                     <Flex
                                         flexDirection={'column'}
                                         flex={1}
-                                        minWidth={'150px'}
+                                        minWidth={'165px'}
                                         borderRight={'1px solid black'}
                                         borderBottom={'1px solid black'}
                                     >
@@ -456,7 +445,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             backgroundColor={'gray.200'}
                                         >
                                             <Text
-                                                flex={1 / 2}
+                                                flex={1 / 3}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -464,17 +453,25 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 Avg
                                             </Text>
                                             <Text
-                                                flex={1 / 2}
+                                                flex={1 / 3}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
                                                 Max
                                             </Text>
+                                            <Text
+                                                flex={1 / 3}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                GPCS
+                                            </Text>
                                         </Flex>
                                         <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
                                             <Text
-                                                flex={1 / 2}
+                                                flex={1 / 3}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -482,19 +479,30 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 {roundToTenth(teamEventData.autoPoints.avg)}
                                             </Text>
                                             <Text
-                                                flex={1 / 2}
+                                                flex={1 / 3}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
                                                 {teamEventData.autoPoints.max}
                                             </Text>
+                                            <Text
+                                                flex={1 / 3}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {roundToTenth(
+                                                    teamEventData.autoGP.ampScore.avg +
+                                                        teamEventData.autoGP.speakerScore.avg
+                                                )}
+                                            </Text>
                                         </Flex>
                                     </Flex>
                                     <Flex
                                         flexDirection={'column'}
                                         flex={1}
-                                        minWidth={'150px'}
+                                        minWidth={'220px'}
                                         borderRight={'1px solid black'}
                                         borderBottom={'1px solid black'}
                                     >
@@ -513,7 +521,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             backgroundColor={'gray.200'}
                                         >
                                             <Text
-                                                flex={1 / 2}
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -521,17 +529,33 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 Avg
                                             </Text>
                                             <Text
-                                                flex={1 / 2}
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
                                                 Max
                                             </Text>
+                                            <Text
+                                                flex={1 / 4}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                Amp
+                                            </Text>
+                                            <Text
+                                                flex={1 / 4}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                Spea.
+                                            </Text>
                                         </Flex>
                                         <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
                                             <Text
-                                                flex={1 / 2}
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -539,19 +563,35 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 {roundToTenth(teamEventData.teleopPoints.avg)}
                                             </Text>
                                             <Text
-                                                flex={1 / 2}
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
                                                 {teamEventData.teleopPoints.max}
                                             </Text>
+                                            <Text
+                                                flex={1 / 4}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {roundToTenth(teamEventData.teleopGP.ampScore.avg)}
+                                            </Text>
+                                            <Text
+                                                flex={1 / 4}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {roundToTenth(teamEventData.teleopGP.speakerScore.avg)}
+                                            </Text>
                                         </Flex>
                                     </Flex>
                                     <Flex
                                         flexDirection={'column'}
                                         flex={1}
-                                        minWidth={'190px'}
+                                        minWidth={'240px'}
                                         borderRight={'1px solid black'}
                                         borderBottom={'1px solid black'}
                                     >
@@ -570,7 +610,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             backgroundColor={'gray.200'}
                                         >
                                             <Text
-                                                flex={1 / 3}
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -578,7 +618,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 Avg
                                             </Text>
                                             <Text
-                                                flex={1 / 3}
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -586,17 +626,25 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 Max
                                             </Text>
                                             <Text
-                                                flex={1 / 3}
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
                                                 Hangs
                                             </Text>
+                                            <Text
+                                                flex={1 / 4}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                Trap
+                                            </Text>
                                         </Flex>
                                         <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
                                             <Text
-                                                flex={1 / 3}
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -604,7 +652,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 {roundToTenth(teamEventData.stagePoints.avg)}
                                             </Text>
                                             <Text
-                                                flex={1 / 3}
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
@@ -612,72 +660,22 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 {teamEventData.stagePoints.max}
                                             </Text>
                                             <Text
-                                                flex={1 / 3}
+                                                flex={1 / 4}
                                                 fontSize={'lg'}
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
                                                 {teamEventData.climbSuccessFraction || 'N/A'}
                                             </Text>
+                                            <Text
+                                                flex={1 / 4}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                            >
+                                                {roundToTenth(teamEventData.teleopGP.trap.avg)}
+                                            </Text>
                                         </Flex>
-                                    </Flex>
-                                    <Flex
-                                        flex={1}
-                                        flexDirection={'column'}
-                                        minWidth={'65px'}
-                                        borderRight={'1px solid black'}
-                                        borderBottom={'1px solid black'}
-                                    >
-                                        <Flex
-                                            alignItems={'center'}
-                                            justifyContent={'center'}
-                                            fontSize={'lg'}
-                                            fontWeight={'medium'}
-                                            textAlign={'center'}
-                                            borderBottom={'1px solid black'}
-                                            height={'54px'}
-                                            backgroundColor={'gray.200'}
-                                        >
-                                            Pts
-                                        </Flex>
-                                        <Text
-                                            fontSize={'lg'}
-                                            fontWeight={'medium'}
-                                            textAlign={'center'}
-                                            padding={'2px 0px'}
-                                            backgroundColor={'red.200'}
-                                        >
-                                            -
-                                        </Text>
-                                    </Flex>
-                                    <Flex
-                                        flex={1}
-                                        flexDirection={'column'}
-                                        minWidth={'85px'}
-                                        borderRight={'1px solid black'}
-                                        borderBottom={'1px solid black'}
-                                    >
-                                        <Flex
-                                            alignItems={'center'}
-                                            justifyContent={'center'}
-                                            fontSize={'lg'}
-                                            fontWeight={'medium'}
-                                            textAlign={'center'}
-                                            borderBottom={'1px solid black'}
-                                            height={'54px'}
-                                            backgroundColor={'gray.200'}
-                                        >
-                                            Max Pts
-                                        </Flex>
-                                        <Text
-                                            fontSize={'lg'}
-                                            fontWeight={'medium'}
-                                            textAlign={'center'}
-                                            padding={'2px 0px'}
-                                            backgroundColor={'red.200'}
-                                        >
-                                            -
-                                        </Text>
                                     </Flex>
                                 </Flex>
                             )}
@@ -2002,7 +2000,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                         />
                         <TeamStatsList
                             teamNumbers={[teamNumberParam]}
-                            multiTeamEventsDatas={{ [teamNumberParam]: teamEventData }}
+                            multiTeamEventsData={{ [teamNumberParam]: teamEventData }}
                             multiTeamMatchForms={{
                                 [teamNumberParam]: oneValidMatchForms
                             }}

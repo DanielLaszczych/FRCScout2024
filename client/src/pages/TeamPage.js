@@ -51,7 +51,10 @@ function TeamPage({ keyProp }) {
                 let events = storedTeamEvents.concat(allTeamEvents);
                 console.log(events);
                 setEvents(sortEvents(events));
-                if (events.length === 0) return;
+                if (events.length === 0) {
+                    setError('This team is not competing at any events');
+                    return;
+                }
                 let currentEvent = events.find((event) => event.currentEvent);
                 if (currentEvent) {
                     setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
@@ -124,20 +127,6 @@ function TeamPage({ keyProp }) {
                 width={{ base: '85%', md: '66%', lg: '50%' }}
             >
                 {error}
-            </Box>
-        );
-    }
-
-    if (events && events.length === 0) {
-        return (
-            <Box
-                fontSize={'lg'}
-                fontWeight={'semibold'}
-                textAlign={'center'}
-                margin={'0 auto'}
-                width={{ base: '85%', md: '66%', lg: '50%' }}
-            >
-                This team is not competing at any events
             </Box>
         );
     }

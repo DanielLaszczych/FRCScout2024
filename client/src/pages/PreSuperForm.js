@@ -1,5 +1,19 @@
 import { ChevronDownIcon } from '@chakra-ui/icons';
-import { Box, Button, Center, Flex, IconButton, Menu, MenuButton, MenuItem, MenuList, NumberInput, NumberInputField, Spinner, Text } from '@chakra-ui/react';
+import {
+    Box,
+    Button,
+    Center,
+    Flex,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuList,
+    NumberInput,
+    NumberInputField,
+    Spinner,
+    Text
+} from '@chakra-ui/react';
 import { React, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -125,7 +139,12 @@ function PreSuperForm() {
     }, [alliance, matchType, matchNumber, currentEvent, getMatchKey, enableManualMode]);
 
     function validSetup() {
-        return alliance !== '' && matchType !== '' && matchNumber !== '' && teamNumbers.filter((teamNumber) => teamNumber !== '').length === 3;
+        return (
+            alliance !== '' &&
+            matchType !== '' &&
+            matchNumber !== '' &&
+            teamNumbers.filter((teamNumber) => teamNumber !== '').length === 3
+        );
     }
 
     function doneFetching() {
@@ -137,7 +156,13 @@ function PreSuperForm() {
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box
+                textAlign={'center'}
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                margin={'0 auto'}
+                width={{ base: '85%', md: '66%', lg: '50%' }}
+            >
                 {error}
             </Box>
         );
@@ -160,14 +185,27 @@ function PreSuperForm() {
                 onClick={() => setManualMode(!manualMode)}
                 icon={enableManualMode() ? <MdOutlineWifiOff /> : <MdOutlineWifi />}
             />
-            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} margin={'0 auto'} marginBottom={'20px'} maxWidth={'calc(100% - 100px)'}>
+            <Text
+                fontSize={'xl'}
+                fontWeight={'semibold'}
+                textAlign={'center'}
+                margin={'0 auto'}
+                marginBottom={'20px'}
+                maxWidth={'calc(100% - 100px)'}
+            >
                 Competition: {currentEvent.name}
             </Text>
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'10px'}>
                 Alliance
             </Text>
             <Menu placement={'bottom'}>
-                <MenuButton display={'flex'} margin={'0 auto'} onClick={() => setFocusedAlliance(alliance)} as={Button} rightIcon={<ChevronDownIcon />}>
+                <MenuButton
+                    display={'flex'}
+                    margin={'0 auto'}
+                    onClick={() => setFocusedAlliance(alliance)}
+                    as={Button}
+                    rightIcon={<ChevronDownIcon />}
+                >
                     {alliance === '' ? 'Choose Alliance' : alliance.label}
                 </MenuButton>
                 <MenuList>
@@ -175,7 +213,12 @@ function PreSuperForm() {
                         <MenuItem
                             _focus={{ backgroundColor: 'none' }}
                             onMouseEnter={() => setFocusedAlliance(allianceItem)}
-                            backgroundColor={(alliance.value === allianceItem.value && focusedAlliance === '') || focusedAlliance.value === allianceItem.value ? 'gray.100' : 'none'}
+                            backgroundColor={
+                                (alliance.value === allianceItem.value && focusedAlliance === '') ||
+                                focusedAlliance.value === allianceItem.value
+                                    ? 'gray.100'
+                                    : 'none'
+                            }
                             maxW={'80vw'}
                             key={allianceItem.id}
                             display={'flex'}
@@ -191,7 +234,13 @@ function PreSuperForm() {
                 Match Number
             </Text>
             <Menu placement={'bottom'}>
-                <MenuButton display={'flex'} margin={'0 auto'} onClick={() => setFocusedMatchType(matchType)} as={Button} rightIcon={<ChevronDownIcon />}>
+                <MenuButton
+                    display={'flex'}
+                    margin={'0 auto'}
+                    onClick={() => setFocusedMatchType(matchType)}
+                    as={Button}
+                    rightIcon={<ChevronDownIcon />}
+                >
                     {matchType === '' ? 'Choose Match Type' : matchType.label}
                 </MenuButton>
                 <MenuList>
@@ -199,7 +248,12 @@ function PreSuperForm() {
                         <MenuItem
                             _focus={{ backgroundColor: 'none' }}
                             onMouseEnter={() => setFocusedMatchType(matchTypeItem)}
-                            backgroundColor={(matchType.value === matchTypeItem.value && focusedMatchType === '') || focusedMatchType.value === matchTypeItem.value ? 'gray.100' : 'none'}
+                            backgroundColor={
+                                (matchType.value === matchTypeItem.value && focusedMatchType === '') ||
+                                focusedMatchType.value === matchTypeItem.value
+                                    ? 'gray.100'
+                                    : 'none'
+                            }
                             maxW={'80vw'}
                             key={matchTypeItem.id}
                             display={'flex'}
@@ -234,6 +288,7 @@ function PreSuperForm() {
                                 event.target.blur();
                             }
                         }}
+                        padding={'0px'}
                         enterKeyHint='done'
                         textAlign={'center'}
                         placeholder='Enter Match #'
@@ -245,7 +300,13 @@ function PreSuperForm() {
                     Team Numbers{enableManualMode() ? '' : doneFetching() && teamNumberError === '' ? '' : ': '}
                 </Text>
                 {!enableManualMode() && teamNumberError !== '' && (
-                    <Text color={'red.500'} fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} maxWidth={'calc(100% - 124px)'}>
+                    <Text
+                        color={'red.500'}
+                        fontSize={'lg'}
+                        fontWeight={'semibold'}
+                        textAlign={'center'}
+                        maxWidth={'calc(100% - 124px)'}
+                    >
                         {teamNumberError}
                     </Text>
                 )}
@@ -260,7 +321,13 @@ function PreSuperForm() {
                           </Text>
                       ))
                     : teamNumbers.map((teamNumber, index) => (
-                          <Flex key={stations[index]} justifyContent={'center'} alignItems={'center'} rowGap={'5px'} columnGap={'10px'}>
+                          <Flex
+                              key={stations[index]}
+                              justifyContent={'center'}
+                              alignItems={'center'}
+                              rowGap={'5px'}
+                              columnGap={'10px'}
+                          >
                               <Text fontSize={'lg'} fontWeight={'semibold'}>
                                   Station {index + 1}:
                               </Text>
@@ -289,7 +356,6 @@ function PreSuperForm() {
                           </Flex>
                       ))}
             </Flex>
-
             <Button
                 isDisabled={!validSetup()}
                 display={'flex'}
@@ -298,7 +364,11 @@ function PreSuperForm() {
                 marginTop={'20px'}
                 onClick={() => {
                     localStorage.setItem('PreSuperFormData', JSON.stringify({ alliance, matchType, manualMode }));
-                    navigate(`/superForm/${currentEvent.key}/${getMatchKey()}/${alliance.value}/${teamNumbers[0]}/${teamNumbers[1]}/${teamNumbers[2]}`);
+                    navigate(
+                        `/superForm/${currentEvent.key}/${getMatchKey()}/${alliance.value}/${teamNumbers[0]}/${
+                            teamNumbers[1]
+                        }/${teamNumbers[2]}`
+                    );
                 }}
             >
                 Confirm

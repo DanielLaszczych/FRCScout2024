@@ -102,7 +102,7 @@ const fields = [
     }
 ];
 
-function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms, showTeamNumber = true }) {
+function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, onTeamPage = true }) {
     const [standForms, setStandForms] = useState(null);
     const [superForms, setSuperForms] = useState(null);
     const [lastFourMatchesVisible, setlastFourMatchesVisible] = useState(
@@ -361,7 +361,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                                 {lastFourTotal >= prevFourTotal * 1.25 ? (
                                     <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                                 ) : lastFourTotal <= prevFourTotal * 0.75 ? (
-                                    <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
+                                    <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'crimson'} />
                                 ) : (
                                     <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                                 )}
@@ -404,7 +404,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                             {lastFourPercentage >= prevFourPercentage * 1.25 ? (
                                 <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                             ) : lastFourPercentage <= prevFourPercentage * 0.75 ? (
-                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
+                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'crimson'} />
                             ) : (
                                 <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                             )}
@@ -515,7 +515,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                             {lastFourTotal > prevFourTotal * 1.25 ? (
                                 <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                             ) : lastFourTotal < prevFourTotal * 0.75 ? (
-                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
+                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'crimson'} />
                             ) : (
                                 <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                             )}
@@ -557,7 +557,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                             {lastFourPercentage >= prevFourPercentage * 1.25 ? (
                                 <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                             ) : lastFourPercentage <= prevFourPercentage * 0.75 ? (
-                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
+                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'crimson'} />
                             ) : (
                                 <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                             )}
@@ -609,7 +609,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                             {lastFourTotal > prevFourTotal * 1.25 ? (
                                 <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                             ) : lastFourTotal < prevFourTotal * 0.75 ? (
-                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
+                                <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'crimson'} />
                             ) : (
                                 <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                             )}
@@ -643,7 +643,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                         {values.lastFourTotal > values.prevFourTotal * 1.25 ? (
                             <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                         ) : values.lastFourTotal < values.prevFourTotal * 0.75 ? (
-                            <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
+                            <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'crimson'} />
                         ) : (
                             <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                         )}
@@ -660,7 +660,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                         {values.lastFourTotal > values.prevFourTotal * 1.25 ? (
                             <Icon as={FaCircleArrowUp} boxSize={'1.25rem'} color={'green'} />
                         ) : values.lastFourTotal < values.prevFourTotal * 0.75 ? (
-                            <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'red'} />
+                            <Icon as={FaCircleArrowDown} boxSize={'1.25rem'} color={'crimson'} />
                         ) : (
                             <Icon as={FaCircleArrowRight} boxSize={'1.25rem'} color={'gray'} />
                         )}
@@ -695,20 +695,25 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
             rowGap={'20px'}
             justifyContent={'center'}
         >
-            {teamNumbers.map((teamNumber) => (
+            {teamNumbers.map((teamNumber, index) => (
                 <Flex
                     key={teamNumber}
                     justifyContent={'center'}
                     width={{ base: '90%', lg: `calc(90% / ${Math.min(teamNumbers.length, 3)})` }}
-                    height={{ base: '60vh', lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2})` }}
+                    height={{ base: '60vh', lg: `calc(120vh / ${teamNumbers.length > 3 ? 3 : 2})` }}
                 >
-                    {multiTeamEventsDatas[teamNumber] &&
+                    {multiTeamEventsData[teamNumber] &&
                     standForms[teamNumber].length > 0 &&
                     superForms[teamNumber].length > 0 ? (
-                        <Box width={{ base: '100%', lg: '50%' }}>
-                            {showTeamNumber && (
-                                <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
-                                    {teamNumber}
+                        <Box width={{ base: '100%', lg: onTeamPage ? '50%' : '100%' }}>
+                            {!onTeamPage && (
+                                <Text
+                                    fontSize={'xl'}
+                                    fontWeight={'semibold'}
+                                    textAlign={'center'}
+                                    color={index > 2 ? 'blue.500' : 'red.500'}
+                                >
+                                    {index > 2 ? `Blue ${index - 2}: ${teamNumber}` : `Red ${index + 1}: ${teamNumber}`}
                                 </Text>
                             )}
                             <Flex justifyContent={'center'} columnGap={'25px'} marginBottom={'10px'}>
@@ -736,9 +741,9 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                             </Flex>
                             <Box
                                 height={{
-                                    base: `calc(60vh - ${50 + (showTeamNumber ? 27 : 0)}px)`,
-                                    lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2} - ${
-                                        50 + (showTeamNumber ? 27 : 0)
+                                    base: `calc(60vh - ${50 + (!onTeamPage ? 27 : 0)}px)`,
+                                    lg: `calc(120vh / ${teamNumbers.length > 3 ? 3 : 2} - ${
+                                        50 + (!onTeamPage ? 27 : 0)
                                     }px)`
                                 }}
                                 overflowY={'auto'}
@@ -831,7 +836,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                                                         >
                                                             {getOverallComponent(
                                                                 subField,
-                                                                multiTeamEventsDatas[teamNumber]
+                                                                multiTeamEventsData[teamNumber]
                                                             )}
                                                         </GridItem>
                                                     ) : (
@@ -857,8 +862,20 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                             </Box>
                         </Box>
                     ) : (
-                        <Box key={teamNumber} fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
-                            Need at least one stand and super form completed
+                        <Box key={teamNumber}>
+                            {!onTeamPage && (
+                                <Text
+                                    fontSize={'xl'}
+                                    fontWeight={'semibold'}
+                                    textAlign={'center'}
+                                    color={index > 2 ? 'blue.500' : 'red.500'}
+                                >
+                                    {index > 2 ? `Blue ${index - 2}: ${teamNumber}` : `Red ${index + 1}: ${teamNumber}`}
+                                </Text>
+                            )}
+                            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                                Need at least one stand and super form completed
+                            </Text>
                         </Box>
                     )}
                 </Flex>

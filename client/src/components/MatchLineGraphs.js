@@ -40,7 +40,7 @@ import { TbCards } from 'react-icons/tb';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Colors);
 
-function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
+function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [firstPreset, setFirstPreset] = useState(false);
     const [standForms, setStandForms] = useState(null);
@@ -224,6 +224,11 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
         getGraphWidth();
         window.addEventListener('resize', getGraphWidth);
 
+        // Stupid solution for scroll bar not being included in the initial width calculation
+        setTimeout(() => {
+            getGraphWidth();
+        }, 200);
+
         return () => window.removeEventListener('resize', getGraphWidth);
     }, [getGraphWidth]);
 
@@ -329,6 +334,14 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
         return datasets;
     }
 
+    function getSuggestedMax() {
+        let max = 0;
+        for (const teamNumber of teamNumbers) {
+            max = Math.max(max, Math.max(...[].concat(...getDatasets(teamNumber).map((dataset) => dataset.data))));
+        }
+        return max;
+    }
+
     function getNumberOfIcons(matchForm) {
         let icons = 0;
         for (const mainFieldKey in fields) {
@@ -353,8 +366,8 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
         if (formsToUse.length === 0) {
             return null;
         }
-        let firstPoint = (graphWidth - 33) / (formsToUse.length * 2) + 33 - iconSize;
-        let offset = (graphWidth - 33) / formsToUse.length;
+        let firstPoint = (graphWidth - 15) / (formsToUse.length * 2) + 15 - iconSize;
+        let offset = (graphWidth - 15) / formsToUse.length;
         let offsetAdjustment = 2;
         return (
             <React.Fragment>
@@ -486,7 +499,13 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
                     </DrawerBody>
                 </DrawerContent>
             </Drawer>
-            <IconButton icon={<AiFillFilter />} position={'absolute'} left={'25px'} top={'-75px'} onClick={onOpen}>
+            <IconButton
+                icon={<AiFillFilter />}
+                position={'absolute'}
+                left={'15px'}
+                top={onTeamPage ? '-75px' : '-125px'}
+                onClick={onOpen}
+            >
                 Open settings
             </IconButton>
             <Flex
@@ -497,18 +516,36 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
                 rowGap={'20px'}
                 justifyContent={'center'}
             >
-                {teamNumbers.map((teamNumber) => (
+                {teamNumbers.map((teamNumber, index) => (
                     <Flex
                         position={'relative'}
                         key={teamNumber}
                         justifyContent={'center'}
                         width={{ base: '90%', lg: `calc(90% / ${Math.min(teamNumbers.length, 3)})` }}
-                        height={{ base: '50vh', lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2})` }}
+                        height={
+                            multiTeamMatchForms[teamNumber].length === 0
+                                ? 'fit-content'
+                                : { base: '50vh', lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2})` }
+                        }
                         marginBottom={`${getMarginBottom(teamNumber)}px`}
                     >
                         {multiTeamMatchForms[teamNumber].length === 0 ? (
-                            <Box key={teamNumber} fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
-                                No match data
+                            <Box>
+                                {!onTeamPage && (
+                                    <Text
+                                        fontSize={'xl'}
+                                        fontWeight={'semibold'}
+                                        textAlign={'center'}
+                                        color={index > 2 ? 'blue.500' : 'red.500'}
+                                    >
+                                        {index > 2
+                                            ? `Blue ${index - 2}: ${teamNumber}`
+                                            : `Red ${index + 1}: ${teamNumber}`}
+                                    </Text>
+                                )}
+                                <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                                    No match data
+                                </Text>
                             </Box>
                         ) : (
                             <React.Fragment>
@@ -526,7 +563,14 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
                                             },
                                             title: {
                                                 display: true,
-                                                text: `${teamNumber}`,
+                                                text: `${
+                                                    !onTeamPage
+                                                        ? index > 2
+                                                            ? `Blue ${index - 2}: `
+                                                            : `Red ${index + 1}: `
+                                                        : ''
+                                                }${teamNumber}`,
+                                                color: `${onTeamPage ? 'black' : index > 2 ? '#3182ce' : '#E53E3E'}`,
                                                 font: {
                                                     size: 20
                                                 }
@@ -542,16 +586,13 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
                                         scales: {
                                             y: {
                                                 beginAtZero: true,
-                                                suggestedMax:
-                                                    Math.max(
-                                                        ...[].concat(
-                                                            ...getDatasets(teamNumber).map((dataset) => dataset.data)
-                                                        )
-                                                    ) + 2,
+                                                suggestedMax: getSuggestedMax() + 2,
                                                 ticks: {
+                                                    stepSize: 1,
                                                     font: {
                                                         size: 16
-                                                    }
+                                                    },
+                                                    color: 'black'
                                                 }
                                             },
                                             x: {
@@ -562,7 +603,8 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms }) {
                                                 ticks: {
                                                     font: {
                                                         size: 16
-                                                    }
+                                                    },
+                                                    color: 'black'
                                                 }
                                             }
                                         }

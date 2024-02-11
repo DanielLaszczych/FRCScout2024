@@ -1,5 +1,19 @@
 import { ChevronDownIcon, StarIcon } from '@chakra-ui/icons';
-import { Box, Button, Center, Flex, IconButton, Menu, MenuButton, MenuItem, MenuList, NumberInput, NumberInputField, Spinner, Text } from '@chakra-ui/react';
+import {
+    Box,
+    Button,
+    Center,
+    Flex,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuList,
+    NumberInput,
+    NumberInputField,
+    Spinner,
+    Text
+} from '@chakra-ui/react';
 import { React, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -110,7 +124,9 @@ function PreStandForm() {
                             teamNumber = data.alliances.blue.team_keys[stationNumber].substring(3);
                         }
                         setTeamNumber(teamNumber);
-                        fetch(`/blueAlliance/isFutureAlly/${currentEvent.key}/${teamNumber}/${matchKey}/${false}`, { signal: abort.current.signal })
+                        fetch(`/blueAlliance/isFutureAlly/${currentEvent.key}/${teamNumber}/${matchKey}/${false}`, {
+                            signal: abort.current.signal
+                        })
                             .then((response) => response.json())
                             .then((data) => {
                                 setFutureAlly(data);
@@ -164,7 +180,13 @@ function PreStandForm() {
     }, [station, matchType, matchNumber, currentEvent, getMatchKey, enableManualMode]);
 
     function validSetup() {
-        return station !== '' && matchType !== '' && matchNumber !== '' && teamNumber && ((teamName && futureAlly !== null) || enableManualMode());
+        return (
+            station !== '' &&
+            matchType !== '' &&
+            matchNumber !== '' &&
+            teamNumber &&
+            ((teamName && futureAlly !== null) || enableManualMode())
+        );
     }
 
     function doneFetching() {
@@ -176,7 +198,13 @@ function PreStandForm() {
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'lg'} fontWeight={'semibold'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box
+                textAlign={'center'}
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                margin={'0 auto'}
+                width={{ base: '85%', md: '66%', lg: '50%' }}
+            >
                 {error}
             </Box>
         );
@@ -199,14 +227,27 @@ function PreStandForm() {
                 onClick={() => setManualMode(!manualMode)}
                 icon={enableManualMode() ? <MdOutlineWifiOff /> : <MdOutlineWifi />}
             />
-            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'} margin={'0 auto'} marginBottom={'20px'} maxWidth={'calc(100% - 100px)'}>
+            <Text
+                fontSize={'xl'}
+                fontWeight={'semibold'}
+                textAlign={'center'}
+                margin={'0 auto'}
+                marginBottom={'20px'}
+                maxWidth={'calc(100% - 100px)'}
+            >
                 Competition: {currentEvent.name}
             </Text>
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'10px'}>
                 Alliance Station
             </Text>
             <Menu placement={'bottom'}>
-                <MenuButton display={'flex'} margin={'0 auto'} onClick={() => setFocusedStation(station)} as={Button} rightIcon={<ChevronDownIcon />}>
+                <MenuButton
+                    display={'flex'}
+                    margin={'0 auto'}
+                    onClick={() => setFocusedStation(station)}
+                    as={Button}
+                    rightIcon={<ChevronDownIcon />}
+                >
                     {station === '' ? 'Choose Station' : station.label}
                 </MenuButton>
                 <MenuList>
@@ -214,7 +255,12 @@ function PreStandForm() {
                         <MenuItem
                             _focus={{ backgroundColor: 'none' }}
                             onMouseEnter={() => setFocusedStation(stationItem)}
-                            backgroundColor={(station.value === stationItem.value && focusedStation === '') || focusedStation.value === stationItem.value ? 'gray.100' : 'none'}
+                            backgroundColor={
+                                (station.value === stationItem.value && focusedStation === '') ||
+                                focusedStation.value === stationItem.value
+                                    ? 'gray.100'
+                                    : 'none'
+                            }
                             maxW={'80vw'}
                             key={stationItem.id}
                             display={'flex'}
@@ -230,7 +276,13 @@ function PreStandForm() {
                 Match Number
             </Text>
             <Menu placement={'bottom'}>
-                <MenuButton display={'flex'} margin={'0 auto'} onClick={() => setFocusedMatchType(matchType)} as={Button} rightIcon={<ChevronDownIcon />}>
+                <MenuButton
+                    display={'flex'}
+                    margin={'0 auto'}
+                    onClick={() => setFocusedMatchType(matchType)}
+                    as={Button}
+                    rightIcon={<ChevronDownIcon />}
+                >
                     {matchType === '' ? 'Choose Match Type' : matchType.label}
                 </MenuButton>
                 <MenuList>
@@ -238,7 +290,12 @@ function PreStandForm() {
                         <MenuItem
                             _focus={{ backgroundColor: 'none' }}
                             onMouseEnter={() => setFocusedMatchType(matchTypeItem)}
-                            backgroundColor={(matchType.value === matchTypeItem.value && focusedMatchType === '') || focusedMatchType.value === matchTypeItem.value ? 'gray.100' : 'none'}
+                            backgroundColor={
+                                (matchType.value === matchTypeItem.value && focusedMatchType === '') ||
+                                focusedMatchType.value === matchTypeItem.value
+                                    ? 'gray.100'
+                                    : 'none'
+                            }
                             maxW={'80vw'}
                             key={matchTypeItem.id}
                             display={'flex'}
@@ -273,20 +330,35 @@ function PreStandForm() {
                                 event.target.blur();
                             }
                         }}
+                        padding={'0px'}
                         enterKeyHint='done'
                         textAlign={'center'}
                         placeholder='Enter Match #'
                     />
                 </NumberInput>
             ) : null}
-            <Flex alignItems={'center'} justifyContent={'center'} marginTop={'20px'} marginBottom={'10px'} columnGap={'10px'}>
+            <Flex
+                alignItems={'center'}
+                justifyContent={'center'}
+                marginTop={'20px'}
+                marginBottom={'10px'}
+                columnGap={'10px'}
+            >
                 <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
                     Team Number{enableManualMode() ? '' : doneFetching() ? `: ${teamNumber || ''}` : ': '}
                 </Text>
-                {!enableManualMode() && doneFetching() && futureAlly ? <StarIcon stroke={'black'} viewBox={'-1 -1 26 26'} fontSize={'lg'} color={'yellow.300'} /> : null}
+                {!enableManualMode() && doneFetching() && futureAlly ? (
+                    <StarIcon stroke={'black'} viewBox={'-1 -1 26 26'} fontSize={'lg'} color={'yellow.300'} />
+                ) : null}
                 {!enableManualMode() && teamNumberError !== '' && (
                     //width={'calc(100% - 73px)'} make the px slightly bigger than the width of the text from above
-                    <Text color={'red.500'} fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} maxWidth={'calc(100% - 122px)'}>
+                    <Text
+                        color={'red.500'}
+                        fontSize={'lg'}
+                        fontWeight={'semibold'}
+                        textAlign={'center'}
+                        maxWidth={'calc(100% - 122px)'}
+                    >
                         {teamNumberError}
                     </Text>
                 )}
@@ -299,7 +371,13 @@ function PreStandForm() {
                     </Text>
                     {teamNumberError !== '' && (
                         //width={'calc(100% - 63px)'} make the px slightly bigger than the width of the text from above
-                        <Text color={'red.500'} fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} maxWidth={'calc(100% - 102px)'}>
+                        <Text
+                            color={'red.500'}
+                            fontSize={'lg'}
+                            fontWeight={'semibold'}
+                            textAlign={'center'}
+                            maxWidth={'calc(100% - 102px)'}
+                        >
                             {teamNumberError}
                         </Text>
                     )}
@@ -325,6 +403,7 @@ function PreStandForm() {
                                 event.target.blur();
                             }
                         }}
+                        padding={'0px'}
                         enterKeyHint='done'
                         textAlign={'center'}
                         placeholder='Enter Team #'

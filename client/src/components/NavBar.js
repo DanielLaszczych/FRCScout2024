@@ -139,7 +139,9 @@ function NavBar() {
                         </NumberInput>
                         <Button
                             h='45px'
-                            onClick={() => navigate(`/team/${teamNumber}/${teamPageTabs.overview}`, { state: Date.now() })}
+                            onClick={() =>
+                                navigate(`/team/${teamNumber}/${teamPageTabs.overview}`, { state: Date.now() })
+                            }
                             _hover={{ bgColor: 'white' }}
                             borderRadius='0px 5px 5px 0px'
                             bgColor={'white'}
@@ -208,6 +210,17 @@ function NavBar() {
                                 color={'white'}
                             >
                                 Matches
+                            </MenuItem>
+                            <MenuItem
+                                backgroundColor={'#2D3339'}
+                                as={Link}
+                                to={'/matchAnalyst'}
+                                _focus={{ backgroundColor: 'none' }}
+                                _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
+                                fontSize={'md'}
+                                color={'white'}
+                            >
+                                Match Analyst
                             </MenuItem>
                             <MenuItem
                                 backgroundColor={'#2D3339'}
