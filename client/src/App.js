@@ -6,6 +6,7 @@ import { AuthContext } from './context/auth';
 import { GlobalContext } from './context/globalState';
 import { teamPageTabs } from './util/helperConstants';
 import '@fontsource/open-sans/400.css';
+import TempPage from './pages/TempPage';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const PitForm = lazy(() => import('./pages/PitForm'));
@@ -107,7 +108,7 @@ function App() {
                             path='/admin'
                             element={offline ? <OfflinePage /> : user.admin ? <AdminPage /> : <AdminErrorPage />}
                         />
-                        {/* <Route exact path='/tableau' element={<WebDataConnector />} /> */}
+                        <Route exact path='/tableau' element={<TempPage />} />
                         <Route path='*' element={<NotFoundPage />} />
                     </Routes>
                 </Suspense>

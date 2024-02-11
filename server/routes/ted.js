@@ -7,6 +7,20 @@ const { matchFormStatus, gamePieceFields, climbFields } = require('../util/helpe
 const { leafGet, leafSet } = require('../util/helperFunctions');
 const { internalBlueCall } = require('./blueAlliance');
 
+router.get('/getTEDs', async (req, res) => {
+    if (req.isUnauthenticated()) {
+        res.sendStatus(401);
+        return;
+    }
+    try {
+        const TEDs = await TED.find(JSON.parse(req.headers.filters || '{}')).exec();
+        res.status(200).json(TEDs);
+    } catch (err) {
+        res.statusMessage = err.message;
+        res.sendStatus(500);
+    }
+});
+
 router.get('/getAllTeamEventData', async (req, res) => {
     try {
         let filters = JSON.parse(req.headers.filters || '{}');

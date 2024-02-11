@@ -180,13 +180,17 @@ const TeamEventDataSchema = new Schema({
         type: teleopGPSchema,
         default: {}
     },
+    teleopPoints: {
+        type: metricsSchema,
+        default: {}
+    },
     climb: {
         type: climbSchema,
         default: {}
     },
     climbSuccessPercentage: {
         type: Number,
-        default: 0
+        default: null
     },
     climbSuccessFraction: {
         type: String,
@@ -194,11 +198,7 @@ const TeamEventDataSchema = new Schema({
     },
     parkSuccessPercentage: {
         type: Number,
-        default: 0
-    },
-    teleopPoints: {
-        type: metricsSchema,
-        default: {}
+        default: null
     },
     stagePoints: {
         type: metricsSchema,
@@ -260,7 +260,7 @@ const TeamEventDataSchema = new Schema({
     },
     highNoteScorePercentage: {
         type: Number,
-        default: 0
+        default: null
     },
     highNoteScoreFraction: {
         type: String,
