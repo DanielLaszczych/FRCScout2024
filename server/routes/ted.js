@@ -187,6 +187,8 @@ class HelperFunctions {
             incUpdate[`climb.${climbFields[data.climb.location].field}`] = 1;
             incUpdate[`climb.harmony.total`] = data.climb.harmony;
             maxUpdate[`climb.harmony.max`] = data.climb.harmony;
+        } else {
+            incUpdate[`climb.park`] = data.climb.park ? 1 : 0;
         }
 
         if (data.defenseRating !== 0) {
@@ -289,6 +291,9 @@ class HelperFunctions {
         let totalAttempts = ted.climb.success + ted.climb.fail;
         ted.climbSuccessPercentage = totalAttempts === 0 ? null : ted.climb.success / totalAttempts;
         ted.climbSuccessFraction = totalAttempts === 0 ? null : `${ted.climb.success} / ${totalAttempts}`;
+
+        totalAttempts = ted.climb.noAttempt + ted.climb.fail;
+        ted.parkSuccessPercentage = totalAttempts === 0 ? null : ted.climb.park / totalAttempts;
 
         ted.climb.harmony.avg = ted.climb.success === 0 ? 0 : ted.climb.harmony.total / ted.climb.success;
 

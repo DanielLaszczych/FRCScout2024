@@ -92,6 +92,9 @@ const climbSchema = new Schema(
         },
         harmony: {
             type: Number
+        },
+        park: {
+            type: Boolean
         }
     },
     { _id: false }

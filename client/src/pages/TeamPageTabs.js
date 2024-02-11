@@ -1740,6 +1740,15 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                                     : ''
                                                             }`}
                                                         </Text>
+                                                        {matchForm.climb.attempt !== 'Success' && (
+                                                            <Text
+                                                                fontSize={'lg'}
+                                                                fontWeight={'medium'}
+                                                                textAlign={'center'}
+                                                            >
+                                                                {`Park: ${matchForm.climb.park ? 'Yes' : 'No'}`}
+                                                            </Text>
+                                                        )}
                                                         {matchForm.climb.attempt === 'Success' && (
                                                             <Text
                                                                 fontSize={'lg'}

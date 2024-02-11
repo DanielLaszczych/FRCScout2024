@@ -38,11 +38,12 @@ const fields = [
         fields: [
             { label: 'Climb Percentage', field: 'climbSuccessPercentage', specialField: true },
             { label: 'Trap', field: 'teleopGP.trap' },
-            { label: '# of Successful Climbs', field: 'climb.success', simple: true, specialL4MField: true },
-            { label: '# of Failed Climbs', field: 'climb.fail', simple: true, specialL4MField: true },
-            { label: '# of Not Attempted Climbs', field: 'climb.noAttempt', simple: true, specialL4MField: true },
             { label: 'Climb Location Counts', field: 'climbLocationCounts', specialField: true },
             { label: 'Harmony', field: 'climb.harmony', specialField: true },
+            { label: '# of Successful Climbs', field: 'climb.success', simple: true, specialL4MField: true },
+            { label: '# of Failed Climbs', field: 'climb.fail', simple: true, specialL4MField: true },
+            { label: '# of Parks', field: 'climb.park', simple: true, specialL4MField: true },
+            { label: '# of Not Attempted Climbs', field: 'climb.noAttempt', simple: true, specialL4MField: true },
             { label: 'Stage Points', field: 'stagePoints' }
         ]
     },
@@ -59,16 +60,19 @@ const fields = [
             {
                 label: 'High Note Percentage',
                 field: 'highNotePercentage',
+                superField: true,
                 specialField: true
             },
             {
                 label: 'High Note',
                 field: 'ampPlayerGP.highNoteScore',
+                superField: true,
                 specialField: true
             },
             {
                 label: 'High Note Miss',
                 field: 'ampPlayerGP.highNoteMiss',
+                superField: true,
                 specialField: true
             }
         ]
@@ -99,26 +103,30 @@ const fields = [
 ];
 
 function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms, showTeamNumber = true }) {
-    const [matchForms, setMatchForms] = useState(null);
+    const [standForms, setStandForms] = useState(null);
+    const [superForms, setSuperForms] = useState(null);
     const [lastFourMatchesVisible, setlastFourMatchesVisible] = useState(
         Object.fromEntries(teamNumbers.map((teamNumber) => [teamNumber, false]))
     );
 
     useLayoutEffect(() => {
-        let newMatchForms = {};
+        let standForms = {};
+        let superForms = {};
         for (const teamNumber of teamNumbers) {
             let matchForms = sortMatches(multiTeamMatchForms[teamNumber]);
-            newMatchForms[teamNumber] = [];
+            standForms[teamNumber] = [];
+            superForms[teamNumber] = [];
             for (const matchForm of matchForms) {
-                if (
-                    [matchFormStatus.complete, matchFormStatus.noShow].includes(matchForm.standStatus) &&
-                    [matchFormStatus.complete, matchFormStatus.noShow].includes(matchForm.superStatus)
-                ) {
-                    newMatchForms[teamNumber].push(matchForm);
+                if ([matchFormStatus.complete, matchFormStatus.noShow].includes(matchForm.standStatus)) {
+                    standForms[teamNumber].push(matchForm);
+                }
+                if ([matchFormStatus.complete, matchFormStatus.noShow].includes(matchForm.superStatus)) {
+                    superForms[teamNumber].push(matchForm);
                 }
             }
         }
-        setMatchForms(newMatchForms);
+        setStandForms(standForms);
+        setSuperForms(superForms);
     }, [teamNumbers, multiTeamMatchForms]);
 
     function getAverageMaxComponent(field, teamEventData) {
@@ -216,22 +224,55 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
         }
     }
 
-    function getLastFourMatchIndex(matchForms) {
-        if (matchForms.length > 8) {
+    function getLastFourMatchIndex(matchFormsLength) {
+        if (matchFormsLength > 8) {
             //This is the breakpoint when we can actually get the last four matches
-            return matchForms.length - 4;
+            return matchFormsLength - 4;
         } else {
-            return Math.ceil(matchForms.length / 2);
+            return Math.ceil(matchFormsLength / 2);
         }
     }
 
-    function getL4MValues(field, matchForms) {
+    function getLastFourMatchString(standFormsLength, superFormsLength) {
+        if (standFormsLength !== superFormsLength) {
+            let standFormString;
+            let superFormString;
+
+            if (standFormsLength === 1) {
+                standFormString = 'Only 1 Stand Form';
+            } else {
+                standFormString = `Last ${
+                    standFormsLength === 1 ? 1 : standFormsLength - getLastFourMatchIndex(standFormsLength)
+                } Stand Forms(s)`;
+            }
+
+            if (superFormsLength === 1) {
+                superFormString = 'Only 1 Super Form';
+            } else {
+                superFormString = `Last ${
+                    superFormsLength === 1 ? 1 : superFormsLength - getLastFourMatchIndex(superFormsLength)
+                } Super Forms(s)`;
+            }
+
+            return `${standFormString}\n${superFormString}`;
+        } else {
+            if (standFormsLength === 1) {
+                return `Only 1 Match Form`;
+            }
+            return `Last ${
+                standFormsLength === 1 ? 1 : standFormsLength - getLastFourMatchIndex(standFormsLength)
+            } Match(s)`;
+        }
+    }
+
+    function getL4MValues(field, standForms, superForms) {
+        let matchForms = field.superField ? superForms : standForms;
         let prevFourTotal = 0;
         let prevFourMatchCount = 0;
         let lastFourTotal = 0;
         let lastFourMax = 0;
         let lastFourMatchCount = 0;
-        let lastFourMatchIndex = getLastFourMatchIndex(matchForms);
+        let lastFourMatchIndex = getLastFourMatchIndex(matchForms.length);
         for (let i = 0; i < matchForms.length; i++) {
             let value;
             if (field.superField && matchForms[i].superStatus === matchFormStatus.noShow) {
@@ -241,7 +282,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                 } else {
                     continue;
                 }
-            } else if (matchForms[i].standStatus === matchFormStatus.noShow) {
+            } else if (!field.superField && matchForms[i].standStatus === matchFormStatus.noShow) {
                 continue;
             } else {
                 value = leafGet(matchForms[i], field.field);
@@ -267,13 +308,14 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
         }
     }
 
-    function getL4MSpecialComponentHelper(field, matchForms) {
+    function getL4MSpecialComponentHelper(field, standForms, superForms) {
+        let matchForms = field.superField ? superForms : standForms;
         let prevFourTotal = 0;
         let lastFourTotal = 0;
         let lastFourMax = 0;
         let prevFourPercentage;
         let lastFourPercentage;
-        let lastFourMatchIndex = getLastFourMatchIndex(matchForms);
+        let lastFourMatchIndex = getLastFourMatchIndex(matchForms.length);
         switch (field.field) {
             case 'defenseRating':
             case 'defenseAllocation':
@@ -282,7 +324,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                 for (let i = 0; i < matchForms.length; i++) {
                     let value;
                     if (matchForms[i].standStatus === matchFormStatus.noShow) {
-                        value = field.noShowValue || 0;
+                        continue;
                     } else {
                         value = leafGet(matchForms[i], field.field);
                     }
@@ -385,7 +427,24 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                     if (matchForms[i].standStatus === matchFormStatus.noShow) {
                         continue;
                     } else {
-                        value = climbFields[matchForms[i].climb.attempt] === climbFieldToCount;
+                        value = climbFields[matchForms[i].climb.attempt].field === climbFieldToCount;
+                    }
+                    if (i >= lastFourMatchIndex || matchForms.length === 1) {
+                        lastFourTotal += value;
+                    }
+                }
+                return (
+                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                        {lastFourTotal}
+                    </Text>
+                );
+            case 'climb.park':
+                for (let i = 0; i < matchForms.length; i++) {
+                    let value;
+                    if (matchForms[i].standStatus === matchFormStatus.noShow) {
+                        continue;
+                    } else {
+                        value = matchForms[i].climb.park;
                     }
                     if (i >= lastFourMatchIndex || matchForms.length === 1) {
                         lastFourTotal += value;
@@ -487,7 +546,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                 prevFourPercentage =
                     prevFourScore + prevFourMiss === 0
                         ? 0
-                        : roundToWhole((prevFourSuccess / (prevFourSuccess + prevFourFail)) * 100);
+                        : roundToWhole((prevFourScore / (prevFourScore + prevFourMiss)) * 100);
                 lastFourPercentage = roundToWhole((lastFourScore / (lastFourScore + lastFourMiss)) * 100);
                 return (
                     <Flex columnGap={'10px'}>
@@ -569,8 +628,8 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
         }
     }
 
-    function getL4MComponentHelper(field, matchForms) {
-        let values = getL4MValues(field, matchForms);
+    function getL4MComponentHelper(field, standForms, superForms) {
+        let values = getL4MValues(field, standForms, superForms);
         if (!field.simple) {
             return (
                 <Flex columnGap={'10px'}>
@@ -611,15 +670,15 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
         }
     }
 
-    function getL4MCompoenent(field, matchForms) {
+    function getL4MCompoenent(field, standForms, superForms) {
         if (field.specialField || field.specialL4MField) {
-            return getL4MSpecialComponentHelper(field, matchForms);
+            return getL4MSpecialComponentHelper(field, standForms, superForms);
         } else {
-            return getL4MComponentHelper(field, matchForms);
+            return getL4MComponentHelper(field, standForms, superForms);
         }
     }
 
-    if (matchForms === null) {
+    if (standForms === null && superForms === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -643,7 +702,9 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                     width={{ base: '90%', lg: `calc(90% / ${Math.min(teamNumbers.length, 3)})` }}
                     height={{ base: '60vh', lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2})` }}
                 >
-                    {multiTeamEventsDatas[teamNumber] && matchForms[teamNumber].length > 0 ? (
+                    {multiTeamEventsDatas[teamNumber] &&
+                    standForms[teamNumber].length > 0 &&
+                    superForms[teamNumber].length > 0 ? (
                         <Box width={{ base: '100%', lg: '50%' }}>
                             {showTeamNumber && (
                                 <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
@@ -723,21 +784,19 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                                                         alignItems={'center'}
                                                         backgroundColor={'gray.400'}
                                                         borderBottom={'1px solid black'}
+                                                        padding={'3px 0px'}
                                                     >
                                                         <Text
                                                             fontSize={'md'}
                                                             fontWeight={'semibold'}
                                                             textAlign={'center'}
+                                                            whiteSpace={'pre-line'}
                                                         >
                                                             {lastFourMatchesVisible[teamNumber]
-                                                                ? `Last ${
-                                                                      matchForms[teamNumber].length === 1
-                                                                          ? 1
-                                                                          : matchForms[teamNumber].length -
-                                                                            getLastFourMatchIndex(
-                                                                                matchForms[teamNumber]
-                                                                            )
-                                                                  } Match(s)`
+                                                                ? getLastFourMatchString(
+                                                                      standForms[teamNumber].length,
+                                                                      superForms[teamNumber].length
+                                                                  )
                                                                 : 'Event'}
                                                         </Text>
                                                     </GridItem>
@@ -783,7 +842,11 @@ function TeamStatsList({ teamNumbers, multiTeamEventsDatas, multiTeamMatchForms,
                                                             backgroundColor={'gray.200'}
                                                             borderBottom={'1px solid black'}
                                                         >
-                                                            {getL4MCompoenent(subField, matchForms[teamNumber])}
+                                                            {getL4MCompoenent(
+                                                                subField,
+                                                                standForms[teamNumber],
+                                                                superForms[teamNumber]
+                                                            )}
                                                         </GridItem>
                                                     )}
                                                 </React.Fragment>

@@ -105,6 +105,10 @@ let climbLocations = [
     { label: 'Center', color: 'blue', id: uuidv4() },
     { label: 'Right Side', color: 'blue', id: uuidv4() }
 ];
+let parkOptions = [
+    { label: 'Yes', value: true, color: 'green', id: uuidv4() },
+    { label: 'No', value: false, color: 'red', id: uuidv4() }
+];
 let lostCommOptions = [
     { label: 'Yes', value: true, color: 'red', id: uuidv4() },
     { label: 'No', value: false, color: 'green', id: uuidv4() }
@@ -174,7 +178,8 @@ function StandForm() {
         climb: {
             attempt: null,
             location: null,
-            harmony: null
+            harmony: null,
+            park: null
         },
         lostCommunication: null,
         robotBroke: null,
@@ -455,8 +460,9 @@ function StandForm() {
     function validEndGame() {
         return (
             standFormData.climb.attempt !== null &&
-            (standFormData.climb.attempt !== 'Success' ||
-                (standFormData.climb.location !== null && standFormData.climb.harmony !== null))
+            (standFormData.climb.attempt === 'Success'
+                ? standFormData.climb.location !== null && standFormData.climb.harmony !== null
+                : standFormData.climb.park !== null)
         );
     }
 
@@ -1514,13 +1520,21 @@ function StandForm() {
                                             onClick={() => {
                                                 let location = standFormData.climb.location;
                                                 let harmony = standFormData.climb.harmony;
+                                                let park = standFormData.climb.park;
                                                 if (type.label !== 'Success') {
                                                     location = null;
                                                     harmony = null;
+                                                } else {
+                                                    park = null;
                                                 }
                                                 setStandFormData({
                                                     ...standFormData,
-                                                    climb: { attempt: type.label, location: location, harmony: harmony }
+                                                    climb: {
+                                                        attempt: type.label,
+                                                        location: location,
+                                                        harmony: harmony,
+                                                        park: park
+                                                    }
                                                 });
                                             }}
                                             colorScheme={
@@ -1612,6 +1626,41 @@ function StandForm() {
                                     </Flex>
                                 </VStack>
                             )}
+                            {['No Attempt', 'Fail'].includes(standFormData.climb.attempt) && (
+                                <VStack gap={'5px'}>
+                                    <Text fontSize={'lg'} fontWeight={'semibold'}>
+                                        Park
+                                    </Text>
+                                    <Flex columnGap={'10px'} width={'100%'} justifyContent={'center'}>
+                                        {parkOptions.map((park) => (
+                                            <Button
+                                                flex={1 / 3}
+                                                key={park.id}
+                                                onClick={() =>
+                                                    setStandFormData({
+                                                        ...standFormData,
+                                                        climb: { ...standFormData.climb, park: park.value }
+                                                    })
+                                                }
+                                                colorScheme={
+                                                    standFormData.climb.park === park.value ? park.color : 'gray'
+                                                }
+                                                whiteSpace={'normal'}
+                                                outline={
+                                                    ['No Attempt', 'Fail'].includes(standFormData.climb.attempt) &&
+                                                    standFormData.climb.park === null &&
+                                                    submitAttempted &&
+                                                    !isFollowOrNoShow()
+                                                        ? '2px solid red'
+                                                        : 'none'
+                                                }
+                                            >
+                                                {park.label}
+                                            </Button>
+                                        ))}
+                                    </Flex>
+                                </VStack>
+                            )}
                             <Button
                                 colorScheme={'facebook'}
                                 height={'60px'}
@@ -1633,7 +1682,8 @@ function StandForm() {
                                 15 +
                                     heightDimensions.max -
                                     activeSection.spaceUsed -
-                                    (standFormData.climb.attempt === 'Success' ? 174 : 0)
+                                    (standFormData.climb.attempt === 'Success' ? 174 : 0) -
+                                    (['No Attempt', 'Fail'].includes(standFormData.climb.attempt) ? 87 : 0)
                             )}px`}
                             marginBottom={'30px'}
                             gap={'15px'}

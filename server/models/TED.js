@@ -132,6 +132,10 @@ const climbSchema = new Schema(
         right: {
             type: Number,
             default: 0
+        },
+        park: {
+            type: Number,
+            default: 0
         }
     },
     { _id: false }
@@ -187,6 +191,10 @@ const TeamEventDataSchema = new Schema({
     climbSuccessFraction: {
         type: String,
         default: ''
+    },
+    parkSuccessPercentage: {
+        type: Number,
+        default: 0
     },
     teleopPoints: {
         type: metricsSchema,
