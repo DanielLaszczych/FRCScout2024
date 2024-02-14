@@ -41,7 +41,7 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
         // Calculate image dimensions based on screen size
         const maxWidth =
             breakPointWidth >= 992 ? (viewportWidth * 0.9) / Math.min(teamNumbers.length, 3) : viewportWidth * 0.9; // Adjust the multiplier as needed
-        const maxHeight = imageHeight;
+        const maxHeight = onTeamPage ? imageHeight : imageHeight * 0.8;
 
         const screenAspectRatio = maxWidth / maxHeight;
         const imageAspectRatio = imageWidth / imageHeight;
@@ -72,7 +72,7 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
             // setWhitespace({ top: 0, bottom: 0, left: whitespaceLeft, right: whitespaceRight });
         }
         setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
-    }, [teamNumbers.length]);
+    }, [teamNumbers.length, onTeamPage]);
 
     useLayoutEffect(() => {
         getImageVariables();
@@ -293,9 +293,6 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
                         </Box>
                     ) : (
                         <Box key={teamNumber}>
-                            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
-                                No auto data
-                            </Text>
                             {!onTeamPage && (
                                 <Text
                                     fontSize={'xl'}
@@ -306,6 +303,9 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
                                     {index > 2 ? `Blue ${index - 2}: ${teamNumber}` : `Red ${index + 1}: ${teamNumber}`}
                                 </Text>
                             )}
+                            <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                                No auto data
+                            </Text>
                         </Box>
                     )}
                 </Flex>

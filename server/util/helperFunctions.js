@@ -63,33 +63,6 @@ class HelperFunctions {
         return Number(value.toFixed());
     }
 
-    static getFields(arr, field) {
-        return arr.map((a) => a[field]);
-    }
-
-    static getDeepFields(arr, field1, field2) {
-        return arr.map((a) => a[field1][field2]);
-    }
-
-    static getStartingPoints(arr, scale, redOffset, blueOffset) {
-        let data = [];
-        arr.forEach((e) => {
-            let offset = e.station.charAt(0) === 'r' ? redOffset : blueOffset;
-            data.push({
-                _id: e.startingPosition._id,
-                x: (e.startingPosition.x + offset.x) * scale,
-                y: (e.startingPosition.y + offset.y) * scale,
-                bottomConeAuto: e.bottomConeAuto,
-                bottomCubeAuto: e.bottomCubeAuto,
-                middleConeAuto: e.middleConeAuto,
-                middleCubeAuto: e.middleCubeAuto,
-                topConeAuto: e.topConeAuto,
-                topCubeAuto: e.topCubeAuto
-            });
-        });
-        return data;
-    }
-
     static medianArr(x) {
         if (x.length === 0) {
             return 'N/A';
@@ -113,61 +86,8 @@ class HelperFunctions {
             : mean(x);
     }
 
-    static getPercentageForTFField(arr, field) {
-        let total = 0;
-        arr.forEach((a) => (total += a[field]));
-        return total / arr.length;
-    }
-
-    static countOccurencesForTFField(arr, field) {
-        let total = 0;
-        arr.forEach((a) => (total += a[field]));
-        return total;
-    }
-
     static capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-
-    static getAutoContribution(arr) {
-        return arr.map((match) => {
-            let total = 0;
-            total += match.crossCommunity ? 3 : 0;
-            total += match.bottomAuto.coneScored * 3;
-            total += match.middleAuto.coneScored * 4;
-            total += match.topAuto.coneScored * 6;
-            total += match.bottomAuto.cubeScored * 3;
-            total += match.middleAuto.cubeScored * 4;
-            total += match.topAuto.cubeScored * 6;
-            if (match.chargeAuto === 'Dock') {
-                total += 8;
-            } else if (match.chargeAuto === 'Engage') {
-                total += 12;
-            }
-            return total;
-        });
-    }
-
-    static getTeleContribution(arr) {
-        return arr.map((match) => {
-            let total = 0;
-            total += match.bottomTele.coneScored * 2;
-            total += match.middleTele.coneScored * 3;
-            total += match.topTele.coneScored * 5;
-            total += match.bottomTele.cubeScored * 2;
-            total += match.middleTele.cubeScored * 3;
-            total += match.topTele.cubeScored * 5;
-            if (match.chargeTele === 'Dock') {
-                total += 6;
-            } else if (match.chargeTele === 'Engage') {
-                total += 10;
-            }
-            return total;
-        });
-    }
-
-    static getDefenseRatings(arr) {
-        return arr.filter((a) => a.defenseRating > 0).map((a) => a['defenseRating']);
     }
 
     static leafGet = (obj, path) => path.split('.').reduce((value, el) => value[el], obj);

@@ -164,14 +164,6 @@ export function joinStandAndSuperForms(standForms, superForms) {
     return combinedForms;
 }
 
-export function getFields(arr, field) {
-    return arr.map((a) => a[field]);
-}
-
-export function getDeepFields(arr, field1, field2) {
-    return arr.map((a) => a[field1][field2]);
-}
-
 export const medianArr = (x) => {
     if (x.length === 0) {
         return 'N/A';
@@ -190,26 +182,6 @@ export const averageArr = (x, round = true, roundToHundredthBoolean = true) => {
     }
     return round ? (roundToHundredthBoolean ? roundToHundredth(mean(x)) : roundToTenth(mean(x))) : mean(x);
 };
-
-export function getPercentageForTFField(arr, field) {
-    let total = 0;
-    arr.forEach((a) => (total += a[field]));
-    return total / arr.length;
-}
-
-export function countOccurencesForTFField(arr, field) {
-    let total = 0;
-    arr.forEach((a) => (total += a[field]));
-    return total;
-}
-
-export function getDefenseRatings(arr) {
-    return arr.filter((a) => a.defenseRating > 0).map((a) => a['defenseRating']);
-}
-
-export function getDefenseAllocation(arr) {
-    return arr.filter((a) => a.defenseRating > 0).map((a) => a['defenseAllocation']);
-}
 
 export function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -272,4 +244,14 @@ export function perc2color(perc) {
     }
     var h = r * 0x10000 + g * 0x100 + b * 0x1;
     return '#' + ('000000' + h.toString(16)).slice(-6);
+}
+
+export function checksum(s) {
+    var chk = 0x12345678;
+    var len = s.length;
+    for (var i = 0; i < len; i++) {
+        chk += s.charCodeAt(i) * (i + 1);
+    }
+
+    return (chk & 0xffffffff).toString(16);
 }

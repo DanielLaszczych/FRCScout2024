@@ -24,61 +24,51 @@ router.get('/getTEDs', async (req, res) => {
 router.get('/getAllTeamEventData', async (req, res) => {
     try {
         let filters = JSON.parse(req.headers.filters || '{}');
-        Promise.all([
+        await Promise.all([
             PitForm.findOne(filters).exec(),
             MatchForm.find(filters).exec(),
             TED.findOne(filters).lean().exec()
-        ])
-            .then((responses) => {
-                let data = {
-                    pitForm: responses[0],
-                    matchForms: responses[1],
-                    teamEventData: responses[2]
-                };
-                if (data.teamEventData) {
-                    data.teamEventData.autoPaths = HelperFunctions.getAutoPaths(data.matchForms);
-                }
-                if (!data.teamEventData) {
-                    res.status(200).json(data);
-                    return;
-                }
-                let rankQueries = [
-                    'offensivePoints.avg',
-                    'autoPoints.avg',
-                    'teleopGP.speakerScore.avg',
-                    'teleopGP.ampScore.avg',
-                    'stagePoints.avg',
-                    'defenseRating.avg'
-                ].map((field) => HelperFunctions.getRank(data.teamEventData, field));
-                Promise.all([
-                    ...rankQueries,
-                    internalBlueCall(`event/${filters.eventKey}/teams/keys`)
-                        .then((data) => {
-                            return !data.Error ? data.length : null;
-                        })
-                        .catch((err) => null)
-                ])
-                    .then((responses) => {
-                        data.teamEventData.rank = {
-                            offense: responses[0],
-                            auto: responses[1],
-                            teleopSpeaker: responses[2],
-                            teleopAmp: responses[3],
-                            stage: responses[4],
-                            defense: responses[5],
-                            totalTeams: responses[6]
-                        };
-                        res.status(200).json(data);
+        ]).then(async (responses) => {
+            let data = {
+                pitForm: responses[0],
+                matchForms: responses[1],
+                teamEventData: responses[2]
+            };
+            if (data.teamEventData) {
+                data.teamEventData.autoPaths = HelperFunctions.getAutoPaths(data.matchForms);
+            }
+            if (!data.teamEventData) {
+                res.status(200).json(data);
+                return;
+            }
+            let rankQueries = [
+                'offensivePoints.avg',
+                'autoPoints.avg',
+                'teleopGP.speakerScore.avg',
+                'teleopGP.ampScore.avg',
+                'stagePoints.avg',
+                'defenseRating.avg'
+            ].map((field) => HelperFunctions.getRank(data.teamEventData, field));
+            await Promise.all([
+                ...rankQueries,
+                internalBlueCall(`event/${filters.eventKey}/teams/keys`)
+                    .then((data) => {
+                        return !data.Error ? data.length : null;
                     })
-                    .catch((err) => {
-                        res.statusMessage = err.message;
-                        res.sendStatus(500);
-                    });
-            })
-            .catch((err) => {
-                res.statusMessage = err.message;
-                res.sendStatus(500);
+                    .catch((err) => null)
+            ]).then((responses) => {
+                data.teamEventData.rank = {
+                    offense: responses[0],
+                    auto: responses[1],
+                    teleopSpeaker: responses[2],
+                    teleopAmp: responses[3],
+                    stage: responses[4],
+                    defense: responses[5],
+                    totalTeams: responses[6]
+                };
+                res.status(200).json(data);
             });
+        });
     } catch (err) {
         res.statusMessage = err.message;
         res.sendStatus(500);
@@ -543,9 +533,7 @@ class HelperFunctions {
             }
         }
 
-        return Promise.all(updates).catch((err) => {
-            throw new Error(err);
-        });
+        return Promise.all(updates);
     }
 }
 

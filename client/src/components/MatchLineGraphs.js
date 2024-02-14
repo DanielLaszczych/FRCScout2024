@@ -366,8 +366,9 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
         if (formsToUse.length === 0) {
             return null;
         }
-        let firstPoint = (graphWidth - 15) / (formsToUse.length * 2) + 15 - iconSize;
-        let offset = (graphWidth - 15) / formsToUse.length;
+        let yTickWidth = getSuggestedMax() + 2 >= 10 ? 30 : 23;
+        let firstPoint = (graphWidth - yTickWidth) / (formsToUse.length * 2) + yTickWidth - iconSize;
+        let offset = (graphWidth - yTickWidth) / formsToUse.length;
         let offsetAdjustment = 2;
         return (
             <React.Fragment>
@@ -377,7 +378,10 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                         maxWidth={`${iconSize * 2}px`}
                         flexWrap={'wrap'}
                         position={'absolute'}
-                        top={{ base: 'calc(50vh)', lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2})` }}
+                        top={{
+                            base: 'max(calc(50vh), 280px)',
+                            lg: `max(calc(100vh / ${teamNumbers.length > 3 ? 3 : 2}), 280px)`
+                        }}
                         left={
                             firstPoint +
                             (getNumberOfIcons(matchForm) > 1 ? 0 : iconSize / 2) +
@@ -503,7 +507,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                 icon={<AiFillFilter />}
                 position={'absolute'}
                 left={'15px'}
-                top={onTeamPage ? '-75px' : '-125px'}
+                top={onTeamPage ? '-75px' : '-55px'}
                 onClick={onOpen}
             >
                 Open settings
@@ -523,9 +527,12 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                         justifyContent={'center'}
                         width={{ base: '90%', lg: `calc(90% / ${Math.min(teamNumbers.length, 3)})` }}
                         height={
-                            multiTeamMatchForms[teamNumber].length === 0
+                            !multiTeamMatchForms[teamNumber] || multiTeamMatchForms[teamNumber].length === 0
                                 ? 'fit-content'
-                                : { base: '50vh', lg: `calc(100vh / ${teamNumbers.length > 3 ? 3 : 2})` }
+                                : {
+                                      base: 'max(50vh, 280px)',
+                                      lg: `max(calc(100vh / ${teamNumbers.length > 3 ? 3 : 2}), 280px)`
+                                  }
                         }
                         marginBottom={`${getMarginBottom(teamNumber)}px`}
                     >

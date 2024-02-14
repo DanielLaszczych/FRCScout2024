@@ -34,7 +34,7 @@ import {
     useToast
 } from '@chakra-ui/react';
 import { StarIcon } from '@chakra-ui/icons';
-import { deepEqual, getValueByRange } from '../util/helperFunctions';
+import { checksum, deepEqual, getValueByRange } from '../util/helperFunctions';
 import { AUTO, ENDGAME, TELEOP, createHistoryManager } from '../util/historyManager';
 import '../stylesheets/standformstyle.css';
 import { matchFormStatus, gamePieceFields, teamPageTabs } from '../util/helperConstants';
@@ -47,6 +47,7 @@ import { GlobalContext } from '../context/globalState';
 import { AiOutlineRotateRight } from 'react-icons/ai';
 import { IoChevronForward, IoChevronBack } from 'react-icons/io5';
 import { LiaHotdogSolid } from 'react-icons/lia';
+import { AuthContext } from '../context/auth';
 
 let sections = {
     preAuto: { label: 'Pre-Auto', spaceUsed: 100 + 35 + 110 + 85 },
@@ -147,8 +148,8 @@ function StandForm() {
         teamNumber: teamNumberParam
     } = useParams();
     const { offline } = useContext(GlobalContext);
+    const { user } = useContext(AuthContext);
     const { isOpen, onOpen, onClose } = useDisclosure();
-
     const cancelRef = useRef(null);
 
     const [activeSection, setActiveSection] = useState(sections.preAuto);
@@ -506,70 +507,68 @@ function StandForm() {
             Missing: 'ms' //Dont think this is ever needed
         };
         // I listed all the fields just as insurance that everything will always be in this order
-        return (
-            '#' +
-            [
-                eventKeyParam,
-                matchNumberParam,
-                stationParam,
-                parseInt(teamNumberParam),
-                standFormData.startingPosition === null ? 'n' : standFormData.startingPosition,
-                standFormData.preLoadedPiece === null ? 'n' : map[standFormData.preLoadedPiece === 'Note'],
-                map[standFormData.leftStart],
-                standFormData.autoTimeline.length === 0
+        let data = [
+            eventKeyParam,
+            matchNumberParam,
+            stationParam,
+            parseInt(teamNumberParam),
+            user.displayName,
+            standFormData.startingPosition === null ? 'n' : standFormData.startingPosition,
+            standFormData.preLoadedPiece === null ? 'n' : map[standFormData.preLoadedPiece === 'Note'],
+            map[standFormData.leftStart],
+            standFormData.autoTimeline.length === 0
+                ? 'n'
+                : standFormData.autoTimeline
+                      .map((element) => [element.piece, element.scored ? gamePieceFields[element.scored].short : 'n'])
+                      .flat()
+                      .join('#'),
+            standFormData.teleopGP.intakeSource,
+            standFormData.teleopGP.intakeGround,
+            standFormData.teleopGP.ampScore,
+            standFormData.teleopGP.speakerScore,
+            standFormData.teleopGP.ampMiss,
+            standFormData.teleopGP.speakerMiss,
+            standFormData.teleopGP.ferry,
+            standFormData.teleopGP.trap,
+            map[standFormData.wasDefended],
+            standFormData.defenseRating,
+            standFormData.defenseAllocation,
+            map[standFormData.climb.attempt],
+            standFormData.climb.location === null ? 'n' : standFormData.climb.location.charAt(0).toLowerCase(),
+            standFormData.climb.harmony === null ? 'n' : standFormData.climb.harmony,
+            map[standFormData.climb.park],
+            map[standFormData.lostCommunication],
+            map[standFormData.robotBroke],
+            map[standFormData.yellowCard],
+            map[standFormData.redCard],
+            standFormData.standComment.trim() === '' ? 'n' : standFormData.standComment.trim(),
+            map[standFormData.standStatus || matchFormStatus.complete],
+            isFollowOrNoShow()
+                ? standFormData.standStatusComment.trim() === ''
                     ? 'n'
-                    : standFormData.autoTimeline
-                          .map((element) => [
-                              element.piece,
-                              element.scored ? gamePieceFields[element.scored].short : 'n'
-                          ])
-                          .flat()
-                          .join('#'),
-                standFormData.teleopGP.intakeSource,
-                standFormData.teleopGP.intakeGround,
-                standFormData.teleopGP.ampScore,
-                standFormData.teleopGP.speakerScore,
-                standFormData.teleopGP.ampMiss,
-                standFormData.teleopGP.speakerMiss,
-                standFormData.teleopGP.ferry,
-                standFormData.teleopGP.trap,
-                map[standFormData.wasDefended],
-                standFormData.defenseRating,
-                standFormData.defenseAllocation,
-                map[standFormData.climb.attempt],
-                standFormData.climb.location === null ? 'n' : standFormData.climb.location.charAt(0).toLowerCase(),
-                standFormData.climb.harmony === null ? 'n' : standFormData.climb.harmony,
-                map[standFormData.lostCommunication],
-                map[standFormData.robotBroke],
-                map[standFormData.yellowCard],
-                map[standFormData.redCard],
-                standFormData.standComment.trim() === '' ? 'n' : standFormData.standComment.trim(),
-                map[standFormData.standStatus || matchFormStatus.complete],
-                isFollowOrNoShow()
-                    ? standFormData.standStatusComment.trim() === ''
-                        ? 'n'
-                        : standFormData.standStatusComment.trim()
-                    : 'n',
-                standFormData.history.auto.data.length === 0
-                    ? 'n'
-                    : standFormData.history.auto.data
-                          .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
-                          .join('#'),
-                standFormData.history.auto.position,
-                standFormData.history.teleop.data.length === 0
-                    ? 'n'
-                    : standFormData.history.teleop.data
-                          .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
-                          .join('#'),
-                standFormData.history.teleop.position,
-                standFormData.history.endGame.data.length === 0
-                    ? 'n'
-                    : standFormData.history.endGame.data
-                          .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
-                          .join('#'),
-                standFormData.history.endGame.position
-            ].join('$')
-        );
+                    : standFormData.standStatusComment.trim()
+                : 'n',
+            standFormData.history.auto.data.length === 0
+                ? 'n'
+                : standFormData.history.auto.data
+                      .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
+                      .join('#'),
+            standFormData.history.auto.position,
+            standFormData.history.teleop.data.length === 0
+                ? 'n'
+                : standFormData.history.teleop.data
+                      .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
+                      .join('#'),
+            standFormData.history.teleop.position,
+            standFormData.history.endGame.data.length === 0
+                ? 'n'
+                : standFormData.history.endGame.data
+                      .map((element) => (isNaN(element) ? gamePieceFields[element].short : element))
+                      .join('#'),
+            standFormData.history.endGame.position
+        ].join('$');
+
+        return '#' + data + '$' + checksum(data);
     }
 
     function submit() {

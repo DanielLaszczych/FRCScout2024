@@ -9,7 +9,9 @@ router.use('/getEventsCustom/:year', (req, res) => {
         res.send('Not signed in');
         return;
     }
-    fetch(`https://www.thebluealliance.com/api/v3/events/${req.params.year}?X-TBA-Auth-Key=${process.env.BLUEALLIANCE_API_KEY}`)
+    fetch(
+        `https://www.thebluealliance.com/api/v3/events/${req.params.year}?X-TBA-Auth-Key=${process.env.BLUEALLIANCE_API_KEY}`
+    )
         .then((response) => response.json())
         .then((data) => {
             if (!data.Error) {
@@ -38,7 +40,12 @@ router.use('/isFutureAlly/:eventKey/:teamNumber/:currentMatch/:allowPlayed', asy
         return;
     }
     try {
-        let isAlly = await isFutureAlly(req.params.eventKey, req.params.teamNumber, req.params.currentMatch, req.params.allowPlayed === 'true');
+        let isAlly = await isFutureAlly(
+            req.params.eventKey,
+            req.params.teamNumber,
+            req.params.currentMatch,
+            req.params.allowPlayed === 'true'
+        );
         res.send(Boolean(isAlly));
     } catch (err) {
         res.statusMessage = err.message;
@@ -51,7 +58,9 @@ router.use('/:apiCall(*)', (req, res) => {
         res.send('Not signed in');
         return;
     }
-    fetch(`https://www.thebluealliance.com/api/v3/${req.params.apiCall}?X-TBA-Auth-Key=${process.env.BLUEALLIANCE_API_KEY}`)
+    fetch(
+        `https://www.thebluealliance.com/api/v3/${req.params.apiCall}?X-TBA-Auth-Key=${process.env.BLUEALLIANCE_API_KEY}`
+    )
         .then((response) => response.json())
         .then((data) => {
             if (!data.Error) {

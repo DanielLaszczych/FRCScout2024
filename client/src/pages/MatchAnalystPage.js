@@ -1,11 +1,13 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { capitalizeFirstLetter, convertMatchKeyToString, sortEvents } from '../util/helperFunctions';
+import { capitalizeFirstLetter, convertMatchKeyToString, roundToTenth, sortEvents } from '../util/helperFunctions';
 import {
     Box,
     Button,
     Center,
     Flex,
+    Grid,
+    GridItem,
     IconButton,
     Menu,
     MenuButton,
@@ -17,12 +19,12 @@ import {
     Text
 } from '@chakra-ui/react';
 import { matchFormStatus, year } from '../util/helperConstants';
-import { MdOutlineWifi, MdOutlineWifiOff } from 'react-icons/md';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { FaSearch } from 'react-icons/fa';
 import MatchLineGraphs from '../components/MatchLineGraphs';
 import AutoPaths from '../components/AutoPaths';
 import TeamStatsList from '../components/TeamStatsList';
+import { RiEditBoxFill } from 'react-icons/ri';
 
 let matchTypes = [
     { label: 'Quals', value: 'q', id: uuidv4() },
@@ -50,6 +52,8 @@ function MatchAnalystPage() {
     const [multiTeamEventData, setMultiTeamEventData] = useState(null);
     const [multiOneValidMatchForms, setMutliOneValidMatchForms] = useState(null);
     const [tab, setTab] = useState(tabs.graphs);
+
+    const abort = useRef(new AbortController());
 
     useEffect(() => {
         if (localStorage.getItem('MatchAnalystData')) {
@@ -119,15 +123,15 @@ function MatchAnalystPage() {
         return matchKey;
     }, [matchNumber, matchType.value]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         function getTeamNumbers() {
+            abort.current = new AbortController();
             if (matchType === '') return;
             let matchKey = getMatchKey();
             if (matchKey === null) {
                 return;
             }
-            setFetchingTeamData(true);
-            fetch(`/blueAlliance/match/${currentEvent.key}_${matchKey}/simple`)
+            fetch(`/blueAlliance/match/${currentEvent.key}_${matchKey}/simple`, { signal: abort.current.signal })
                 .then((response) => response.json())
                 .then((data) => {
                     if (!data.Error) {
@@ -138,20 +142,19 @@ function MatchAnalystPage() {
                     } else {
                         setTeams({ red: ['', '', ''], blue: ['', '', ''] });
                         setMatchNumberError(`Error: (${data.Error})`);
-                        setFetchingTeamData(false);
                     }
                 })
                 .catch((error) => {
                     if (error?.name !== 'AbortError') {
                         console.log(error);
                         setError(error.message);
-                        setFetchingTeamData(false);
                     }
                 });
         }
-        setMatchNumberError('');
-        setTeams({ red: ['', '', ''], blue: ['', '', ''] });
+        abort.current.abort();
         if (!manualMode) {
+            setMatchNumberError('');
+            setTeams({ red: ['', '', ''], blue: ['', '', ''] });
             getTeamNumbers();
         }
     }, [matchType, matchNumber, currentEvent, getMatchKey, manualMode]);
@@ -217,11 +220,37 @@ function MatchAnalystPage() {
             });
     }, [currentEvent, teams]);
 
-    useEffect(() => {
-        if (!manualMode && validSetup() && matchType !== '' && matchNumber !== '') {
-            fetchTeamInfo();
+    function getAvgTotalPoints(alliance, amplify = 0) {
+        let total = 0;
+        for (const teamNumber of teams[alliance]) {
+            let teamData = multiTeamEventData[teamNumber];
+            if (teamData) {
+                total +=
+                    teamData.autoPoints.avg +
+                    teamData.teleopGP.ampScore.avg +
+                    teamData.teleopGP.speakerScore.avg * (1 - amplify) * 2 +
+                    teamData.teleopGP.speakerScore.avg * amplify * 5 +
+                    teamData.stagePoints.avg;
+            }
         }
-    }, [manualMode, validSetup, fetchTeamInfo, matchType, matchNumber]);
+        return total;
+    }
+
+    function getMaxTotalPoints(alliance, amplify = 0) {
+        let total = 0;
+        for (const teamNumber of teams[alliance]) {
+            let teamData = multiTeamEventData[teamNumber];
+            if (teamData) {
+                total +=
+                    teamData.autoPoints.max +
+                    teamData.teleopGP.ampScore.max +
+                    teamData.teleopGP.speakerScore.max * (1 - amplify) * 2 +
+                    teamData.teleopGP.speakerScore.max * amplify * 5 +
+                    teamData.stagePoints.max;
+            }
+        }
+        return total;
+    }
 
     if (error) {
         return (
@@ -251,7 +280,6 @@ function MatchAnalystPage() {
                 position={'absolute'}
                 right={'15px'}
                 onClick={() => {
-                    setMatchNumber('');
                     setMultiTeamEventData(null);
                     setMutliOneValidMatchForms(null);
                 }}
@@ -261,12 +289,13 @@ function MatchAnalystPage() {
                 <React.Fragment>
                     <IconButton
                         position={'absolute'}
-                        left={'15px'}
+                        right={'15px'}
+                        top={'50px'}
                         onClick={() => {
-                            setMatchNumber('');
                             setManualMode(!manualMode);
                         }}
-                        icon={manualMode ? <MdOutlineWifiOff /> : <MdOutlineWifi />}
+                        color={manualMode ? 'green' : 'black'}
+                        icon={<RiEditBoxFill />}
                     />
                     <Center marginBottom={'25px'}>
                         <Menu placement={'bottom'}>
@@ -355,9 +384,9 @@ function MatchAnalystPage() {
                                     min={1}
                                     precision={0}
                                     width={{
-                                        base: '65%',
-                                        md: '30%',
-                                        lg: '30%'
+                                        base: '50%',
+                                        md: '25%',
+                                        lg: '20%'
                                     }}
                                 >
                                     <NumberInputField
@@ -374,6 +403,58 @@ function MatchAnalystPage() {
                                     />
                                 </NumberInput>
                             ) : null}
+                            {!doneFetching() && (
+                                <Center marginTop={'20px'}>
+                                    <Spinner />
+                                </Center>
+                            )}
+                            {matchNumberError && (
+                                <Text
+                                    fontSize={'lg'}
+                                    fontWeight={'semibold'}
+                                    textAlign={'center'}
+                                    color={'red.500'}
+                                    margin={'0 auto'}
+                                    marginTop={'15px'}
+                                    width={'85%'}
+                                >
+                                    {matchNumberError}
+                                </Text>
+                            )}
+                            {validSetup() && (
+                                <Flex
+                                    flexWrap={'wrap'}
+                                    justifyContent={'center'}
+                                    alignItems={'center'}
+                                    rowGap={'20px'}
+                                    columnGap={'20px'}
+                                    marginTop={'20px'}
+                                >
+                                    {['red', 'blue'].map((station) => (
+                                        <Flex
+                                            key={station}
+                                            justifyContent={'center'}
+                                            alignItems={'center'}
+                                            flexDirection={'column'}
+                                            rowGap={'10px'}
+                                        >
+                                            {teams[station].map((teamNumber, stationIndex) => (
+                                                <Flex
+                                                    key={stationIndex}
+                                                    justifyContent={'center'}
+                                                    alignItems={'center'}
+                                                    columnGap={'10px'}
+                                                >
+                                                    <Text fontSize={'lg'} fontWeight={'semibold'}>
+                                                        {capitalizeFirstLetter(station)} Station {stationIndex + 1}:{' '}
+                                                        {teamNumber}
+                                                    </Text>
+                                                </Flex>
+                                            ))}
+                                        </Flex>
+                                    ))}
+                                </Flex>
+                            )}
                         </React.Fragment>
                     )}
                     {manualMode && (
@@ -406,7 +487,7 @@ function MatchAnalystPage() {
                                                     value={teamNumber}
                                                     min={1}
                                                     precision={0}
-                                                    width={'50%'}
+                                                    width={'30%'}
                                                 >
                                                     <NumberInputField
                                                         onKeyDown={(event) => {
@@ -416,7 +497,7 @@ function MatchAnalystPage() {
                                                         }}
                                                         enterKeyHint='done'
                                                         textAlign={'center'}
-                                                        placeholder='Enter Team #'
+                                                        placeholder='Team #'
                                                     />
                                                 </NumberInput>
                                             </Flex>
@@ -424,36 +505,19 @@ function MatchAnalystPage() {
                                     </Flex>
                                 ))}
                             </Flex>
-                            <Button
-                                isDisabled={!validSetup() || fetchingTeamData}
-                                display={'flex'}
-                                margin={'0 auto'}
-                                marginTop={'20px'}
-                                onClick={() => fetchTeamInfo()}
-                            >
-                                Confirm
-                            </Button>
                         </Box>
                     )}
+                    <Button
+                        isDisabled={!validSetup() || fetchingTeamData}
+                        display={'flex'}
+                        margin={'0 auto'}
+                        marginTop={'15px'}
+                        onClick={() => fetchTeamInfo()}
+                        isLoading={fetchingTeamData}
+                    >
+                        Confirm
+                    </Button>
                 </React.Fragment>
-            )}
-            {fetchingTeamData && (
-                <Center marginTop={'15px'}>
-                    <Spinner />
-                </Center>
-            )}
-            {!manualMode && doneFetching() && matchNumberError && (
-                <Text
-                    fontSize={'lg'}
-                    fontWeight={'semibold'}
-                    textAlign={'center'}
-                    color={'red.500'}
-                    margin={'0 auto'}
-                    marginTop={'15px'}
-                    width={'85%'}
-                >
-                    {matchNumberError}
-                </Text>
             )}
             {multiTeamEventData !== null && multiOneValidMatchForms !== null && (
                 <Box>
@@ -465,11 +529,241 @@ function MatchAnalystPage() {
                             {convertMatchKeyToString(getMatchKey())}
                         </Text>
                     )}
+                    <Box
+                        width={{ base: '100%', md: '90%', lg: '80%' }}
+                        overflowX={'auto'}
+                        margin={'0 auto'}
+                        marginBottom={'15px'}
+                    >
+                        <Grid
+                            templateColumns={'1fr 2fr 1.5fr 1.5fr 2fr 1.75fr 1.75fr'}
+                            borderTop={'1px solid black'}
+                            minWidth={'900px'}
+                        >
+                            {[
+                                { label: 'Team #' },
+                                { label: 'Total', subLabels: ['Avg', 'Max', 'GPCS'] },
+                                { label: 'Auto', subLabels: ['Avg', 'Max'] },
+                                { label: 'Teleop', subLabels: ['Avg', 'Max'] },
+                                { label: 'Stage', subLabels: ['Avg', 'Max', 'Hangs'] },
+                                { label: 'No Amplif.', subLabels: ['Pts', 'Max Pts'] },
+                                { label: '75% Amplif.', subLabels: ['Pts', 'Max Pts'] }
+                            ].map((element) => (
+                                <React.Fragment key={element.label}>
+                                    <GridItem
+                                        fontSize={'lg'}
+                                        fontWeight={'semibold'}
+                                        textAlign={'center'}
+                                        display={'flex'}
+                                        flexDirection={'column'}
+                                        justifyContent={'center'}
+                                        alignItems={'center'}
+                                        borderBottom={'1px solid black'}
+                                        borderRight={'1px solid black'}
+                                        backgroundColor={'gray.200'}
+                                        padding={'0px 0px'}
+                                        position={element.label === 'Team #' && 'sticky'}
+                                        left={element.label === 'Team #' && 0}
+                                        zIndex={element.label === 'Team #' && 1}
+                                        borderLeft={element.label === 'Team #' && '1px solid black'}
+                                    >
+                                        {!element.subLabels ? (
+                                            element.label
+                                        ) : (
+                                            <React.Fragment>
+                                                <Text height={'27px'}>{element.label}</Text>
+                                                <Flex height={'27px'} width={'100%'}>
+                                                    {element.subLabels.map((subLabel) => (
+                                                        <Text key={subLabel} flex={1 / element.subLabels.length}>
+                                                            {subLabel}
+                                                        </Text>
+                                                    ))}
+                                                </Flex>
+                                            </React.Fragment>
+                                        )}
+                                    </GridItem>
+                                </React.Fragment>
+                            ))}
+                            {['red', 'blue'].map((alliance, index) => (
+                                <React.Fragment key={alliance}>
+                                    <GridItem
+                                        fontSize={'xl'}
+                                        fontWeight={'medium'}
+                                        textAlign={'center'}
+                                        display={'flex'}
+                                        justifyContent={'center'}
+                                        alignItems={'center'}
+                                        borderBottom={'1px solid black'}
+                                        borderRight={'1px solid black'}
+                                        backgroundColor={alliance === 'red' ? 'red.200' : 'blue.200'}
+                                        rowEnd={index * 3 + 5}
+                                        colEnd={7}
+                                        rowSpan={3}
+                                        colSpan={1}
+                                    >
+                                        <Text flex={1 / 2}>{roundToTenth(getAvgTotalPoints(alliance))}</Text>
+                                        <Text flex={1 / 2}>{roundToTenth(getMaxTotalPoints(alliance))}</Text>
+                                    </GridItem>
+                                    <GridItem
+                                        fontSize={'xl'}
+                                        fontWeight={'medium'}
+                                        textAlign={'center'}
+                                        display={'flex'}
+                                        justifyContent={'center'}
+                                        alignItems={'center'}
+                                        borderBottom={'1px solid black'}
+                                        borderRight={'1px solid black'}
+                                        backgroundColor={alliance === 'red' ? 'red.200' : 'blue.200'}
+                                        rowEnd={index * 3 + 5}
+                                        colEnd={8}
+                                        rowSpan={3}
+                                        colSpan={1}
+                                    >
+                                        <Text flex={1 / 2}>{roundToTenth(getAvgTotalPoints(alliance, 0.75))}</Text>
+                                        <Text flex={1 / 2}>{roundToTenth(getMaxTotalPoints(alliance, 0.75))}</Text>
+                                    </GridItem>
+                                </React.Fragment>
+                            ))}
+
+                            {[...teams.red, ...teams.blue].map((teamNumber, index) => (
+                                <React.Fragment key={teamNumber}>
+                                    <GridItem
+                                        fontSize={'lg'}
+                                        fontWeight={'medium'}
+                                        textAlign={'center'}
+                                        display={'flex'}
+                                        justifyContent={'center'}
+                                        alignItems={'center'}
+                                        borderBottom={'1px solid black'}
+                                        borderRight={'1px solid black'}
+                                        backgroundColor={index > 2 ? 'blue.200' : 'red.200'}
+                                        minHeight={'35px'}
+                                        position={'sticky'}
+                                        left={0}
+                                        zIndex={1}
+                                        borderLeft={'1px solid black'}
+                                    >
+                                        {teamNumber}
+                                    </GridItem>
+
+                                    {multiTeamEventData[teamNumber] && (
+                                        <React.Fragment>
+                                            <Grid
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                                display={'flex'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                                borderBottom={'1px solid black'}
+                                                borderRight={'1px solid black'}
+                                                backgroundColor={index > 2 ? 'blue.200' : 'red.200'}
+                                            >
+                                                <Text flex={1 / 3}>
+                                                    {roundToTenth(multiTeamEventData[teamNumber].offensivePoints.avg)}
+                                                </Text>
+                                                <Text flex={1 / 3}>
+                                                    {multiTeamEventData[teamNumber].offensivePoints.max}
+                                                </Text>
+                                                <Text flex={1 / 3}>
+                                                    {roundToTenth(
+                                                        multiTeamEventData[teamNumber].autoGP.ampScore.avg +
+                                                            multiTeamEventData[teamNumber].autoGP.speakerScore.avg +
+                                                            multiTeamEventData[teamNumber].teleopGP.ampScore.avg +
+                                                            multiTeamEventData[teamNumber].teleopGP.speakerScore.avg
+                                                    )}
+                                                </Text>
+                                            </Grid>
+                                            <Grid
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                                display={'flex'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                                borderBottom={'1px solid black'}
+                                                borderRight={'1px solid black'}
+                                                backgroundColor={index > 2 ? 'blue.200' : 'red.200'}
+                                            >
+                                                <Text flex={1 / 2}>
+                                                    {roundToTenth(multiTeamEventData[teamNumber].autoPoints.avg)}
+                                                </Text>
+                                                <Text flex={1 / 2}>
+                                                    {multiTeamEventData[teamNumber].autoPoints.max}
+                                                </Text>
+                                            </Grid>
+                                            <Grid
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                                display={'flex'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                                borderBottom={'1px solid black'}
+                                                borderRight={'1px solid black'}
+                                                backgroundColor={index > 2 ? 'blue.200' : 'red.200'}
+                                            >
+                                                <Text flex={1 / 2}>
+                                                    {roundToTenth(multiTeamEventData[teamNumber].teleopPoints.avg)}
+                                                </Text>
+                                                <Text flex={1 / 2}>
+                                                    {multiTeamEventData[teamNumber].teleopPoints.max}
+                                                </Text>
+                                            </Grid>
+                                            <Grid
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                                display={'flex'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                                borderBottom={'1px solid black'}
+                                                borderRight={'1px solid black'}
+                                                backgroundColor={index > 2 ? 'blue.200' : 'red.200'}
+                                            >
+                                                <Text flex={1 / 3}>
+                                                    {roundToTenth(multiTeamEventData[teamNumber].stagePoints.avg)}
+                                                </Text>
+                                                <Text flex={1 / 3}>
+                                                    {multiTeamEventData[teamNumber].stagePoints.max}
+                                                </Text>
+                                                <Text flex={1 / 3}>
+                                                    {multiTeamEventData[teamNumber].climbSuccessFraction || 'N/A'}
+                                                </Text>
+                                            </Grid>
+                                        </React.Fragment>
+                                    )}
+                                    {!multiTeamEventData[teamNumber] && (
+                                        <React.Fragment>
+                                            <GridItem
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                                display={'flex'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                                borderBottom={'1px solid black'}
+                                                borderRight={'1px solid black'}
+                                                backgroundColor={index > 2 ? 'blue.200' : 'red.200'}
+                                                colSpan={4}
+                                            >
+                                                No data avaliable
+                                            </GridItem>
+                                        </React.Fragment>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </Grid>
+                    </Box>
                     <Flex
+                        margin={'0 auto'}
                         justifyContent={'center'}
                         columnGap={'10px'}
+                        rowGap={'5px'}
                         marginTop={matchType !== '' && matchNumber !== '' ? '0px' : '25px'}
                         marginBottom={'15px'}
+                        flexWrap={'wrap'}
+                        width={'80%'}
                     >
                         {Object.keys(tabs).map((tabKey) => (
                             <Button
@@ -481,7 +775,7 @@ function MatchAnalystPage() {
                             </Button>
                         ))}
                     </Flex>
-                    {tab === tabs.graphs && (
+                    <Box hidden={tab !== tabs.graphs}>
                         <MatchLineGraphs
                             teamNumbers={[...teams.red, ...teams.blue]}
                             multiTeamMatchForms={Object.fromEntries(
@@ -492,8 +786,8 @@ function MatchAnalystPage() {
                             )}
                             onTeamPage={false}
                         />
-                    )}
-                    {tab === tabs.autoPaths && (
+                    </Box>
+                    <Box hidden={tab !== tabs.autoPaths}>
                         <AutoPaths
                             teamNumbers={[...teams.red, ...teams.blue]}
                             autoPaths={Object.fromEntries(
@@ -504,8 +798,8 @@ function MatchAnalystPage() {
                             )}
                             onTeamPage={false}
                         />
-                    )}
-                    {tab === tabs.stats && (
+                    </Box>
+                    <Box hidden={tab !== tabs.stats}>
                         <TeamStatsList
                             teamNumbers={[...teams.red, ...teams.blue]}
                             multiTeamEventsData={Object.fromEntries(
@@ -522,7 +816,7 @@ function MatchAnalystPage() {
                             )}
                             onTeamPage={false}
                         />
-                    )}
+                    </Box>
                 </Box>
             )}
         </Box>

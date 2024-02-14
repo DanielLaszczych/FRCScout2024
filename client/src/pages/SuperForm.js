@@ -31,11 +31,12 @@ import {
 } from '@chakra-ui/react';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { convertMatchKeyToString, deepEqual } from '../util/helperFunctions';
+import { checksum, convertMatchKeyToString, deepEqual } from '../util/helperFunctions';
 import { matchFormStatus, teamPageTabs } from '../util/helperConstants';
 import { GlobalContext } from '../context/globalState';
 import QRCode from 'react-qr-code';
 import { GrPowerReset } from 'react-icons/gr';
+import { AuthContext } from '../context/auth';
 
 function SuperForm() {
     const location = useLocation();
@@ -51,6 +52,7 @@ function SuperForm() {
         teamNumber3: teamNumber3Param
     } = useParams();
     const { offline } = useContext(GlobalContext);
+    const { user } = useContext(AuthContext);
     const { isOpen, onOpen, onClose } = useDisclosure();
 
     const [stations] = useState([`${allianceParam}1`, `${allianceParam}2`, `${allianceParam}3`]);
@@ -68,13 +70,13 @@ function SuperForm() {
                 teamNumber: teamNumbers[i],
                 agility: null,
                 fieldAwareness: null,
-                superStatus: null,
-                superStatusComment: '',
                 ampPlayer: false,
                 ampPlayerGP: {
                     highNoteScore: 0,
                     highNoteMiss: 0
-                }
+                },
+                superStatus: null,
+                superStatusComment: ''
             };
         }
         return obj;
@@ -228,6 +230,42 @@ function SuperForm() {
         return [matchFormStatus.followUp, matchFormStatus.noShow].includes(superFormData[station].superStatus);
     }
 
+    function getQRValue() {
+        let map = {
+            null: 'n',
+            true: 't',
+            false: 'f',
+            Complete: 'cp',
+            'Follow Up': 'fu',
+            'No Show': 'ns',
+            Missing: 'ms' //Dont think this is ever needed
+        };
+        let data = [
+            eventKeyParam,
+            matchNumberParam,
+            user.displayName,
+            ...stations.map((station) =>
+                [
+                    station,
+                    superFormData[station].teamNumber,
+                    superFormData[station].agility === null ? 'n' : superFormData[station].agility,
+                    superFormData[station].fieldAwareness === null ? 'n' : superFormData[station].fieldAwareness,
+                    map[superFormData[station].ampPlayer],
+                    superFormData[station].ampPlayerGP.highNoteScore,
+                    superFormData[station].ampPlayerGP.highNoteMiss,
+                    map[superFormData[station].superStatus || matchFormStatus.complete],
+                    superFormData[station].superStatus === matchFormStatus.followUp
+                        ? superFormData[station].superStatusComment.trim() === ''
+                            ? 'n'
+                            : superFormData[station].superStatusComment.trim()
+                        : 'n'
+                ].join('#')
+            )
+        ].join('$');
+
+        return '#' + data + '$' + checksum(data);
+    }
+
     function submit() {
         setSubmitAttempted(true);
         let agilityText = [];
@@ -325,37 +363,6 @@ function SuperForm() {
                 });
                 setSubmitting(false);
             });
-    }
-
-    function getQRValue() {
-        let map = {
-            null: 'n',
-            Complete: 'cp',
-            'Follow Up': 'fu',
-            'No Show': 'ns',
-            Missing: 'ms' //Dont think this is ever needed
-        };
-        return (
-            '#' +
-            [
-                eventKeyParam,
-                matchNumberParam,
-                ...stations.map((station) =>
-                    [
-                        station,
-                        superFormData[station].teamNumber,
-                        superFormData[station].agility,
-                        superFormData[station].fieldAwareness,
-                        map[superFormData[station].superStatus || matchFormStatus.complete],
-                        superFormData[station].superStatus === matchFormStatus.followUp
-                            ? superFormData[station].superStatusComment.trim() === ''
-                                ? 'n'
-                                : superFormData[station].superStatusComment.trim()
-                            : 'n'
-                    ].join('#')
-                )
-            ].join('$')
-        );
     }
 
     if (error) {

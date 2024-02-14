@@ -700,7 +700,18 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
                     key={teamNumber}
                     justifyContent={'center'}
                     width={{ base: '90%', lg: `calc(90% / ${Math.min(teamNumbers.length, 3)})` }}
-                    height={{ base: '60vh', lg: `calc(120vh / ${teamNumbers.length > 3 ? 3 : 2})` }}
+                    height={
+                        !multiTeamEventsData[teamNumber] ||
+                        standForms[teamNumber].length === 0 ||
+                        superForms[teamNumber].length === 0
+                            ? 'fit-content'
+                            : {
+                                  base: `max(60vh, 280px + ${50 + (!onTeamPage ? 27 : 0)}px)`,
+                                  lg: `max(calc(120vh / ${teamNumbers.length > 3 ? 3 : 2}), 280px + ${
+                                      50 + (!onTeamPage ? 27 : 0)
+                                  }px)`
+                              }
+                    }
                 >
                     {multiTeamEventsData[teamNumber] &&
                     standForms[teamNumber].length > 0 &&
@@ -741,10 +752,10 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
                             </Flex>
                             <Box
                                 height={{
-                                    base: `calc(60vh - ${50 + (!onTeamPage ? 27 : 0)}px)`,
-                                    lg: `calc(120vh / ${teamNumbers.length > 3 ? 3 : 2} - ${
+                                    base: `max(calc(60vh - ${50 + (!onTeamPage ? 27 : 0)}px), 280px)`,
+                                    lg: `max(calc(120vh / ${teamNumbers.length > 3 ? 3 : 2} - ${
                                         50 + (!onTeamPage ? 27 : 0)
-                                    }px)`
+                                    }px), 280px)`
                                 }}
                                 overflowY={'auto'}
                             >
