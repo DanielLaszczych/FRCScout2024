@@ -18,7 +18,7 @@ import {
     Spinner,
     Text
 } from '@chakra-ui/react';
-import { matchFormStatus, year } from '../util/helperConstants';
+import { matchFormStatus } from '../util/helperConstants';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { FaSearch } from 'react-icons/fa';
 import MatchLineGraphs from '../components/MatchLineGraphs';
@@ -81,9 +81,7 @@ function MatchAnalystPage() {
                 }
             })
             .then((data) => {
-                console.log(data);
                 let events = data;
-                events = events.filter((event) => event.key !== `${year}cmptx`);
                 setEvents(sortEvents(events));
                 if (events.length === 0) {
                     setError('No events are registered in the database');
@@ -423,12 +421,14 @@ function MatchAnalystPage() {
                             )}
                             {validSetup() && (
                                 <Flex
+                                    margin={'0 auto'}
                                     flexWrap={'wrap'}
                                     justifyContent={'center'}
                                     alignItems={'center'}
                                     rowGap={'20px'}
                                     columnGap={'20px'}
                                     marginTop={'20px'}
+                                    width={'80%'}
                                 >
                                     {['red', 'blue'].map((station) => (
                                         <Flex
@@ -519,7 +519,7 @@ function MatchAnalystPage() {
                     </Button>
                 </React.Fragment>
             )}
-            {multiTeamEventData !== null && multiOneValidMatchForms !== null && (
+            {multiTeamEventData !== null && multiOneValidMatchForms !== null && validSetup() && (
                 <Box>
                     <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
                         {currentEvent.name}
@@ -529,16 +529,11 @@ function MatchAnalystPage() {
                             {convertMatchKeyToString(getMatchKey())}
                         </Text>
                     )}
-                    <Box
-                        width={{ base: '100%', md: '90%', lg: '80%' }}
-                        overflowX={'auto'}
-                        margin={'0 auto'}
-                        marginBottom={'15px'}
-                    >
+                    <Box width={{ base: '100%', lg: '85%' }} overflowX={'auto'} margin={'0 auto'} marginBottom={'15px'}>
                         <Grid
                             templateColumns={'1fr 2fr 1.5fr 1.5fr 2fr 1.75fr 1.75fr'}
                             borderTop={'1px solid black'}
-                            minWidth={'900px'}
+                            minWidth={'1000px'}
                         >
                             {[
                                 { label: 'Team #' },

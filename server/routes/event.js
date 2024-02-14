@@ -16,6 +16,20 @@ router.get('/getEvents', async (req, res) => {
     }
 });
 
+router.get('/getEvent', async (req, res) => {
+    if (req.isUnauthenticated()) {
+        res.sendStatus(401);
+        return;
+    }
+    try {
+        const event = await Event.findOne(JSON.parse(req.headers.filters || '{}')).exec();
+        res.status(200).json(event);
+    } catch (err) {
+        res.statusMessage = err.message;
+        res.sendStatus(500);
+    }
+});
+
 router.get('/getCurrentEvent', async (req, res) => {
     if (req.isUnauthenticated()) {
         res.sendStatus(401);

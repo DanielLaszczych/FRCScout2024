@@ -10,7 +10,7 @@ import TempPage from './pages/TempPage';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const PitForm = lazy(() => import('./pages/PitForm'));
-// const PitPage = lazy(() => import('./pages/PitsPage'));
+const PitPage = lazy(() => import('./pages/PitsPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 // const MatchesPage = lazy(() => import('./pages/MatchesPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
@@ -81,7 +81,7 @@ function App() {
                 >
                     <Routes>
                         <Route exact path='/' element={<HomePage />} />
-                        {/* <Route exact path='/pits' element={<PitPage />} /> */}
+                        <Route exact path='/pits' element={<PitPage />} />
                         {/* <Route exact path='/matches' element={<MatchesPage />} /> */}
                         {/* {['team', 'event'].map((path) => (
                             <Route path={`/rtessIssues/${path}`} key={path} element={<RTESSIssuesPage />} />

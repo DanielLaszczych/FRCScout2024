@@ -568,7 +568,7 @@ function StandForm() {
             standFormData.history.endGame.position
         ].join('$');
 
-        return '#' + data + '$' + checksum(data);
+        return '#$stand$' + data + '$' + checksum(data);
     }
 
     function submit() {

@@ -14,7 +14,7 @@ import {
     PopoverFooter,
     PopoverHeader,
     PopoverTrigger,
-    Text,
+    Text
 } from '@chakra-ui/react';
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -74,76 +74,117 @@ function PitsMemo({ eventData, pitForms, currentEvent }) {
     }
 
     return (
-        <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'} minH={'50px'}>
+        <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'}>
             {eventData.length === 0 ? (
-                <Center paddingTop={'10px'} paddingBottom={'10px'}>
-                    <Text textAlign={'center'} width={'90%'} fontSize={'20px'}>
+                <Center minH={'50px'}>
+                    <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} width={'90%'}>
                         No pit forms marked for follow up or missing
                     </Text>
                 </Center>
             ) : (
-                eventData.map((team, index) => (
-                    <Grid
-                        borderTop={'1px solid black'}
-                        backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
-                        borderRadius={index % 2 === 0 ? 'none' : '0px 0px 10px 10px'}
-                        key={team.key}
-                        templateColumns='1fr 2fr 1fr 1fr'
-                        gap={'5px'}
-                    >
-                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
+                <Grid borderTop={'1px solid black'} templateColumns='1fr 1.5fr 1fr 1fr'>
+                    {eventData.map((team, index) => (
+                        <React.Fragment key={team.key}>
+                            <GridItem
+                                fontSize={'lg'}
+                                fontWeight={'medium'}
+                                textAlign={'center'}
+                                display={'flex'}
+                                justifyContent={'center'}
+                                alignItems={'center'}
+                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                            >
                                 {team.number}
-                            </Text>
-                        </GridItem>
-                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
+                            </GridItem>
+                            <GridItem
+                                fontSize={'lg'}
+                                fontWeight={'medium'}
+                                textAlign={'center'}
+                                display={'flex'}
+                                justifyContent={'center'}
+                                alignItems={'center'}
+                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                padding={'10px 0px'}
+                            >
                                 {team.name}
-                            </Text>
-                        </GridItem>
-                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
+                            </GridItem>
+                            <GridItem
+                                fontSize={'lg'}
+                                fontWeight={'medium'}
+                                textAlign={'center'}
+                                display={'flex'}
+                                justifyContent={'center'}
+                                alignItems={'center'}
+                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                            >
                                 {getPitFormScouter(team.number)}
-                            </Text>
-                        </GridItem>
-                        <GridItem padding={'10px 0px 10px 0px'} marginRight={'10px'} marginLeft={'10px'} textAlign={'center'}>
-                            {getPitFormStatusColor(team.number) !== 'yellow' ? (
-                                <IconButton
-                                    icon={getPitFormStatusIcon(team.number)}
-                                    colorScheme={getPitFormStatusColor(team.number)}
-                                    backgroundColor={getPitFormStatusColor(team.number) === 'gray' ? 'gray.300' : 'green.500'}
-                                    _hover={{ backgroundColor: getPitFormStatusColor(team.number) === 'gray' ? 'gray.400' : 'green.600' }}
-                                    _focus={{ outline: 'none' }}
-                                    size='sm'
-                                    as={Link}
-                                    to={`/pitForm/${currentEvent.key}/${team.number}`}
-                                    state={{ previousRoute: 'pits' }}
-                                />
-                            ) : (
-                                <Popover flip={true} placement='bottom'>
-                                    <PopoverTrigger>
-                                        <IconButton icon={getPitFormStatusIcon(team.number)} colorScheme={getPitFormStatusColor(team.number)} _focus={{ outline: 'none' }} size='sm' />
-                                    </PopoverTrigger>
-                                    <PopoverContent maxWidth={'50vw'} _focus={{ outline: 'none' }}>
-                                        <PopoverArrow />
-                                        <PopoverCloseButton />
-                                        <PopoverHeader margin={'0 auto'} maxWidth={'165px'} color='black' fontSize='md' fontWeight='bold'>
-                                            Follow Up Comment
-                                        </PopoverHeader>
-                                        <PopoverBody maxHeight={'125px'} overflowY={'auto'}>
-                                            <Text>{getPitFormFollowUpComment(team.number)}</Text>
-                                        </PopoverBody>
-                                        <PopoverFooter>
-                                            <Button _focus={{ outline: 'none' }} size='sm' as={Link} to={`/pitForm/${currentEvent.key}/${team.number}`} state={{ previousRoute: 'pits' }}>
-                                                Go To
-                                            </Button>
-                                        </PopoverFooter>
-                                    </PopoverContent>
-                                </Popover>
-                            )}
-                        </GridItem>
-                    </Grid>
-                ))
+                            </GridItem>
+                            <GridItem
+                                display={'flex'}
+                                justifyContent={'center'}
+                                alignItems={'center'}
+                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                            >
+                                {getPitFormStatusColor(team.number) !== 'yellow' ? (
+                                    <IconButton
+                                        icon={getPitFormStatusIcon(team.number)}
+                                        colorScheme={getPitFormStatusColor(team.number)}
+                                        backgroundColor={
+                                            getPitFormStatusColor(team.number) === 'gray' ? 'gray.300' : 'green.500'
+                                        }
+                                        _hover={{
+                                            backgroundColor:
+                                                getPitFormStatusColor(team.number) === 'gray' ? 'gray.400' : 'green.600'
+                                        }}
+                                        size='sm'
+                                        as={Link}
+                                        to={`/pitForm/${currentEvent.key}/${team.number}`}
+                                        state={{ previousRoute: 'pits' }}
+                                    />
+                                ) : (
+                                    <Popover flip={true} placement='bottom'>
+                                        <PopoverTrigger>
+                                            <IconButton
+                                                icon={getPitFormStatusIcon(team.number)}
+                                                colorScheme={getPitFormStatusColor(team.number)}
+                                                size='sm'
+                                            />
+                                        </PopoverTrigger>
+                                        <PopoverContent maxWidth={'50vw'}>
+                                            <PopoverArrow />
+                                            <PopoverCloseButton />
+                                            <PopoverHeader
+                                                margin={'0 auto'}
+                                                maxWidth={'75%'}
+                                                fontSize={'md'}
+                                                fontWeight={'semibold'}
+                                                textAlign={'center'}
+                                            >
+                                                Follow Up Comment
+                                            </PopoverHeader>
+                                            <PopoverBody maxHeight={'100px'} overflowY={'auto'}>
+                                                <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                                                    {getPitFormFollowUpComment(team.number)}
+                                                </Text>
+                                            </PopoverBody>
+                                            <PopoverFooter margin={'0 auto'}>
+                                                <Button
+                                                    _focus={{ outline: 'none' }}
+                                                    size='sm'
+                                                    as={Link}
+                                                    to={`/pitForm/${currentEvent.key}/${team.number}`}
+                                                    state={{ previousRoute: 'pits' }}
+                                                >
+                                                    Go To
+                                                </Button>
+                                            </PopoverFooter>
+                                        </PopoverContent>
+                                    </Popover>
+                                )}
+                            </GridItem>
+                        </React.Fragment>
+                    ))}
+                </Grid>
             )}
         </Box>
     );

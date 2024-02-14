@@ -1,78 +1,96 @@
 import { React, useCallback, useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { Button, Center, Box, Menu, MenuButton, MenuList, MenuItem, Spinner, IconButton, Grid, GridItem, Text } from '@chakra-ui/react';
-import { GET_EVENT, GET_EVENTS_KEYS_NAMES, GET_PITFORMS_BY_EVENT } from '../graphql/queries';
+import {
+    Button,
+    Center,
+    Box,
+    Menu,
+    MenuButton,
+    MenuList,
+    MenuItem,
+    Spinner,
+    IconButton,
+    Grid,
+    GridItem
+} from '@chakra-ui/react';
 import { ChevronDownIcon, WarningIcon } from '@chakra-ui/icons';
-import { sortRegisteredEvents } from '../util/helperFunctions';
+import { sortEvents } from '../util/helperFunctions';
 import PitsMemo from '../components/PitsMemo';
 import { AiFillFilter } from 'react-icons/ai';
 
 function PitPage() {
     const [error, setError] = useState(null);
-    const [currentEvent, setCurrentEvent] = useState({ name: '', key: '' });
-    const [focusedEvent, setFocusedEvent] = useState('');
+    const [events, setEvents] = useState(null);
+    const [currentEvent, setCurrentEvent] = useState(null);
+    const [focusedEvent, setFocusedEvent] = useState(null);
+    const [currentEventData, setCurrentEventData] = useState(null);
     const [followUpFilter, setFollowUpFilter] = useState(false);
-    const [filteredPitList, setFilteredPitList] = useState(null);
+    const [pitForms, setPitForms] = useState(null);
+    const [filteredPitForms, setFilteredPitForms] = useState(null);
     const [pitListVersion, setPitListVersion] = useState(0);
 
-    const {
-        loading: loadingEvents,
-        error: eventsError,
-        data: { getEvents: events } = {}
-    } = useQuery(GET_EVENTS_KEYS_NAMES, {
-        fetchPolicy: 'network-only',
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve registered events');
-        },
-        onCompleted({ getEvents: events }) {
-            let sortedEvents = sortRegisteredEvents(events);
-            if (sortedEvents.length > 0) {
-                let currentEvent = sortedEvents.find((event) => event.currentEvent);
-                if (currentEvent === undefined) {
-                    setCurrentEvent({ name: sortedEvents[sortedEvents.length - 1].name, key: sortedEvents[sortedEvents.length - 1].key });
-                    setFocusedEvent(sortedEvents[sortedEvents.length - 1].name);
+    useEffect(() => {
+        fetch('/event/getEventsSimple')
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
                 } else {
+                    throw new Error(response.statusText);
+                }
+            })
+            .then((data) => {
+                let events = data;
+                setEvents(sortEvents(events));
+                if (events.length === 0) {
+                    setError('No events are registered in the database');
+                    return;
+                }
+                let currentEvent = events.find((event) => event.currentEvent);
+                if (currentEvent) {
+                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setFocusedEvent(currentEvent.name);
+                } else {
+                    currentEvent = events[events.length - 1];
                     setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
                     setFocusedEvent(currentEvent.name);
                 }
-            } else {
-                setError('No events registered in the database');
-            }
-        }
-    });
+            })
+            .catch((error) => setError(error.message));
+    }, []);
 
-    const {
-        loading: loadingPitForms,
-        error: pitFormsError,
-        data: { getPitForms: pitForms } = {}
-    } = useQuery(GET_PITFORMS_BY_EVENT, {
-        skip: currentEvent.key === '',
-        fetchPolicy: 'network-only',
-        variables: {
-            eventKey: currentEvent.key
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve pit forms');
-        }
-    });
+    useEffect(() => {
+        setCurrentEventData(null);
+        setPitForms(null);
+        setFilteredPitForms(null);
+        if (currentEvent !== null) {
+            fetch('/event/getEvent', { headers: { filters: JSON.stringify({ key: currentEvent.key }) } })
+                .then((response) => {
+                    if (response.status === 200) {
+                        return response.json();
+                    } else {
+                        throw new Error(response.statusText);
+                    }
+                })
+                .then((data) => {
+                    setCurrentEventData(data);
+                })
+                .catch((error) => setError(error.message));
 
-    const {
-        loading: loadingEvent,
-        error: eventError,
-        data: { getEvent: event } = {}
-    } = useQuery(GET_EVENT, {
-        skip: currentEvent.key === '',
-        fetchPolicy: 'network-only',
-        variables: {
-            key: currentEvent.key
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve data on current event');
+            fetch('/pitForm/getPitFormsSimple', {
+                headers: { filters: JSON.stringify({ eventKey: currentEvent.key }) }
+            })
+                .then((response) => {
+                    if (response.status === 200) {
+                        return response.json();
+                    } else {
+                        throw new Error(response.statusText);
+                    }
+                })
+                .then((data) => {
+                    setPitForms(data);
+                })
+                .catch((error) => setError(error.message));
         }
-    });
+    }, [currentEvent]);
 
     const getPitFormStatusColor = useCallback(
         (teamNumber) => {
@@ -95,25 +113,35 @@ function PitPage() {
     );
 
     useEffect(() => {
-        let newPitList = [];
-        if (!loadingEvent && !loadingPitForms && event && pitForms) {
-            newPitList = (followUpFilter ? [...event.teams].filter((team) => getPitFormStatusColor(team.number) !== 'green') : [...event.teams]).sort((a, b) => a.number - b.number);
-            setFilteredPitList(newPitList);
+        let newPitForms = [];
+        if (pitForms && currentEventData) {
+            newPitForms = (
+                followUpFilter
+                    ? [...currentEventData.teams].filter((team) => getPitFormStatusColor(team.number) !== 'green')
+                    : [...currentEventData.teams]
+            ).sort((a, b) => a.number - b.number);
+            setFilteredPitForms(newPitForms);
         } else {
-            setFilteredPitList(null);
+            setFilteredPitForms(null);
         }
         setPitListVersion((prevVersion) => prevVersion + 1);
-    }, [event, pitForms, followUpFilter, getPitFormStatusColor, loadingEvent, loadingPitForms]);
+    }, [pitForms, followUpFilter, currentEventData, getPitFormStatusColor]);
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                textAlign={'center'}
+                margin={'0 auto'}
+                width={{ base: '85%', md: '66%', lg: '50%' }}
+            >
                 {error}
             </Box>
         );
     }
 
-    if (loadingEvents || currentEvent.key === '' || (eventsError && error !== false)) {
+    if (currentEvent === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -136,19 +164,30 @@ function PitPage() {
             />
             <Center marginBottom={'25px'}>
                 <Menu placement='bottom'>
-                    <MenuButton maxW={'65vw'} onClick={() => setFocusedEvent('')} _focus={{ outline: 'none' }} as={Button} rightIcon={<ChevronDownIcon />}>
+                    <MenuButton
+                        maxW={'65vw'}
+                        onClick={() => setFocusedEvent('')}
+                        _focus={{ outline: 'none' }}
+                        as={Button}
+                        rightIcon={<ChevronDownIcon />}
+                    >
                         <Box overflow={'hidden'} textOverflow={'ellipsis'}>
                             {currentEvent.name}
                         </Box>
                     </MenuButton>
                     <MenuList>
-                        {sortRegisteredEvents(events).map((eventItem) => (
+                        {events.map((eventItem) => (
                             <MenuItem
                                 textAlign={'center'}
                                 justifyContent={'center'}
                                 _focus={{ backgroundColor: 'none' }}
                                 onMouseEnter={() => setFocusedEvent(eventItem.name)}
-                                backgroundColor={(currentEvent.name === eventItem.name && focusedEvent === '') || focusedEvent === eventItem.name ? 'gray.100' : 'none'}
+                                backgroundColor={
+                                    (currentEvent.name === eventItem.name && focusedEvent === '') ||
+                                    focusedEvent === eventItem.name
+                                        ? 'gray.100'
+                                        : 'none'
+                                }
                                 maxW={'65vw'}
                                 key={eventItem.key}
                                 onClick={() => setCurrentEvent({ name: eventItem.name, key: eventItem.key })}
@@ -159,35 +198,67 @@ function PitPage() {
                     </MenuList>
                 </Menu>
             </Center>
-            {loadingPitForms || loadingEvent || filteredPitList === null || ((pitFormsError || eventError) && error !== false) ? (
+            {currentEvent === null || pitForms === null || filteredPitForms === null ? (
                 <Center>
                     <Spinner></Spinner>
                 </Center>
             ) : (
                 <Box marginBottom={'25px'}>
-                    <Grid border={'1px solid black'} borderBottom={'none'} borderRadius={'10px 10px 0px 0px'} backgroundColor={'gray.300'} templateColumns='1fr 2fr 1fr 1fr' gap={'5px'}>
-                        <GridItem padding={'10px 0px 10px 0px'} _focus={{ zIndex: 1 }} textAlign={'center'}>
-                            <Text w='fit-content' margin={'0 auto'} pos={'relative'} fontWeight={'500'} fontSize={'18px'} top={'50%'} transform={'translateY(-50%)'}>
-                                Team #
-                            </Text>
+                    <Grid
+                        border={'1px solid black'}
+                        borderBottom={'none'}
+                        borderRadius={'10px 10px 0px 0px'}
+                        backgroundColor={'gray.300'}
+                        templateColumns='1fr 1.5fr 1fr 1fr'
+                    >
+                        <GridItem
+                            fontSize={'lg'}
+                            fontWeight={'semibold'}
+                            textAlign={'center'}
+                            display={'flex'}
+                            justifyContent={'center'}
+                            alignItems={'center'}
+                            padding={'10px 0px'}
+                        >
+                            Team #
                         </GridItem>
-                        <GridItem padding={'0px 0px 0px 0px'} _focus={{ zIndex: 1 }} textAlign={'center'}>
-                            <Text w='fit-content' margin={'0 auto'} pos={'relative'} fontSize={'18px'} fontWeight={'500'} top={'50%'} transform={'translateY(-50%)'}>
-                                Team Name
-                            </Text>
+                        <GridItem
+                            fontSize={'lg'}
+                            fontWeight={'semibold'}
+                            textAlign={'center'}
+                            display={'flex'}
+                            justifyContent={'center'}
+                            alignItems={'center'}
+                        >
+                            Name
                         </GridItem>
-                        <GridItem padding={'0px 0px 0px 0px'} _focus={{ zIndex: 1 }} textAlign={'center'}>
-                            <Text w='fit-content' margin={'0 auto'} pos={'relative'} fontSize={'18px'} fontWeight={'500'} top={'50%'} transform={'translateY(-50%)'}>
-                                Scouter
-                            </Text>
+                        <GridItem
+                            fontSize={'lg'}
+                            fontWeight={'semibold'}
+                            textAlign={'center'}
+                            display={'flex'}
+                            justifyContent={'center'}
+                            alignItems={'center'}
+                        >
+                            Scouter
                         </GridItem>
-                        <GridItem padding={'0px 0px 0px 0px'} _focus={{ zIndex: 1 }} textAlign={'center'}>
-                            <Text w='fit-content' margin={'0 auto'} pos={'relative'} fontSize={'18px'} fontWeight={'500'} top={'50%'} transform={'translateY(-50%)'}>
-                                Status
-                            </Text>
+                        <GridItem
+                            fontSize={'lg'}
+                            fontWeight={'semibold'}
+                            textAlign={'center'}
+                            display={'flex'}
+                            justifyContent={'center'}
+                            alignItems={'center'}
+                        >
+                            Status
                         </GridItem>
                     </Grid>
-                    <PitsMemo eventData={filteredPitList} pitForms={pitForms} version={pitListVersion} currentEvent={currentEvent}></PitsMemo>
+                    <PitsMemo
+                        eventData={filteredPitForms}
+                        pitForms={pitForms}
+                        version={pitListVersion}
+                        currentEvent={currentEvent}
+                    ></PitsMemo>
                 </Box>
             )}
         </Box>
