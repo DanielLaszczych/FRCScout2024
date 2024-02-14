@@ -1207,7 +1207,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                         'Defense',
                                         'Super Form',
                                         'Issues',
-                                        'Comments'
+                                        'Comment'
                                     ].map((label) => (
                                         <GridItem
                                             key={label}
@@ -1814,6 +1814,12 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 borderRight={'1px solid black'}
                                                 backgroundColor={'gray.200'}
                                                 minWidth={'135px'}
+                                                // Just to make 'Not yet completed' look nicer
+                                                padding={
+                                                    matchForm.superStatus === matchFormStatus.missing
+                                                        ? '0px 5px'
+                                                        : '0px'
+                                                }
                                             >
                                                 {matchForm.superStatus === matchFormStatus.followUp
                                                     ? 'Marked for follow up'
@@ -1885,7 +1891,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                     alignItems={'center'}
                                                     borderBottom={'1px solid black'}
                                                     borderRight={'1px solid black'}
-                                                    colSpan={2}
+                                                    colSpan={matchForm.standStatus === matchFormStatus.noShow ? 1 : 2}
                                                     backgroundColor={'gray.200'}
                                                 >
                                                     {matchForm.standStatus === matchFormStatus.followUp
@@ -1895,33 +1901,37 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         : 'No show'}
                                                 </GridItem>
                                             )}
-                                            {matchForm.standStatus === matchFormStatus.complete && (
+                                            {[matchFormStatus.complete, matchFormStatus.noShow].includes(
+                                                matchForm.standStatus
+                                            ) && (
                                                 <React.Fragment>
-                                                    <GridItem
-                                                        display={'flex'}
-                                                        justifyContent={'center'}
-                                                        alignItems={'center'}
-                                                        flexDirection={'column'}
-                                                        borderBottom={'1px solid black'}
-                                                        borderRight={'1px solid black'}
-                                                        backgroundColor={'gray.200'}
-                                                        minWidth={'120px'}
-                                                    >
-                                                        <Text
-                                                            fontSize={'lg'}
-                                                            fontWeight={'medium'}
-                                                            textAlign={'center'}
+                                                    {matchForm.standStatus === matchFormStatus.complete && (
+                                                        <GridItem
+                                                            display={'flex'}
+                                                            justifyContent={'center'}
+                                                            alignItems={'center'}
+                                                            flexDirection={'column'}
+                                                            borderBottom={'1px solid black'}
+                                                            borderRight={'1px solid black'}
+                                                            backgroundColor={'gray.200'}
+                                                            minWidth={'120px'}
                                                         >
-                                                            {[
-                                                                matchForm.lostCommunication ? 'Lost comms' : false,
-                                                                matchForm.robotBroke ? 'Broke' : false,
-                                                                matchForm.yellowCard ? 'Yellow card' : false,
-                                                                matchForm.redCard ? 'Red card' : false
-                                                            ]
-                                                                .filter((elem) => elem)
-                                                                .join(', ') || 'No issues'}
-                                                        </Text>
-                                                    </GridItem>
+                                                            <Text
+                                                                fontSize={'lg'}
+                                                                fontWeight={'medium'}
+                                                                textAlign={'center'}
+                                                            >
+                                                                {[
+                                                                    matchForm.lostCommunication ? 'Lost comms' : false,
+                                                                    matchForm.robotBroke ? 'Broke' : false,
+                                                                    matchForm.yellowCard ? 'Yellow card' : false,
+                                                                    matchForm.redCard ? 'Red card' : false
+                                                                ]
+                                                                    .filter((elem) => elem)
+                                                                    .join(', ') || 'No issues'}
+                                                            </Text>
+                                                        </GridItem>
+                                                    )}
                                                     <GridItem
                                                         display={'flex'}
                                                         justifyContent={'center'}
@@ -1930,7 +1940,11 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                         borderRight={'1px solid black'}
                                                         backgroundColor={'gray.200'}
                                                         minWidth={'120px'}
-                                                        padding={'0px 10px'}
+                                                        padding={
+                                                            commentsToggled.includes(matchForm.matchNumber)
+                                                                ? '10px 10px'
+                                                                : '0px 10px'
+                                                        }
                                                         onClick={() => {
                                                             if (commentsToggled.includes(matchForm.matchNumber)) {
                                                                 setCommentsToggled(
@@ -1967,7 +1981,9 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                             overflow={'hidden'}
                                                             textOverflow={'ellipsis'}
                                                         >
-                                                            {matchForm.standComment || 'No comment'}
+                                                            {matchForm.standStatus === matchFormStatus.noShow
+                                                                ? matchForm.standStatusComment
+                                                                : matchForm.standComment || 'No comment'}
                                                         </Text>
                                                     </GridItem>
                                                 </React.Fragment>

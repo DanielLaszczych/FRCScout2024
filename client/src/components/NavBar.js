@@ -1,4 +1,4 @@
-import { React, useContext, useEffect, useState } from 'react';
+import { React, useContext, useEffect, useLayoutEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
 import {
@@ -32,6 +32,8 @@ let titleMap = [
     { path: '/pitForm', title: 'Pit Form' },
     { path: '/preStandForm', title: 'Pre Stand Form' },
     { path: '/standForm', title: 'Stand Form' },
+    { path: '/preSuperForm', title: 'Pre Super Form' },
+    { path: '/superForm', title: 'Super Form' },
     { path: '/team', title: 'Team' },
     { path: '/admin', title: 'Admin' },
     { path: '/tableau', title: 'Tableau' }
@@ -45,7 +47,7 @@ function NavBar() {
 
     const [teamNumber, setTeamNumber] = useState('');
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const curTitle = titleMap.find((item) => item.path === `/${curLoc.pathname.split('/')[1]}`);
         if (curTitle && curTitle.title) {
             let title = curTitle.title;

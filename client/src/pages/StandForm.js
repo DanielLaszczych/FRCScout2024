@@ -14,7 +14,7 @@ import {
     Checkbox,
     Flex,
     HStack,
-    IconButton,
+    Icon,
     Modal,
     ModalBody,
     ModalCloseButton,
@@ -365,7 +365,12 @@ function StandForm() {
         if (activeSection.label === sections.preAuto.label) {
             maxHeight = getHeightDimensions().max - sections.preAuto.spaceUsed;
         } else {
-            maxHeight = getHeightDimensions().availableScoringSpace;
+            if (fieldRotation % 180 !== 0) {
+                maxHeight = maxWidth;
+                maxWidth = getHeightDimensions().availableScoringSpace;
+            } else {
+                maxHeight = getHeightDimensions().availableScoringSpace;
+            }
         }
 
         let newDimensionsRatios = {};
@@ -405,7 +410,7 @@ function StandForm() {
             newDimensionsRatios[imageKey] = { width: scaledWidth / imageWidth, height: scaledHeight / imageHeight };
         }
         setImageDimensionRatios(newDimensionsRatios);
-    }, [activeSection]);
+    }, [activeSection, fieldRotation]);
 
     useEffect(() => {
         getImageVariables();
@@ -541,7 +546,11 @@ function StandForm() {
             map[standFormData.robotBroke],
             map[standFormData.yellowCard],
             map[standFormData.redCard],
-            standFormData.standComment.trim() === '' ? 'n' : standFormData.standComment.trim(),
+            standFormData.standStatus === matchFormStatus.noShow
+                ? 'n'
+                : standFormData.standComment.trim() === ''
+                ? 'n'
+                : standFormData.standComment.trim(),
             map[standFormData.standStatus || matchFormStatus.complete],
             isFollowOrNoShow()
                 ? standFormData.standStatusComment.trim() === ''
@@ -568,7 +577,7 @@ function StandForm() {
             standFormData.history.endGame.position
         ].join('$');
 
-        return '#$stand$' + data + '$' + checksum(data);
+        return '#stand$' + data + '$' + checksum(data);
     }
 
     function submit() {
@@ -624,7 +633,8 @@ function StandForm() {
                 matchNumber: matchNumberParam,
                 station: stationParam,
                 teamNumber: parseInt(teamNumberParam),
-                standComment: standFormData.standComment.trim(),
+                standComment:
+                    standFormData.standStatus === matchFormStatus.noShow ? '' : standFormData.standComment.trim(),
                 standStatus: standFormData.standStatus || matchFormStatus.complete,
                 standStatusComment: isFollowOrNoShow() ? standFormData.standStatusComment.trim() : ''
             })
@@ -917,9 +927,8 @@ function StandForm() {
                                     onLoad={() => setImageLoaded(true)}
                                 />
                                 {notePositions.map((position, index) => (
-                                    <IconButton
+                                    <Button
                                         key={position[2]}
-                                        icon={<LiaHotdogSolid />}
                                         position={'absolute'}
                                         visibility={imageLoaded ? 'visible' : 'hidden'}
                                         left={`${getPoint(position[0]) * imageDimensionRatios.auto.width}px`}
@@ -939,12 +948,14 @@ function StandForm() {
                                             (element) => element.piece === (index + 1).toString()
                                         )}
                                         _disabled={{
-                                            backgroundColor: '#3182ce',
+                                            backgroundColor: 'purple.600',
                                             textColor: 'white',
-                                            _hover: { backgroundColor: '#3182ce' },
+                                            _hover: { backgroundColor: 'purple.600' },
                                             cursor: 'default'
                                         }}
-                                    />
+                                    >
+                                        <Icon as={LiaHotdogSolid} boxSize={6} color={'orange'} />
+                                    </Button>
                                 ))}
                             </Center>
                         ) : (
@@ -1841,15 +1852,17 @@ function StandForm() {
                                     ))}
                                 </HStack>
                             </HStack>
-                            <Center>
-                                <Textarea
-                                    onChange={(event) =>
-                                        setStandFormData({ ...standFormData, standComment: event.target.value })
-                                    }
-                                    value={standFormData.standComment}
-                                    placeholder='Only write comments you think are VITAL!'
-                                />
-                            </Center>
+                            {standFormData.standStatus !== matchFormStatus.noShow && (
+                                <Center>
+                                    <Textarea
+                                        onChange={(event) =>
+                                            setStandFormData({ ...standFormData, standComment: event.target.value })
+                                        }
+                                        value={standFormData.standComment}
+                                        placeholder='Only write comments you think are VITAL!'
+                                    />
+                                </Center>
+                            )}
                             {standFormData.standStatus !== matchFormStatus.noShow && (
                                 <Center>
                                     <Checkbox
@@ -1914,7 +1927,7 @@ function StandForm() {
                                     (standFormData.standStatus === matchFormStatus.followUp
                                         ? 95
                                         : standFormData.standStatus === matchFormStatus.noShow
-                                        ? 56
+                                        ? -39
                                         : 0)
                             )}px`}
                             marginBottom={'30px'}

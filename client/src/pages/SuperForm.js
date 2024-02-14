@@ -263,7 +263,7 @@ function SuperForm() {
             )
         ].join('$');
 
-        return '#$super$' + data + '$' + checksum(data);
+        return '#super$' + data + '$' + checksum(data);
     }
 
     function submit() {
