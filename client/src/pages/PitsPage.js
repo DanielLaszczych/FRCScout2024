@@ -1,4 +1,4 @@
-import { React, useCallback, useEffect, useState } from 'react';
+import { React, useCallback, useEffect, useState, useLayoutEffect } from 'react';
 import {
     Button,
     Center,
@@ -57,7 +57,7 @@ function PitPage() {
             .catch((error) => setError(error.message));
     }, []);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         setCurrentEventData(null);
         setPitForms(null);
         setFilteredPitForms(null);
@@ -112,7 +112,7 @@ function PitPage() {
         [pitForms]
     );
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         let newPitForms = [];
         if (pitForms && currentEventData) {
             newPitForms = (
