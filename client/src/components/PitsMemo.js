@@ -76,8 +76,8 @@ function PitsMemo({ eventData, pitForms, currentEvent }) {
     return (
         <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'}>
             {eventData.length === 0 ? (
-                <Center minH={'50px'}>
-                    <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} width={'90%'}>
+                <Center padding={'10px 0px'}>
+                    <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'} width={'90%'}>
                         No pit forms marked for follow up or missing
                     </Text>
                 </Center>
@@ -86,36 +86,39 @@ function PitsMemo({ eventData, pitForms, currentEvent }) {
                     {eventData.map((team, index) => (
                         <React.Fragment key={team.key}>
                             <GridItem
-                                fontSize={'lg'}
+                                fontSize={'md'}
                                 fontWeight={'medium'}
                                 textAlign={'center'}
                                 display={'flex'}
                                 justifyContent={'center'}
                                 alignItems={'center'}
                                 backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                borderBottom={index < eventData.length - 1 && '1px solid black'}
                             >
                                 {team.number}
                             </GridItem>
                             <GridItem
-                                fontSize={'lg'}
+                                fontSize={'md'}
                                 fontWeight={'medium'}
                                 textAlign={'center'}
                                 display={'flex'}
                                 justifyContent={'center'}
                                 alignItems={'center'}
                                 backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                borderBottom={index < eventData.length - 1 && '1px solid black'}
                                 padding={'10px 0px'}
                             >
                                 {team.name}
                             </GridItem>
                             <GridItem
-                                fontSize={'lg'}
+                                fontSize={'md'}
                                 fontWeight={'medium'}
                                 textAlign={'center'}
                                 display={'flex'}
                                 justifyContent={'center'}
                                 alignItems={'center'}
                                 backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                borderBottom={index < eventData.length - 1 && '1px solid black'}
                             >
                                 {getPitFormScouter(team.number)}
                             </GridItem>
@@ -124,6 +127,7 @@ function PitsMemo({ eventData, pitForms, currentEvent }) {
                                 justifyContent={'center'}
                                 alignItems={'center'}
                                 backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                borderBottom={index < eventData.length - 1 && '1px solid black'}
                             >
                                 {getPitFormStatusColor(team.number) !== 'yellow' ? (
                                     <IconButton
@@ -150,7 +154,7 @@ function PitsMemo({ eventData, pitForms, currentEvent }) {
                                                 size='sm'
                                             />
                                         </PopoverTrigger>
-                                        <PopoverContent maxWidth={'50vw'}>
+                                        <PopoverContent maxWidth={'200px'}>
                                             <PopoverArrow />
                                             <PopoverCloseButton />
                                             <PopoverHeader
@@ -169,7 +173,6 @@ function PitsMemo({ eventData, pitForms, currentEvent }) {
                                             </PopoverBody>
                                             <PopoverFooter margin={'0 auto'}>
                                                 <Button
-                                                    _focus={{ outline: 'none' }}
                                                     size='sm'
                                                     as={Link}
                                                     to={`/pitForm/${currentEvent.key}/${team.number}`}

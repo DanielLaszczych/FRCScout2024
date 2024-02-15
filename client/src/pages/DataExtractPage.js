@@ -3,7 +3,7 @@ import { Box, Button, Center } from '@chakra-ui/react';
 import FileSaver from 'file-saver';
 import XLSX from 'sheetjs-style';
 
-function TempPage() {
+function DataExtractPage() {
     const [currentEvent, setCurrentEvent] = useState(null);
     const [error, setError] = useState(null);
 
@@ -71,6 +71,8 @@ function TempPage() {
                             data.forEach((ted) => {
                                 dataArray.push({
                                     'Team Number': ted.teamNumber,
+                                    'Team Name':
+                                        currentEvent.teams.find((team) => ted.teamNumber === team.number).name || 'N/A',
                                     'Left Start': ted.leftStart,
                                     'Auto Intake Miss': ted.autoGP.intakeMiss.avg,
                                     'Auto Amp Scored': ted.autoGP.ampScore.avg,
@@ -118,4 +120,4 @@ function TempPage() {
     );
 }
 
-export default TempPage;
+export default DataExtractPage;

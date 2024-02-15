@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Event = require('../models/Event');
+const cloudinary = require('cloudinary').v2;
 
 router.get('/getEvents', async (req, res) => {
     if (req.isUnauthenticated()) {
@@ -30,6 +31,22 @@ router.get('/getEvent', async (req, res) => {
     }
 });
 
+router.get('/getEventsSimple', async (req, res) => {
+    if (req.isUnauthenticated()) {
+        res.sendStatus(401);
+        return;
+    }
+    try {
+        const events = await Event.find(JSON.parse(req.headers.filters || '{}'))
+            .select(['key', 'name', 'currentEvent', 'startDate', 'endDate', 'custom', 'pitMapImage'].join(' '))
+            .exec();
+        res.status(200).send(events);
+    } catch (err) {
+        res.statusMessage = err.message;
+        res.sendStatus(500);
+    }
+});
+
 router.get('/getCurrentEvent', async (req, res) => {
     if (req.isUnauthenticated()) {
         res.sendStatus(401);
@@ -38,22 +55,6 @@ router.get('/getCurrentEvent', async (req, res) => {
     try {
         const event = await Event.findOne({ currentEvent: true }).exec();
         res.status(200).json(event);
-    } catch (err) {
-        res.statusMessage = err.message;
-        res.sendStatus(500);
-    }
-});
-
-router.get('/getEventsSimple', async (req, res) => {
-    if (req.isUnauthenticated()) {
-        res.sendStatus(401);
-        return;
-    }
-    try {
-        const events = await Event.find(JSON.parse(req.headers.filters || '{}'))
-            .select(['key', 'name', 'currentEvent', 'startDate', 'endDate', 'custom'].join(' '))
-            .exec();
-        res.status(200).send(events);
     } catch (err) {
         res.statusMessage = err.message;
         res.sendStatus(500);
@@ -126,6 +127,33 @@ router.post('/setCurrentEvent', async (req, res) => {
             newEvent.currentEvent = true;
             await newEvent.save();
             res.status(200).send(newEvent);
+        }
+    } catch (err) {
+        res.statusMessage = err.message;
+        res.sendStatus(500);
+    }
+});
+
+router.post('/setEventPitMap', async (req, res) => {
+    if (req.isUnauthenticated() || !req.user.admin) {
+        res.sendStatus(401);
+        return;
+    }
+    try {
+        const event = await Event.findOne({ key: req.headers.key }).exec();
+        if (!event) {
+            throw new Error('This event is not registered inside the databse');
+        } else {
+            let imageUrl;
+            await cloudinary.uploader.upload(req.body.image, (error, result) => {
+                if (error) {
+                    throw new Error('Could not upload image');
+                }
+                imageUrl = result.secure_url;
+            });
+            event.pitMapImage = imageUrl;
+            await event.save();
+            res.status(200).send(event);
         }
     } catch (err) {
         res.statusMessage = err.message;

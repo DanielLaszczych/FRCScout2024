@@ -6,13 +6,12 @@ import { AuthContext } from './context/auth';
 import { GlobalContext } from './context/globalState';
 import { teamPageTabs } from './util/helperConstants';
 import '@fontsource/open-sans/400.css';
-import TempPage from './pages/TempPage';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const PitForm = lazy(() => import('./pages/PitForm'));
 const PitPage = lazy(() => import('./pages/PitsPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
-// const MatchesPage = lazy(() => import('./pages/MatchesPage'));
+const MatchesPage = lazy(() => import('./pages/MatchesPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const PreStandForm = lazy(() => import('./pages/PreStandForm'));
 // const WebDataConnector = lazy(() => import('./pages/WebDataConnector'));
@@ -20,13 +19,14 @@ const AdminErrorPage = lazy(() => import('./pages/AdminErrorPage'));
 const FailedLoginPage = lazy(() => import('./pages/FailedLoginPage'));
 const StandForm = lazy(() => import('./pages/StandForm'));
 const MatchAnalystPage = lazy(() => import('./pages/MatchAnalystPage'));
-// const PitMapPage = lazy(() => import('./pages/PitMapPage'));
+const PitMapPage = lazy(() => import('./pages/PitMapPage'));
 const TeamPageHelper = lazy(() => import('./pages/TeamPageHelper'));
 // const RTESSIssuesPage = lazy(() => import('./pages/RTESSIssuesPage'));
 // const RTESSIssuePage = lazy(() => import('./pages/RTESSIssuePage'));
 const PreSuperForm = lazy(() => import('./pages/PreSuperForm'));
 const SuperForm = lazy(() => import('./pages/SuperForm'));
 const OfflinePage = lazy(() => import('./pages/OfflinePage'));
+const DataExtractPage = lazy(() => import('./pages/DataExtractPage'));
 
 // import { createBreakpoints } from '@chakra-ui/theme-tools';
 
@@ -82,7 +82,7 @@ function App() {
                     <Routes>
                         <Route exact path='/' element={<HomePage />} />
                         <Route exact path='/pits' element={<PitPage />} />
-                        {/* <Route exact path='/matches' element={<MatchesPage />} /> */}
+                        <Route exact path='/matches' element={<MatchesPage />} />
                         {/* {['team', 'event'].map((path) => (
                             <Route path={`/rtessIssues/${path}`} key={path} element={<RTESSIssuesPage />} />
                         ))} */}
@@ -104,13 +104,13 @@ function App() {
                         ))}
                         <Route exact path='/matchAnalyst' element={<MatchAnalystPage />} />
                         {/* <Route exact path='/rtessIssue/:id' element={<RTESSIssuePage />} /> */}
-                        {/* <Route exact path='/pitMap' element={<PitMapPage />} /> */}
+                        <Route exact path='/pitMap' element={<PitMapPage />} />
                         <Route
                             exact
                             path='/admin'
                             element={offline ? <OfflinePage /> : user.admin ? <AdminPage /> : <AdminErrorPage />}
                         />
-                        <Route exact path='/tableau' element={<TempPage />} />
+                        <Route exact path='/dataextract' element={<DataExtractPage />} />
                         <Route path='*' element={<NotFoundPage />} />
                     </Routes>
                 </Suspense>

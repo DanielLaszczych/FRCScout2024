@@ -29,6 +29,38 @@ router.get('/getMatchForms', async (req, res) => {
     }
 });
 
+router.get('/getMatchFormsSimple', async (req, res) => {
+    if (req.isUnauthenticated()) {
+        res.sendStatus(401);
+        return;
+    }
+    try {
+        const matchForms = await MatchForm.find(JSON.parse(req.headers.filters || '{}'))
+            .select(
+                [
+                    'eventKey',
+                    'eventName',
+                    'matchNumber',
+                    'teamNumber',
+                    'teamName',
+                    'station',
+                    'standScouter',
+                    'standStatus',
+                    'standStatusComment',
+                    'superScouter',
+                    'allianceNumbers',
+                    'superStatus',
+                    'superStatusComment'
+                ].join(' ')
+            )
+            .exec();
+        res.status(200).json(matchForms);
+    } catch (err) {
+        res.statusMessage = err.message;
+        res.sendStatus(500);
+    }
+});
+
 router.get('/getMatchForm', async (req, res) => {
     if (req.isUnauthenticated()) {
         res.sendStatus(401);

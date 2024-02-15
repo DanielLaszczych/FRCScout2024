@@ -36,7 +36,7 @@ let titleMap = [
     { path: '/superForm', title: 'Super Form' },
     { path: '/team', title: 'Team' },
     { path: '/admin', title: 'Admin' },
-    { path: '/tableau', title: 'Tableau' }
+    { path: '/dataextract', title: 'Data Extract' }
 ];
 
 function NavBar() {
@@ -271,13 +271,13 @@ function NavBar() {
                             <MenuItem
                                 backgroundColor={'#2D3339'}
                                 as={Link}
-                                to={'/tableau'}
+                                to={'/dataextract'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                                 fontSize={'md'}
                                 color={'white'}
                             >
-                                Tableau
+                                Data Extract
                             </MenuItem>
                         </Box>
                         <a href={`${config.API_URL}/auth/logout`}>

@@ -159,7 +159,6 @@ function PitPage() {
                 icon={followUpFilter ? <WarningIcon /> : <AiFillFilter />}
                 colorScheme={followUpFilter ? 'yellow' : 'black'}
                 variant={followUpFilter ? 'solid' : 'outline'}
-                _focus={{ outline: 'none' }}
                 size='sm'
             />
             <Center marginBottom={'25px'}>
@@ -167,7 +166,6 @@ function PitPage() {
                     <MenuButton
                         maxW={'65vw'}
                         onClick={() => setFocusedEvent('')}
-                        _focus={{ outline: 'none' }}
                         as={Button}
                         rightIcon={<ChevronDownIcon />}
                     >
@@ -180,7 +178,6 @@ function PitPage() {
                             <MenuItem
                                 textAlign={'center'}
                                 justifyContent={'center'}
-                                _focus={{ backgroundColor: 'none' }}
                                 onMouseEnter={() => setFocusedEvent(eventItem.name)}
                                 backgroundColor={
                                     (currentEvent.name === eventItem.name && focusedEvent === '') ||
@@ -190,7 +187,11 @@ function PitPage() {
                                 }
                                 maxW={'65vw'}
                                 key={eventItem.key}
-                                onClick={() => setCurrentEvent({ name: eventItem.name, key: eventItem.key })}
+                                onClick={() => {
+                                    if (eventItem.key !== currentEvent.key) {
+                                        setCurrentEvent({ name: eventItem.name, key: eventItem.key });
+                                    }
+                                }}
                             >
                                 {eventItem.name}
                             </MenuItem>
@@ -198,7 +199,7 @@ function PitPage() {
                     </MenuList>
                 </Menu>
             </Center>
-            {currentEvent === null || pitForms === null || filteredPitForms === null ? (
+            {pitForms === null || filteredPitForms === null ? (
                 <Center>
                     <Spinner></Spinner>
                 </Center>
