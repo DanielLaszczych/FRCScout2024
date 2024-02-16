@@ -49,38 +49,59 @@ function RTESSIssuesMemo({ noRTESSIssues, rtessIssues, filter }) {
     }
 
     return (
-        <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'} minH={'50px'}>
+        <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'}>
             {rtessIssues.length === 0 ? (
-                <Center paddingTop={'10px'} paddingBottom={'10px'}>
-                    <Text textAlign={'center'} width={'90%'} fontSize={'20px'}>
+                <Center padding={'10px 0px'} borderTop={'1px solid black'}>
+                    <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'} width={'90%'}>
                         {noRTESSIssues ? 'No RTESS issues reported yet' : filter.emptyMsg}
                     </Text>
                 </Center>
             ) : (
-                rtessIssues.map((rtessIssue, index) => (
-                    <Grid
-                        borderTop={'1px solid black'}
-                        backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
-                        borderRadius={index % 2 === 0 ? 'none' : '0px 0px 10px 10px'}
-                        key={rtessIssue._id}
-                        templateColumns='1fr 1fr 1fr'
-                        gap={'5px'}
-                    >
-                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
+                <Grid borderTop={'1px solid black'} templateColumns={'1fr 1fr 1fr'}>
+                    {rtessIssues.map((rtessIssue, index) => (
+                        <React.Fragment key={rtessIssue._id}>
+                            <GridItem
+                                fontSize={'md'}
+                                fontWeight={'medium'}
+                                textAlign={'center'}
+                                display={'flex'}
+                                justifyContent={'center'}
+                                alignItems={'center'}
+                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                borderBottom={index < rtessIssues.length - 1 && '1px solid black'}
+                                borderRadius={index === rtessIssues.length - 1 && '0px 0px 0px 10px'}
+                            >
                                 {rtessIssue.teamNumber}
-                            </Text>
-                        </GridItem>
-                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'} noOfLines={2}>
-                                {rtessIssue.issue}
-                            </Text>
-                        </GridItem>
-                        <GridItem padding={'10px 0px 10px 0px'} textAlign={'center'}>
-                            {getIcon(rtessIssue)}
-                        </GridItem>
-                    </Grid>
-                ))
+                            </GridItem>
+                            <GridItem
+                                fontSize={'md'}
+                                fontWeight={'medium'}
+                                textAlign={'center'}
+                                display={'flex'}
+                                justifyContent={'center'}
+                                alignItems={'center'}
+                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                borderBottom={index < rtessIssues.length - 1 && '1px solid black'}
+                            >
+                                <Text noOfLines={2}>{rtessIssue.issue}</Text>
+                            </GridItem>
+                            <GridItem
+                                fontSize={'md'}
+                                fontWeight={'medium'}
+                                textAlign={'center'}
+                                display={'flex'}
+                                justifyContent={'center'}
+                                alignItems={'center'}
+                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                borderBottom={index < rtessIssues.length - 1 && '1px solid black'}
+                                padding={'10px 0px'}
+                                borderRadius={index === rtessIssues.length - 1 && '0px 0px 10px 0px'}
+                            >
+                                {getIcon(rtessIssue)}
+                            </GridItem>
+                        </React.Fragment>
+                    ))}
+                </Grid>
             )}
         </Box>
     );

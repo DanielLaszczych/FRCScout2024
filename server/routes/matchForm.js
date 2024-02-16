@@ -175,7 +175,7 @@ router.post('/postStandForm/:isQR?/:apiKey?', async (req, res) => {
                             problemComment:
                                 matchFormInput.standStatus === matchFormStatus.noShow
                                     ? matchFormInput.standStatusComment
-                                    : matchFormInput.standEndComment,
+                                    : matchFormInput.standComment,
                             status: rtessIssuesStatus.unresolved
                         };
 
@@ -200,8 +200,8 @@ router.post('/postStandForm/:isQR?/:apiKey?', async (req, res) => {
 
                         //Service Squad Anncoument
                         if (futureMatchNumber && !prevRTESSIssue) {
-                            internalBlueCall(`/match/${rtessIssueInput.eventKey}_${futureMatchNumber}/simple`).then(
-                                (data) => {
+                            internalBlueCall(`/match/${rtessIssueInput.eventKey}_${futureMatchNumber}/simple`)
+                                .then((data) => {
                                     let time = data.time;
                                     if (data.predicted_time) {
                                         time = data.predicted_time;
@@ -223,8 +223,10 @@ router.post('/postStandForm/:isQR?/:apiKey?', async (req, res) => {
                                             futureMatchNumber
                                         )}${convertedTime}`
                                     );
-                                }
-                            );
+                                })
+                                .catch((err) => {
+                                    console.log(err);
+                                });
                         }
                     }
                 }

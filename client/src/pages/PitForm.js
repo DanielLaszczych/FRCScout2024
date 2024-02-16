@@ -988,7 +988,7 @@ function PitForm() {
             .catch((error) => {
                 console.log(error);
                 toast({
-                    title: 'Apollo Error',
+                    title: 'Error',
                     description: 'Pit form could not be updated',
                     status: 'error',
                     duration: 3000,

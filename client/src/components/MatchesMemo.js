@@ -173,6 +173,7 @@ function MatchesMemo({ noMatches, matches, currentEvent, filter, hasSecondaryFil
                                 alignItems={'center'}
                                 backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
                                 borderBottom={index < matches.length - 1 && '1px solid black'}
+                                borderRadius={index === matches.length - 1 && '0px 0px 0px 10px'}
                             >
                                 {convertMatchKeyToString(match.matchNumber)} :{' '}
                                 {convertStationKeyToString(match.station)}
@@ -223,6 +224,7 @@ function MatchesMemo({ noMatches, matches, currentEvent, filter, hasSecondaryFil
                                 backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
                                 borderBottom={index < matches.length - 1 && '1px solid black'}
                                 padding={'10px 0px'}
+                                borderRadius={index === matches.length - 1 && '0px 0px 10px 0px'}
                             >
                                 <Flex flexDirection={'column'} rowGap={'10px'}>
                                     <Box>

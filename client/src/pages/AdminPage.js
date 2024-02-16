@@ -54,9 +54,9 @@ const eventTypesArr = [
 function AdminPage() {
     const linkRef = useRef();
     const toast = useToast();
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const { isOpen: isOpenSetEvent, onOpen: onOpenSetEvent, onClose: onCloseSetEvent } = useDisclosure();
+    const { isOpen: isOpenCustomEvent, onOpen: onOpenCustomEvent, onClose: onCloseCustomEvent } = useDisclosure();
 
-    const [customEventDialog, setCustomEventDialog] = useState({ open: false });
     const [customEventData, setCustomEventData] = useState({
         key: '',
         name: '',
@@ -221,7 +221,7 @@ function AdminPage() {
                     setMutatingEventKey(null);
                     setEvents((prevEvents) => sortRegisteredEvents([...prevEvents, createdEvent]));
                 }, 300);
-                setCustomEventDialog({ open: false });
+                onCloseCustomEvent();
                 setCustomEventData({
                     key: '',
                     name: '',
@@ -454,7 +454,7 @@ function AdminPage() {
 
     return (
         <Box margin={'0 auto'} width={{ base: '90%', md: '66%', lg: '66%' }}>
-            <Modal closeOnEsc={true} isOpen={isOpen} onClose={onClose}>
+            <Modal closeOnEsc={true} isOpen={isOpenSetEvent} onClose={onCloseSetEvent}>
                 <ModalOverlay>
                     <ModalContent
                         width={{ base: '75%', md: '40%', lg: '30%' }}
@@ -489,13 +489,13 @@ function AdminPage() {
                             </VStack>
                         </ModalBody>
                         <ModalFooter>
-                            <Button onClick={onClose}>Cancel</Button>
+                            <Button onClick={onCloseSetEvent}>Cancel</Button>
                             <Button
                                 colorScheme='blue'
                                 ml={3}
                                 onClick={() => {
                                     handleSetCurrentEvent(focusedEvent.key);
-                                    onClose();
+                                    onCloseSetEvent();
                                 }}
                             >
                                 Confirm
@@ -506,9 +506,9 @@ function AdminPage() {
             </Modal>
             <Modal
                 closeOnEsc={true}
-                isOpen={customEventDialog.open}
+                isOpen={isOpenCustomEvent}
                 onClose={() => {
-                    setCustomEventDialog({ open: false });
+                    onCloseCustomEvent();
                     setCustomEventData({
                         key: '',
                         name: '',
@@ -730,7 +730,7 @@ function AdminPage() {
                         <ModalFooter paddingTop={'var(--chakra-space-4)'}>
                             <Button
                                 onClick={() => {
-                                    setCustomEventDialog({ open: false });
+                                    onCloseCustomEvent();
                                     setCustomEventData({
                                         key: '',
                                         name: '',
@@ -805,7 +805,7 @@ function AdminPage() {
                 {changingCurrentEvent ? (
                     <Spinner></Spinner>
                 ) : (
-                    <IconButton size='sm' icon={<EditIcon />} onClick={onOpen} />
+                    <IconButton size='sm' icon={<EditIcon />} onClick={onOpenSetEvent} />
                 )}
             </Box>
             <Box margin='0 auto' marginBottom={'15px'}>
@@ -857,7 +857,7 @@ function AdminPage() {
                     ))}
                 </TransitionGroup>
                 <Center marginTop={'15px'} marginBottom={'0px'}>
-                    <Button onClick={() => setCustomEventDialog({ open: true })}>Add Custom Event</Button>
+                    <Button onClick={() => onOpenCustomEvent()}>Add Custom Event</Button>
                 </Center>
             </Box>
             <Center>

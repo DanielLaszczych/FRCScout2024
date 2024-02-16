@@ -1,76 +1,77 @@
-import { useQuery } from '@apollo/client';
+import { React, useCallback, useEffect, useState } from 'react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { Box, Button, Center, Menu, MenuButton, MenuItem, MenuList, Spinner } from '@chakra-ui/react';
-import { React, useCallback, useContext, useEffect, useState } from 'react';
-import { SocketContext } from '../context/socket';
-import { GET_EVENTS_KEYS_NAMES, GET_RTESS_ISSUES_ALL } from '../graphql/queries';
 import { teamNumber, year } from '../util/helperConstants';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { sortMatches, sortRegisteredEvents } from '../util/helperFunctions';
+import { sortEvents, sortMatches } from '../util/helperFunctions';
+import '../stylesheets/teamstyle.css';
 
 import RTESSIssuesTabs from './RTESSIssuesTabs';
 
 function RTESSIssuesPage() {
-    const socket = useContext(SocketContext);
-
     const navigate = useNavigate();
     const path = useLocation();
     const tab = path.pathname.split('/')[2];
 
     const [error, setError] = useState(null);
-    const [currentEvent, setCurrentEvent] = useState({ name: '', key: '' });
-    const [focusedEvent, setFocusedEvent] = useState('');
+    const [events, setEvents] = useState(null);
+    const [currentEvent, setCurrentEvent] = useState(null);
+    const [focusedEvent, setFocusedEvent] = useState(null);
     const [eventInfo, setEventInfo] = useState({ inEvent: null, eventDone: null, matchTable: null });
-    const [rtessIssuesAll, setRTESSIssuesAll] = useState(null);
-    const [eventRTESSIssues, setEventRTESSIssues] = useState(null);
+    const [rtessIssues, setRTESSIssues] = useState(null);
 
-    const {
-        loading: loadingRTESSIssues,
-        error: rtessIssuesError,
-        refetch: refetchRTESSIssues,
-    } = useQuery(GET_RTESS_ISSUES_ALL, {
-        fetchPolicy: 'network-only',
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve rtess issues');
-        },
-        onCompleted({ getRTESSIssues: rtessIssues }) {
-            if (currentEvent.key !== '') {
-                setEventRTESSIssues(rtessIssues.filter((rtessIssue) => rtessIssue.eventKey === currentEvent.key && !['Loan', 'Donation'].includes(rtessIssue.issue)));
-            }
-            setRTESSIssuesAll(rtessIssues);
-        },
-    });
-
-    const {
-        loading: loadingEvents,
-        error: eventsError,
-        data: { getEvents: events } = {},
-    } = useQuery(GET_EVENTS_KEYS_NAMES, {
-        skip: rtessIssuesAll === null,
-        fetchPolicy: 'network-only',
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve registered events');
-        },
-        onCompleted({ getEvents: events }) {
-            let sortedEvents = sortRegisteredEvents(events);
-            if (sortedEvents.length > 0) {
-                let currentEvent = sortedEvents.find((event) => event.currentEvent);
-                if (currentEvent === undefined) {
-                    setEventRTESSIssues(rtessIssuesAll.filter((rtessIssue) => rtessIssue.eventKey === sortedEvents[sortedEvents.length - 1].key && !['Loan', 'Donation'].includes(rtessIssue.issue)));
-                    setCurrentEvent({ name: sortedEvents[sortedEvents.length - 1].name, key: sortedEvents[sortedEvents.length - 1].key, custom: sortedEvents[sortedEvents.length - 1].custom });
-                    setFocusedEvent(sortedEvents[sortedEvents.length - 1].name);
+    useEffect(() => {
+        fetch('/event/getEventsSimple')
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
                 } else {
-                    setEventRTESSIssues(rtessIssuesAll.filter((rtessIssue) => rtessIssue.eventKey === currentEvent.key && !['Loan', 'Donation'].includes(rtessIssue.issue)));
-                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key, custom: currentEvent.custom });
+                    throw new Error(response.statusText);
+                }
+            })
+            .then((data) => {
+                let events = data;
+                setEvents(sortEvents(events));
+                if (events.length === 0) {
+                    setError('No events are registered in the database');
+                    return;
+                }
+                let currentEvent = events.find((event) => event.currentEvent);
+                if (currentEvent) {
+                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setFocusedEvent(currentEvent.name);
+                } else {
+                    currentEvent = events[events.length - 1];
+                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
                     setFocusedEvent(currentEvent.name);
                 }
-            } else {
-                setError('No events registered in the database');
-            }
-        },
-    });
+            })
+            .catch((error) => setError(error.message));
+    }, []);
+
+    const fetchRTESSIssues = useCallback(() => {
+        fetch('/rtessIssue/getRTESSIssues', {
+            headers: { filters: JSON.stringify({ eventKey: currentEvent.key }) }
+        })
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    throw new Error(response.statusText);
+                }
+            })
+            .then((data) => {
+                setRTESSIssues(data);
+            })
+            .catch((error) => setError(error.message));
+    }, [currentEvent]);
+
+    useEffect(() => {
+        setRTESSIssues(null);
+        if (currentEvent !== null) {
+            fetchRTESSIssues();
+        }
+    }, [currentEvent, fetchRTESSIssues]);
 
     const fetchTeamInfoWrapper = useCallback(
         (currentEventParam) => {
@@ -90,16 +91,23 @@ function RTESSIssuesPage() {
                                             if (match.actual_time === null) {
                                                 matches.push({
                                                     matchNumber: match.key.split('_')[1],
-                                                    alliance: match.alliances.red.team_keys.includes(`frc${teamNumber}`) ? match.alliances.red.team_keys : match.alliances.blue.team_keys,
+                                                    alliance: match.alliances.red.team_keys.includes(`frc${teamNumber}`)
+                                                        ? match.alliances.red.team_keys
+                                                        : match.alliances.blue.team_keys,
                                                     predictedTime: match.predicted_time,
-                                                    scheduledTime: match.time,
+                                                    scheduledTime: match.time
                                                 });
                                             } else {
                                                 atLeastOneMatch = true;
                                             }
                                         }
                                     }
-                                    setEventInfo({ ...eventInfo, inEvent: true, eventDone: atLeastOneMatch && matches.length === 0, matchTable: sortMatches(matches) });
+                                    setEventInfo({
+                                        ...eventInfo,
+                                        inEvent: true,
+                                        eventDone: atLeastOneMatch && matches.length === 0,
+                                        matchTable: sortMatches(matches)
+                                    });
                                 })
                                 .catch((error) => {
                                     setError(error);
@@ -119,47 +127,26 @@ function RTESSIssuesPage() {
     );
 
     useEffect(() => {
-        if (currentEvent.key !== '' && eventInfo.inEvent === null) {
+        if (currentEvent !== null && eventInfo.inEvent === null) {
             fetchTeamInfoWrapper(currentEvent);
         }
     }, [currentEvent, eventInfo, fetchTeamInfoWrapper]);
 
-    useEffect(() => {
-        socket.on('connect', () => {
-            refetchRTESSIssues();
-            if (currentEvent.key !== '') {
-                fetchTeamInfoWrapper(currentEvent);
-            }
-        });
-        socket.on('rtessUpdate', () => {
-            refetchRTESSIssues();
-        });
-        socket.on('rtessIssuesPageUpdate', (data) => {
-            if (tab === 'team') {
-                setCurrentEvent({ ...data.currentEvent });
-                setEventInfo({ ...eventInfo, inEvent: data.inEvent, eventDone: data.eventDone, matchTable: data.matchTable });
-                if (data.currentEvent.key !== '') {
-                    setEventRTESSIssues(rtessIssuesAll.filter((rtessIssue) => rtessIssue.eventKey === data.currentEvent.key && !['Loan', 'Donation'].includes(rtessIssue.issue)));
-                }
-            }
-        });
-        // clean up
-        return () => {
-            socket.off('connect');
-            socket.off('rtessUpdate');
-            socket.off('rtessIssuesPageUpdate');
-        };
-    }, [socket, currentEvent, refetchRTESSIssues, fetchTeamInfoWrapper, eventInfo, tab, rtessIssuesAll]);
-
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                textAlign={'center'}
+                margin={'0 auto'}
+                width={{ base: '85%', md: '66%', lg: '50%' }}
+            >
                 {error}
             </Box>
         );
     }
 
-    if (loadingEvents || loadingRTESSIssues || (eventInfo.inEvent === null && eventInfo.matchTable === null) || ((eventsError || rtessIssuesError) && error !== false)) {
+    if (currentEvent === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -168,40 +155,57 @@ function RTESSIssuesPage() {
     }
 
     return (
-        <Box>
-            <div className='tabs'>
-                <div className='tab-header'>
-                    <div style={{ width: 'calc(100% / 2)' }} onClick={() => navigate(`/rtessIssues/team`)}>
+        <Box marginBottom={'25px'}>
+            <Box className='tabs'>
+                <Box className='tab-header'>
+                    <Box style={{ width: 'calc(100% / 2)' }} onClick={() => navigate(`/rtessIssues/team`)}>
                         Our Team
-                    </div>
-                    <div style={{ width: 'calc(100% / 2)' }} onClick={() => navigate(`/rtessIssues/event`)}>
+                    </Box>
+                    <Box style={{ width: 'calc(100% / 2)' }} onClick={() => navigate(`/rtessIssues/event`)}>
                         Event
-                    </div>
-                </div>
-                <div className='tab-indicator' style={{ width: 'calc(75% / 2)', left: `calc((calc(100% / 2) * ${['team', 'event'].indexOf(tab)}) + 6.25%)` }}></div>
-            </div>
+                    </Box>
+                </Box>
+                <Box
+                    className='tab-indicator'
+                    style={{
+                        width: 'calc(75% / 2)',
+                        left: `calc((calc(100% / 2) * ${['team', 'event'].indexOf(tab)}) + 6.25%)`
+                    }}
+                ></Box>
+            </Box>
             <Box margin={'0 auto'} marginTop={'25px'} width={{ base: '90%', md: '66%', lg: '66%' }}>
                 <Center marginBottom={'25px'}>
-                    <Menu placement='bottom'>
-                        <MenuButton maxW={'65vw'} onClick={() => setFocusedEvent('')} _focus={{ outline: 'none' }} as={Button} rightIcon={<ChevronDownIcon />}>
+                    <Menu placement={'bottom'}>
+                        <MenuButton
+                            maxW={'65vw'}
+                            onClick={() => setFocusedEvent('')}
+                            as={Button}
+                            rightIcon={<ChevronDownIcon />}
+                        >
                             <Box overflow={'hidden'} textOverflow={'ellipsis'}>
                                 {currentEvent.name}
                             </Box>
                         </MenuButton>
                         <MenuList>
-                            {sortRegisteredEvents(events).map((eventItem) => (
+                            {events.map((eventItem) => (
                                 <MenuItem
                                     textAlign={'center'}
                                     justifyContent={'center'}
                                     _focus={{ backgroundColor: 'none' }}
                                     onMouseEnter={() => setFocusedEvent(eventItem.name)}
-                                    backgroundColor={(currentEvent.name === eventItem.name && focusedEvent === '') || focusedEvent === eventItem.name ? 'gray.100' : 'none'}
+                                    backgroundColor={
+                                        (currentEvent.name === eventItem.name && focusedEvent === '') ||
+                                        focusedEvent === eventItem.name
+                                            ? 'gray.100'
+                                            : 'none'
+                                    }
                                     maxW={'65vw'}
                                     key={eventItem.key}
                                     onClick={() => {
-                                        setEventInfo({ ...eventInfo, inEvent: null });
-                                        setCurrentEvent({ name: eventItem.name, key: eventItem.key });
-                                        setEventRTESSIssues(rtessIssuesAll.filter((rtessIssue) => rtessIssue.eventKey === eventItem.key && !['Loan', 'Donation'].includes(rtessIssue.issue)));
+                                        if (eventItem.key !== currentEvent.key) {
+                                            setEventInfo({ inEvent: null, eventDone: null, matchTable: null });
+                                            setCurrentEvent({ name: eventItem.name, key: eventItem.key });
+                                        }
                                     }}
                                 >
                                     {eventItem.name}
@@ -210,7 +214,20 @@ function RTESSIssuesPage() {
                         </MenuList>
                     </Menu>
                 </Center>
-                <RTESSIssuesTabs tab={tab} currentEvent={currentEvent} rtessIssues={eventRTESSIssues} rtessIssuesAll={rtessIssuesAll} eventInfo={eventInfo} setError={setError} />
+                {eventInfo.inEvent === null || rtessIssues === null ? (
+                    <Center>
+                        <Spinner></Spinner>
+                    </Center>
+                ) : (
+                    <RTESSIssuesTabs
+                        tab={tab}
+                        currentEvent={currentEvent}
+                        rtessIssues={rtessIssues}
+                        eventInfo={eventInfo}
+                        setError={setError}
+                        fetchRTESSIssues={fetchRTESSIssues}
+                    />
+                )}
             </Box>
         </Box>
     );

@@ -245,15 +245,11 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
 
     useLayoutEffect(() => {
         getGraphWidth();
+
         window.addEventListener('resize', getGraphWidth);
 
-        // Stupid solution for scroll bar not being included in the initial width calculation
-        setTimeout(() => {
-            getGraphWidth();
-        }, 200);
-
         return () => window.removeEventListener('resize', getGraphWidth);
-    }, [getGraphWidth]);
+    }, [standForms, superForms, bothCompleteForms, getGraphWidth]);
 
     function clearFields() {
         let newFields = { ...fields };

@@ -203,7 +203,9 @@ function TeamPage({ keyProp }) {
                                 maxW={'65vw'}
                                 key={eventItem.key}
                                 onClick={() => {
-                                    setCurrentEvent({ name: eventItem.name, key: eventItem.key });
+                                    if (eventItem.key !== currentEvent.key) {
+                                        setCurrentEvent({ name: eventItem.name, key: eventItem.key });
+                                    }
                                 }}
                             >
                                 {eventItem.name}

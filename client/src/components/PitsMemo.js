@@ -94,6 +94,7 @@ function PitsMemo({ eventData, pitForms, currentEvent }) {
                                 alignItems={'center'}
                                 backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
                                 borderBottom={index < eventData.length - 1 && '1px solid black'}
+                                borderRadius={index === eventData.length - 1 && '0px 0px 0px 10px'}
                             >
                                 {team.number}
                             </GridItem>
@@ -128,6 +129,7 @@ function PitsMemo({ eventData, pitForms, currentEvent }) {
                                 alignItems={'center'}
                                 backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
                                 borderBottom={index < eventData.length - 1 && '1px solid black'}
+                                borderRadius={index === eventData.length - 1 && '0px 0px 10px 0px'}
                             >
                                 {getPitFormStatusColor(team.number) !== 'yellow' ? (
                                     <IconButton

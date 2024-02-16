@@ -127,7 +127,7 @@ function PitMapPage() {
             .catch((error) => {
                 console.log(error);
                 toast({
-                    title: 'Apollo Error',
+                    title: 'Error',
                     description: 'Pit map was not able to be uploaded',
                     status: 'error',
                     duration: 3000,
@@ -270,6 +270,7 @@ function PitMapPage() {
                             <MenuItem
                                 textAlign={'center'}
                                 justifyContent={'center'}
+                                _focus={{ backgroundColor: 'none' }}
                                 onMouseEnter={() => setFocusedEvent(eventItem.name)}
                                 backgroundColor={
                                     (currentEvent.name === eventItem.name && focusedEvent === '') ||

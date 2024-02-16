@@ -1,10 +1,5 @@
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import {
-    AlertDialog,
-    AlertDialogBody,
-    AlertDialogContent,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogOverlay,
     Box,
     Button,
     Center,
@@ -16,17 +11,20 @@ import {
     Input,
     Menu,
     MenuButton,
-    MenuDivider,
-    MenuGroup,
     MenuItem,
     MenuList,
+    Modal,
+    ModalBody,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
     Spinner,
     Text,
     Textarea,
     Tooltip,
-    useToast,
+    useToast
 } from '@chakra-ui/react';
-import React, { useEffect, useRef, useState } from 'react';
 import { rtessIssuesStatus, teamNumber, timeZone, year } from '../util/helperConstants';
 import { convertMatchKeyToString, roundToWhole } from '../util/helperFunctions';
 import { circularLinkedList } from '../util/circularlinkedlist';
@@ -34,24 +32,18 @@ import { AiFillFilter, AiOutlinePlus } from 'react-icons/ai';
 import { CheckCircleIcon, ChevronDownIcon, WarningIcon } from '@chakra-ui/icons';
 import { HiWrenchScrewdriver } from 'react-icons/hi2';
 import RTESSIssuesMemo from '../components/RTESSIssuesMemo.';
-import { CREATE_RTESS_ISSUE } from '../graphql/mutations';
-import { useMutation } from '@apollo/client';
 import { MdDownload } from 'react-icons/md';
 import { v4 as uuidv4 } from 'uuid';
 import FileSaver from 'file-saver';
 import XLSX from 'sheetjs-style';
 
 const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const toolsArr = [
-    { name: 'Loan', key: uuidv4() },
-    { name: 'Donation', key: uuidv4() },
-];
 const issuesArr = [
     { name: 'Mechanical', key: uuidv4() },
     { name: 'Electrical', key: uuidv4() },
     { name: 'Programming', key: uuidv4() },
     { name: 'Inspection', key: uuidv4() },
-    { name: 'Other', key: uuidv4() },
+    { name: 'Other', key: uuidv4() }
 ];
 let rtessIssueCLL = new circularLinkedList();
 rtessIssueCLL.append({ key: 'None', emptyMsg: '' });
@@ -59,22 +51,27 @@ rtessIssueCLL.append({ key: rtessIssuesStatus.unresolved, emptyMsg: 'No unresolv
 rtessIssueCLL.append({ key: rtessIssuesStatus.beingResolved, emptyMsg: 'No RTESS issues being resolved' });
 rtessIssueCLL.append({ key: rtessIssuesStatus.resolved, emptyMsg: 'No resolved RTESS issues' });
 
-function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, eventInfo, setError }) {
-    const [rtessIssueFilter, setRTESSIssueFilter] = useState(rtessIssueCLL.getHead());
-    const [rtessIssuesListVersion, setRTESSIssuesListVersion] = useState(0);
-    const [filteredRTESSIssues, setFilteredRTESSIssues] = useState(rtessIssues);
-
+function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, eventInfo, setError, fetchRTESSIssues }) {
     const cancelRef = useRef();
     const toast = useToast();
 
+    const [rtessIssueFilter, setRTESSIssueFilter] = useState(rtessIssueCLL.getHead());
+    const [rtessIssuesListVersion, setRTESSIssuesListVersion] = useState(0);
+    const [filteredRTESSIssues, setFilteredRTESSIssues] = useState(rtessIssues);
     const [rtessIssueDialog, setRTESSIssueDialog] = useState({ open: false, issue: null });
-    const [rtessIssueData, setRTESSIssueData] = useState({ teamNumber: '', issue: '', focusedIssue: '', problemComment: '', solutionComment: '' });
+    const [rtessIssueData, setRTESSIssueData] = useState({
+        teamNumber: '',
+        issue: '',
+        focusedIssue: '',
+        problemComment: '',
+        solutionComment: ''
+    });
     const [rtessIssuePopoverError, setRTESSIssuePopoverError] = useState(null);
     const [fetchingConfirmation, setFetchingConfirmation] = useState(false);
     const [submitAttempted, setSubmitAttempted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         let newRTESSIssues = [];
         for (let rtessIssue of rtessIssues) {
             if (rtessIssueFilter.elem.key !== 'None' && rtessIssueFilter.elem.key !== rtessIssue.status) {
@@ -83,12 +80,16 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
             newRTESSIssues.push(rtessIssue);
         }
         newRTESSIssues = newRTESSIssues.sort((a, b) => {
-            let diff = Object.values(rtessIssuesStatus).indexOf(a.status) - Object.values(rtessIssuesStatus).indexOf(b.status);
+            let diff =
+                Object.values(rtessIssuesStatus).indexOf(a.status) - Object.values(rtessIssuesStatus).indexOf(b.status);
             if (diff === 0) {
                 diff = parseInt(a.teamNumber) - parseInt(b.teamNumber);
             }
             if (diff === 0) {
-                return new Date(parseInt(b.updatedAt)) - new Date(parseInt(a.updatedAt));
+                console.log('here');
+                console.log(new Date(a.updatedAt));
+                console.log(new Date(b.updatedAt));
+                return new Date(b.updatedAt) - new Date(a.updatedAt);
             }
             return diff;
         });
@@ -99,7 +100,6 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
     function getIssueOfTeam(teamNumber) {
         let issue = rtessIssues.find(
             (rtessIssue) =>
-                rtessIssue.eventKey === currentEvent.key &&
                 rtessIssue.teamNumber === parseInt(teamNumber) &&
                 [rtessIssuesStatus.unresolved, rtessIssuesStatus.beingResolved].includes(rtessIssue.status)
         );
@@ -139,53 +139,60 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
         }
     }
 
-    const [updateRTESSIssue] = useMutation(CREATE_RTESS_ISSUE, {
-        onCompleted() {
-            toast({
-                title: 'RTESS Issue Created',
-                status: 'success',
-                duration: 3000,
-                isClosable: true,
-            });
-            setRTESSIssueDialog({ open: false, issue: null });
-            setRTESSIssueData({ teamNumber: '', issue: '', focusedIssue: '', problemComment: '', solutionComment: '' });
-            setRTESSIssuePopoverError(null);
-            setFetchingConfirmation(false);
-            setSubmitAttempted(false);
-            setSubmitting(false);
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            toast({
-                title: 'Apollo Error',
-                description: 'RTESS Issues could not be created',
-                status: 'error',
-                duration: 3000,
-                isClosable: true,
-            });
-            setSubmitting(false);
-        },
-    });
-
     function submit() {
         setSubmitting(true);
         fetch(`/blueAlliance/team/frc${parseInt(rtessIssueData.teamNumber)}/simple`)
             .then((response) => response.json())
             .then((data) => {
                 if (!data.Error) {
-                    updateRTESSIssue({
-                        variables: {
-                            rtessIssueInput: {
-                                eventKey: currentEvent.key,
-                                teamNumber: parseInt(rtessIssueData.teamNumber),
-                                teamName: data.nickname,
-                                issue: rtessIssueData.issue,
-                                problemComment: rtessIssueData.problemComment.trim(),
-                                solutionComment: rtessIssueData.solutionComment.trim(),
-                                status: rtessIssueDialog.issue ? rtessIssuesStatus.unresolved : rtessIssuesStatus.resolved,
-                            },
-                        },
-                    });
+                    fetch('/rtessIssue/postRTESSIssue', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            eventKey: currentEvent.key,
+                            teamNumber: parseInt(rtessIssueData.teamNumber),
+                            teamName: data.nickname,
+                            issue: rtessIssueData.issue,
+                            problemComment: rtessIssueData.problemComment.trim(),
+                            solutionComment: rtessIssueData.solutionComment.trim(),
+                            status: rtessIssueDialog.issue ? rtessIssuesStatus.unresolved : rtessIssuesStatus.resolved
+                        })
+                    })
+                        .then((response) => {
+                            if (response.status === 200) {
+                                toast({
+                                    title: 'RTESS Issue Created',
+                                    status: 'success',
+                                    duration: 3000,
+                                    isClosable: true
+                                });
+                                setRTESSIssueDialog({ open: false, issue: null });
+                                setRTESSIssueData({
+                                    teamNumber: '',
+                                    issue: '',
+                                    focusedIssue: '',
+                                    problemComment: '',
+                                    solutionComment: ''
+                                });
+                                setRTESSIssuePopoverError(null);
+                                setSubmitAttempted(false);
+                                setSubmitting(false);
+                                fetchRTESSIssues();
+                            } else {
+                                throw new Error(response.statusText);
+                            }
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                            toast({
+                                title: 'Error',
+                                description: 'RTESS Issue could not be created',
+                                status: 'error',
+                                duration: 3000,
+                                isClosable: true
+                            });
+                            setSubmitting(false);
+                        });
                 } else {
                     setError(data.Error);
                 }
@@ -209,15 +216,13 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
                     let event = data.find((event) => event.key === currentEvent.key);
                     if (event === undefined) {
                         setRTESSIssuePopoverError('This team is not competing at this event');
-                        setFetchingConfirmation(false);
                     } else {
                         submit();
-                        setFetchingConfirmation(false);
                     }
                 } else {
                     setRTESSIssuePopoverError(data.Error);
-                    setFetchingConfirmation(false);
                 }
+                setFetchingConfirmation(false);
             })
             .catch((error) => {
                 setRTESSIssuePopoverError(error);
@@ -228,9 +233,9 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
     function downloadRTESSLogs() {
         const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 
-        let rtessIssues = rtessIssuesAll.filter((rtessIssue) => rtessIssue.eventKey === currentEvent.key);
         rtessIssues = rtessIssues.sort((a, b) => {
-            let diff = Object.values(rtessIssuesStatus).indexOf(a.status) - Object.values(rtessIssuesStatus).indexOf(b.status);
+            let diff =
+                Object.values(rtessIssuesStatus).indexOf(a.status) - Object.values(rtessIssuesStatus).indexOf(b.status);
             if (diff === 0) {
                 diff = parseInt(a.teamNumber) - parseInt(b.teamNumber);
             }
@@ -240,32 +245,23 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
             return diff;
         });
         let issuesArray = [];
-        let partsArray = [];
         rtessIssues.forEach((rtessIssue) => {
-            if (!['Loan', 'Donation'].includes(rtessIssue.issue)) {
-                issuesArray.push({
-                    'Event Name': currentEvent.name,
-                    'Team Number': rtessIssue.teamNumber,
-                    Submitter: rtessIssue.submitter,
-                    'RTESS Member': rtessIssue.rtessMember,
-                    Status: rtessIssue.status,
-                    Category: rtessIssue.issue,
-                    Problem: rtessIssue.problemComment,
-                    Solution: rtessIssue.solutionComment,
-                });
-            } else {
-                partsArray.push({
-                    'Event Name': currentEvent.name,
-                    'Team Number': rtessIssue.teamNumber,
-                    Submitter: rtessIssue.submitter,
-                    'Loan/Donation': rtessIssue.issue,
-                    'Tool/Part': rtessIssue.solutionComment,
-                });
-            }
+            issuesArray.push({
+                'Event Name': currentEvent.name,
+                'Team Number': rtessIssue.teamNumber,
+                Submitter: rtessIssue.submitter,
+                'RTESS Member': rtessIssue.rtessMember,
+                Status: rtessIssue.status,
+                Category: rtessIssue.issue,
+                Problem: rtessIssue.problemComment,
+                Solution: rtessIssue.solutionComment
+            });
         });
         const issuesJSON = XLSX.utils.json_to_sheet(issuesArray);
-        const partsJSON = XLSX.utils.json_to_sheet(partsArray);
-        const wb = { Sheets: { RTESS: issuesJSON, 'Tool-Part Log': partsJSON }, SheetNames: ['RTESS', 'Tool-Part Log'] };
+        const wb = {
+            Sheets: { RTESS: issuesJSON },
+            SheetNames: ['RTESS']
+        };
         const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         const data = new Blob([excelBuffer], { type: fileType });
         FileSaver.saveAs(data, `${currentEvent.name} RTESSLogs.xlsx`);
@@ -275,15 +271,27 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
         switch (tab) {
             case 'team':
                 return (
-                    <Box marginBottom={'25px'}>
+                    <Box>
                         {!eventInfo.inEvent ? (
-                            <Box textAlign={'center'} fontSize={'20px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+                            <Text
+                                fontSize={'lg'}
+                                fontWeight={'semibold'}
+                                textAlign={'center'}
+                                margin={'0 auto'}
+                                width={{ base: '85%', md: '66%', lg: '50%' }}
+                            >
                                 We are not registered for this event
-                            </Box>
+                            </Text>
                         ) : (
                             <Box>
                                 {eventInfo.matchTable.length === 0 ? (
-                                    <Text textAlign={'center'} fontSize={'20px'} margin={'0 auto'} marginBottom={'10px'} fontWeight={'medium'}>
+                                    <Text
+                                        fontSize={'lg'}
+                                        fontWeight={'semibold'}
+                                        textAlign={'center'}
+                                        margin={'0 auto'}
+                                        width={{ base: '85%', md: '66%', lg: '50%' }}
+                                    >
                                         {eventInfo.eventDone ? 'This event has finished' : 'No matches posted yet'}
                                     </Text>
                                 ) : (
@@ -295,87 +303,150 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
                                             borderRadius={'10px 10px 0px 0px'}
                                             backgroundColor={'gray.300'}
                                             templateColumns={'1fr 0.75fr 1fr'}
-                                            gap={'0px'}
                                         >
-                                            <GridItem padding={'7px 0px 7px 0px'} textAlign={'center'} borderRight={'1px solid black'}>
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    Match
-                                                </Text>
+                                            <GridItem
+                                                padding={'7px 0px'}
+                                                textAlign={'center'}
+                                                borderRight={'1px solid black'}
+                                                display={'flex'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                            >
+                                                Match
                                             </GridItem>
-                                            <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'} borderRight={'1px solid black'}>
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    TT
-                                                </Text>
+                                            <GridItem
+                                                textAlign={'center'}
+                                                borderRight={'1px solid black'}
+                                                display={'flex'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                            >
+                                                TT
                                             </GridItem>
-                                            <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                                                <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                    Alliance
-                                                </Text>
+                                            <GridItem
+                                                textAlign={'center'}
+                                                display={'flex'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                            >
+                                                Alliance
                                             </GridItem>
                                         </Grid>
-                                        <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'}>
+                                        <Box
+                                            borderRadius={'0px 0px 10px 10px'}
+                                            border={'1px solid black'}
+                                            borderTop={'none'}
+                                        >
                                             {eventInfo.matchTable.map((match, index) => (
                                                 <Grid
-                                                    margin={'0 auto'}
                                                     borderTop={index === 0 ? '1px solid black' : '1px solid gray'}
                                                     backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
-                                                    borderRadius={eventInfo.matchTable.length - 1 === index && '0px 0px 10px 10px'}
+                                                    borderRadius={
+                                                        eventInfo.matchTable.length - 1 === index && '0px 0px 10px 10px'
+                                                    }
                                                     key={match.matchNumber}
                                                     templateColumns={'1fr 0.75fr 1fr'}
-                                                    gap={'0px'}
                                                 >
-                                                    <GridItem padding={'7px 0px 7px 0px'} textAlign={'center'} borderRight={'1px solid gray'}>
-                                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                                            {convertMatchKeyToString(match.matchNumber)}
-                                                        </Text>
+                                                    <GridItem
+                                                        padding={'7px 0px'}
+                                                        textAlign={'center'}
+                                                        borderRight={'1px solid gray'}
+                                                        display={'flex'}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                    >
+                                                        {convertMatchKeyToString(match.matchNumber)}
                                                     </GridItem>
-                                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'} borderRight={'1px solid gray'}>
+                                                    <GridItem textAlign={'center'} borderRight={'1px solid gray'}>
                                                         <Tooltip
                                                             isDisabled={!match.predictedTime}
                                                             label={
                                                                 !match.scheduledTime
                                                                     ? 'No time scheduled' //this will likely never occur because our tooltip is only enabled if theres a predicted time which means there should also be a scheduled time
-                                                                    : `Scheduled at ${weekday[new Date(match.scheduledTime * 1000).getDay()]} ${new Date(match.scheduledTime * 1000).toLocaleString(
-                                                                          'en-US',
-                                                                          {
-                                                                              hour: 'numeric',
-                                                                              minute: 'numeric',
-                                                                              hour12: true,
-                                                                              timeZone: timeZone,
-                                                                          }
-                                                                      )}`
+                                                                    : `Scheduled at ${
+                                                                          weekday[
+                                                                              new Date(
+                                                                                  match.scheduledTime * 1000
+                                                                              ).getDay()
+                                                                          ]
+                                                                      } ${new Date(
+                                                                          match.scheduledTime * 1000
+                                                                      ).toLocaleString('en-US', {
+                                                                          hour: 'numeric',
+                                                                          minute: 'numeric',
+                                                                          hour12: true,
+                                                                          timeZone: timeZone
+                                                                      })}`
                                                             }
                                                         >
                                                             {index === 0 ? (
-                                                                <Text fontStyle={match.predictedTime ? 'italic' : 'normal'} pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
+                                                                <Text
+                                                                    fontStyle={
+                                                                        match.predictedTime ? 'italic' : 'normal'
+                                                                    }
+                                                                    pos={'relative'}
+                                                                    top={'50%'}
+                                                                    transform={'translateY(-50%)'}
+                                                                >
                                                                     {match.predictedTime
-                                                                        ? `${weekday[new Date(match.predictedTime * 1000).getDay()]} ${new Date(match.predictedTime * 1000).toLocaleString('en-US', {
+                                                                        ? `${
+                                                                              weekday[
+                                                                                  new Date(
+                                                                                      match.predictedTime * 1000
+                                                                                  ).getDay()
+                                                                              ]
+                                                                          } ${new Date(
+                                                                              match.predictedTime * 1000
+                                                                          ).toLocaleString('en-US', {
                                                                               hour: 'numeric',
                                                                               minute: 'numeric',
                                                                               hour12: true,
-                                                                              timeZone: timeZone,
+                                                                              timeZone: timeZone
                                                                           })}*`
                                                                         : match.scheduledTime
-                                                                        ? `${weekday[new Date(match.scheduledTime * 1000).getDay()]} ${new Date(match.scheduledTime * 1000).toLocaleString('en-US', {
+                                                                        ? `${
+                                                                              weekday[
+                                                                                  new Date(
+                                                                                      match.scheduledTime * 1000
+                                                                                  ).getDay()
+                                                                              ]
+                                                                          } ${new Date(
+                                                                              match.scheduledTime * 1000
+                                                                          ).toLocaleString('en-US', {
                                                                               hour: 'numeric',
                                                                               minute: 'numeric',
                                                                               hour12: true,
-                                                                              timeZone: timeZone,
+                                                                              timeZone: timeZone
                                                                           })}`
                                                                         : '?'}
                                                                 </Text>
                                                             ) : (
-                                                                <Text fontStyle={match.predictedTime ? 'italic' : 'normal'} pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
+                                                                <Text
+                                                                    fontStyle={
+                                                                        match.predictedTime ? 'italic' : 'normal'
+                                                                    }
+                                                                    pos={'relative'}
+                                                                    top={'50%'}
+                                                                    transform={'translateY(-50%)'}
+                                                                >
                                                                     {match.predictedTime
                                                                         ? `${roundToWhole(
                                                                               (match.predictedTime -
-                                                                                  (eventInfo.matchTable[index - 1].predictedTime || eventInfo.matchTable[index - 1].scheduledTime || 0)) /
+                                                                                  (eventInfo.matchTable[index - 1]
+                                                                                      .predictedTime ||
+                                                                                      eventInfo.matchTable[index - 1]
+                                                                                          .scheduledTime ||
+                                                                                      0)) /
                                                                                   60
                                                                           )} min*`
                                                                         : match.scheduledTime
                                                                         ? `${roundToWhole(
                                                                               (match.scheduledTime -
-                                                                                  (eventInfo.matchTable[index - 1].predictedTime || eventInfo.matchTable[index - 1].scheduledTime || 0)) /
+                                                                                  (eventInfo.matchTable[index - 1]
+                                                                                      .predictedTime ||
+                                                                                      eventInfo.matchTable[index - 1]
+                                                                                          .scheduledTime ||
+                                                                                      0)) /
                                                                                   60
                                                                           )} min`
                                                                         : '?'}
@@ -383,42 +454,61 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
                                                             )}
                                                         </Tooltip>
                                                     </GridItem>
-                                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
+                                                    <GridItem textAlign={'center'}>
                                                         <Flex height={'100%'}>
                                                             {match.alliance.map((team, innerIndex) => (
                                                                 <Flex
-                                                                    borderRadius={eventInfo.matchTable.length - 1 === index && innerIndex === 2 && '0px 0px 10px 0px'}
+                                                                    borderRadius={
+                                                                        eventInfo.matchTable.length - 1 === index &&
+                                                                        innerIndex === 2 &&
+                                                                        '0px 0px 10px 0px'
+                                                                    }
                                                                     height={'100%'}
                                                                     justifyContent={'center'}
                                                                     alignItems={'center'}
                                                                     borderRight={innerIndex !== 2 && '1px solid gray'}
                                                                     width={`${100.0 / 3.0}%`}
                                                                     key={team}
-                                                                    textDecoration={team === `frc${teamNumber}` ? 'underline' : 'none'}
+                                                                    textDecoration={
+                                                                        team === `frc${teamNumber}`
+                                                                            ? 'underline'
+                                                                            : 'none'
+                                                                    }
                                                                     textDecorationThickness={'2px'}
                                                                     fontWeight={'normal'}
                                                                     backgroundColor={
-                                                                        getIssueOfTeam(team.substring(3))?.status === rtessIssuesStatus.unresolved
+                                                                        getIssueOfTeam(team.substring(3))?.status ===
+                                                                        rtessIssuesStatus.unresolved
                                                                             ? 'red.200'
-                                                                            : getIssueOfTeam(team.substring(3))?.status === rtessIssuesStatus.beingResolved
+                                                                            : getIssueOfTeam(team.substring(3))
+                                                                                  ?.status ===
+                                                                              rtessIssuesStatus.beingResolved
                                                                             ? 'yellow.200'
                                                                             : ''
                                                                     }
                                                                     _hover={{
                                                                         backgroundColor:
-                                                                            getIssueOfTeam(team.substring(3))?.status === rtessIssuesStatus.unresolved
+                                                                            getIssueOfTeam(team.substring(3))
+                                                                                ?.status ===
+                                                                            rtessIssuesStatus.unresolved
                                                                                 ? 'red.300'
-                                                                                : getIssueOfTeam(team.substring(3))?.status === rtessIssuesStatus.beingResolved
+                                                                                : getIssueOfTeam(team.substring(3))
+                                                                                      ?.status ===
+                                                                                  rtessIssuesStatus.beingResolved
                                                                                 ? 'yellow.300'
-                                                                                : 'gray.300',
+                                                                                : 'gray.300'
                                                                     }}
                                                                     _active={{
                                                                         backgroundColor:
-                                                                            getIssueOfTeam(team.substring(3))?.status === rtessIssuesStatus.unresolved
+                                                                            getIssueOfTeam(team.substring(3))
+                                                                                ?.status ===
+                                                                            rtessIssuesStatus.unresolved
                                                                                 ? 'red.400'
-                                                                                : getIssueOfTeam(team.substring(3))?.status === rtessIssuesStatus.beingResolved
+                                                                                : getIssueOfTeam(team.substring(3))
+                                                                                      ?.status ===
+                                                                                  rtessIssuesStatus.beingResolved
                                                                                 ? 'yellow.400'
-                                                                                : 'gray.400',
+                                                                                : 'gray.400'
                                                                     }}
                                                                 >
                                                                     {team.substring(3)}
@@ -437,7 +527,7 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
                 );
             case 'event':
                 return (
-                    <Box marginBottom={'25px'}>
+                    <Box>
                         <IconButton
                             position={'absolute'}
                             right={'10px'}
@@ -446,7 +536,6 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
                             icon={getIcon(rtessIssueFilter.elem.key)}
                             colorScheme={getColor(rtessIssueFilter.elem.key)}
                             variant={rtessIssueFilter.elem.key !== 'None' ? 'solid' : 'outline'}
-                            _focus={{ outline: 'none' }}
                             size='sm'
                         />
                         <IconButton
@@ -456,7 +545,6 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
                             onClick={() => downloadRTESSLogs()}
                             icon={<MdDownload />}
                             variant={'solid'}
-                            _focus={{ outline: 'none' }}
                             size='xs'
                         />
                         <IconButton
@@ -466,145 +554,172 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
                             onClick={() => setRTESSIssueDialog({ open: true, issue: null })}
                             icon={<AiOutlinePlus />}
                             variant={'solid'}
-                            _focus={{ outline: 'none' }}
-                            size='sm'
+                            size={'sm'}
+                            color={'black'}
                         />
-                        <AlertDialog
+                        <Modal
                             closeOnEsc={true}
                             isOpen={rtessIssueDialog.open}
-                            leastDestructiveRef={cancelRef}
                             onClose={() => {
                                 setRTESSIssueDialog({ open: false, issue: null });
-                                setRTESSIssueData({ teamNumber: '', issue: '', focusedIssue: '', problemComment: '', solutionComment: '' });
+                                setRTESSIssueData({
+                                    teamNumber: '',
+                                    issue: '',
+                                    focusedIssue: '',
+                                    problemComment: '',
+                                    solutionComment: ''
+                                });
                                 setRTESSIssuePopoverError(null);
                                 setFetchingConfirmation(false);
                                 setSubmitAttempted(false);
                                 setSubmitting(false);
                             }}
                         >
-                            <AlertDialogOverlay
-                                onKeyDown={(event) => {
-                                    if (event.key === 'Enter' && rtessIssueData.teamNumber.trim() !== '' && !fetchingConfirmation) {
-                                        handleRTESSIssueConfirm();
-                                    }
-                                }}
-                            >
-                                <AlertDialogContent margin={0} w={{ base: '75%', md: '40%', lg: '30%' }} top={'15%'}>
-                                    <AlertDialogHeader color='black' fontSize='lg' fontWeight='bold' paddingBottom={'5px'}>
-                                        {rtessIssueDialog.issue === null ? 'Select One' : rtessIssueDialog.issue ? 'Report Issue' : 'RTESS Report'}
-                                    </AlertDialogHeader>
-                                    <AlertDialogBody>
-                                        <HStack marginBottom={rtessIssueDialog.issue === null ? '0px' : '20px'} marginLeft={'5px'} spacing={'30px'}>
+                            <ModalOverlay>
+                                <ModalContent
+                                    width={{ base: '75%', md: '40%', lg: '30%' }}
+                                    marginTop={'10dvh'}
+                                    marginBottom={'10dvh'}
+                                    maxHeight={'80dvh'}
+                                >
+                                    <ModalHeader fontSize={'lg'} fontWeight={'semibold'} paddingBottom={'5px'}>
+                                        {rtessIssueDialog.issue === null
+                                            ? 'Select One'
+                                            : rtessIssueDialog.issue
+                                            ? 'Report Issue'
+                                            : 'RTESS Report'}
+                                    </ModalHeader>
+                                    <ModalBody overflowY={'auto'}>
+                                        <HStack
+                                            marginBottom={rtessIssueDialog.issue === null ? '0px' : '20px'}
+                                            marginLeft={'5px'}
+                                            spacing={'15px'}
+                                        >
                                             <Button
-                                                outline={rtessIssueDialog.issue === null && submitAttempted ? '2px solid red' : 'none'}
-                                                _focus={{ outline: 'none' }}
+                                                outline={
+                                                    rtessIssueDialog.issue === null && submitAttempted
+                                                        ? '2px solid red'
+                                                        : 'none'
+                                                }
                                                 colorScheme={rtessIssueDialog.issue === true ? 'green' : 'gray'}
                                                 onClick={() => {
                                                     setRTESSIssueDialog({ ...rtessIssueDialog, issue: true });
-                                                    if (['Loan', 'Donation'].includes(rtessIssueData.issue)) {
-                                                        setRTESSIssueData({ ...rtessIssueData, issue: '' });
-                                                    }
                                                 }}
                                             >
                                                 Issue
                                             </Button>
                                             <Button
-                                                outline={rtessIssueDialog.issue === null && submitAttempted ? '2px solid red' : 'none'}
-                                                _focus={{ outline: 'none' }}
+                                                outline={
+                                                    rtessIssueDialog.issue === null && submitAttempted
+                                                        ? '2px solid red'
+                                                        : 'none'
+                                                }
                                                 colorScheme={rtessIssueDialog.issue === false ? 'green' : 'gray'}
-                                                onClick={() => setRTESSIssueDialog({ ...rtessIssueDialog, issue: false })}
+                                                onClick={() =>
+                                                    setRTESSIssueDialog({ ...rtessIssueDialog, issue: false })
+                                                }
                                             >
                                                 Report
                                             </Button>
                                         </HStack>
                                         {rtessIssueDialog.issue !== null && (
-                                            <React.Fragment>
+                                            <Box>
                                                 <Input
                                                     type={'number'}
-                                                    _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
                                                     borderColor='gray.300'
                                                     value={rtessIssueData.teamNumber}
-                                                    onChange={(e) => setRTESSIssueData({ ...rtessIssueData, teamNumber: e.target.value })}
+                                                    onChange={(e) =>
+                                                        setRTESSIssueData({
+                                                            ...rtessIssueData,
+                                                            teamNumber: e.target.value
+                                                        })
+                                                    }
                                                     marginBottom={'20px'}
                                                     placeholder={'Team Number'}
-                                                    outline={rtessIssueData.teamNumber.trim() === '' && submitAttempted ? '2px solid red' : 'none'}
+                                                    outline={
+                                                        rtessIssueData.teamNumber.trim() === '' && submitAttempted
+                                                            ? '2px solid red'
+                                                            : 'none'
+                                                    }
                                                     marginLeft={'5px'}
                                                 />
                                                 <Menu>
                                                     <MenuButton
                                                         maxW={'75vw'}
-                                                        onClick={() => setRTESSIssueData({ ...rtessIssueData, focusedIssue: '' })}
-                                                        _focus={{ outline: 'none' }}
+                                                        onClick={() =>
+                                                            setRTESSIssueData({ ...rtessIssueData, focusedIssue: '' })
+                                                        }
                                                         as={Button}
                                                         rightIcon={<ChevronDownIcon />}
-                                                        outline={rtessIssueData.issue === '' && submitAttempted ? '2px solid red' : 'none'}
+                                                        outline={
+                                                            rtessIssueData.issue === '' && submitAttempted
+                                                                ? '2px solid red'
+                                                                : 'none'
+                                                        }
                                                         marginLeft={'5px'}
                                                     >
-                                                        <Box overflow={'hidden'} textOverflow={'ellipsis'} lineHeight={'base'}>
+                                                        <Box
+                                                            overflow={'hidden'}
+                                                            textOverflow={'ellipsis'}
+                                                            lineHeight={'base'}
+                                                        >
                                                             {rtessIssueData.issue || 'Select One'}
                                                         </Box>
                                                     </MenuButton>
-                                                    <MenuList maxHeight={'300px'} overflowY={'auto'}>
-                                                        {!rtessIssueDialog.issue && (
-                                                            <React.Fragment>
-                                                                <MenuGroup title='Tool/Part'>
-                                                                    {toolsArr.map((issue) => (
-                                                                        <MenuItem
-                                                                            paddingLeft={'25px'}
-                                                                            _focus={{ backgroundColor: 'none' }}
-                                                                            onMouseEnter={() => setRTESSIssueData({ ...rtessIssueData, focusedIssue: issue.name })}
-                                                                            backgroundColor={
-                                                                                (rtessIssueData.issue === issue.name && rtessIssueData.focusedIssue === '') ||
-                                                                                rtessIssueData.focusedIssue === issue.name
-                                                                                    ? 'gray.100'
-                                                                                    : 'none'
-                                                                            }
-                                                                            maxW={'75vw'}
-                                                                            key={issue.key}
-                                                                            onClick={() => {
-                                                                                setRTESSIssueData({ ...rtessIssueData, issue: issue.name });
-                                                                            }}
-                                                                        >
-                                                                            {issue.name}
-                                                                        </MenuItem>
-                                                                    ))}
-                                                                </MenuGroup>
-                                                                <MenuDivider />
-                                                            </React.Fragment>
-                                                        )}
-                                                        <MenuGroup title='Robot'>
-                                                            {issuesArr.map((issue) => (
-                                                                <MenuItem
-                                                                    paddingLeft={'25px'}
-                                                                    _focus={{ backgroundColor: 'none' }}
-                                                                    onMouseEnter={() => setRTESSIssueData({ ...rtessIssueData, focusedIssue: issue.name })}
-                                                                    backgroundColor={
-                                                                        (rtessIssueData.issue === issue.name && rtessIssueData.focusedIssue === '') || rtessIssueData.focusedIssue === issue.name
-                                                                            ? 'gray.100'
-                                                                            : 'none'
-                                                                    }
-                                                                    maxW={'75vw'}
-                                                                    key={issue.key}
-                                                                    onClick={() => {
-                                                                        setRTESSIssueData({ ...rtessIssueData, issue: issue.name });
-                                                                    }}
-                                                                >
-                                                                    {issue.name}
-                                                                </MenuItem>
-                                                            ))}
-                                                        </MenuGroup>
+                                                    <MenuList>
+                                                        {issuesArr.map((issue) => (
+                                                            <MenuItem
+                                                                paddingLeft={'25px'}
+                                                                _focus={{ outline: 'none' }}
+                                                                onMouseEnter={() =>
+                                                                    setRTESSIssueData({
+                                                                        ...rtessIssueData,
+                                                                        focusedIssue: issue.name
+                                                                    })
+                                                                }
+                                                                backgroundColor={
+                                                                    (rtessIssueData.issue === issue.name &&
+                                                                        rtessIssueData.focusedIssue === '') ||
+                                                                    rtessIssueData.focusedIssue === issue.name
+                                                                        ? 'gray.100'
+                                                                        : 'none'
+                                                                }
+                                                                maxW={'75vw'}
+                                                                key={issue.key}
+                                                                onClick={() => {
+                                                                    setRTESSIssueData({
+                                                                        ...rtessIssueData,
+                                                                        issue: issue.name
+                                                                    });
+                                                                }}
+                                                            >
+                                                                {issue.name}
+                                                            </MenuItem>
+                                                        ))}
                                                     </MenuList>
                                                 </Menu>
-                                            </React.Fragment>
+                                            </Box>
                                         )}
                                         {issuesArr.find((issue) => issue.name === rtessIssueData.issue) && (
                                             <Center marginTop={'20px'}>
                                                 <Textarea
-                                                    outline={rtessIssueData.problemComment.trim() === '' && submitAttempted ? '2px solid red' : 'none'}
-                                                    _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
-                                                    onChange={(event) => setRTESSIssueData({ ...rtessIssueData, problemComment: event.target.value })}
+                                                    outline={
+                                                        rtessIssueData.problemComment.trim() === '' && submitAttempted
+                                                            ? '2px solid red'
+                                                            : 'none'
+                                                    }
+                                                    onChange={(event) =>
+                                                        setRTESSIssueData({
+                                                            ...rtessIssueData,
+                                                            problemComment: event.target.value
+                                                        })
+                                                    }
                                                     value={rtessIssueData.problemComment}
-                                                    placeholder={rtessIssueDialog.issue ? 'What is the issue specifically?' : 'What was the issue specifically?'}
+                                                    placeholder={
+                                                        rtessIssueDialog.issue
+                                                            ? 'What is the issue specifically?'
+                                                            : 'What was the issue specifically?'
+                                                    }
                                                     w={'85%'}
                                                 ></Textarea>
                                             </Center>
@@ -612,33 +727,54 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
                                         {!rtessIssueDialog.issue && rtessIssueData.issue !== '' && (
                                             <Center marginTop={'20px'}>
                                                 <Textarea
-                                                    outline={rtessIssueData.solutionComment.trim() === '' && submitAttempted ? '2px solid red' : 'none'}
-                                                    _focus={{ outline: 'none', boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px' }}
-                                                    onChange={(event) => setRTESSIssueData({ ...rtessIssueData, solutionComment: event.target.value })}
+                                                    outline={
+                                                        rtessIssueData.solutionComment.trim() === '' && submitAttempted
+                                                            ? '2px solid red'
+                                                            : 'none'
+                                                    }
+                                                    _focus={{
+                                                        outline: 'none',
+                                                        boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px'
+                                                    }}
+                                                    onChange={(event) =>
+                                                        setRTESSIssueData({
+                                                            ...rtessIssueData,
+                                                            solutionComment: event.target.value
+                                                        })
+                                                    }
                                                     value={rtessIssueData.solutionComment}
-                                                    placeholder={issuesArr.find((issue) => issue.name === rtessIssueData.issue) ? 'How did RTESS help?' : 'Name of tool/part'}
+                                                    placeholder={
+                                                        issuesArr.find((issue) => issue.name === rtessIssueData.issue)
+                                                            ? 'How did RTESS help?'
+                                                            : 'Name of tool/part'
+                                                    }
                                                     w={'85%'}
                                                 ></Textarea>
                                             </Center>
                                         )}
                                         {rtessIssuePopoverError && (
-                                            <Center color={'red.500'} marginTop={'5px'}>
+                                            <Center color={'red.500'} marginTop={'5px'} textAlign={'center'}>
                                                 {rtessIssuePopoverError}
                                             </Center>
                                         )}
-                                    </AlertDialogBody>
-                                    <AlertDialogFooter paddingTop={rtessIssuePopoverError ? 0 : 'var(--chakra-space-4)'}>
+                                    </ModalBody>
+                                    <ModalFooter paddingTop={rtessIssuePopoverError ? 0 : 'var(--chakra-space-4)'}>
                                         <Button
                                             ref={cancelRef}
                                             onClick={() => {
                                                 setRTESSIssueDialog({ open: false, issue: null });
-                                                setRTESSIssueData({ teamNumber: '', issue: '', focusedIssue: '', problemComment: '', solutionComment: '' });
+                                                setRTESSIssueData({
+                                                    teamNumber: '',
+                                                    issue: '',
+                                                    focusedIssue: '',
+                                                    problemComment: '',
+                                                    solutionComment: ''
+                                                });
                                                 setRTESSIssuePopoverError(null);
                                                 setFetchingConfirmation(false);
                                                 setSubmitAttempted(false);
                                                 setSubmitting(false);
                                             }}
-                                            _focus={{ outline: 'none' }}
                                         >
                                             Cancel
                                         </Button>
@@ -648,40 +784,63 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
                                             isDisabled={
                                                 rtessIssueData.teamNumber.trim() === '' ||
                                                 rtessIssueData.issue === '' ||
-                                                (rtessIssueDialog.issue && rtessIssueData.problemComment.trim() === '') ||
+                                                (rtessIssueDialog.issue &&
+                                                    rtessIssueData.problemComment.trim() === '') ||
                                                 (!rtessIssueDialog.issue &&
                                                     issuesArr.find((issue) => issue.name === rtessIssueData.issue) &&
-                                                    (rtessIssueData.problemComment.trim() === '' || rtessIssueData.solutionComment.trim() === '')) ||
-                                                (!rtessIssueDialog.issue && toolsArr.find((issue) => issue.name === rtessIssueData.issue) && rtessIssueData.solutionComment.trim() === '') ||
+                                                    (rtessIssueData.problemComment.trim() === '' ||
+                                                        rtessIssueData.solutionComment.trim() === '')) ||
                                                 fetchingConfirmation ||
                                                 submitting
                                             }
-                                            _focus={{ outline: 'none' }}
                                             onClick={() => handleRTESSIssueConfirm()}
+                                            isLoading={fetchingConfirmation || submitting}
                                         >
                                             Submit
                                         </Button>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialogOverlay>
-                        </AlertDialog>
+                                    </ModalFooter>
+                                </ModalContent>
+                            </ModalOverlay>
+                        </Modal>
                         {rtessIssues.length > 0 ? (
-                            <Box paddingTop={'10px'}>
-                                <Grid border={'1px solid black'} borderBottom={'none'} borderRadius={'10px 10px 0px 0px'} backgroundColor={'gray.300'} templateColumns='1fr 1fr 1fr' gap={'5px'}>
-                                    <GridItem padding={'10px 0px 10px 0px'} _focus={{ zIndex: 1 }} textAlign={'center'}>
-                                        <Text w='fit-content' margin={'0 auto'} pos={'relative'} fontSize={'18px'} fontWeight={'500'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Team #
-                                        </Text>
+                            <Box>
+                                <Grid
+                                    border={'1px solid black'}
+                                    borderBottom={'none'}
+                                    borderRadius={'10px 10px 0px 0px'}
+                                    backgroundColor={'gray.300'}
+                                    templateColumns='1fr 1fr 1fr'
+                                >
+                                    <GridItem
+                                        fontSize={'lg'}
+                                        fontWeight={'semibold'}
+                                        textAlign={'center'}
+                                        display={'flex'}
+                                        justifyContent={'center'}
+                                        alignItems={'center'}
+                                        padding={'10px 0px'}
+                                    >
+                                        Team #
                                     </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} _focus={{ zIndex: 1 }} textAlign={'center'}>
-                                        <Text w='fit-content' margin={'0 auto'} pos={'relative'} fontSize={'18px'} fontWeight={'500'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Issue(s)
-                                        </Text>
+                                    <GridItem
+                                        fontSize={'lg'}
+                                        fontWeight={'semibold'}
+                                        textAlign={'center'}
+                                        display={'flex'}
+                                        justifyContent={'center'}
+                                        alignItems={'center'}
+                                    >
+                                        Issue(s)
                                     </GridItem>
-                                    <GridItem padding={'0px 0px 0px 0px'} _focus={{ zIndex: 1 }} textAlign={'center'}>
-                                        <Text w='fit-content' margin={'0 auto'} pos={'relative'} fontSize={'18px'} fontWeight={'500'} top={'50%'} transform={'translateY(-50%)'}>
-                                            Status
-                                        </Text>
+                                    <GridItem
+                                        fontSize={'lg'}
+                                        fontWeight={'semibold'}
+                                        textAlign={'center'}
+                                        display={'flex'}
+                                        justifyContent={'center'}
+                                        alignItems={'center'}
+                                    >
+                                        Status
                                     </GridItem>
                                 </Grid>
                                 <RTESSIssuesMemo
@@ -692,7 +851,13 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, rtessIssuesAll, event
                                 ></RTESSIssuesMemo>
                             </Box>
                         ) : (
-                            <Box textAlign={'center'} fontSize={'20px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+                            <Box
+                                fontSize={'lg'}
+                                fontWeight={'semibold'}
+                                textAlign={'center'}
+                                margin={'0 auto'}
+                                width={{ base: '85%', md: '66%', lg: '50%' }}
+                            >
                                 No RTESS Reports For This Event
                             </Box>
                         )}

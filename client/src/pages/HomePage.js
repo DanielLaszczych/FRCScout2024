@@ -71,9 +71,9 @@ function HomePage() {
     if (error) {
         return (
             <Box
-                textAlign={'center'}
                 fontSize={'lg'}
                 fontWeight={'semibold'}
+                textAlign={'center'}
                 margin={'0 auto'}
                 width={{ base: '85%', md: '66%', lg: '50%' }}
             >

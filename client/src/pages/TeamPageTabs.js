@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useLayoutEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
     Box,
     Center,
@@ -76,12 +76,23 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
     const { user } = useContext(AuthContext);
 
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const teamRef = useRef();
+    const totalRef = useRef();
+    const autoRef = useRef();
+    const teleopRef = useRef();
+    const stageRef = useRef();
 
     const [dimensionRatios, setDimensionRatios] = useState(null);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [commentsToggled, setCommentsToggled] = useState([]);
     const [oneValidMatchForms, setOneValidMatchForms] = useState(null);
     const [modalImage, setModalImage] = useState(null);
+    const [childrenWrapped, setChildrenWrapped] = useState({
+        team: false,
+        total: false,
+        auto: false,
+        teleop: false
+    });
 
     useEffect(() => {
         if (matchForms) {
@@ -147,6 +158,23 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
         }
         setDimensionRatios({ width: scaledWidth / imageWidth, height: scaledHeight / imageHeight });
     }, [tab]);
+
+    const getChildrenWrapped = useCallback(() => {
+        let newChildrenWrapped = {};
+        newChildrenWrapped.team = teamRef.current?.offsetTop !== totalRef.current?.offsetTop;
+        newChildrenWrapped.total = totalRef.current?.offsetTop !== autoRef.current?.offsetTop;
+        newChildrenWrapped.auto = autoRef.current?.offsetTop !== teleopRef.current?.offsetTop;
+        newChildrenWrapped.teleop = teleopRef.current?.offsetTop !== stageRef.current?.offsetTop;
+        setChildrenWrapped(newChildrenWrapped);
+    }, []);
+
+    useLayoutEffect(() => {
+        getChildrenWrapped();
+
+        window.addEventListener('resize', getChildrenWrapped);
+
+        return () => window.removeEventListener('resize', getChildrenWrapped);
+    }, [pitForm, matchForms, oneValidMatchForms, teamEventData, getChildrenWrapped]);
 
     useLayoutEffect(() => {
         if ([teamPageTabs.pit, teamPageTabs.forms].includes(tab)) {
@@ -314,16 +342,19 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                     width={'90%'}
                                     flexWrap={'wrap'}
                                     justifyContent={'center'}
-                                    borderLeft={'1px solid black'}
-                                    borderTop={'1px solid black'}
-                                    outline={'1px solid black'}
+                                    border={'1px solid black'}
+                                    borderBottom={'none'}
+                                    borderRadius={'10px'}
+                                    backgroundColor={'gray.200'}
+                                    overflow={'hidden'} //makes children obey border radius
                                 >
                                     <Flex
                                         flex={0.75}
                                         flexDirection={'column'}
                                         minWidth={'80px'}
-                                        borderRight={'1px solid black'}
+                                        borderRight={!childrenWrapped.team && '1px solid black'}
                                         borderBottom={'1px solid black'}
+                                        ref={teamRef}
                                     >
                                         <Flex
                                             alignItems={'center'}
@@ -333,7 +364,6 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                             textAlign={'center'}
                                             borderBottom={'1px solid black'}
                                             height={'54px'}
-                                            backgroundColor={'gray.200'}
                                         >
                                             Team #
                                         </Flex>
@@ -350,24 +380,19 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                     <Flex
                                         flex={1}
                                         flexDirection={'column'}
-                                        borderRight={'1px solid black'}
-                                        minWidth={'165px'}
-                                        borderBottom={'1px solid black'}
+                                        minWidth={'190px'}
+                                        borderRight={!childrenWrapped.total && '1px solid black'}
+                                        ref={totalRef}
                                     >
                                         <Text
                                             fontSize={'lg'}
                                             fontWeight={'medium'}
                                             textAlign={'center'}
                                             height={'27px'}
-                                            backgroundColor={'gray.200'}
                                         >
                                             Total
                                         </Text>
-                                        <Flex
-                                            borderBottom={'1px solid black'}
-                                            height={'27px'}
-                                            backgroundColor={'gray.200'}
-                                        >
+                                        <Flex borderBottom={'1px solid black'} height={'27px'}>
                                             <Text
                                                 flex={1 / 3}
                                                 fontSize={'lg'}
@@ -393,7 +418,11 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                                 Avg GP
                                             </Text>
                                         </Flex>
-                                        <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
+                                        <Flex
+                                            padding={'2px 0px'}
+                                            backgroundColor={'red.200'}
+                                            borderBottom={'1px solid black'}
+                                        >
                                             <Text
                                                 flex={1 / 3}
                                                 fontSize={'lg'}
@@ -428,24 +457,19 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                     <Flex
                                         flexDirection={'column'}
                                         flex={1}
-                                        minWidth={'165px'}
-                                        borderRight={'1px solid black'}
-                                        borderBottom={'1px solid black'}
+                                        minWidth={'190px'}
+                                        borderRight={!childrenWrapped.auto && '1px solid black'}
+                                        ref={autoRef}
                                     >
                                         <Text
                                             fontSize={'lg'}
                                             fontWeight={'medium'}
                                             textAlign={'center'}
                                             height={'27px'}
-                                            backgroundColor={'gray.200'}
                                         >
                                             Auto
                                         </Text>
-                                        <Flex
-                                            borderBottom={'1px solid black'}
-                                            height={'27px'}
-                                            backgroundColor={'gray.200'}
-                                        >
+                                        <Flex borderBottom={'1px solid black'} height={'27px'}>
                                             <Text
                                                 flex={1 / 3}
                                                 fontSize={'lg'}
@@ -471,7 +495,11 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                                 Avg GP
                                             </Text>
                                         </Flex>
-                                        <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
+                                        <Flex
+                                            padding={'2px 0px'}
+                                            backgroundColor={'red.200'}
+                                            borderBottom={'1px solid black'}
+                                        >
                                             <Text
                                                 flex={1 / 3}
                                                 fontSize={'lg'}
@@ -505,8 +533,8 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                         flexDirection={'column'}
                                         flex={1}
                                         minWidth={'220px'}
-                                        borderRight={'1px solid black'}
-                                        borderBottom={'1px solid black'}
+                                        borderRight={!childrenWrapped.teleop && '1px solid black'}
+                                        ref={teleopRef}
                                     >
                                         <Flex>
                                             <Text
@@ -515,7 +543,6 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                                 height={'27px'}
-                                                backgroundColor={'gray.200'}
                                             >
                                                 Teleop
                                             </Text>
@@ -525,16 +552,11 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                                 height={'27px'}
-                                                backgroundColor={'gray.200'}
                                             >
                                                 Avg GP
                                             </Text>
                                         </Flex>
-                                        <Flex
-                                            borderBottom={'1px solid black'}
-                                            height={'27px'}
-                                            backgroundColor={'gray.200'}
-                                        >
+                                        <Flex borderBottom={'1px solid black'} height={'27px'}>
                                             <Text
                                                 flex={1 / 4}
                                                 fontSize={'lg'}
@@ -568,7 +590,11 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                                 Spea.
                                             </Text>
                                         </Flex>
-                                        <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
+                                        <Flex
+                                            padding={'2px 0px'}
+                                            backgroundColor={'red.200'}
+                                            borderBottom={'1px solid black'}
+                                        >
                                             <Text
                                                 flex={1 / 4}
                                                 fontSize={'lg'}
@@ -603,27 +629,16 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                             </Text>
                                         </Flex>
                                     </Flex>
-                                    <Flex
-                                        flexDirection={'column'}
-                                        flex={1}
-                                        minWidth={'240px'}
-                                        borderRight={'1px solid black'}
-                                        borderBottom={'1px solid black'}
-                                    >
+                                    <Flex flexDirection={'column'} flex={1} minWidth={'240px'} ref={stageRef}>
                                         <Text
                                             fontSize={'lg'}
                                             fontWeight={'medium'}
                                             textAlign={'center'}
                                             height={'27px'}
-                                            backgroundColor={'gray.200'}
                                         >
                                             Stage
                                         </Text>
-                                        <Flex
-                                            borderBottom={'1px solid black'}
-                                            height={'27px'}
-                                            backgroundColor={'gray.200'}
-                                        >
+                                        <Flex borderBottom={'1px solid black'} height={'27px'}>
                                             <Text
                                                 flex={1 / 4}
                                                 fontSize={'lg'}
@@ -657,7 +672,11 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, tea
                                                 Traps
                                             </Text>
                                         </Flex>
-                                        <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
+                                        <Flex
+                                            padding={'2px 0px'}
+                                            backgroundColor={'red.200'}
+                                            borderBottom={'1px solid black'}
+                                        >
                                             <Text
                                                 flex={1 / 4}
                                                 fontSize={'lg'}

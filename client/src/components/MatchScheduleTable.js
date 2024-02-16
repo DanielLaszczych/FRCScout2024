@@ -233,61 +233,50 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                         </Button>
                     )}
                     <Grid
-                        margin={'0 auto'}
                         border={'1px solid black'}
                         borderBottom={'none'}
                         borderRadius={'10px 10px 0px 0px'}
                         backgroundColor={'gray.300'}
                         templateColumns={isMobile ? '1fr 1fr 0.5fr' : '1.5fr 1fr 1fr 0.75fr'}
-                        gap={'0px'}
                     >
-                        <GridItem padding={'7px 0px 7px 0px'} textAlign={'center'} borderRight={'1px solid black'}>
-                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                Match
-                            </Text>
+                        <GridItem
+                            padding={'7px 0px'}
+                            textAlign={'center'}
+                            borderRight={'1px solid black'}
+                            display={'flex'}
+                            justifyContent={'center'}
+                            alignItems={'center'}
+                        >
+                            Match
                         </GridItem>
                         <ConditionalWrapper
                             condition={isMobile}
-                            wrapper={(children) => (
-                                <GridItem padding={'8px 0px 8px 0px'} borderRight={'1px solid black'}>
-                                    {children}
-                                </GridItem>
-                            )}
+                            wrapper={(children) => <GridItem borderRight={'1px solid black'}>{children}</GridItem>}
                         >
                             <GridItem
-                                padding={'0px 0px 0px 0px'}
+                                padding={!isMobile ? '0px' : '5px 0px'}
                                 textAlign={'center'}
                                 borderRight={!isMobile && '1px solid black'}
+                                display={'flex'}
+                                justifyContent={'center'}
+                                alignItems={'center'}
                             >
-                                <Text
-                                    pos={'relative'}
-                                    top={!isMobile && '50%'}
-                                    transform={!isMobile && 'translateY(-50%)'}
-                                    paddingBottom={isMobile && '4px'}
-                                >
-                                    Red Alliance
-                                </Text>
+                                Red Alliance
                             </GridItem>
                             {isMobile && <Divider borderColor={'black'} borderRadius={'5px'}></Divider>}
                             <GridItem
-                                padding={'0px 0px 0px 0px'}
+                                padding={!isMobile ? '0px' : '5px 0px'}
                                 textAlign={'center'}
                                 borderRight={!isMobile && '1px solid black'}
+                                display={'flex'}
+                                justifyContent={'center'}
+                                alignItems={'center'}
                             >
-                                <Text
-                                    pos={'relative'}
-                                    top={!isMobile && '50%'}
-                                    transform={!isMobile && 'translateY(-50%)'}
-                                    paddingTop={isMobile && '4px'}
-                                >
-                                    Blue Alliance
-                                </Text>
+                                Blue Alliance
                             </GridItem>
                         </ConditionalWrapper>
-                        <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
-                            <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                Scores
-                            </Text>
+                        <GridItem textAlign={'center'} display={'flex'} justifyContent={'center'} alignItems={'center'}>
+                            Scores
                         </GridItem>
                     </Grid>
                     <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'}>
@@ -295,13 +284,10 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                             <React.Fragment key={match.matchNumber}>
                                 {index === 0 && (
                                     <Grid
-                                        margin={'0 auto'}
                                         borderTop={index === 0 ? '1px solid black' : '1px solid gray'}
                                         backgroundColor={'#d7d7d761'}
                                         borderRadius={matchTable.length - 1 === index && '0px 0px 10px 10px'}
-                                        key={'Qualifications'}
-                                        gap={'0px'}
-                                        padding={'10px 0px 10px 0px'}
+                                        padding={'10px 0px'}
                                         textAlign={'center'}
                                     >
                                         {matchTable[index].matchNumber.substring(0, 2) === 'qm'
@@ -315,13 +301,10 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                     matchTable[index].matchNumber.substring(0, 2) === 'sf' &&
                                     matchTable[index - 1].matchNumber.substring(0, 2) === 'qm' && (
                                         <Grid
-                                            margin={'0 auto'}
                                             borderTop={index === 0 ? '1px solid black' : '1px solid gray'}
                                             backgroundColor={'#d7d7d761'}
                                             borderRadius={matchTable.length - 1 === index && '0px 0px 10px 10px'}
-                                            key={'Semifinals'}
-                                            gap={'0px'}
-                                            padding={'10px 0px 10px 0px'}
+                                            padding={'10px 0px'}
                                             textAlign={'center'}
                                         >
                                             Semifinals
@@ -331,45 +314,37 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                     matchTable[index].matchNumber.substring(0, 1) === 'f' &&
                                     matchTable[index - 1].matchNumber.substring(0, 2) === 'sf' && (
                                         <Grid
-                                            margin={'0 auto'}
                                             borderTop={index === 0 ? '1px solid black' : '1px solid gray'}
                                             backgroundColor={'#d7d7d761'}
                                             borderRadius={matchTable.length - 1 === index && '0px 0px 10px 10px'}
-                                            key={'Finals'}
-                                            gap={'0px'}
-                                            padding={'10px 0px 10px 0px'}
+                                            padding={'10px 0px'}
                                             textAlign={'center'}
                                         >
                                             Finals
                                         </Grid>
                                     )}
                                 <Grid
-                                    margin={'0 auto'}
                                     borderTop={index === 0 ? '1px solid black' : '1px solid gray'}
                                     backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
                                     borderRadius={matchTable.length - 1 === index && '0px 0px 10px 10px'}
                                     templateColumns={isMobile ? '1fr 1fr 0.5fr' : '1.5fr 1fr 1fr 0.75fr'}
-                                    gap={'0px'}
                                 >
                                     <GridItem
                                         minH={isMobile && '70px'}
                                         padding={'7px 0px 7px 0px'}
                                         textAlign={'center'}
                                         borderRight={'1px solid gray'}
+                                        display={'flex'}
+                                        justifyContent={'center'}
+                                        alignItems={'center'}
                                     >
-                                        <Text pos={'relative'} top={'50%'} transform={'translateY(-50%)'}>
-                                            {convertMatchKeyToString(match.matchNumber)}
-                                        </Text>
+                                        {convertMatchKeyToString(match.matchNumber)}
                                     </GridItem>
                                     <ConditionalWrapper
                                         condition={isMobile}
                                         wrapper={(children) => <GridItem>{children}</GridItem>}
                                     >
-                                        <GridItem
-                                            height={isMobile && '50%'}
-                                            padding={'0px 0px 0px 0px'}
-                                            textAlign={'center'}
-                                        >
+                                        <GridItem height={isMobile && '50%'} textAlign={'center'}>
                                             <Flex height={'100%'}>
                                                 {match.redAlliance.map((team) => (
                                                     <Flex
@@ -399,11 +374,7 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                                 ))}
                                             </Flex>
                                         </GridItem>
-                                        <GridItem
-                                            height={isMobile && '50%'}
-                                            padding={'0px 0px 0px 0px'}
-                                            textAlign={'center'}
-                                        >
+                                        <GridItem height={isMobile && '50%'} textAlign={'center'}>
                                             <Flex height={'100%'}>
                                                 {match.blueAlliance.map((team) => (
                                                     <Flex
@@ -436,7 +407,7 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                             </Flex>
                                         </GridItem>
                                     </ConditionalWrapper>
-                                    <GridItem padding={'0px 0px 0px 0px'} textAlign={'center'}>
+                                    <GridItem textAlign={'center'}>
                                         {match.actualTime !== null ? (
                                             <Flex height={'100%'} position={'relative'} flexWrap={'wrap'}>
                                                 <Flex

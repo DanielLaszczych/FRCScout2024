@@ -178,6 +178,7 @@ function PitPage() {
                             <MenuItem
                                 textAlign={'center'}
                                 justifyContent={'center'}
+                                _focus={{ backgroundColor: 'none' }}
                                 onMouseEnter={() => setFocusedEvent(eventItem.name)}
                                 backgroundColor={
                                     (currentEvent.name === eventItem.name && focusedEvent === '') ||
