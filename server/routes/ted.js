@@ -80,6 +80,7 @@ class HelperFunctions {
         let value = leafGet(ted, field);
         return (
             (await TED.countDocuments({
+                eventKey: ted.eventKey,
                 [field]: { $gt: value }
             })) + 1
         );

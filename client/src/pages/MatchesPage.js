@@ -131,7 +131,6 @@ function MatchesPage() {
     useEffect(() => {
         setMatchForms(null);
         setAllMatches(null);
-        console.log('here');
         if (currentEvent !== null) {
             fetch('/matchForm/getMatchFormsSimple', {
                 headers: { filters: JSON.stringify({ eventKey: currentEvent.key }) }

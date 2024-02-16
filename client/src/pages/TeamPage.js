@@ -217,8 +217,9 @@ function TeamPage({ keyProp }) {
                 pitForm={teamData?.pitForm}
                 matchForms={teamData?.matchForms}
                 teamEventData={teamData?.teamEventData}
-                teamNumberParam={teamNumberParam}
+                teamNumber={teamNumberParam}
                 teamName={teamName}
+                currentEvent={currentEvent}
             />
         </Box>
     );

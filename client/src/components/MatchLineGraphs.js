@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useState } from 'react';
 import {
     Box,
     Button,
@@ -34,9 +34,16 @@ import { matchFormStatus } from '../util/helperConstants';
 import { convertMatchKeyToString, leafGet, sortMatches } from '../util/helperFunctions';
 import { AiFillFilter } from 'react-icons/ai';
 import { GiBrickWall } from 'react-icons/gi';
-import { MdOutlineSignalWifiStatusbarConnectedNoInternet4, MdDisabledVisible } from 'react-icons/md';
+import {
+    MdOutlineSignalWifiStatusbarConnectedNoInternet4,
+    MdDisabledVisible,
+    MdExposurePlus1,
+    MdExposurePlus2
+} from 'react-icons/md';
 import { FaScrewdriverWrench } from 'react-icons/fa6';
 import { TbCards } from 'react-icons/tb';
+import { GiMountainClimbing } from 'react-icons/gi';
+import { FaParking } from 'react-icons/fa';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Colors);
 
@@ -79,8 +86,22 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
         endGame: {
             label: 'Stage/End Game',
             fields: {
-                climb: { label: 'Climb', field: 'climb', value: false, specialField: true },
-                harmony: { label: 'Harmony', field: 'climb.harmony', value: false },
+                climb: {
+                    label: 'Hang/Park',
+                    field: 'climb',
+                    value: false,
+                    icons: [GiMountainClimbing, FaParking],
+                    specialField: true
+                },
+                harmony: {
+                    label: 'Harmony',
+                    field: 'harmony',
+                    value: false,
+                    icons: [MdExposurePlus1, MdExposurePlus2],
+                    color: 'white',
+                    background: 'gray.800',
+                    specialField: true
+                },
                 trap: { label: 'Trap', field: 'teleopGP.trap', value: false },
                 stagePoints: { label: 'Stage Points', field: 'stagePoints', value: false }
             }
@@ -119,7 +140,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                     value: false,
                     icon: MdDisabledVisible,
                     note: 'Include/Exclude No Show Matches',
-                    specialField: true
+                    noShowValue: true
                 },
                 lossCommunication: {
                     label: 'Lost Comms.',
@@ -139,6 +160,8 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
         fields.teleop.fields.ferry.field,
         fields.teleop.fields.defenseRating.field,
         fields.teleop.fields.wasDefended.field,
+        fields.endGame.fields.climb.field,
+        fields.endGame.fields.harmony.field,
         fields.other.fields.noShow.field,
         fields.other.fields.lossCommunication.field,
         fields.other.fields.robotBroke.field,
@@ -165,7 +188,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
         [fields]
     );
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!firstPreset) {
             setPreset(teleopPreset);
             setFirstPreset(true);
@@ -220,7 +243,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
         }
     }, [teamNumbers]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         getGraphWidth();
         window.addEventListener('resize', getGraphWidth);
 
@@ -284,16 +307,14 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
 
     function getSpecialFieldValue(matchForm, field) {
         switch (field) {
-            case fields.other.fields.noShow.field:
-                if (isOnlyStandData() && matchForm.standStatus === matchFormStatus.noShow) {
-                    return true;
-                } else if (matchForm.superStatus === matchFormStatus.noShow) {
-                    return true;
-                } else {
-                    return false;
-                }
             case fields.endGame.fields.climb.field:
-                if (matchForm.climb.attempt === 'Success') {
+                if (matchForm.climb.attempt === 'Success' || matchForm.climb.park) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            case fields.endGame.fields.harmony.field:
+                if (matchForm.climb.attempt === 'Success' && matchForm.climb.harmony > 0) {
                     return 1;
                 } else {
                     return 0;
@@ -311,7 +332,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
             let subFields = mainField.fields;
             for (const subFieldKey in subFields) {
                 let subField = subFields[subFieldKey];
-                if (subField.value && !subField.icon) {
+                if (subField.value && !subField.icon && !subField.icons) {
                     let dataset = {};
                     dataset.label = `${subField.label}${subField.mainLabel ? ` (${mainField.label})` : ''}`;
                     dataset.data = formsToUse.map((matchForm) => {
@@ -348,10 +369,8 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
             let subFields = fields[mainFieldKey].fields;
             for (const subFieldKey in subFields) {
                 let subField = subFields[subFieldKey];
-                if (subField.value && subField.icon) {
-                    if (subField.specialField && getSpecialFieldValue(matchForm, subField.field)) {
-                        icons += 1;
-                    } else if (leafGet(matchForm, subField.field)) {
+                if (subField.value && (subField.icon || subField.icons)) {
+                    if (getIconValue(matchForm, subField)) {
                         icons += 1;
                     }
                 }
@@ -360,14 +379,46 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
         return icons;
     }
 
+    function getIconValue(matchForm, subField) {
+        if (subField.superField && matchForm.superStatus === matchFormStatus.noShow) {
+            return subField.noShowValue || false;
+        } else if (!subField.superField && matchForm.standStatus === matchFormStatus.noShow) {
+            return subField.noShowValue || false;
+        } else if (subField.specialField) {
+            return getSpecialFieldValue(matchForm, subField.field);
+        } else {
+            return leafGet(matchForm, subField.field);
+        }
+    }
+
+    function getOneIcon(matchForm, subField) {
+        switch (subField.field) {
+            case fields.endGame.fields.climb.field:
+                if (matchForm.climb.attempt === 'Success') {
+                    return subField.icons[0];
+                } else {
+                    return subField.icons[1];
+                }
+            case fields.endGame.fields.harmony.field:
+                if (matchForm.climb.harmony === 1) {
+                    return subField.icons[0];
+                } else {
+                    return subField.icons[1];
+                }
+            default:
+                return null;
+        }
+    }
+
     function getIcons(teamNumber) {
-        let iconSize = 20;
         let formsToUse = getFormsToUse(teamNumber);
         if (formsToUse.length === 0) {
             return null;
         }
-        let yTickWidth = getSuggestedMax() + 2 >= 10 ? 30 : 23;
-        let firstPoint = (graphWidth - yTickWidth) / (formsToUse.length * 2) + yTickWidth - iconSize;
+        let iconSize = 20;
+        let iconsPerRow = 3;
+        let yTickWidth = getSuggestedMax() + 2 >= 10 ? 28 : 19;
+        let firstPoint = (graphWidth - yTickWidth) / (formsToUse.length * 2) + yTickWidth;
         let offset = (graphWidth - yTickWidth) / formsToUse.length;
         let offsetAdjustment = 2;
         return (
@@ -375,29 +426,32 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                 {formsToUse.map((matchForm, index) => (
                     <Flex
                         key={matchForm.matchNumber}
-                        maxWidth={`${iconSize * 2}px`}
+                        maxWidth={`${iconSize * iconsPerRow}px`}
                         flexWrap={'wrap'}
                         position={'absolute'}
                         top={{
                             base: 'max(calc(50vh), 280px)',
                             lg: `max(calc(100vh / ${teamNumbers.length > 3 ? 3 : 2}), 280px)`
                         }}
-                        left={
-                            firstPoint +
-                            (getNumberOfIcons(matchForm) > 1 ? 0 : iconSize / 2) +
+                        left={`${
+                            firstPoint -
+                            (Math.min(getNumberOfIcons(matchForm), 3) * iconSize) / 2 +
                             index * (offset - offsetAdjustment)
-                        }
+                        }px`}
                     >
                         {Object.values(fields).map((mainField) =>
                             Object.values(mainField.fields).map((subField) =>
-                                subField.icon &&
+                                (subField.icon || subField.icons) &&
                                 subField.value &&
-                                (subField.specialField
-                                    ? getSpecialFieldValue(matchForm, subField.field)
-                                    : leafGet(matchForm, subField.field)) ? (
+                                getIconValue(matchForm, subField) ? (
                                     <ChakraTooltip key={subField.field} label={subField.label}>
                                         <span>
-                                            <Icon boxSize={5} as={subField.icon} color={subField.color}></Icon>
+                                            <Icon
+                                                boxSize={5}
+                                                as={subField.icons ? getOneIcon(matchForm, subField) : subField.icon}
+                                                color={subField.color}
+                                                background={subField.background}
+                                            ></Icon>
                                         </span>
                                     </ChakraTooltip>
                                 ) : null
@@ -418,7 +472,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
         if (maxIcons === 0) {
             return 0;
         } else {
-            return Math.ceil((maxIcons * 16) / 32) * 25;
+            return Math.ceil((maxIcons * 20) / 60) * 25;
         }
     }
 
@@ -487,8 +541,23 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                                                         boxSize={5}
                                                         as={fields[mainFieldKey].fields[subFieldKey].icon}
                                                         color={fields[mainFieldKey].fields[subFieldKey].color}
+                                                        background={fields[mainFieldKey].fields[subFieldKey].background}
                                                     ></Icon>
                                                 )}
+                                                {fields[mainFieldKey].fields[subFieldKey].icons &&
+                                                    fields[mainFieldKey].fields[subFieldKey].icons.map(
+                                                        (icon, index) => (
+                                                            <Icon
+                                                                key={index}
+                                                                boxSize={5}
+                                                                as={icon}
+                                                                color={fields[mainFieldKey].fields[subFieldKey].color}
+                                                                background={
+                                                                    fields[mainFieldKey].fields[subFieldKey].background
+                                                                }
+                                                            ></Icon>
+                                                        )
+                                                    )}
                                                 {fields[mainFieldKey].fields[subFieldKey].note && (
                                                     <Text
                                                         fontSize={'xs'}

@@ -50,6 +50,7 @@ import { GrMap } from 'react-icons/gr';
 import MatchLineGraphs from '../components/MatchLineGraphs';
 import AutoPaths from '../components/AutoPaths';
 import TeamStatsList from '../components/TeamStatsList';
+import MatchScheduleTable from '../components/MatchScheduleTable';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -71,7 +72,7 @@ let startingPositions = [
 let imageWidth = 435;
 let imageHeight = 435;
 
-function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam, teamName }) {
+function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumber, teamName, currentEvent }) {
     const { user } = useContext(AuthContext);
 
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -178,7 +179,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                         case abilityTypes.checkbox:
                             return (
                                 <Flex
-                                    justifyContent={'space-evenly'}
+                                    justifyContent={'center'}
                                     flexWrap={'wrap'}
                                     marginTop={'5px'}
                                     columnGap={'10px'}
@@ -243,7 +244,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                     <Flex flexWrap={'wrap'} justifyContent={'center'} rowGap={'15px'}>
                         <Flex width={{ base: '100%', lg: '40%' }} flexDirection={'column'} alignItems={'center'}>
                             <Text fontSize={'2xl'} fontWeight={'semibold'} textAlign={'center'}>
-                                Team Number: {teamNumberParam}
+                                Team Number: {teamNumber}
                             </Text>
                             <Text fontSize={'2xl'} fontWeight={'semibold'} textAlign={'center'}>
                                 Team Name: {teamName}
@@ -300,6 +301,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                     </ModalContent>
                                 </ModalOverlay>
                             </Modal>
+                            <MatchScheduleTable teamNumber={teamNumber} currentEvent={currentEvent} />
                         </Flex>
                         <Flex
                             width={{ base: '100%', lg: '60%' }}
@@ -342,7 +344,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                             padding={'2px 0px'}
                                             backgroundColor={'red.200'}
                                         >
-                                            {teamNumberParam}
+                                            {teamNumber}
                                         </Text>
                                     </Flex>
                                     <Flex
@@ -388,7 +390,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                GPCS
+                                                Avg GP
                                             </Text>
                                         </Flex>
                                         <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
@@ -466,7 +468,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                GPCS
+                                                Avg GP
                                             </Text>
                                         </Flex>
                                         <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
@@ -506,15 +508,28 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                         borderRight={'1px solid black'}
                                         borderBottom={'1px solid black'}
                                     >
-                                        <Text
-                                            fontSize={'lg'}
-                                            fontWeight={'medium'}
-                                            textAlign={'center'}
-                                            height={'27px'}
-                                            backgroundColor={'gray.200'}
-                                        >
-                                            Teleop
-                                        </Text>
+                                        <Flex>
+                                            <Text
+                                                flex={1 / 2}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                                height={'27px'}
+                                                backgroundColor={'gray.200'}
+                                            >
+                                                Teleop
+                                            </Text>
+                                            <Text
+                                                flex={1 / 2}
+                                                fontSize={'lg'}
+                                                fontWeight={'medium'}
+                                                textAlign={'center'}
+                                                height={'27px'}
+                                                backgroundColor={'gray.200'}
+                                            >
+                                                Avg GP
+                                            </Text>
+                                        </Flex>
                                         <Flex
                                             borderBottom={'1px solid black'}
                                             height={'27px'}
@@ -639,7 +654,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                Trap
+                                                Traps
                                             </Text>
                                         </Flex>
                                         <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
@@ -673,7 +688,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                {roundToTenth(teamEventData.teleopGP.trap.avg)}
+                                                {teamEventData.teleopGP.trap.total}
                                             </Text>
                                         </Flex>
                                     </Flex>
@@ -1277,7 +1292,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                                 }
                                                                 to={
                                                                     matchForm.standStatus !== matchFormStatus.missing
-                                                                        ? `/standForm/${matchForm.eventKey}/${matchForm.matchNumber}/${matchForm.station}/${teamNumberParam}`
+                                                                        ? `/standForm/${matchForm.eventKey}/${matchForm.matchNumber}/${matchForm.station}/${teamNumber}`
                                                                         : null
                                                                 }
                                                                 state={{ previousRoute: 'team' }}
@@ -1307,7 +1322,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                                                                 }
                                                                 state={{
                                                                     previousRoute: 'team',
-                                                                    teamNumber: teamNumberParam
+                                                                    teamNumber: teamNumber
                                                                 }}
                                                                 isDisabled={
                                                                     matchForm.superStatus === matchFormStatus.missing
@@ -2004,21 +2019,21 @@ function TeamPageTabs({ tab, pitForm, matchForms, teamEventData, teamNumberParam
                 return (
                     <Flex flexDirection={'column'} rowGap={'15px'}>
                         <MatchLineGraphs
-                            teamNumbers={[teamNumberParam]}
+                            teamNumbers={[teamNumber]}
                             multiTeamMatchForms={{
-                                [teamNumberParam]: oneValidMatchForms
+                                [teamNumber]: oneValidMatchForms
                             }}
                         />
                         <AutoPaths
-                            teamNumbers={[teamNumberParam]}
-                            autoPaths={{ [teamNumberParam]: teamEventData?.autoPaths }}
+                            teamNumbers={[teamNumber]}
+                            autoPaths={{ [teamNumber]: teamEventData?.autoPaths }}
                             showTeamNumber={false}
                         />
                         <TeamStatsList
-                            teamNumbers={[teamNumberParam]}
-                            multiTeamEventsData={{ [teamNumberParam]: teamEventData }}
+                            teamNumbers={[teamNumber]}
+                            multiTeamEventsData={{ [teamNumber]: teamEventData }}
                             multiTeamMatchForms={{
-                                [teamNumberParam]: oneValidMatchForms
+                                [teamNumber]: oneValidMatchForms
                             }}
                             showTeamNumber={false}
                         />

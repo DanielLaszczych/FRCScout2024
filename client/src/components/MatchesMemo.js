@@ -151,7 +151,7 @@ function MatchesMemo({ noMatches, matches, currentEvent, filter, hasSecondaryFil
     return (
         <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'}>
             {(noMatches && filter.key !== 'missing') || matches.length === 0 ? (
-                <Center padding={'10px 0px'}>
+                <Center padding={'10px 0px'} borderTop={'1px solid black'}>
                     <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'} width={'90%'}>
                         {noMatches
                             ? 'No matches have been scouted yet'
@@ -161,7 +161,7 @@ function MatchesMemo({ noMatches, matches, currentEvent, filter, hasSecondaryFil
                     </Text>
                 </Center>
             ) : (
-                <Grid borderTop={'1px solid black'} templateColumns='2fr 1fr 1fr 1fr'>
+                <Grid borderTop={'1px solid black'} templateColumns={'2fr 1fr 1fr 1fr'}>
                     {matches.map((match, index) => (
                         <React.Fragment key={match._id}>
                             <GridItem

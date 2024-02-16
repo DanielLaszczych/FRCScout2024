@@ -283,7 +283,6 @@ router.post('/postSuperForm/:isQR?/:apiKey?', async (req, res) => {
 
 class HelperFunctions {
     static convertQRToStandFormInput(QRString) {
-        console.log(QRString);
         let map = {
             n: null,
             t: true,

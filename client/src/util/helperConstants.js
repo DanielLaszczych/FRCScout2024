@@ -52,4 +52,4 @@ export const teamPageTabs = {
     other: 'other'
 };
 
-export const timeZone = 'US/Central';
+export const timeZone = 'US/Eastern';

@@ -76,13 +76,13 @@ function PitsMemo({ eventData, pitForms, currentEvent }) {
     return (
         <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'}>
             {eventData.length === 0 ? (
-                <Center padding={'10px 0px'}>
+                <Center padding={'10px 0px'} borderTop={'1px solid black'}>
                     <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'} width={'90%'}>
                         No pit forms marked for follow up or missing
                     </Text>
                 </Center>
             ) : (
-                <Grid borderTop={'1px solid black'} templateColumns='1fr 1.5fr 1fr 1fr'>
+                <Grid borderTop={'1px solid black'} templateColumns={'1fr 1.5fr 1fr 1fr'}>
                     {eventData.map((team, index) => (
                         <React.Fragment key={team.key}>
                             <GridItem

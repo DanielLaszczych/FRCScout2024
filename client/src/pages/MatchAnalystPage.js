@@ -18,13 +18,14 @@ import {
     Spinner,
     Text
 } from '@chakra-ui/react';
-import { matchFormStatus } from '../util/helperConstants';
+import { matchFormStatus, teamPageTabs } from '../util/helperConstants';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { FaSearch } from 'react-icons/fa';
 import MatchLineGraphs from '../components/MatchLineGraphs';
 import AutoPaths from '../components/AutoPaths';
 import TeamStatsList from '../components/TeamStatsList';
 import { RiEditBoxFill } from 'react-icons/ri';
+import { Link } from 'react-router-dom';
 
 let matchTypes = [
     { label: 'Quals', value: 'q', id: uuidv4() },
@@ -195,7 +196,6 @@ function MatchAnalystPage() {
                 }
             })
             .then((data) => {
-                console.log(data);
                 let allTeamData = data;
                 let multiTeamEventData = {};
                 let multiOneValidMatchForms = {};
@@ -637,6 +637,14 @@ function MatchAnalystPage() {
                                         left={0}
                                         zIndex={1}
                                         borderLeft={'1px solid black'}
+                                        as={Link}
+                                        to={`/team/${teamNumber}/${teamPageTabs.overview}`}
+                                        _hover={
+                                            index > 2 ? { backgroundColor: 'blue.300' } : { backgroundColor: 'red.300' }
+                                        }
+                                        _active={
+                                            index > 2 ? { backgroundColor: 'blue.400' } : { backgroundColor: 'red.400' }
+                                        }
                                     >
                                         {teamNumber}
                                     </GridItem>

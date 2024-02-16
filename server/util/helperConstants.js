@@ -16,7 +16,7 @@ class HelperConstants {
 
     static weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    static timeZone = 'US/Central';
+    static timeZone = 'US/Eastern';
 
     // Try to combine these two next year maybe into an all encompasing fields object
     static gamePieceFields = {
