@@ -758,13 +758,14 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
                                     }px), 280px)`
                                 }}
                                 overflowY={'auto'}
+                                borderRadius={'5px'}
                             >
                                 <Grid templateColumns={'2fr 5fr'}>
                                     {fields.map((mainField, index) => (
                                         <React.Fragment key={mainField.label}>
                                             <GridItem
                                                 colSpan={2}
-                                                backgroundColor={'gray.400'}
+                                                backgroundColor={'gray.300'}
                                                 padding={'4px 0px'}
                                                 borderBottom={'1px solid black'}
                                                 position={'sticky'}
@@ -781,7 +782,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
                                                         display={'flex'}
                                                         justifyContent={'center'}
                                                         alignItems={'center'}
-                                                        backgroundColor={'gray.400'}
+                                                        backgroundColor={'gray.300'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
                                                         padding={'4px 0px'}
@@ -798,7 +799,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
                                                         display={'flex'}
                                                         justifyContent={'center'}
                                                         alignItems={'center'}
-                                                        backgroundColor={'gray.400'}
+                                                        backgroundColor={'gray.300'}
                                                         borderBottom={'1px solid black'}
                                                         padding={'3px 0px'}
                                                     >
@@ -824,7 +825,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
                                                         display={'flex'}
                                                         justifyContent={'center'}
                                                         alignItems={'center'}
-                                                        backgroundColor={'gray.200'}
+                                                        backgroundColor={'gray.100'}
                                                         borderBottom={'1px solid black'}
                                                         borderRight={'1px solid black'}
                                                         padding={'10px 5px'}
@@ -842,7 +843,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
                                                             display={'flex'}
                                                             justifyContent={'center'}
                                                             alignItems={'center'}
-                                                            backgroundColor={'gray.200'}
+                                                            backgroundColor={'gray.100'}
                                                             borderBottom={'1px solid black'}
                                                         >
                                                             {getOverallComponent(
@@ -855,7 +856,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
                                                             display={'flex'}
                                                             justifyContent={'center'}
                                                             alignItems={'center'}
-                                                            backgroundColor={'gray.200'}
+                                                            backgroundColor={'gray.100'}
                                                             borderBottom={'1px solid black'}
                                                         >
                                                             {getL4MCompoenent(

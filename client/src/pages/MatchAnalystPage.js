@@ -555,7 +555,7 @@ function MatchAnalystPage() {
                                         alignItems={'center'}
                                         borderBottom={'1px solid black'}
                                         borderRight={'1px solid black'}
-                                        backgroundColor={'gray.200'}
+                                        backgroundColor={'gray.300'}
                                         padding={'0px 0px'}
                                         position={element.label === 'Team #' && 'sticky'}
                                         left={element.label === 'Team #' && 0}

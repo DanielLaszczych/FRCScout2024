@@ -119,8 +119,8 @@ function HomePage() {
                                         onClick={onClose}
                                     >
                                         <ChakraImage
-                                            width={'min(90vw, 90dvh)'}
-                                            height={'min(90vw, 90dvh)'}
+                                            width={'90vw'}
+                                            height={'90dvh'}
                                             fit={'contain'}
                                             src={currentEvent.pitMapImage}
                                         />

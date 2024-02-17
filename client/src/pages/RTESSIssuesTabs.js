@@ -339,8 +339,8 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, eventInfo, setError, 
                                         >
                                             {eventInfo.matchTable.map((match, index) => (
                                                 <Grid
-                                                    borderTop={index === 0 ? '1px solid black' : '1px solid gray'}
-                                                    backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                                    borderTop={index === 0 ? '1px solid black' : '1px solid black'}
+                                                    backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
                                                     borderRadius={
                                                         eventInfo.matchTable.length - 1 === index && '0px 0px 10px 10px'
                                                     }
@@ -350,14 +350,14 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, eventInfo, setError, 
                                                     <GridItem
                                                         padding={'7px 0px'}
                                                         textAlign={'center'}
-                                                        borderRight={'1px solid gray'}
+                                                        borderRight={'1px solid black'}
                                                         display={'flex'}
                                                         justifyContent={'center'}
                                                         alignItems={'center'}
                                                     >
                                                         {convertMatchKeyToString(match.matchNumber)}
                                                     </GridItem>
-                                                    <GridItem textAlign={'center'} borderRight={'1px solid gray'}>
+                                                    <GridItem textAlign={'center'} borderRight={'1px solid black'}>
                                                         <Tooltip
                                                             isDisabled={!match.predictedTime}
                                                             label={
@@ -466,7 +466,7 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, eventInfo, setError, 
                                                                     height={'100%'}
                                                                     justifyContent={'center'}
                                                                     alignItems={'center'}
-                                                                    borderRight={innerIndex !== 2 && '1px solid gray'}
+                                                                    borderRight={innerIndex !== 2 && '1px solid black'}
                                                                     width={`${100.0 / 3.0}%`}
                                                                     key={team}
                                                                     textDecoration={
@@ -479,11 +479,11 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, eventInfo, setError, 
                                                                     backgroundColor={
                                                                         getIssueOfTeam(team.substring(3))?.status ===
                                                                         rtessIssuesStatus.unresolved
-                                                                            ? 'red.200'
+                                                                            ? 'red.300'
                                                                             : getIssueOfTeam(team.substring(3))
                                                                                   ?.status ===
                                                                               rtessIssuesStatus.beingResolved
-                                                                            ? 'yellow.200'
+                                                                            ? 'yellow.300'
                                                                             : ''
                                                                     }
                                                                     _hover={{
@@ -491,12 +491,12 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, eventInfo, setError, 
                                                                             getIssueOfTeam(team.substring(3))
                                                                                 ?.status ===
                                                                             rtessIssuesStatus.unresolved
-                                                                                ? 'red.300'
+                                                                                ? 'red.400'
                                                                                 : getIssueOfTeam(team.substring(3))
                                                                                       ?.status ===
                                                                                   rtessIssuesStatus.beingResolved
-                                                                                ? 'yellow.300'
-                                                                                : 'gray.300'
+                                                                                ? 'yellow.400'
+                                                                                : 'gray.200'
                                                                     }}
                                                                     _active={{
                                                                         backgroundColor:
@@ -508,7 +508,7 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, eventInfo, setError, 
                                                                                       ?.status ===
                                                                                   rtessIssuesStatus.beingResolved
                                                                                 ? 'yellow.400'
-                                                                                : 'gray.400'
+                                                                                : 'gray.300'
                                                                     }}
                                                                 >
                                                                     {team.substring(3)}

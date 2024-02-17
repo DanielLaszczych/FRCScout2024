@@ -49,7 +49,7 @@ function RTESSIssuesMemo({ noRTESSIssues, rtessIssues, filter }) {
     }
 
     return (
-        <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'}>
+        <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'} overflow={'hidden'}>
             {rtessIssues.length === 0 ? (
                 <Center padding={'10px 0px'} borderTop={'1px solid black'}>
                     <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'} width={'90%'}>
@@ -67,9 +67,8 @@ function RTESSIssuesMemo({ noRTESSIssues, rtessIssues, filter }) {
                                 display={'flex'}
                                 justifyContent={'center'}
                                 alignItems={'center'}
-                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
                                 borderBottom={index < rtessIssues.length - 1 && '1px solid black'}
-                                borderRadius={index === rtessIssues.length - 1 && '0px 0px 0px 10px'}
                             >
                                 {rtessIssue.teamNumber}
                             </GridItem>
@@ -80,7 +79,7 @@ function RTESSIssuesMemo({ noRTESSIssues, rtessIssues, filter }) {
                                 display={'flex'}
                                 justifyContent={'center'}
                                 alignItems={'center'}
-                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
                                 borderBottom={index < rtessIssues.length - 1 && '1px solid black'}
                             >
                                 <Text noOfLines={2}>{rtessIssue.issue}</Text>
@@ -92,10 +91,9 @@ function RTESSIssuesMemo({ noRTESSIssues, rtessIssues, filter }) {
                                 display={'flex'}
                                 justifyContent={'center'}
                                 alignItems={'center'}
-                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
                                 borderBottom={index < rtessIssues.length - 1 && '1px solid black'}
                                 padding={'10px 0px'}
-                                borderRadius={index === rtessIssues.length - 1 && '0px 0px 10px 0px'}
                             >
                                 {getIcon(rtessIssue)}
                             </GridItem>

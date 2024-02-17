@@ -22,7 +22,7 @@ const MatchAnalystPage = lazy(() => import('./pages/MatchAnalystPage'));
 const PitMapPage = lazy(() => import('./pages/PitMapPage'));
 const TeamPageHelper = lazy(() => import('./pages/TeamPageHelper'));
 const RTESSIssuesPage = lazy(() => import('./pages/RTESSIssuesPage'));
-// const RTESSIssuePage = lazy(() => import('./pages/RTESSIssuePage'));
+const RTESSIssuePage = lazy(() => import('./pages/RTESSIssuePage'));
 const PreSuperForm = lazy(() => import('./pages/PreSuperForm'));
 const SuperForm = lazy(() => import('./pages/SuperForm'));
 const OfflinePage = lazy(() => import('./pages/OfflinePage'));
@@ -86,7 +86,7 @@ function App() {
                         {['team', 'event'].map((path) => (
                             <Route path={`/rtessIssues/${path}`} key={path} element={<RTESSIssuesPage />} />
                         ))}
-                        {/* <Route exact path='/rtessIssue/:id' element={<RTESSIssuePage />} /> */}
+                        <Route exact path='/rtessIssue/:id' element={<RTESSIssuePage />} />
                         <Route exact path='/pitForm/:eventKey/:teamNumber' element={<PitForm />} />
                         <Route exact path='/preStandForm' element={<PreStandForm />} />
                         <Route exact path='/preSuperForm' element={<PreSuperForm />} />

@@ -18,7 +18,7 @@ function TBAEventsMemo({ eventType, mutatingEventKey, handleAddEvent }) {
                         <Grid
                             minHeight={'60px'}
                             borderTop={'1px solid black'}
-                            backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                            backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
                             templateColumns='2fr 1fr'
                             gap={'15px'}
                         >

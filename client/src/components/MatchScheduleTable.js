@@ -285,7 +285,7 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                 {index === 0 && (
                                     <Grid
                                         borderTop={index === 0 ? '1px solid black' : '1px solid gray'}
-                                        backgroundColor={'#d7d7d761'}
+                                        backgroundColor={'gray.100'}
                                         borderRadius={matchTable.length - 1 === index && '0px 0px 10px 10px'}
                                         padding={'10px 0px'}
                                         textAlign={'center'}
@@ -302,7 +302,7 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                     matchTable[index - 1].matchNumber.substring(0, 2) === 'qm' && (
                                         <Grid
                                             borderTop={index === 0 ? '1px solid black' : '1px solid gray'}
-                                            backgroundColor={'#d7d7d761'}
+                                            backgroundColor={'gray.100'}
                                             borderRadius={matchTable.length - 1 === index && '0px 0px 10px 10px'}
                                             padding={'10px 0px'}
                                             textAlign={'center'}
@@ -315,7 +315,7 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                     matchTable[index - 1].matchNumber.substring(0, 2) === 'sf' && (
                                         <Grid
                                             borderTop={index === 0 ? '1px solid black' : '1px solid gray'}
-                                            backgroundColor={'#d7d7d761'}
+                                            backgroundColor={'gray.100'}
                                             borderRadius={matchTable.length - 1 === index && '0px 0px 10px 10px'}
                                             padding={'10px 0px'}
                                             textAlign={'center'}
@@ -325,7 +325,7 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                     )}
                                 <Grid
                                     borderTop={index === 0 ? '1px solid black' : '1px solid gray'}
-                                    backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                    backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
                                     borderRadius={matchTable.length - 1 === index && '0px 0px 10px 10px'}
                                     templateColumns={isMobile ? '1fr 1fr 0.5fr' : '1.5fr 1fr 1fr 0.75fr'}
                                 >

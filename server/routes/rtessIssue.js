@@ -90,4 +90,21 @@ router.post('/postRTESSIssue', async (req, res) => {
     }
 });
 
+router.post('/updateRTESSIssue', async (req, res) => {
+    if (req.isUnauthenticated()) {
+        res.sendStatus(401);
+        return;
+    }
+    try {
+        let rtessIssueInput = req.body;
+        rtessIssueInput.rtessMember = req.user.displayName;
+        await RTESSIssue.findOneAndUpdate({ _id: rtessIssueInput._id }, rtessIssueInput, { new: true });
+
+        res.sendStatus(200);
+    } catch (err) {
+        res.statusMessage = err.message;
+        res.sendStatus(500);
+    }
+});
+
 module.exports = router;

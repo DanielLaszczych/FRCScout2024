@@ -1,81 +1,78 @@
-import { useMutation, useQuery } from '@apollo/client';
-import { Box, Button, Center, HStack, Spinner, Text, Textarea, useToast } from '@chakra-ui/react';
-import { React, useState } from 'react';
+import { React, useEffect, useState } from 'react';
+import {
+    Box,
+    Button,
+    Card,
+    CardBody,
+    CardHeader,
+    Center,
+    Flex,
+    Spinner,
+    Stack,
+    StackDivider,
+    Text,
+    Textarea,
+    useToast
+} from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { UPDATE_RTESS_ISSUE } from '../graphql/mutations';
-import { GET_EVENT, GET_RTESS_ISSUE } from '../graphql/queries';
 import { rtessIssuesStatus } from '../util/helperConstants';
+import { v4 as uuidv4 } from 'uuid';
+
+const statusOptions = [
+    { id: uuidv4(), label: 'Yes', status: rtessIssuesStatus.resolved, color: 'green' },
+    { id: uuidv4(), label: 'Being Resolved', status: rtessIssuesStatus.beingResolved, color: 'yellow' },
+    { id: uuidv4(), label: 'No', status: rtessIssuesStatus.unresolved, color: 'red' }
+];
 
 function RTESSIssuePage() {
     const { id: idParam } = useParams();
     const navigate = useNavigate();
     const toast = useToast();
 
-    const [submitAttempted, setSubmitAttempted] = useState(false);
     const [eventName, setEventName] = useState(null);
-    const [rtessIssueData, setRTESSIssueData] = useState(null);
+    const [rtessIssue, setRTESSIssue] = useState(null);
+    const [submitAttempted, setSubmitAttempted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
-    const { error: eventError } = useQuery(GET_EVENT, {
-        fetchPolicy: 'network-only',
-        skip: rtessIssueData === null,
-        variables: {
-            key: rtessIssueData?.eventKey
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve data on current event');
-        },
-        onCompleted({ getEvent: event }) {
-            setEventName(event.name);
-        }
-    });
-
-    const { loading: loadingRTESSIssue, error: rtessIssueError } = useQuery(GET_RTESS_ISSUE, {
-        fetchPolicy: 'network-only',
-        variables: {
-            _id: idParam
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            setError('Apollo error, could not retrieve rtess issue');
-        },
-        onCompleted({ getRTESSIssue: rtessIssue }) {
-            if (!rtessIssue) {
-                setError('RTESS issue does not exist');
+    useEffect(() => {
+        fetch('/rtessIssue/getRTESSIssue', {
+            headers: {
+                filters: JSON.stringify({ _id: idParam })
             }
-            setRTESSIssueData(rtessIssue);
-        }
-    });
+        })
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    throw new Error(response.statusText);
+                }
+            })
+            .then((data) => {
+                let rtessIssue = data;
+                setRTESSIssue(rtessIssue);
+                fetch('/event/getEvent', { headers: { filters: JSON.stringify({ key: rtessIssue.eventKey }) } })
+                    .then((response) => {
+                        if (response.status === 200) {
+                            return response.json();
+                        } else {
+                            throw new Error(response.statusText);
+                        }
+                    })
+                    .then((data) => {
+                        setEventName(data.name);
+                    })
+                    .catch((error) => setError(error.message));
+            })
+            .catch((error) => setError(error.message));
+    }, [idParam]);
 
     function validForm() {
-        return rtessIssueData.status !== rtessIssuesStatus.resolved || (rtessIssueData.solutionComment && rtessIssueData.solutionComment.trim() !== '');
+        return (
+            rtessIssue.status !== rtessIssuesStatus.resolved ||
+            (rtessIssue.solutionComment && rtessIssue.solutionComment.trim() !== '')
+        );
     }
-
-    const [updateRTESSIssues] = useMutation(UPDATE_RTESS_ISSUE, {
-        onCompleted() {
-            toast({
-                title: 'RTESS Issue Updated',
-                status: 'success',
-                duration: 3000,
-                isClosable: true
-            });
-            navigate('/rtessIssues/event');
-            setSubmitting(false);
-        },
-        onError(err) {
-            console.log(JSON.stringify(err, null, 2));
-            toast({
-                title: 'Apollo Error',
-                description: 'RTESS Issues could not be updated',
-                status: 'error',
-                duration: 3000,
-                isClosable: true
-            });
-            setSubmitting(false);
-        }
-    });
 
     function submit() {
         setSubmitAttempted(true);
@@ -90,26 +87,53 @@ function RTESSIssuePage() {
             return;
         }
         setSubmitting(true);
-        updateRTESSIssues({
-            variables: {
-                rtessIssueInput: {
-                    _id: rtessIssueData._id,
-                    solutionComment: rtessIssueData.solutionComment ? rtessIssueData.solutionComment.trim() : '',
-                    status: rtessIssueData.status
+        fetch('/rtessIssue/updateRTESSIssue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(rtessIssue)
+        })
+            .then((response) => {
+                if (response.status === 200) {
+                    toast({
+                        title: 'RTESS Issue Updated',
+                        status: 'success',
+                        duration: 3000,
+                        isClosable: true
+                    });
+                    navigate('/rtessIssues/event');
+                    setSubmitting(false);
+                } else {
+                    throw new Error(response.statusText);
                 }
-            }
-        });
+            })
+            .catch((error) => {
+                console.log(error);
+                toast({
+                    title: 'Error',
+                    description: 'RTESS Issue could not be updated',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true
+                });
+                setSubmitting(false);
+            });
     }
 
     if (error) {
         return (
-            <Box textAlign={'center'} fontSize={'25px'} fontWeight={'medium'} margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Box
+                fontSize={'lg'}
+                fontWeight={'semibold'}
+                textAlign={'center'}
+                margin={'0 auto'}
+                width={{ base: '85%', md: '66%', lg: '50%' }}
+            >
                 {error}
             </Box>
         );
     }
 
-    if (loadingRTESSIssue || (rtessIssueError && eventError && error !== false) || eventName === null || rtessIssueData === null) {
+    if (rtessIssue === null || eventName === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -118,91 +142,133 @@ function RTESSIssuePage() {
     }
 
     return (
-        <Box margin={'0 auto'} width={{ base: '85%', md: '66%', lg: '50%' }}>
-            <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} marginBottom={'30px'}>
-                <Text marginBottom={'20px'} fontWeight={'bold'} fontSize={'110%'}>
-                    Competition: {eventName}
-                </Text>
-                <Text marginBottom={'20px'} fontWeight={'bold'} fontSize={'110%'}>
-                    Team Number: {rtessIssueData.teamNumber}
-                </Text>
-                <Text marginBottom={'0px'} fontWeight={'bold'} fontSize={'110%'}>
-                    Team Name: {rtessIssueData.teamName}
-                </Text>
-            </Box>
+        <Box margin={'0 auto'} marginBottom={'25px'} width={{ base: '85%', md: '66%', lg: '50%' }}>
+            <Card
+                size={'sm'}
+                margin={'0 auto'}
+                boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
+                marginBottom={'25px'}
+            >
+                <CardHeader paddingBottom={'2px'}>
+                    <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'}>
+                        Competition: {eventName}
+                    </Text>
+                </CardHeader>
+                <CardBody>
+                    <Stack divider={<StackDivider />} spacing={'2'}>
+                        <Box textAlign={'center'}>
+                            <Text fontSize={'md'} fontWeight={'semibold'}>
+                                Team Number
+                            </Text>
+                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                {rtessIssue.teamNumber}
+                            </Text>
+                        </Box>
+                        <Box textAlign={'center'}>
+                            <Text fontSize={'md'} fontWeight={'semibold'}>
+                                Team Name
+                            </Text>
+                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                {rtessIssue.teamName}
+                            </Text>
+                        </Box>
+                    </Stack>
+                </CardBody>
+            </Card>
 
-            <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} marginBottom={'30px'}>
-                <Text marginBottom={'20px'} fontWeight={'bold'} fontSize={'110%'}>
-                    Reported by: {rtessIssueData.submitter}
-                </Text>
-                <Text marginBottom={'0px'} fontWeight={'bold'} fontSize={'110%'}>
-                    Resolved by: {rtessIssueData.rtessMember || 'N/A'}
-                </Text>
-            </Box>
+            <Card
+                size={'sm'}
+                margin={'0 auto'}
+                boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
+                marginBottom={'25px'}
+            >
+                <CardBody>
+                    <Stack divider={<StackDivider />} spacing={'2'}>
+                        <Box textAlign={'center'}>
+                            <Text fontSize={'md'} fontWeight={'semibold'}>
+                                Reported By
+                            </Text>
+                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                {rtessIssue.submitter}
+                            </Text>
+                        </Box>
+                        <Box textAlign={'center'}>
+                            <Text fontSize={'md'} fontWeight={'semibold'}>
+                                Resolved By
+                            </Text>
+                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                {rtessIssue.rtessMember || '-'}
+                            </Text>
+                        </Box>
+                    </Stack>
+                </CardBody>
+            </Card>
 
-            <Box boxShadow={'rgba(0, 0, 0, 0.98) 0px 0px 7px 1px'} borderRadius={'10px'} padding={'10px'} marginBottom={'20px'}>
-                <Text marginBottom={'20px'} fontWeight={'bold'} fontSize={'110%'}>
-                    Issue(s): {rtessIssueData.issue}
-                </Text>
-                <Box marginBottom={'20px'} fontWeight={'bold'} fontSize={'110%'}>
-                    Comment: {rtessIssueData.problemComment}
-                </Box>
-                <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
-                    RTESS Comment:
-                </Text>
-                <Center marginBottom={'20px'}>
-                    <Textarea
-                        isInvalid={rtessIssueData.status === rtessIssuesStatus.resolved && submitAttempted && (!rtessIssueData.solutionComment || rtessIssueData.solutionComment.trim() === '')}
-                        _focus={{
-                            outline: 'none',
-                            boxShadow: 'rgba(0, 0, 0, 0.35) 0px 3px 8px'
-                        }}
-                        onChange={(event) => {
-                            setRTESSIssueData({ ...rtessIssueData, solutionComment: event.target.value });
-                        }}
-                        value={rtessIssueData.solutionComment || ''}
-                        placeholder='Any comments from RTESS?'
-                        w={'85%'}
-                    ></Textarea>
-                </Center>
-                <Text marginBottom={'10px'} fontWeight={'bold'} fontSize={'110%'}>
-                    Resolved:
-                </Text>
-                <HStack marginBottom={'20px'} marginLeft={{ base: '10px', sm: '25px' }} spacing={'20px'}>
-                    <Button
-                        outline={'none'}
-                        _focus={{ outline: 'none' }}
-                        colorScheme={rtessIssueData.status === rtessIssuesStatus.resolved ? 'green' : 'gray'}
-                        onClick={() => {
-                            setRTESSIssueData({ ...rtessIssueData, status: rtessIssuesStatus.resolved });
-                        }}
-                    >
-                        Yes
-                    </Button>
-                    <Button
-                        outline={'none'}
-                        _focus={{ outline: 'none' }}
-                        colorScheme={rtessIssueData.status === rtessIssuesStatus.beingResolved ? 'green' : 'gray'}
-                        onClick={() => {
-                            setRTESSIssueData({ ...rtessIssueData, status: rtessIssuesStatus.beingResolved });
-                        }}
-                    >
-                        Being Resolved
-                    </Button>
-                    <Button
-                        outline={'none'}
-                        _focus={{ outline: 'none' }}
-                        colorScheme={rtessIssueData.status === rtessIssuesStatus.unresolved ? 'green' : 'gray'}
-                        onClick={() => {
-                            setRTESSIssueData({ ...rtessIssueData, status: rtessIssuesStatus.unresolved });
-                        }}
-                    >
-                        No
-                    </Button>
-                </HStack>
-            </Box>
+            <Card
+                size={'sm'}
+                margin={'0 auto'}
+                boxShadow={'0 1px 3px 0 rgba(0, 0, 0, 0.15),0 1px 2px 0 rgba(0, 0, 0, 0.06)'}
+                marginBottom={'25px'}
+            >
+                <CardBody>
+                    <Stack divider={<StackDivider />} spacing={'2'}>
+                        <Box textAlign={'center'}>
+                            <Text fontSize={'md'} fontWeight={'semibold'}>
+                                Issue(s)
+                            </Text>
+                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                {rtessIssue.issue}
+                            </Text>
+                        </Box>
+                        <Box textAlign={'center'}>
+                            <Text fontSize={'md'} fontWeight={'semibold'}>
+                                Initial Comment
+                            </Text>
+                            <Text fontSize={'md'} fontWeight={'medium'}>
+                                {rtessIssue.problemComment}
+                            </Text>
+                        </Box>
+                        <Box textAlign={'center'}>
+                            <Text fontSize={'md'} fontWeight={'semibold'} marginBottom={'10px'}>
+                                RTESS Comment
+                            </Text>
+                            <Textarea
+                                isInvalid={
+                                    rtessIssue.status === rtessIssuesStatus.resolved &&
+                                    submitAttempted &&
+                                    (!rtessIssue.solutionComment || rtessIssue.solutionComment.trim() === '')
+                                }
+                                onChange={(event) => {
+                                    setRTESSIssue({ ...rtessIssue, solutionComment: event.target.value });
+                                }}
+                                value={rtessIssue.solutionComment || ''}
+                                placeholder='Any comments from RTESS?'
+                                w={'85%'}
+                            ></Textarea>
+                        </Box>
+                        <Box textAlign={'center'}>
+                            <Text fontSize={'md'} fontWeight={'semibold'} marginBottom={'5px'}>
+                                Status
+                            </Text>
+                            <Flex justifyContent={'center'} alignItems={'center'} columnGap={'15px'}>
+                                {statusOptions.map((status) => (
+                                    <Button
+                                        key={status.id}
+                                        colorScheme={rtessIssue.status === status.status ? status.color : 'gray'}
+                                        onClick={() => {
+                                            setRTESSIssue({ ...rtessIssue, status: status.status });
+                                        }}
+                                    >
+                                        {status.label}
+                                    </Button>
+                                ))}
+                            </Flex>
+                        </Box>
+                    </Stack>
+                </CardBody>
+            </Card>
             <Center>
-                <Button isLoading={submitting} _focus={{ outline: 'none' }} marginBottom={'25px'} onClick={() => submit()}>
+                <Button isLoading={submitting} _focus={{ outline: 'none' }} onClick={() => submit()}>
                     Submit
                 </Button>
             </Center>

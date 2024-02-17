@@ -149,7 +149,7 @@ function MatchesMemo({ noMatches, matches, currentEvent, filter, hasSecondaryFil
     }
 
     return (
-        <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'}>
+        <Box borderRadius={'0px 0px 10px 10px'} border={'1px solid black'} borderTop={'none'} overflow={'hidden'}>
             {(noMatches && filter.key !== 'missing') || matches.length === 0 ? (
                 <Center padding={'10px 0px'} borderTop={'1px solid black'}>
                     <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'} width={'90%'}>
@@ -171,9 +171,8 @@ function MatchesMemo({ noMatches, matches, currentEvent, filter, hasSecondaryFil
                                 display={'flex'}
                                 justifyContent={'center'}
                                 alignItems={'center'}
-                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
                                 borderBottom={index < matches.length - 1 && '1px solid black'}
-                                borderRadius={index === matches.length - 1 && '0px 0px 0px 10px'}
                             >
                                 {convertMatchKeyToString(match.matchNumber)} :{' '}
                                 {convertStationKeyToString(match.station)}
@@ -185,7 +184,7 @@ function MatchesMemo({ noMatches, matches, currentEvent, filter, hasSecondaryFil
                                 display={'flex'}
                                 justifyContent={'center'}
                                 alignItems={'center'}
-                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
                                 borderBottom={index < matches.length - 1 && '1px solid black'}
                             >
                                 {match.teamNumber}
@@ -197,7 +196,7 @@ function MatchesMemo({ noMatches, matches, currentEvent, filter, hasSecondaryFil
                                 display={'flex'}
                                 justifyContent={'center'}
                                 alignItems={'center'}
-                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
                                 borderBottom={index < matches.length - 1 && '1px solid black'}
                                 padding={'10px 0px'}
                             >
@@ -221,10 +220,9 @@ function MatchesMemo({ noMatches, matches, currentEvent, filter, hasSecondaryFil
                                 display={'flex'}
                                 justifyContent={'center'}
                                 alignItems={'center'}
-                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
                                 borderBottom={index < matches.length - 1 && '1px solid black'}
                                 padding={'10px 0px'}
-                                borderRadius={index === matches.length - 1 && '0px 0px 10px 0px'}
                             >
                                 <Flex flexDirection={'column'} rowGap={'10px'}>
                                     <Box>

@@ -824,7 +824,7 @@ function AdminPage() {
                                 minHeight={'60px'}
                                 borderTop={'1px solid black'}
                                 borderBottom={index === events.length - 1 && '1px solid black'}
-                                backgroundColor={index % 2 === 0 ? '#d7d7d761' : 'white'}
+                                backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
                                 templateColumns='2fr 1fr'
                             >
                                 <GridItem
