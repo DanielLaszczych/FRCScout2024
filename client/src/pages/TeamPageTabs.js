@@ -166,7 +166,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
     }, [pitForm, matchForms, oneValidMatchForms, oneValidPracticeForms, teamEventData, getChildrenOffsetTop]);
 
     useLayoutEffect(() => {
-        if ([teamPageTabs.pit, teamPageTabs.forms].includes(tab)) {
+        if ([teamPageTabs.pit, teamPageTabs.forms, teamPageTabs.other].includes(tab)) {
             getImageVariables();
             window.addEventListener('resize', getImageVariables);
 
@@ -1257,7 +1257,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
         );
     }
 
-    if ([teamPageTabs.pit, teamPageTabs.forms].includes(tab) && dimensionRatios === null) {
+    if ([teamPageTabs.pit, teamPageTabs.forms, teamPageTabs.other].includes(tab) && dimensionRatios === null) {
         return null;
     }
 
