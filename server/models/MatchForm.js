@@ -247,4 +247,5 @@ const matchFormSchema = new Schema({
 });
 
 const MatchForm = model('MatchForm', matchFormSchema);
-module.exports = MatchForm;
+const PracticeForm = model('PracticeForm', matchFormSchema);
+module.exports = { MatchForm, PracticeForm };

@@ -276,7 +276,7 @@ function StandForm() {
                         standStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp]
                     })
                 };
-                fetch('/matchForm/getMatchForm', {
+                fetch(`/${matchNumberParam.startsWith('pm') ? 'practiceForm' : 'matchForm'}/getMatchForm`, {
                     headers: headers
                 })
                     .then((response) => {
@@ -624,7 +624,7 @@ function StandForm() {
             return;
         }
         setSubmitting(true);
-        fetch('/matchForm/postStandForm', {
+        fetch(`/${matchNumberParam.startsWith('pm') ? 'practiceForm' : 'matchForm'}/postStandForm`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

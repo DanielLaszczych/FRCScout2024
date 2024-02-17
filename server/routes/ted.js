@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const TED = require('../models/TED');
-const MatchForm = require('../models/MatchForm');
+const { MatchForm, PracticeForm } = require('../models/MatchForm');
 const PitForm = require('../models/PitForm');
 const { matchFormStatus, gamePieceFields, climbFields } = require('../util/helperConstants');
 const { leafGet, leafSet } = require('../util/helperFunctions');
@@ -27,12 +27,14 @@ router.get('/getAllTeamEventData', async (req, res) => {
         await Promise.all([
             PitForm.findOne(filters).exec(),
             MatchForm.find(filters).exec(),
+            PracticeForm.find(filters).exec(),
             TED.findOne(filters).lean().exec()
         ]).then(async (responses) => {
             let data = {
                 pitForm: responses[0],
                 matchForms: responses[1],
-                teamEventData: responses[2]
+                practiceForms: responses[2],
+                teamEventData: responses[3]
             };
             if (data.teamEventData) {
                 data.teamEventData.autoPaths = HelperFunctions.getAutoPaths(data.matchForms);

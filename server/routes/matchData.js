@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const MatchForm = require('../models/MatchForm');
+const { MatchForm } = require('../models/MatchForm');
 const bcrypt = require('bcrypt');
 const PitForm = require('../models/PitForm');
 const Event = require('../models/Event');
@@ -31,7 +31,11 @@ router.use('/getEventData/:eventKey', async (req, res) => {
     let teamData = {};
 
     for (let team of teams) {
-        let standForms = await MatchForm.find({ eventKey: req.params.eventKey, teamNumber: team, standStatus: [matchFormStatus.complete] })
+        let standForms = await MatchForm.find({
+            eventKey: req.params.eventKey,
+            teamNumber: team,
+            standStatus: [matchFormStatus.complete]
+        })
             .lean()
             .exec();
         let data = {};
@@ -57,12 +61,20 @@ router.use('/getEventData/:eventKey', async (req, res) => {
         data['medianAutoContribution'] = medianArr(getAutoContribution(standForms));
         data['averageTeleContribution'] = averageArr(getTeleContribution(standForms));
         data['medianTeleContribution'] = medianArr(getTeleContribution(standForms));
-        data['chargeDockAuto'] = standForms.length > 0 ? standForms.filter((e) => e.chargeAuto === 'Dock').length : 'N/A';
-        data['chargeEngageAuto'] = standForms.length > 0 ? standForms.filter((e) => e.chargeAuto === 'Engage').length : 'N/A';
-        data['chargeDockTele'] = standForms.length > 0 ? standForms.filter((e) => e.chargeTele === 'Dock').length : 'N/A';
-        data['chargeEngageTele'] = standForms.length > 0 ? standForms.filter((e) => e.chargeTele === 'Engage').length : 'N/A';
+        data['chargeDockAuto'] =
+            standForms.length > 0 ? standForms.filter((e) => e.chargeAuto === 'Dock').length : 'N/A';
+        data['chargeEngageAuto'] =
+            standForms.length > 0 ? standForms.filter((e) => e.chargeAuto === 'Engage').length : 'N/A';
+        data['chargeDockTele'] =
+            standForms.length > 0 ? standForms.filter((e) => e.chargeTele === 'Dock').length : 'N/A';
+        data['chargeEngageTele'] =
+            standForms.length > 0 ? standForms.filter((e) => e.chargeTele === 'Engage').length : 'N/A';
 
-        let superForms = await MatchForm.find({ eventKey: req.params.eventKey, teamNumber: team, superStatus: [matchFormStatus.complete] })
+        let superForms = await MatchForm.find({
+            eventKey: req.params.eventKey,
+            teamNumber: team,
+            superStatus: [matchFormStatus.complete]
+        })
             .lean()
             .exec();
 
@@ -94,7 +106,12 @@ router.use('/getTableauEventData/:eventKey/:password?', async (req, res) => {
         return;
     } else {
         try {
-            let matchForms = await MatchForm.find({ eventKey: req.params.eventKey, standStatus: matchFormStatus.complete }).lean().exec();
+            let matchForms = await MatchForm.find({
+                eventKey: req.params.eventKey,
+                standStatus: matchFormStatus.complete
+            })
+                .lean()
+                .exec();
             matchForms = sortMatches(matchForms);
             let matchFormMap = new Map();
             let driveTrainMap = new Map();
@@ -102,7 +119,13 @@ router.use('/getTableauEventData/:eventKey/:password?', async (req, res) => {
                 if (!matchFormMap.has(matchForm.teamNumber)) {
                     matchFormMap.set(matchForm.teamNumber, 1);
                     matchForm.matchIndex = 1;
-                    let pitForm = await PitForm.findOne({ eventKey: req.params.eventKey, followUp: false, teamNumber: matchForm.teamNumber }).lean().exec();
+                    let pitForm = await PitForm.findOne({
+                        eventKey: req.params.eventKey,
+                        followUp: false,
+                        teamNumber: matchForm.teamNumber
+                    })
+                        .lean()
+                        .exec();
                     if (pitForm !== null) {
                         matchForm.driveTrain = pitForm.driveTrain;
                         driveTrainMap.set(matchForm.teamNumber, pitForm.driveTrain);
@@ -190,7 +213,10 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
         res.send('Not signed in');
         return;
     }
-    let standForms = await MatchForm.find({ eventKey: req.params.eventKey, standStatus: [matchFormStatus.complete, matchFormStatus.noShow] })
+    let standForms = await MatchForm.find({
+        eventKey: req.params.eventKey,
+        standStatus: [matchFormStatus.complete, matchFormStatus.noShow]
+    })
         .lean()
         .exec();
     let blueAllianceForms = await internalBlueCall(`/event/${req.params.eventKey}/matches`);
@@ -241,7 +267,10 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
             let trueMobility = scoreBreakdown[`mobilityRobot${index}`];
             let scoutedMobility = redForm.crossCommunity ? 'Yes' : 'No';
             if (scoutedMobility !== trueMobility) {
-                errorsObject[redForm.teamNumber].mobility = { scouted: scoutedMobility, true: scoreBreakdown[`mobilityRobot${index}`] };
+                errorsObject[redForm.teamNumber].mobility = {
+                    scouted: scoutedMobility,
+                    true: scoreBreakdown[`mobilityRobot${index}`]
+                };
                 mobilityErrors += 1;
             }
             scoutedAutoChargePoints += redForm.chargeAuto === 'Dock' ? 8 : redForm.chargeAuto === 'Engage' ? 12 : 0;
@@ -253,9 +282,14 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
                     trueAutoCharge = 'Dock';
                 }
             }
-            let scoutedChargeAuto = ['No Attempt', 'Fail', null].includes(redForm.chargeAuto) ? 'None' : redForm.chargeAuto;
+            let scoutedChargeAuto = ['No Attempt', 'Fail', null].includes(redForm.chargeAuto)
+                ? 'None'
+                : redForm.chargeAuto;
             if (scoutedChargeAuto !== trueAutoCharge) {
-                errorsObject[redForm.teamNumber].autoChargeStation = { scouted: redForm.chargeAuto, true: trueAutoCharge };
+                errorsObject[redForm.teamNumber].autoChargeStation = {
+                    scouted: redForm.chargeAuto,
+                    true: trueAutoCharge
+                };
                 autoChargeErrors += 1;
             }
             scoutedTelePoints += redForm.bottomTele.coneScored * 2;
@@ -275,9 +309,14 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
             } else {
                 trueTeleCharge = 'None';
             }
-            let scoutedChargeTele = ['No Attempt', 'Fail', null].includes(redForm.chargeTele) ? 'None' : redForm.chargeTele;
+            let scoutedChargeTele = ['No Attempt', 'Fail', null].includes(redForm.chargeTele)
+                ? 'None'
+                : redForm.chargeTele;
             if (scoutedChargeTele !== trueTeleCharge) {
-                errorsObject[redForm.teamNumber].teleChargeStation = { scouted: redForm.chargeTele, true: trueTeleCharge };
+                errorsObject[redForm.teamNumber].teleChargeStation = {
+                    scouted: redForm.chargeTele,
+                    true: trueTeleCharge
+                };
                 teleChargeErrors += 1;
             }
         }
@@ -291,8 +330,17 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
                 overallErrors.push('Tele Game Pieces');
                 teleErrors++;
             }
-            let actualScore = scoreBreakdown.totalPoints - scoreBreakdown.endGameParkPoints - scoreBreakdown.foulPoints - scoreBreakdown.linkPoints;
-            let scoutedScore = scoutedAutoPoints + scoutedMobilityPoints + scoutedAutoChargePoints + scoutedTelePoints + scoutedTeleChargePoints;
+            let actualScore =
+                scoreBreakdown.totalPoints -
+                scoreBreakdown.endGameParkPoints -
+                scoreBreakdown.foulPoints -
+                scoreBreakdown.linkPoints;
+            let scoutedScore =
+                scoutedAutoPoints +
+                scoutedMobilityPoints +
+                scoutedAutoChargePoints +
+                scoutedTelePoints +
+                scoutedTeleChargePoints;
             let accuarcy = (1 - Math.abs((scoutedScore - actualScore) / actualScore)) * 100;
             if (redStandForms.length === 3) {
                 accuracies.push(accuarcy);
@@ -334,7 +382,10 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
             let trueMobility = scoreBreakdown[`mobilityRobot${index}`];
             let scoutedMobility = blueForm.crossCommunity ? 'Yes' : 'No';
             if (scoutedMobility !== trueMobility) {
-                errorsObject[blueForm.teamNumber].mobility = { scouted: scoutedMobility, true: scoreBreakdown[`mobilityRobot${index}`] };
+                errorsObject[blueForm.teamNumber].mobility = {
+                    scouted: scoutedMobility,
+                    true: scoreBreakdown[`mobilityRobot${index}`]
+                };
                 mobilityErrors += 1;
             }
             scoutedAutoChargePoints += blueForm.chargeAuto === 'Dock' ? 8 : blueForm.chargeAuto === 'Engage' ? 12 : 0;
@@ -346,9 +397,14 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
                     trueAutoCharge = 'Dock';
                 }
             }
-            let scoutedChargeAuto = ['No Attempt', 'Fail', null].includes(blueForm.chargeAuto) ? 'None' : blueForm.chargeAuto;
+            let scoutedChargeAuto = ['No Attempt', 'Fail', null].includes(blueForm.chargeAuto)
+                ? 'None'
+                : blueForm.chargeAuto;
             if (scoutedChargeAuto !== trueAutoCharge) {
-                errorsObject[blueForm.teamNumber].autoChargeStation = { scouted: blueForm.chargeAuto, true: trueAutoCharge };
+                errorsObject[blueForm.teamNumber].autoChargeStation = {
+                    scouted: blueForm.chargeAuto,
+                    true: trueAutoCharge
+                };
                 autoChargeErrors += 1;
             }
             scoutedTelePoints += blueForm.bottomTele.coneScored * 2;
@@ -368,9 +424,14 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
             } else {
                 trueTeleCharge = 'None';
             }
-            let scoutedChargeTele = ['No Attempt', 'Fail', null].includes(blueForm.chargeTele) ? 'None' : blueForm.chargeTele;
+            let scoutedChargeTele = ['No Attempt', 'Fail', null].includes(blueForm.chargeTele)
+                ? 'None'
+                : blueForm.chargeTele;
             if (scoutedChargeTele !== trueTeleCharge) {
-                errorsObject[blueForm.teamNumber].teleChargeStation = { scouted: blueForm.chargeTele, true: trueTeleCharge };
+                errorsObject[blueForm.teamNumber].teleChargeStation = {
+                    scouted: blueForm.chargeTele,
+                    true: trueTeleCharge
+                };
                 teleChargeErrors += 1;
             }
         }
@@ -384,8 +445,17 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
                 overallErrors.push('Tele Game Pieces');
                 teleErrors++;
             }
-            let actualScore = scoreBreakdown.totalPoints - scoreBreakdown.endGameParkPoints - scoreBreakdown.foulPoints - scoreBreakdown.linkPoints;
-            let scoutedScore = scoutedAutoPoints + scoutedMobilityPoints + scoutedAutoChargePoints + scoutedTelePoints + scoutedTeleChargePoints;
+            let actualScore =
+                scoreBreakdown.totalPoints -
+                scoreBreakdown.endGameParkPoints -
+                scoreBreakdown.foulPoints -
+                scoreBreakdown.linkPoints;
+            let scoutedScore =
+                scoutedAutoPoints +
+                scoutedMobilityPoints +
+                scoutedAutoChargePoints +
+                scoutedTelePoints +
+                scoutedTeleChargePoints;
             let accuarcy = (1 - Math.abs((scoutedScore - actualScore) / actualScore)) * 100;
             if (blueStandForms.length === 3) {
                 accuracies.push(accuarcy);

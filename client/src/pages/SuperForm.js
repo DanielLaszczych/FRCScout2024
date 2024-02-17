@@ -115,7 +115,7 @@ function SuperForm() {
                         superStatus: [matchFormStatus.complete, matchFormStatus.noShow, matchFormStatus.followUp]
                     })
                 };
-                fetch('/matchForm/getMatchForms', {
+                fetch(`/${matchNumberParam.startsWith('pm') ? 'practiceForm' : 'matchForm'}/getMatchForms`, {
                     headers: headers
                 })
                     .then((response) => {
@@ -311,7 +311,7 @@ function SuperForm() {
             return;
         }
         setSubmitting(true);
-        fetch('/matchForm/postSuperForm', {
+        fetch(`/${matchNumberParam.startsWith('pm') ? 'practiceForm' : 'matchForm'}/postSuperForm`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(
@@ -479,7 +479,7 @@ function SuperForm() {
                     padding={'5px 0px'}
                     borderBottom={'1px solid black'}
                     borderRight={'1px solid black'}
-                    backgroundColor={'gray.400'}
+                    backgroundColor={'gray.300'}
                 >
                     Attribute
                 </GridItem>
@@ -492,7 +492,7 @@ function SuperForm() {
                         padding={'5px 0px'}
                         borderBottom={'1px solid black'}
                         borderRight={'1px solid black'}
-                        backgroundColor={'gray.400'}
+                        backgroundColor={'gray.300'}
                     >
                         {index + 1}
                         {index === 0 ? ' (Worst)' : index === 2 ? ' (Best)' : ''}
@@ -502,7 +502,7 @@ function SuperForm() {
                     padding={'10px 0px'}
                     borderBottom={'1px solid black'}
                     borderRight={'1px solid black'}
-                    backgroundColor={'gray.200'}
+                    backgroundColor={'gray.100'}
                 >
                     <Center height={'100%'} fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
                         Agility
@@ -514,7 +514,7 @@ function SuperForm() {
                         padding={'10px 0px'}
                         borderBottom={'1px solid black'}
                         borderRight={'1px solid black'}
-                        backgroundColor={'gray.200'}
+                        backgroundColor={'gray.100'}
                     >
                         <Center height={'100%'}>
                             <Menu placement={'bottom'} autoSelect={false}>
@@ -567,7 +567,7 @@ function SuperForm() {
                     padding={'10px 0px'}
                     borderBottom={'1px solid black'}
                     borderRight={'1px solid black'}
-                    backgroundColor={'gray.200'}
+                    backgroundColor={'gray.100'}
                 >
                     <Center height={'100%'} fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
                         Field Aware.
@@ -579,7 +579,7 @@ function SuperForm() {
                         padding={'10px 0px'}
                         borderBottom={'1px solid black'}
                         borderRight={'1px solid black'}
-                        backgroundColor={'gray.200'}
+                        backgroundColor={'gray.100'}
                     >
                         <Center height={'100%'}>
                             <Menu placement={'bottom'} autoSelect={false}>

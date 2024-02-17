@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const MatchForm = require('../models/MatchForm');
+const { MatchForm } = require('../models/MatchForm');
 const { internalBlueCall, isFutureAlly } = require('./blueAlliance');
 const { internalSendMessage } = require('./groupMeBot');
 const { convertMatchKeyToString } = require('../util/helperFunctions');
@@ -431,4 +431,4 @@ class HelperFunctions {
     }
 }
 
-module.exports = router;
+module.exports = { router, HelperFunctions };

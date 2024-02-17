@@ -218,6 +218,7 @@ function TeamPage({ keyProp }) {
                 tab={tab}
                 pitForm={teamData?.pitForm}
                 matchForms={teamData?.matchForms}
+                practiceForms={teamData?.practiceForms}
                 teamEventData={teamData?.teamEventData}
                 teamNumber={teamNumberParam}
                 teamName={teamName}

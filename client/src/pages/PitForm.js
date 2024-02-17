@@ -1018,7 +1018,7 @@ function PitForm() {
                             }}
                             value={abilityContainer.value}
                         >
-                            <Flex flexWrap={'wrap'} rowGap={'5px'} columnGap={'2px'} justifyContent={'space-evenly'}>
+                            <Flex flexWrap={'wrap'} rowGap={'5px'} columnGap={'25px'} justifyContent={'center'}>
                                 {abilityContainer.abilities.map((ability) => (
                                     <Radio
                                         isInvalid={
