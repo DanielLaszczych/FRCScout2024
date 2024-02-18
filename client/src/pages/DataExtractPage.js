@@ -52,7 +52,7 @@ function DataExtractPage() {
     function getNoShowMatchValues(matchForm) {
         return {
             'Team Number': matchForm.teamNumber,
-            'Team Name': currentEvent.teams.find((team) => matchForm.teamNumber === team.number).name || 'N/A',
+            'Team Name': currentEvent.teams.find((team) => matchForm.teamNumber === team.number)?.name || 'N/A',
             'Match Number': matchForm.matchIndex,
             'Match Name': convertMatchKeyToString(matchForm.matchNumber),
             Station: matchForm.station,
@@ -233,7 +233,7 @@ function DataExtractPage() {
                                         'Team Number': matchForm.teamNumber,
                                         'Team Name':
                                             currentEvent.teams.find((team) => matchForm.teamNumber === team.number)
-                                                .name || 'N/A',
+                                                ?.name || 'N/A',
                                         'Match Number': matchForm.matchIndex,
                                         'Match Name': convertMatchKeyToString(matchForm.matchNumber),
                                         Station: matchForm.station,
