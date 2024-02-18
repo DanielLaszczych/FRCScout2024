@@ -158,12 +158,14 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
     }, []);
 
     useLayoutEffect(() => {
-        getChildrenOffsetTop();
+        if (tab === teamPageTabs.overview) {
+            getChildrenOffsetTop();
 
-        window.addEventListener('resize', getChildrenOffsetTop);
+            window.addEventListener('resize', getChildrenOffsetTop);
 
-        return () => window.removeEventListener('resize', getChildrenOffsetTop);
-    }, [pitForm, matchForms, oneValidMatchForms, oneValidPracticeForms, teamEventData, getChildrenOffsetTop]);
+            return () => window.removeEventListener('resize', getChildrenOffsetTop);
+        }
+    }, [pitForm, matchForms, oneValidMatchForms, oneValidPracticeForms, teamEventData, getChildrenOffsetTop, tab]);
 
     useLayoutEffect(() => {
         if ([teamPageTabs.pit, teamPageTabs.forms, teamPageTabs.other].includes(tab)) {

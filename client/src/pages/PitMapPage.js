@@ -281,14 +281,18 @@ function PitMapPage() {
                                 maxW={'65vw'}
                                 key={eventItem.key}
                                 onClick={() => {
-                                    setCurrentEvent({
-                                        name: eventItem.name,
-                                        key: eventItem.key,
-                                        pitMap: eventItem.pitMapImage
-                                    });
-                                    setTempImage(null);
-                                    setImageRotation(0);
-                                    hiddenImageInput.current.value = '';
+                                    if (eventItem.key !== currentEvent.key) {
+                                        setCurrentEvent({
+                                            name: eventItem.name,
+                                            key: eventItem.key,
+                                            pitMap: eventItem.pitMapImage
+                                        });
+                                        setTempImage(null);
+                                        setImageRotation(0);
+                                        if (hiddenImageInput.current !== null) {
+                                            hiddenImageInput.current.value = '';
+                                        }
+                                    }
                                 }}
                             >
                                 {eventItem.name}
