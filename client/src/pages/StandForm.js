@@ -46,7 +46,7 @@ import QRCode from 'react-qr-code';
 import { GlobalContext } from '../context/globalState';
 import { AiOutlineRotateRight } from 'react-icons/ai';
 import { IoChevronForward, IoChevronBack } from 'react-icons/io5';
-import { LiaHotdogSolid } from 'react-icons/lia';
+import { LuDonut } from 'react-icons/lu';
 import { AuthContext } from '../context/auth';
 
 let sections = {
@@ -62,7 +62,7 @@ let startingPositions = [
     [28, 200, uuidv4()],
     [28, 300, uuidv4()]
 ];
-let preLoadedPieces = [
+let preloadedPieces = [
     { label: 'None', id: uuidv4() },
     { label: 'Note', id: uuidv4() }
 ];
@@ -160,12 +160,13 @@ function StandForm() {
     const prevStandFormData = useRef(null);
     const [standFormData, setStandFormData] = useState({
         startingPosition: null,
-        preLoadedPiece: null,
+        preloadedPiece: null,
         leftStart: null,
         autoTimeline: [],
         teleopGP: {
             intakeSource: 0,
             intakeGround: 0,
+            intakePreloaded: 0,
             ampScore: 0,
             speakerScore: 0,
             ampMiss: 0,
@@ -452,7 +453,7 @@ function StandForm() {
     }
 
     function validPreAuto() {
-        return standFormData.startingPosition !== null && standFormData.preLoadedPiece !== null;
+        return standFormData.startingPosition !== null && standFormData.preloadedPiece !== null;
     }
 
     function validAuto() {
@@ -519,7 +520,7 @@ function StandForm() {
             parseInt(teamNumberParam),
             user.displayName,
             standFormData.startingPosition === null ? 'n' : standFormData.startingPosition,
-            standFormData.preLoadedPiece === null ? 'n' : map[standFormData.preLoadedPiece === 'Note'],
+            standFormData.preloadedPiece === null ? 'n' : map[standFormData.preloadedPiece === 'Note'],
             map[standFormData.leftStart],
             standFormData.autoTimeline.length === 0
                 ? 'n'
@@ -754,14 +755,14 @@ function StandForm() {
                                     Preloaded:
                                 </Text>
                                 <HStack flex={1 / 2} justifyContent={'center'} gap={'20px'}>
-                                    {preLoadedPieces.map((piece) => (
+                                    {preloadedPieces.map((piece) => (
                                         <Button
                                             key={piece.id}
                                             onClick={() => {
-                                                if (piece.label === 'Note' && standFormData.preLoadedPiece !== 'Note') {
+                                                if (piece.label === 'Note' && standFormData.preloadedPiece !== 'Note') {
                                                     setStandFormData({
                                                         ...standFormData,
-                                                        preLoadedPiece: piece.label,
+                                                        preloadedPiece: piece.label,
                                                         autoTimeline: [
                                                             { piece: '0', scored: null },
                                                             ...standFormData.autoTimeline
@@ -769,22 +770,22 @@ function StandForm() {
                                                     });
                                                 } else if (
                                                     piece.label === 'None' &&
-                                                    standFormData.preLoadedPiece === 'Note'
+                                                    standFormData.preloadedPiece === 'Note'
                                                 ) {
                                                     let newData =
                                                         standFormManagers.auto.removePreloadedEntry(standFormData);
                                                     setStandFormData({
                                                         ...newData,
-                                                        preLoadedPiece: piece.label,
+                                                        preloadedPiece: piece.label,
                                                         autoTimeline: newData.autoTimeline.slice(1)
                                                     });
                                                 } else {
-                                                    setStandFormData({ ...standFormData, preLoadedPiece: piece.label });
+                                                    setStandFormData({ ...standFormData, preloadedPiece: piece.label });
                                                 }
                                             }}
-                                            colorScheme={standFormData.preLoadedPiece === piece.label ? 'blue' : 'gray'}
+                                            colorScheme={standFormData.preloadedPiece === piece.label ? 'blue' : 'gray'}
                                             outline={
-                                                standFormData.preLoadedPiece === null &&
+                                                standFormData.preloadedPiece === null &&
                                                 submitAttempted &&
                                                 !isFollowOrNoShow()
                                                     ? '2px solid red'
@@ -954,7 +955,7 @@ function StandForm() {
                                             cursor: 'default'
                                         }}
                                     >
-                                        <Icon as={LiaHotdogSolid} boxSize={6} color={'orange'} />
+                                        <Icon as={LuDonut} boxSize={6} color={'orange'} />
                                     </Button>
                                 ))}
                             </Center>
@@ -1192,7 +1193,11 @@ function StandForm() {
                             }
                         >
                             {activeSection.label}:{' '}
-                            {standFormData.teleopGP.intakeGround + standFormData.teleopGP.intakeSource ===
+                            {[
+                                standFormData.teleopGP.intakeSource,
+                                standFormData.teleopGP.intakeGround,
+                                standFormData.teleopGP.intakePreloaded
+                            ].reduce((partialSum, a) => partialSum + a, 0) ===
                             [
                                 standFormData.teleopGP.ampScore,
                                 standFormData.teleopGP.speakerScore,
@@ -1203,7 +1208,11 @@ function StandForm() {
                                 ? 'Intake'
                                 : 'Scoring'}
                         </Text>
-                        {standFormData.teleopGP.intakeGround + standFormData.teleopGP.intakeSource ===
+                        {[
+                            standFormData.teleopGP.intakeSource,
+                            standFormData.teleopGP.intakeGround,
+                            standFormData.teleopGP.intakePreloaded
+                        ].reduce((partialSum, a) => partialSum + a, 0) ===
                         [
                             standFormData.teleopGP.ampScore,
                             standFormData.teleopGP.speakerScore,
@@ -1211,36 +1220,59 @@ function StandForm() {
                             standFormData.teleopGP.speakerMiss,
                             standFormData.teleopGP.ferry
                         ].reduce((partialSum, a) => partialSum + a, 0) ? (
-                            <Flex height={`${heightDimensions.availableScoringSpace}px`} margin={'0 auto'} gap={'15px'}>
+                            <Flex
+                                height={`${heightDimensions.availableScoringSpace}px`}
+                                margin={'0 auto'}
+                                flexDir={'column'}
+                                gap={'15px'}
+                            >
+                                <Flex flex={0.8} gap={'15px'}>
+                                    <Button
+                                        colorScheme={'teal'}
+                                        fontSize={'xl'}
+                                        fontWeight={'bold'}
+                                        flex={1 / 2}
+                                        height={'100%'}
+                                        onClick={() => {
+                                            standFormManagers.teleop.doCommand(
+                                                standFormData,
+                                                gamePieceFields.intakeSource.field
+                                            );
+                                        }}
+                                    >
+                                        Source: {standFormData.teleopGP.intakeSource}
+                                    </Button>
+                                    <Button
+                                        colorScheme={'facebook'}
+                                        fontSize={'xl'}
+                                        fontWeight={'bold'}
+                                        flex={1 / 2}
+                                        height={'100%'}
+                                        onClick={() => {
+                                            standFormManagers.teleop.doCommand(
+                                                standFormData,
+                                                gamePieceFields.intakeGround.field
+                                            );
+                                        }}
+                                    >
+                                        Ground: {standFormData.teleopGP.intakeGround}
+                                    </Button>
+                                </Flex>
                                 <Button
-                                    colorScheme={'teal'}
+                                    colorScheme={'yellow'}
                                     fontSize={'xl'}
                                     fontWeight={'bold'}
-                                    flex={1 / 2}
                                     height={'100%'}
+                                    flex={0.2}
                                     onClick={() => {
                                         standFormManagers.teleop.doCommand(
                                             standFormData,
-                                            gamePieceFields.intakeSource.field
+                                            gamePieceFields.intakePreloaded.field
                                         );
                                     }}
+                                    isDisabled={standFormData.teleopGP.intakePreloaded}
                                 >
-                                    Source: {standFormData.teleopGP.intakeSource}
-                                </Button>
-                                <Button
-                                    colorScheme={'facebook'}
-                                    fontSize={'xl'}
-                                    fontWeight={'bold'}
-                                    flex={1 / 2}
-                                    height={'100%'}
-                                    onClick={() => {
-                                        standFormManagers.teleop.doCommand(
-                                            standFormData,
-                                            gamePieceFields.intakeGround.field
-                                        );
-                                    }}
-                                >
-                                    Ground: {standFormData.teleopGP.intakeGround}
+                                    Preloaded
                                 </Button>
                             </Flex>
                         ) : (

@@ -117,7 +117,7 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
             width={'100%'}
             flexWrap={'wrap'}
             columnGap={'50px'}
-            rowGap={'20px'}
+            rowGap={'40px'}
             justifyContent={'center'}
         >
             {teamNumbers.map((teamNumber, index) => (
@@ -191,7 +191,8 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
                                                 width={`${55 * dimensionRatios.width}px`}
                                                 height={`${55 * dimensionRatios.height}px`}
                                                 backgroundColor={
-                                                    Object.keys(autoPath.path).length > 1
+                                                    Object.keys(autoPath.path).length >= 2 ||
+                                                    autoPath.path[1]?.piece !== '0'
                                                         ? perc2color(0)
                                                         : perc2color(1)
                                                 }

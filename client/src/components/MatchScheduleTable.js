@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initialCollapse = true }) {
+function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollapse = true }) {
     const [error, setError] = useState(null);
     const [eventInfo, setEventInfo] = useState({ inEvent: null, matchTable: null, teamStatus: null });
     const [matchTable, setMatchTable] = useState(null);
@@ -19,14 +19,10 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
             .then((response) => response.json())
             .then((data) => {
                 if (!data.Error) {
-                    if (data.includes(currentEvent.key)) {
-                        let matchDataPromise = fetch(
-                            `/blueAlliance/team/frc${teamNumber}/event/${currentEvent.key}/matches`
-                        );
+                    if (data.includes(event.key)) {
+                        let matchDataPromise = fetch(`/blueAlliance/team/frc${teamNumber}/event/${event.key}/matches`);
 
-                        let teamStatusPromise = fetch(
-                            `/blueAlliance/team/frc${teamNumber}/event/${currentEvent.key}/status`
-                        );
+                        let teamStatusPromise = fetch(`/blueAlliance/team/frc${teamNumber}/event/${event.key}/status`);
 
                         Promise.all([matchDataPromise, teamStatusPromise])
                             .then((responses) => Promise.all(responses.map((response) => response.json())))
@@ -41,13 +37,13 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                             blueAlliance: match.alliances.blue.team_keys,
                                             redScore: {
                                                 score: match.alliances.red.score,
-                                                linkRP: match.score_breakdown?.red.sustainabilityBonusAchieved,
-                                                chargeRP: match.score_breakdown?.red.activationBonusAchieved
+                                                melodyRP: match.score_breakdown?.red.melodyBonusAchieved,
+                                                ensembleRP: match.score_breakdown?.red.ensembleBonusAchieved
                                             },
                                             blueScore: {
                                                 score: match.alliances.blue.score,
-                                                linkRP: match.score_breakdown?.blue.sustainabilityBonusAchieved,
-                                                chargeRP: match.score_breakdown?.blue.activationBonusAchieved
+                                                melodyRP: match.score_breakdown?.blue.melodyBonusAchieved,
+                                                ensembleRP: match.score_breakdown?.blue.ensembleBonusAchieved
                                             },
                                             winner: match.winning_alliance,
                                             predictedTime: match.predicted_time,
@@ -83,7 +79,7 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
             .catch((error) => {
                 setError(error.message);
             });
-    }, [teamNumber, currentEvent]);
+    }, [teamNumber, event]);
 
     const updateSizes = useCallback(() => {
         setIsMobile(teamPage || window.innerWidth < 650);
@@ -431,8 +427,8 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                                 >
                                                     {match.redScore.score}
                                                 </Flex>
-                                                {match.redScore.linkRP && (
-                                                    <Tooltip label={'Sustainability Bonus'} placement={'top'}>
+                                                {match.redScore.melodyRP && (
+                                                    <Tooltip label={'Melody Bonus'} placement={'top'}>
                                                         <Box
                                                             position={'absolute'}
                                                             borderRadius={'5px'}
@@ -444,8 +440,8 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                                         ></Box>
                                                     </Tooltip>
                                                 )}
-                                                {match.redScore.chargeRP && (
-                                                    <Tooltip label={'Activation Bonus'} placement={'top'}>
+                                                {match.redScore.ensembleRP && (
+                                                    <Tooltip label={'Ensemble Bonus'} placement={'top'}>
                                                         <Box
                                                             position={'absolute'}
                                                             borderRadius={'5px'}
@@ -478,8 +474,8 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                                 >
                                                     {match.blueScore.score}
                                                 </Flex>
-                                                {match.blueScore.linkRP && (
-                                                    <Tooltip label={'Cargo Bonus'} placement={'top'}>
+                                                {match.blueScore.melodyRP && (
+                                                    <Tooltip label={'Melody Bonus'} placement={'top'}>
                                                         <Box
                                                             position={'absolute'}
                                                             borderRadius={'5px'}
@@ -491,8 +487,8 @@ function MatchScheduleTable({ teamNumber, currentEvent, teamPage = true, initial
                                                         ></Box>
                                                     </Tooltip>
                                                 )}
-                                                {match.blueScore.chargeRP && (
-                                                    <Tooltip label={'Hangar Bonus'} placement={'top'}>
+                                                {match.blueScore.ensembleRP && (
+                                                    <Tooltip label={'Ensemble Bonus'} placement={'top'}>
                                                         <Box
                                                             position={'absolute'}
                                                             borderRadius={'5px'}

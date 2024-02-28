@@ -26,6 +26,7 @@ export const rtessIssuesStatus = {
 export const gamePieceFields = {
     intakeSource: { field: 'intakeSource', label: 'Source', short: 'is', auto: false, teleop: true },
     intakeGround: { field: 'intakeGround', label: 'Ground', short: 'ig', auto: false, teleop: true },
+    intakePreloaded: { field: 'intakePreloaded', label: 'Preloaded', short: 'pl', auto: false, teleop: false },
     intakeMiss: { field: 'intakeMiss', label: 'Intake Miss', short: 'im', auto: true, teleop: false },
     ampScore: { field: 'ampScore', label: 'Amp', short: 'as', auto: true, teleop: true },
     speakerScore: { field: 'speakerScore', label: 'Speaker', short: 'ss', auto: true, teleop: true },

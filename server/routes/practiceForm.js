@@ -118,27 +118,24 @@ router.post('/postSuperForm/:isQR?/:apiKey?', async (req, res) => {
             matchFormInputs = req.body.map((QRString) => convertQRToSuperFormInputs(QRString));
         } else {
             req.body.forEach((matchFormInput) => (matchFormInput.superScouter = req.user.displayName));
-            matchFormInputs = [req.body];
+            matchFormInputs = req.body;
         }
 
         await Promise.all(
-            matchFormInputs.map(async (superFormInputs) => {
-                const updates = superFormInputs.map((superFormInput) =>
-                    PracticeForm.findOneAndUpdate(
-                        {
-                            eventKey: superFormInput.eventKey,
-                            matchNumber: superFormInput.matchNumber,
-                            station: superFormInput.station
-                        },
-                        superFormInput,
-                        {
-                            upsert: true
-                        }
-                    )
-                        .lean()
-                        .exec()
-                );
-                await Promise.all(updates);
+            matchFormInputs.map(async (matchFormInput) => {
+                await PracticeForm.findOneAndUpdate(
+                    {
+                        eventKey: matchFormInput.eventKey,
+                        matchNumber: matchFormInput.matchNumber,
+                        station: matchFormInput.station
+                    },
+                    matchFormInput,
+                    {
+                        upsert: true
+                    }
+                )
+                    .lean()
+                    .exec();
             })
         );
         res.sendStatus(200);

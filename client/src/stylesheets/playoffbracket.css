@@ -1,0 +1,295 @@
+#double-elim-bracket-wrapper {
+    margin-left: -20px;
+    overflow-x: auto;
+    width: calc(100% + 20px);
+}
+
+#double-elim-bracket-table {
+    margin-left: 20px;
+    width: calc(100% - 20px);
+}
+
+#double-elim-bracket-table tr {
+    height: 35px;
+}
+
+#double-elim-bracket-table td {
+    min-width: 10px;
+    position: relative;
+}
+
+#double-elim-bracket-table .match {
+    min-width: 160px;
+}
+
+#double-elim-bracket-table .team-placeholder {
+    background-color: #f0f0f0;
+}
+
+#double-elim-bracket-table .inner {
+    height: 100%;
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+
+#double-elim-bracket-table .inner.merger {
+    border: 2px solid #000;
+    border-left: 0;
+}
+
+#double-elim-bracket-table .inner.snake {
+    border: 2px solid #000;
+    border-left: 0;
+    border-top: 0;
+    height: calc(100% + 1px);
+    top: -1px;
+}
+
+#double-elim-bracket-table .inner.top {
+    border-top: 2px solid #000;
+}
+
+#double-elim-bracket-table .dash {
+    border-bottom: 2px solid #000;
+}
+
+#double-elim-bracket-table .match-label {
+    color: #777;
+    font-style: italic;
+    left: 5px;
+    position: absolute;
+    top: -22px;
+}
+
+#double-elim-bracket-table .match-table {
+    margin-bottom: 0;
+}
+
+#double-elim-bracket-table .match-table-wrapper {
+    bottom: -20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: absolute;
+    top: -20px;
+    width: 100%;
+}
+
+#double-elim-bracket-table .gap-row {
+    height: 40px;
+}
+
+table.table-center td,
+table.table-center th,
+text-center {
+    text-align: center;
+}
+
+table.match-table {
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    max-width: 100%;
+    width: 100%;
+}
+
+table.match-table > tbody > tr > td,
+table.match-table > tbody > tr > th,
+table.match-table > tfoot > tr > td,
+table.match-table > tfoot > tr > th,
+table.match-table > thead > tr > td,
+table.match-table > thead > tr > th {
+    border-top: 1px solid #ddd;
+    line-height: 1.42857143;
+    padding: 8px;
+    vertical-align: top;
+}
+
+table.match-table > thead > tr > th {
+    border-bottom: 2px solid #ddd;
+    vertical-align: bottom;
+}
+
+table.match-table > tbody + tbody {
+    border-top: 2px solid #ddd;
+}
+
+table.match-table .table {
+    background-color: #fff;
+}
+
+table.match-table > tbody > tr > td,
+table.match-table > tbody > tr > th,
+table.match-table > tfoot > tr > td,
+table.match-table > tfoot > tr > th,
+table.match-table > thead > tr > td,
+table.match-table > thead > tr > th {
+    border: 1px solid #ddd;
+    padding: 5px;
+}
+
+table.match-table > thead > tr > td,
+table.match-table > thead > tr > th {
+    border-bottom-width: 2px;
+}
+
+table.match-table,
+table.oprTable {
+    background-color: #fff;
+    margin: 0 0 1em auto;
+    padding: 3px 0;
+    width: 100%;
+}
+
+table.match-table tr,
+table.oprTable tr {
+    padding: 3px 0;
+}
+
+table.match-table tr.key,
+table.oprTable tr.key {
+    background-color: #f0f0f0;
+}
+
+table.match-table th,
+table.oprTable th {
+    font-weight: 700;
+}
+
+table.match-table td,
+table.match-table th,
+table.oprTable td,
+table.oprTable th {
+    padding: 3px;
+    text-align: center;
+    vertical-align: middle !important;
+}
+
+table.match-table td.red {
+    background-color: #fee;
+}
+
+table.match-table td.blue {
+    background-color: #eef;
+}
+
+table.match-table td.red-favorite {
+    border: 2px solid red;
+}
+
+table.match-table td.blue-favorite {
+    border: 2px solid #00f;
+}
+
+table.match-table td.redScore {
+    background-color: #fdd;
+}
+
+table.match-table td.blueScore {
+    background-color: #ddf;
+}
+
+table.match-table .winner {
+    font-weight: 700;
+}
+
+table.match-table td.current-team {
+    text-decoration: underline;
+}
+
+table.match-table .compact-row {
+    border-top: 1px double #000;
+}
+
+table.match-table td.icon,
+table.match-table th.icon {
+    font-size: 0.5em;
+    margin: 0;
+    padding: 3px 0 0;
+}
+
+table.match-table td.win {
+    background-color: #90ee90;
+}
+
+table.match-table td.lose {
+    background-color: #f08080;
+}
+
+table.match-table td.tie {
+    background-color: #d3d3d3;
+}
+
+table.match-table div.match-name-container {
+    position: relative;
+}
+
+table.match-table div.match-name-container .match-name {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+table.match-table div.match-name-container .favorite-match-icon {
+    display: none;
+    height: 100%;
+    left: 0;
+    margin-top: -2px;
+    position: absolute;
+}
+
+table.match-table div.match-name-container .favorite-match-icon .favorite-match-icon-spacer {
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+
+table.match-table div.match-name-container .favorite-match-icon .glyphicon {
+    color: #ffc107;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+table td {
+    position: relative;
+}
+
+table.match-table .favorite-team-dot {
+    display: none;
+    height: 5px;
+    position: absolute;
+    right: 3px;
+    top: 3px;
+    width: 5px;
+}
+
+table.match-table .favorite-team-dot circle {
+    fill: #ffc107;
+}
+
+table.match-table .top-left-dot {
+    height: 4px;
+    left: 3px;
+    position: absolute;
+    top: 3px;
+    width: 4px;
+}
+
+table.match-table .top-left-dot-2 {
+    height: 4px;
+    left: 10px;
+    position: absolute;
+    top: 3px;
+    width: 4px;
+}
+
+table.match-table .tooltip-inner {
+    width: 130px;
+}
+
+table.match-table .surrogate {
+    border-bottom: 1px dotted;
+}
+
+table.match-table .dq {
+    text-decoration: line-through;
+}

@@ -26,6 +26,7 @@ import AutoPaths from '../components/AutoPaths';
 import TeamStatsList from '../components/TeamStatsList';
 import { RiEditBoxFill } from 'react-icons/ri';
 import { Link } from 'react-router-dom';
+import MatchCompareGraph from '../components/MatchCompareGraph';
 
 let matchTypes = [
     { label: 'Quals', value: 'q', id: uuidv4() },
@@ -35,7 +36,8 @@ let matchTypes = [
 let tabs = {
     graphs: 'Graphs',
     autoPaths: 'Auto Paths',
-    stats: 'Stats List'
+    stats: 'Stats List',
+    compare: 'Compare'
 };
 
 function MatchAnalystPage() {
@@ -763,7 +765,7 @@ function MatchAnalystPage() {
                         justifyContent={'center'}
                         columnGap={'10px'}
                         rowGap={'5px'}
-                        marginTop={matchType !== '' && matchNumber !== '' ? '0px' : '25px'}
+                        marginTop={'30px'}
                         marginBottom={'15px'}
                         flexWrap={'wrap'}
                         width={'80%'}
@@ -804,6 +806,24 @@ function MatchAnalystPage() {
                     </Box>
                     <Box hidden={tab !== tabs.stats}>
                         <TeamStatsList
+                            teamNumbers={[...teams.red, ...teams.blue]}
+                            multiTeamEventsData={Object.fromEntries(
+                                [...teams.red, ...teams.blue].map((teamNumber) => [
+                                    teamNumber,
+                                    multiTeamEventData[teamNumber]
+                                ])
+                            )}
+                            multiTeamMatchForms={Object.fromEntries(
+                                [...teams.red, ...teams.blue].map((teamNumber) => [
+                                    teamNumber,
+                                    multiOneValidMatchForms[teamNumber]
+                                ])
+                            )}
+                            onTeamPage={false}
+                        />
+                    </Box>
+                    <Box hidden={tab !== tabs.compare}>
+                        <MatchCompareGraph
                             teamNumbers={[...teams.red, ...teams.blue]}
                             multiTeamEventsData={Object.fromEntries(
                                 [...teams.red, ...teams.blue].map((teamNumber) => [

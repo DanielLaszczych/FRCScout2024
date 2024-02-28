@@ -86,9 +86,6 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, eventInfo, setError, 
                 diff = parseInt(a.teamNumber) - parseInt(b.teamNumber);
             }
             if (diff === 0) {
-                console.log('here');
-                console.log(new Date(a.updatedAt));
-                console.log(new Date(b.updatedAt));
                 return new Date(b.updatedAt) - new Date(a.updatedAt);
             }
             return diff;

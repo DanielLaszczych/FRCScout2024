@@ -69,7 +69,8 @@ export const createHistoryManager = (type, setData, prevHistoryData = { data: []
         if (type === AUTO && !isNaN(note)) {
             return 'Note ' + note;
         } else if (type === AUTO && position <= 0 && history[0] === note && isNaN(note)) {
-            return gamePieceFields[note].label + ' (Pre)';
+            //In case we want to append to the label for a preloaded note
+            return gamePieceFields[note].label;
         } else {
             return gamePieceFields[note].label;
         }

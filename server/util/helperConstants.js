@@ -34,6 +34,7 @@ class HelperConstants {
             auto: false,
             teleop: true
         },
+        intakePreloaded: { field: 'intakePreloaded', label: 'Preloaded', short: 'pl', auto: false, teleop: false },
         intakeMiss: {
             field: 'intakeMiss',
             label: 'Intake Miss',

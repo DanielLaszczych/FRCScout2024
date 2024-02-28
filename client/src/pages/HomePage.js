@@ -24,6 +24,7 @@ import { fetchAndCache } from '../util/helperFunctions';
 import { GrMapLocation } from 'react-icons/gr';
 import GoogleButton from '../components/GoogleButton';
 import MatchScheduleTable from '../components/MatchScheduleTable';
+import PlayoffBracket from '../components/PlayoffBracket';
 
 function HomePage() {
     let navigate = useNavigate();
@@ -207,10 +208,11 @@ function HomePage() {
                     </VStack>
                     <MatchScheduleTable
                         teamNumber={teamNumber}
-                        currentEvent={currentEvent}
+                        event={currentEvent}
                         teamPage={false}
                         initialCollapse={false}
                     />
+                    {/* <PlayoffBracket event={currentEvent}></PlayoffBracket> */}
                 </Box>
             )}
         </Center>

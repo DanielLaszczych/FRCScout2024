@@ -305,7 +305,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                     </ModalContent>
                                 </ModalOverlay>
                             </Modal>
-                            <MatchScheduleTable teamNumber={teamNumber} currentEvent={currentEvent} />
+                            <MatchScheduleTable teamNumber={teamNumber} event={currentEvent} />
                         </Flex>
                         <Flex
                             width={{ base: '100%', lg: '60%' }}

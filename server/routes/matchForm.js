@@ -13,7 +13,7 @@ const {
     gamePieceFields,
     climbFields
 } = require('../util/helperConstants');
-const { updateTEDStandForm, updateTEDSuperForms } = require('./ted').HelperFunctions;
+const { updateTEDStandForm, updateTEDSuperForm } = require('./ted').HelperFunctions;
 
 router.get('/getMatchForms', async (req, res) => {
     if (req.isUnauthenticated()) {
@@ -104,19 +104,20 @@ router.post('/postStandForm/:isQR?/:apiKey?', async (req, res) => {
                         } else {
                             matchFormInput.autoGP[element.scored] = 1;
                         }
-
                         matchFormInput.autoPoints += gamePieceFields[element.scored].autoValue || 0;
                     }
                 }
                 matchFormInput.autoPoints += matchFormInput.leftStart ? 2 : 0;
 
                 for (const element in matchFormInput.teleopGP) {
-                    if (element === 'trap') {
-                        matchFormInput.stagePoints +=
-                            matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
-                    } else {
-                        matchFormInput.teleopPoints +=
-                            matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
+                    if (gamePieceFields[element].teleop) {
+                        if (element === 'trap') {
+                            matchFormInput.stagePoints +=
+                                matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
+                        } else {
+                            matchFormInput.teleopPoints +=
+                                matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
+                        }
                     }
                 }
                 // ?. in case climb is null;
@@ -251,29 +252,25 @@ router.post('/postSuperForm/:isQR?/:apiKey?', async (req, res) => {
             matchFormInputs = req.body.map((QRString) => HelperFunctions.convertQRToSuperFormInputs(QRString));
         } else {
             req.body.forEach((matchFormInput) => (matchFormInput.superScouter = req.user.displayName));
-            matchFormInputs = [req.body];
+            matchFormInputs = req.body;
         }
 
         await Promise.all(
-            matchFormInputs.map(async (superFormInputs) => {
-                const updates = superFormInputs.map((superFormInput) =>
-                    MatchForm.findOneAndUpdate(
-                        {
-                            eventKey: superFormInput.eventKey,
-                            matchNumber: superFormInput.matchNumber,
-                            station: superFormInput.station
-                        },
-                        superFormInput,
-                        {
-                            upsert: true
-                        }
-                    )
-                        .lean()
-                        .exec()
-                );
-                await Promise.all(updates).then((prevMatchForms) =>
-                    updateTEDSuperForms(prevMatchForms, matchFormInputs)
-                );
+            matchFormInputs.map(async (matchFormInput) => {
+                const prevMatchForm = await MatchForm.findOneAndUpdate(
+                    {
+                        eventKey: matchFormInput.eventKey,
+                        matchNumber: matchFormInput.matchNumber,
+                        station: matchFormInput.station
+                    },
+                    matchFormInput,
+                    {
+                        upsert: true
+                    }
+                )
+                    .lean()
+                    .exec();
+                await updateTEDSuperForm(prevMatchForm, matchFormInput);
             })
         );
         res.sendStatus(200);
@@ -308,7 +305,7 @@ class HelperFunctions {
             teamNumber: parseInt(data[3]),
             standScouter: data[4],
             startingPosition: data[5] === 'n' ? null : parseInt(data[5]),
-            preLoadedPiece: data[6] === 'n' ? null : data[6] === 't' ? 'Note' : 'None',
+            preloadedPiece: data[6] === 'n' ? null : data[6] === 't' ? 'Note' : 'None',
             leftStart: map[data[7]],
             autoTimeline: data[8] === 'n' ? [] : HelperFunctions.extractAutoTimeline(data[8]),
             teleopGP: {

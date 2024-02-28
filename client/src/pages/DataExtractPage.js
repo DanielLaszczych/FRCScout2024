@@ -240,7 +240,7 @@ function DataExtractPage() {
                                         'Stand Scouter': matchForm.standScouter,
                                         'Super Scouter': matchForm.superScouter,
                                         'Starting Position': matchForm.startingPosition,
-                                        'Pre-Loaded Piece': matchForm.preLoadedPiece,
+                                        'Preloaded Piece': matchForm.preloadedPiece,
                                         'Left Start': matchForm.leftStart ? 1 : 0,
                                         'Auto Intake Miss': matchForm.autoGP.intakeMiss,
                                         'Auto Amp Scored': matchForm.autoGP.ampScore,

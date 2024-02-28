@@ -183,7 +183,7 @@ class HelperFunctions {
         }
 
         for (const element in data.teleopGP) {
-            if (data.teleopGP[element] > 0) {
+            if (gamePieceFields[element].teleop && data.teleopGP[element] > 0) {
                 incUpdate[`teleopGP.${element}.total`] = data.teleopGP[element];
                 maxUpdate[`teleopGP.${element}.max`] = data.teleopGP[element];
             }
@@ -453,9 +453,7 @@ class HelperFunctions {
             return;
         }
         if (reverseUpdate !== null) {
-            let incUpdate = {
-                $inc: reverseUpdate.incUpdate
-            };
+            let incUpdate = { $inc: reverseUpdate.incUpdate };
 
             await HelperFunctions.updateStandForm(
                 prevStandForm.eventKey,
@@ -478,65 +476,59 @@ class HelperFunctions {
         }
     }
 
-    static async updateTEDSuperForms(prevSuperForms, superFormInputs) {
-        let updates = [];
-        for (const prevSuperForm of prevSuperForms) {
-            if (prevSuperForm !== null && prevSuperForm.superStatus === matchFormStatus.complete) {
-                let reverseUpdate = HelperFunctions.getSuperFormUpdate(prevSuperForm, true);
-
-                let index = superFormInputs.findIndex(
-                    (element) =>
-                        parseInt(element.teamNumber) === prevSuperForm.teamNumber &&
-                        element.superStatus === matchFormStatus.complete
-                );
-                if (index !== -1) {
-                    let superFormInput = superFormInputs.splice(index, 1)[0];
-                    let forwardUpdate = HelperFunctions.getSuperFormUpdate(superFormInput);
-                    HelperFunctions.compareMaxUpdates(forwardUpdate.maxUpdate, reverseUpdate.maxUpdate);
-                    let incUpdate = {
-                        $inc: HelperFunctions.mergeIncUpdates(forwardUpdate.incUpdate, reverseUpdate.incUpdate)
-                    };
-                    updates.push(
-                        HelperFunctions.updateSuperForm(
-                            superFormInput.eventKey,
-                            superFormInput.teamNumber,
-                            incUpdate,
-                            forwardUpdate.maxUpdate,
-                            reverseUpdate.maxUpdate
-                        )
-                    );
-                } else {
-                    let incUpdate = { $inc: reverseUpdate.incUpdate };
-                    updates.push(
-                        HelperFunctions.updateSuperForm(
-                            prevSuperForm.eventKey,
-                            prevSuperForm.teamNumber,
-                            incUpdate,
-                            null,
-                            reverseUpdate.maxUpdate
-                        )
-                    );
-                }
-            }
+    static async updateTEDSuperForm(prevSuperForm, superFormInput) {
+        let reverseUpdate = null;
+        if (prevSuperForm !== null && prevSuperForm.superStatus === matchFormStatus.complete) {
+            reverseUpdate = HelperFunctions.getSuperFormUpdate(prevSuperForm, true);
         }
 
-        for (const superFormInput of superFormInputs) {
-            if (superFormInput.superStatus === matchFormStatus.complete) {
-                let forwardUpdate = HelperFunctions.getSuperFormUpdate(superFormInput);
-                let incUpdate = { $inc: forwardUpdate.incUpdate };
-                updates.push(
-                    HelperFunctions.updateSuperForm(
-                        superFormInput.eventKey,
-                        superFormInput.teamNumber,
-                        incUpdate,
-                        forwardUpdate.maxUpdate,
-                        null
-                    )
-                );
-            }
+        let forwardUpdate = null;
+        if (superFormInput.superStatus === matchFormStatus.complete) {
+            let forwardUpdate = HelperFunctions.getSuperFormUpdate(superFormInput);
         }
 
-        return Promise.all(updates);
+        if (
+            reverseUpdate !== null &&
+            forwardUpdate !== null &&
+            prevSuperForm.teamNumber === superFormInput.teamNumber
+        ) {
+            HelperFunctions.compareMaxUpdates(forwardUpdate.maxUpdate, reverseUpdate.maxUpdate);
+            let incUpdate = {
+                $inc: HelperFunctions.mergeIncUpdates(forwardUpdate.incUpdate, reverseUpdate.incUpdate)
+            };
+            await HelperFunctions.updateSuperForm(
+                superFormInput.eventKey,
+                superFormInput.teamNumber,
+                incUpdate,
+                forwardUpdate.maxUpdate,
+                reverseUpdate.maxUpdate
+            );
+            return;
+        }
+
+        if (reverseUpdate !== null) {
+            let incUpdate = { $inc: reverseUpdate.incUpdate };
+
+            await HelperFunctions.updateSuperForm(
+                prevSuperForm.eventKey,
+                prevSuperForm.teamNumber,
+                incUpdate,
+                null,
+                reverseUpdate.maxUpdate
+            );
+        }
+
+        if (forwardUpdate !== null) {
+            let incUpdate = { $inc: forwardUpdate.incUpdate };
+
+            await HelperFunctions.updateSuperForm(
+                superFormInput.eventKey,
+                superFormInput.teamNumber,
+                incUpdate,
+                forwardUpdate.maxUpdate,
+                null
+            );
+        }
     }
 }
 

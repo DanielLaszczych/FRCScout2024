@@ -361,7 +361,7 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                                 borderRight={'1px solid black'}
                                                 backgroundColor={'gray.100'}
                                             >
-                                                {matchForm.preLoadedPiece}
+                                                {matchForm.preloadedPiece}
                                             </GridItem>
                                             <GridItem
                                                 fontSize={'lg'}

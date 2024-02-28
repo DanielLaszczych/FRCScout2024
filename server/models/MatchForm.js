@@ -48,6 +48,9 @@ const teleopGPSchema = new Schema(
         intakeGround: {
             type: Number
         },
+        intakePreloaded: {
+            type: Number
+        },
         ampScore: {
             type: Number
         },
@@ -150,7 +153,7 @@ const matchFormSchema = new Schema({
     startingPosition: {
         type: Number
     },
-    preLoadedPiece: {
+    preloadedPiece: {
         type: String
     },
     leftStart: {

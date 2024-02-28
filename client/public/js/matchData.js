@@ -26,7 +26,7 @@
 //                 dataType: tableau.dataTypeEnum.string,
 //             },
 //             {
-//                 id: 'preLoadedPiece',
+//                 id: 'preloadedPiece',
 //                 dataType: tableau.dataTypeEnum.string,
 //             },
 //             {
@@ -212,7 +212,7 @@
 //                             matchIndex: data[i].matchIndex,
 //                             scouter: data[i].standScouter,
 //                             station: data[i].station,
-//                             preLoadedPiece: data[i].preLoadedPiece,
+//                             preloadedPiece: data[i].preloadedPiece,
 //                             startingPositionX: data[i].startingPosition.x,
 //                             startingPositionY: data[i].startingPosition.y,
 //                             bottomConeAuto: data[i].bottomAuto.coneScored,

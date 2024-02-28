@@ -692,7 +692,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
             width={'100%'}
             flexWrap={'wrap'}
             columnGap={'50px'}
-            rowGap={'20px'}
+            rowGap={'40px'}
             justifyContent={'center'}
         >
             {teamNumbers.map((teamNumber, index) => (

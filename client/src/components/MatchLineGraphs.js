@@ -270,19 +270,27 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
     }
 
     function isOnlyStandData() {
-        return !Object.keys(fields).some((mainField) =>
-            Object.keys(fields[mainField].fields).some(
-                (subField) => fields[mainField].fields[subField].superField && fields[mainField].fields[subField].value
-            )
-        );
+        for (const mainFieldKey in fields) {
+            let subFields = fields[mainFieldKey].fields;
+            for (const subFieldKey in subFields) {
+                if (subFieldKey !== 'noShow' && subFields[subFieldKey].superField && subFields[subFieldKey].value) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     function isOnlySuperData() {
-        return !Object.keys(fields).some((mainField) =>
-            Object.keys(fields[mainField].fields).some(
-                (subField) => !fields[mainField].fields[subField].superField && fields[mainField].fields[subField].value
-            )
-        );
+        for (const mainFieldKey in fields) {
+            let subFields = fields[mainFieldKey].fields;
+            for (const subFieldKey in subFields) {
+                if (subFieldKey !== 'noShow' && !subFields[subFieldKey].superField && subFields[subFieldKey].value) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     function getFormsToUse(teamNumber) {
@@ -427,7 +435,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                         position={'absolute'}
                         top={{
                             base: 'max(calc(50vh), 280px)',
-                            lg: `max(calc(100vh / ${teamNumbers.length > 3 ? 3 : 2}), 280px)`
+                            lg: `max(calc(100vh / ${teamNumbers.length > 3 ? 2.5 : 2}), 280px)`
                         }}
                         left={`${
                             firstPoint -
@@ -582,7 +590,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                 width={'100%'}
                 flexWrap={'wrap'}
                 columnGap={'50px'}
-                rowGap={'20px'}
+                rowGap={'40px'}
                 justifyContent={'center'}
             >
                 {teamNumbers.map((teamNumber, index) => (
@@ -596,7 +604,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                                 ? 'fit-content'
                                 : {
                                       base: 'max(50vh, 280px)',
-                                      lg: `max(calc(100vh / ${teamNumbers.length > 3 ? 3 : 2}), 280px)`
+                                      lg: `max(calc(100vh / ${teamNumbers.length > 3 ? 2.5 : 2}), 280px)`
                                   }
                         }
                         marginBottom={`${getMarginBottom(teamNumber)}px`}

@@ -37,7 +37,6 @@ function TeamPage({ keyProp }) {
                 }
             })
             .then((data) => {
-                console.log(data);
                 let storedTeamEvents = data[0];
                 let allTeamEvents = data[1];
                 if (allTeamEvents.Error) {
@@ -49,7 +48,6 @@ function TeamPage({ keyProp }) {
                         !storedTeamEvents.some((storedEvent) => storedEvent.key === event.key)
                 );
                 let events = storedTeamEvents.concat(allTeamEvents);
-                console.log(events);
                 setEvents(sortEvents(events));
                 if (events.length === 0) {
                     setError('This team is not competing at any events');
@@ -102,7 +100,6 @@ function TeamPage({ keyProp }) {
                     }
                 })
                 .then((data) => {
-                    console.log(data);
                     setTeamData(data);
                 })
                 .catch((error) => {
