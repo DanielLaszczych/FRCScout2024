@@ -66,8 +66,14 @@ let preloadedPieces = [
     { label: 'None', id: uuidv4() },
     { label: 'Note', id: uuidv4() }
 ];
+let autoStartingPositions = [
+    [20, 31, uuidv4()],
+    [45, 107, uuidv4()],
+    [20, 185, uuidv4()],
+    [20, 280, uuidv4()]
+];
 let notePositions = [
-    [119, 31, uuidv4()],
+    [115, 31, uuidv4()],
     [119, 107, uuidv4()],
     [119, 185, uuidv4()],
     [405, 5, uuidv4()],
@@ -102,9 +108,8 @@ let climbTypes = [
     { label: 'Fail', color: 'red', id: uuidv4() }
 ];
 let climbLocations = [
-    { label: 'Left Side', color: 'blue', id: uuidv4() },
     { label: 'Center', color: 'blue', id: uuidv4() },
-    { label: 'Right Side', color: 'blue', id: uuidv4() }
+    { label: 'Side', color: 'blue', id: uuidv4() }
 ];
 let parkOptions = [
     { label: 'Yes', value: true, color: 'green', id: uuidv4() },
@@ -927,6 +932,32 @@ function StandForm() {
                                     }}
                                     onLoad={() => setImageLoaded(true)}
                                 />
+                                {standFormData.startingPosition !== null && (
+                                    <Flex
+                                        position={'absolute'}
+                                        visibility={imageLoaded ? 'visible' : 'hidden'}
+                                        left={`${
+                                            getPoint(autoStartingPositions[standFormData.startingPosition - 1][0]) *
+                                            imageDimensionRatios.auto.width
+                                        }px`}
+                                        top={`${
+                                            (heightDimensions.availableScoringSpace -
+                                                imageDimensions.auto.height * imageDimensionRatios.auto.height) /
+                                                2 +
+                                            autoStartingPositions[standFormData.startingPosition - 1][1] *
+                                                imageDimensionRatios.auto.height
+                                        }px`}
+                                        width={`${65 * imageDimensionRatios.auto.width}px`}
+                                        height={`${65 * imageDimensionRatios.auto.height}px`}
+                                        backgroundColor={'gray.500'}
+                                        textColor={'white'}
+                                        justifyContent={'center'}
+                                        alignItems={'center'}
+                                        borderRadius={'5px'}
+                                    >
+                                        Start
+                                    </Flex>
+                                )}
                                 {notePositions.map((position, index) => (
                                     <Button
                                         key={position[2]}
@@ -1062,6 +1093,11 @@ function StandForm() {
                                             gamePieceFields.intakeMiss.field
                                         );
                                     }}
+                                    isDisabled={
+                                        standFormData.autoTimeline.length > 0 &&
+                                        standFormData.autoTimeline[0].piece === '0' &&
+                                        standFormData.autoTimeline[0].scored === null
+                                    }
                                 >
                                     Intake Miss:{' '}
                                     {standFormData.autoTimeline.reduce(

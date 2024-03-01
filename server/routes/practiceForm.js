@@ -68,12 +68,14 @@ router.post('/postStandForm/:isQR?/:apiKey?', async (req, res) => {
                 matchFormInput.autoPoints += matchFormInput.leftStart ? 2 : 0;
 
                 for (const element in matchFormInput.teleopGP) {
-                    if (element === 'trap') {
-                        matchFormInput.stagePoints +=
-                            matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
-                    } else {
-                        matchFormInput.teleopPoints +=
-                            matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
+                    if (gamePieceFields[element].teleop) {
+                        if (element === 'trap') {
+                            matchFormInput.stagePoints +=
+                                matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
+                        } else {
+                            matchFormInput.teleopPoints +=
+                                matchFormInput.teleopGP[element] * (gamePieceFields[element].teleopValue || 0);
+                        }
                     }
                 }
                 // ?. in case climb is null;

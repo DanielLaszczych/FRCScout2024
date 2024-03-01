@@ -172,7 +172,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
                     }
                     return (
                         <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                            {`Left: ${teamEventData.climb.left}, Center: ${teamEventData.climb.center}, Right: ${teamEventData.climb.right}`}
+                            {`Center: ${teamEventData.climb.center}, Side: ${teamEventData.climb.side}`}
                         </Text>
                     );
                 case 'climb.harmony':
@@ -456,7 +456,7 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
                     </Text>
                 );
             case 'climbLocationCounts':
-                let climbCounts = { left: 0, center: 0, right: 0 };
+                let climbCounts = { center: 0, side: 0 };
                 for (let i = 0; i < matchForms.length; i++) {
                     if (matchForms[i].standStatus === matchFormStatus.noShow) {
                         continue;
@@ -467,12 +467,12 @@ function TeamStatsList({ teamNumbers, multiTeamEventsData, multiTeamMatchForms, 
                         }
                     }
                 }
-                if (climbCounts.left + climbCounts.center + climbCounts.right === 0) {
+                if (climbCounts.center + climbCounts.side === 0) {
                     return getNAComponent();
                 } else {
                     return (
                         <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                            {`Left: ${climbCounts.left}, Center: ${climbCounts.center}, Right: ${climbCounts.right}`}
+                            {`Center: ${climbCounts.center}, Side: ${climbCounts.side}`}
                         </Text>
                     );
                 }

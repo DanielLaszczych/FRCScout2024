@@ -40,9 +40,8 @@ export const climbFields = {
     'No Attempt': { field: 'noAttempt' },
     Success: { field: 'success', teleopValue: 3 },
     Fail: { field: 'fail' },
-    'Left Side': { field: 'left' },
     Center: { field: 'center' },
-    'Right Side': { field: 'right' }
+    Side: { field: 'side' }
 };
 
 export const teamPageTabs = {

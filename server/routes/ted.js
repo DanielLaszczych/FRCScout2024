@@ -484,7 +484,7 @@ class HelperFunctions {
 
         let forwardUpdate = null;
         if (superFormInput.superStatus === matchFormStatus.complete) {
-            let forwardUpdate = HelperFunctions.getSuperFormUpdate(superFormInput);
+            forwardUpdate = HelperFunctions.getSuperFormUpdate(superFormInput);
         }
 
         if (

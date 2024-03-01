@@ -48,8 +48,7 @@ function PlayoffBracket({ event }) {
     }
 
     return (
-        <div class='col-sm-12'>
-            <h3>Playoff Bracket</h3>
+        <Box>
             <div id='double-elim-bracket-wrapper'>
                 <table id='double-elim-bracket-table'>
                     <tbody>
@@ -62,8 +61,7 @@ function PlayoffBracket({ event }) {
                                         <table class='match-table'>
                                             <tbody>
                                                 <tr>
-                                                    <td class='winner'> 1</td>
-
+                                                    <td class={'winner'}> 1</td>
                                                     <td>
                                                         <span class='alliance-name winner'>
                                                             <a href='https://www.thebluealliance.com/team/1690'>1690</a>
@@ -73,7 +71,6 @@ function PlayoffBracket({ event }) {
                                                             <a href='https://www.thebluealliance.com/team/5135'>5135</a>
                                                         </span>
                                                     </td>
-
                                                     <td class='redScore winner'>1</td>
                                                 </tr>
 
@@ -781,7 +778,7 @@ function PlayoffBracket({ event }) {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </Box>
     );
 }
 

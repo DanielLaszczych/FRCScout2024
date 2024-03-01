@@ -1,12 +1,11 @@
 #double-elim-bracket-wrapper {
-    margin-left: -20px;
     overflow-x: auto;
-    width: calc(100% + 20px);
+    width: 100%;
 }
 
 #double-elim-bracket-table {
-    margin-left: 20px;
-    width: calc(100% - 20px);
+    width: calc(75%);
+    margin: 0 auto;
 }
 
 #double-elim-bracket-table tr {
@@ -55,7 +54,6 @@
 }
 
 #double-elim-bracket-table .match-label {
-    color: #777;
     font-style: italic;
     left: 5px;
     position: absolute;

@@ -14,11 +14,12 @@ import {
     Spinner,
     Text
 } from '@chakra-ui/react';
-import { React, useCallback, useEffect, useRef, useState } from 'react';
+import { React, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { fetchAndCache } from '../util/helperFunctions';
 import { MdOutlineWifi, MdOutlineWifiOff } from 'react-icons/md';
+import { GlobalContext } from '../context/globalState';
 
 let alliances = [
     { label: 'Red', value: 'r', id: uuidv4() },
@@ -34,6 +35,8 @@ let stations = [uuidv4(), uuidv4(), uuidv4()];
 
 function PreSuperForm() {
     let navigate = useNavigate();
+
+    const { offline } = useContext(GlobalContext);
 
     const [error, setError] = useState(null);
     const [currentEvent, setCurrentEvent] = useState(null);
@@ -96,8 +99,8 @@ function PreSuperForm() {
     }, [matchNumber, matchType.value]);
 
     const enableManualMode = useCallback(() => {
-        return manualMode || matchType.value === 'p';
-    }, [manualMode, matchType.value]);
+        return manualMode || matchType.value === 'p' || offline;
+    }, [manualMode, matchType.value, offline]);
 
     useEffect(() => {
         function getTeamNumbers() {
@@ -181,7 +184,7 @@ function PreSuperForm() {
             <IconButton
                 position={'absolute'}
                 right={'15px'}
-                isDisabled={matchType.value === 'p'}
+                isDisabled={matchType.value === 'p' || offline}
                 onClick={() => setManualMode(!manualMode)}
                 icon={enableManualMode() ? <MdOutlineWifiOff /> : <MdOutlineWifi />}
             />

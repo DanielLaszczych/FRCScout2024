@@ -121,15 +121,11 @@ const climbSchema = new Schema(
             type: metricsSchema,
             default: {}
         },
-        left: {
-            type: Number,
-            default: 0
-        },
         center: {
             type: Number,
             default: 0
         },
-        right: {
+        side: {
             type: Number,
             default: 0
         },
