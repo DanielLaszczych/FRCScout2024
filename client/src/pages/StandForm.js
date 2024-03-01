@@ -73,7 +73,7 @@ let autoStartingPositions = [
     [20, 280, uuidv4()]
 ];
 let notePositions = [
-    [115, 31, uuidv4()],
+    [119, 31, uuidv4()],
     [119, 107, uuidv4()],
     [119, 185, uuidv4()],
     [405, 5, uuidv4()],
