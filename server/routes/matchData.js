@@ -23,7 +23,7 @@ const { internalBlueCall } = require('./blueAlliance');
 
 router.use('/getEventData/:eventKey', async (req, res) => {
     if (req.isUnauthenticated()) {
-        res.send('Not signed in');
+        res.sendStatus(401);
         return;
     }
     let event = await Event.findOne({ key: req.params.eventKey }).lean().exec();
@@ -164,7 +164,7 @@ router.use('/getTableauEventData/:eventKey/:password?', async (req, res) => {
 
 router.use('/getMedianMatches/:eventKey', async (req, res) => {
     if (req.isUnauthenticated()) {
-        res.send('Not signed in');
+        res.sendStatus(401);
         return;
     }
     let standForms = await MatchForm.find({ eventKey: req.params.eventKey, standStatus: [matchFormStatus.complete] })
@@ -210,7 +210,7 @@ router.use('/getMedianMatches/:eventKey', async (req, res) => {
 
 router.use('/getEventAccuracy/:eventKey', async (req, res) => {
     if (req.isUnauthenticated()) {
-        res.send('Not signed in');
+        res.sendStatus(401);
         return;
     }
     let standForms = await MatchForm.find({
@@ -226,12 +226,6 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
     }
 
     let accuracyData = [];
-    let autoErrors = 0;
-    let mobilityErrors = 0;
-    let autoChargeErrors = 0;
-    let teleErrors = 0;
-    let teleChargeErrors = 0;
-    let accuracies = [];
     for (let blueAllianceForm of blueAllianceForms) {
         let object = {
             matchNumber: convertMatchKeyToString(blueAllianceForm.key.split('_')[1]),
@@ -240,11 +234,6 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
         let filteredStandForms = standForms.filter((standForm) => standForm.matchNumber === object.matchKey);
 
         let redStandForms = filteredStandForms.filter((standForm) => standForm.station.charAt(0) === 'r');
-        let scoutedAutoPoints = 0;
-        let scoutedMobilityPoints = 0;
-        let scoutedAutoChargePoints = 0;
-        let scoutedTelePoints = 0;
-        let scoutedTeleChargePoints = 0;
         let scoreBreakdown = blueAllianceForm.score_breakdown?.red;
         if (!scoreBreakdown) {
             continue;
@@ -257,109 +246,43 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
                 continue;
             }
             index += 1;
-            scoutedAutoPoints += redForm.bottomAuto.coneScored * 3;
-            scoutedAutoPoints += redForm.bottomAuto.cubeScored * 3;
-            scoutedAutoPoints += redForm.middleAuto.coneScored * 4;
-            scoutedAutoPoints += redForm.middleAuto.cubeScored * 4;
-            scoutedAutoPoints += redForm.topAuto.coneScored * 6;
-            scoutedAutoPoints += redForm.topAuto.cubeScored * 6;
-            scoutedMobilityPoints += redForm.crossCommunity ? 3 : 0;
-            let trueMobility = scoreBreakdown[`mobilityRobot${index}`];
-            let scoutedMobility = redForm.crossCommunity ? 'Yes' : 'No';
-            if (scoutedMobility !== trueMobility) {
-                errorsObject[redForm.teamNumber].mobility = {
-                    scouted: scoutedMobility,
-                    true: scoreBreakdown[`mobilityRobot${index}`]
+            let trueLeave = scoreBreakdown[`autoLineRobot${index}`];
+            let scoutedLeave = redForm.leftStart ? 'Yes' : 'No';
+            if (scoutedLeave !== trueLeave) {
+                errorsObject[redForm.teamNumber].leave = {
+                    scouted: scoutedLeave,
+                    true: trueLeave
                 };
-                mobilityErrors += 1;
             }
-            scoutedAutoChargePoints += redForm.chargeAuto === 'Dock' ? 8 : redForm.chargeAuto === 'Engage' ? 12 : 0;
-            let trueAutoCharge = scoreBreakdown[`autoChargeStationRobot${index}`];
-            if (trueAutoCharge === 'Docked') {
-                if (scoreBreakdown[`autoBridgeState`] === 'Level') {
-                    trueAutoCharge = 'Engage';
+
+            let trueEndGame = scoreBreakdown[`endGameRobot${index}`]; //Parked, None, Stage
+            if (trueEndGame.includes('Stage')) {
+                trueEndGame = 'Stage';
+            }
+            let scoutedEndGame;
+            if (['No Attempt', 'Fail', null].includes(redForm.climb.attempt)) {
+                if (redForm.climb.park) {
+                    scoutedEndGame = 'Parked';
                 } else {
-                    trueAutoCharge = 'Dock';
-                }
-            }
-            let scoutedChargeAuto = ['No Attempt', 'Fail', null].includes(redForm.chargeAuto)
-                ? 'None'
-                : redForm.chargeAuto;
-            if (scoutedChargeAuto !== trueAutoCharge) {
-                errorsObject[redForm.teamNumber].autoChargeStation = {
-                    scouted: redForm.chargeAuto,
-                    true: trueAutoCharge
-                };
-                autoChargeErrors += 1;
-            }
-            scoutedTelePoints += redForm.bottomTele.coneScored * 2;
-            scoutedTelePoints += redForm.bottomTele.cubeScored * 2;
-            scoutedTelePoints += redForm.middleTele.coneScored * 3;
-            scoutedTelePoints += redForm.middleTele.cubeScored * 3;
-            scoutedTelePoints += redForm.topTele.coneScored * 5;
-            scoutedTelePoints += redForm.topTele.cubeScored * 5;
-            scoutedTeleChargePoints += redForm.chargeTele === 'Dock' ? 6 : redForm.chargeTele === 'Engage' ? 10 : 0;
-            let trueTeleCharge = scoreBreakdown[`endGameChargeStationRobot${index}`];
-            if (trueTeleCharge === 'Docked') {
-                if (scoreBreakdown[`endGameBridgeState`] === 'Level') {
-                    trueTeleCharge = 'Engage';
-                } else {
-                    trueTeleCharge = 'Dock';
+                    scoutedEndGame = 'None';
                 }
             } else {
-                trueTeleCharge = 'None';
+                scoutedEndGame = 'Stage';
             }
-            let scoutedChargeTele = ['No Attempt', 'Fail', null].includes(redForm.chargeTele)
-                ? 'None'
-                : redForm.chargeTele;
-            if (scoutedChargeTele !== trueTeleCharge) {
-                errorsObject[redForm.teamNumber].teleChargeStation = {
-                    scouted: redForm.chargeTele,
-                    true: trueTeleCharge
+            if (scoutedEndGame !== trueEndGame) {
+                errorsObject[redForm.teamNumber].endGame = {
+                    scouted: scoutedEndGame,
+                    true: trueEndGame
                 };
-                teleChargeErrors += 1;
             }
         }
         if (redStandForms.length > 0) {
-            overallErrors = [];
-            if (scoreBreakdown.autoGamePiecePoints !== scoutedAutoPoints) {
-                overallErrors.push('Auto Game Pieces');
-                autoErrors++;
-            }
-            if (scoreBreakdown.teleopGamePiecePoints !== scoutedTelePoints) {
-                overallErrors.push('Tele Game Pieces');
-                teleErrors++;
-            }
-            let actualScore =
-                scoreBreakdown.totalPoints -
-                scoreBreakdown.endGameParkPoints -
-                scoreBreakdown.foulPoints -
-                scoreBreakdown.linkPoints;
-            let scoutedScore =
-                scoutedAutoPoints +
-                scoutedMobilityPoints +
-                scoutedAutoChargePoints +
-                scoutedTelePoints +
-                scoutedTeleChargePoints;
-            let accuarcy = (1 - Math.abs((scoutedScore - actualScore) / actualScore)) * 100;
-            if (redStandForms.length === 3) {
-                accuracies.push(accuarcy);
-            }
-            errorsObject.other = overallErrors;
             object.red = {
-                actualScore: actualScore,
-                scoutedScore: scoutedScore,
-                accuarcy: `${roundToHundredth(accuarcy)}%`,
                 errors: errorsObject
             };
         }
 
         let blueStandForms = filteredStandForms.filter((standForm) => standForm.station.charAt(0) === 'b');
-        scoutedAutoPoints = 0;
-        scoutedMobilityPoints = 0;
-        scoutedAutoChargePoints = 0;
-        scoutedTelePoints = 0;
-        scoutedTeleChargePoints = 0;
         scoreBreakdown = blueAllianceForm.score_breakdown?.blue;
         if (!scoreBreakdown) {
             continue;
@@ -372,99 +295,38 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
                 continue;
             }
             index += 1;
-            scoutedAutoPoints += blueForm.bottomAuto.coneScored * 3;
-            scoutedAutoPoints += blueForm.bottomAuto.cubeScored * 3;
-            scoutedAutoPoints += blueForm.middleAuto.coneScored * 4;
-            scoutedAutoPoints += blueForm.middleAuto.cubeScored * 4;
-            scoutedAutoPoints += blueForm.topAuto.coneScored * 6;
-            scoutedAutoPoints += blueForm.topAuto.cubeScored * 6;
-            scoutedMobilityPoints += blueForm.crossCommunity ? 3 : 0;
-            let trueMobility = scoreBreakdown[`mobilityRobot${index}`];
-            let scoutedMobility = blueForm.crossCommunity ? 'Yes' : 'No';
-            if (scoutedMobility !== trueMobility) {
-                errorsObject[blueForm.teamNumber].mobility = {
-                    scouted: scoutedMobility,
-                    true: scoreBreakdown[`mobilityRobot${index}`]
+            let trueLeave = scoreBreakdown[`autoLineRobot${index}`];
+            let scoutedLeave = blueForm.leftStart ? 'Yes' : 'No';
+            if (scoutedLeave !== trueLeave) {
+                errorsObject[blueForm.teamNumber].leave = {
+                    scouted: scoutedLeave,
+                    true: trueLeave
                 };
-                mobilityErrors += 1;
             }
-            scoutedAutoChargePoints += blueForm.chargeAuto === 'Dock' ? 8 : blueForm.chargeAuto === 'Engage' ? 12 : 0;
-            let trueAutoCharge = scoreBreakdown[`autoChargeStationRobot${index}`];
-            if (trueAutoCharge === 'Docked') {
-                if (scoreBreakdown[`autoBridgeState`] === 'Level') {
-                    trueAutoCharge = 'Engage';
+
+            let trueEndGame = scoreBreakdown[`endGameRobot${index}`]; //Parked, None, Stage
+            if (trueEndGame.includes('Stage')) {
+                trueEndGame = 'Stage';
+            }
+            let scoutedEndGame;
+            if (['No Attempt', 'Fail', null].includes(blueForm.climb.attempt)) {
+                if (blueForm.climb.park) {
+                    scoutedEndGame = 'Parked';
                 } else {
-                    trueAutoCharge = 'Dock';
-                }
-            }
-            let scoutedChargeAuto = ['No Attempt', 'Fail', null].includes(blueForm.chargeAuto)
-                ? 'None'
-                : blueForm.chargeAuto;
-            if (scoutedChargeAuto !== trueAutoCharge) {
-                errorsObject[blueForm.teamNumber].autoChargeStation = {
-                    scouted: blueForm.chargeAuto,
-                    true: trueAutoCharge
-                };
-                autoChargeErrors += 1;
-            }
-            scoutedTelePoints += blueForm.bottomTele.coneScored * 2;
-            scoutedTelePoints += blueForm.bottomTele.cubeScored * 2;
-            scoutedTelePoints += blueForm.middleTele.coneScored * 3;
-            scoutedTelePoints += blueForm.middleTele.cubeScored * 3;
-            scoutedTelePoints += blueForm.topTele.coneScored * 5;
-            scoutedTelePoints += blueForm.topTele.cubeScored * 5;
-            scoutedTeleChargePoints += blueForm.chargeTele === 'Dock' ? 6 : blueForm.chargeTele === 'Engage' ? 10 : 0;
-            let trueTeleCharge = scoreBreakdown[`endGameChargeStationRobot${index}`];
-            if (trueTeleCharge === 'Docked') {
-                if (scoreBreakdown[`endGameBridgeState`] === 'Level') {
-                    trueTeleCharge = 'Engage';
-                } else {
-                    trueTeleCharge = 'Dock';
+                    scoutedEndGame = 'None';
                 }
             } else {
-                trueTeleCharge = 'None';
+                scoutedEndGame = 'Stage';
             }
-            let scoutedChargeTele = ['No Attempt', 'Fail', null].includes(blueForm.chargeTele)
-                ? 'None'
-                : blueForm.chargeTele;
-            if (scoutedChargeTele !== trueTeleCharge) {
-                errorsObject[blueForm.teamNumber].teleChargeStation = {
-                    scouted: blueForm.chargeTele,
-                    true: trueTeleCharge
+            if (scoutedEndGame !== trueEndGame) {
+                errorsObject[blueForm.teamNumber].endGame = {
+                    scouted: scoutedEndGame,
+                    true: trueEndGame
                 };
-                teleChargeErrors += 1;
             }
         }
         if (blueStandForms.length > 0) {
-            overallErrors = [];
-            if (scoreBreakdown.autoGamePiecePoints !== scoutedAutoPoints) {
-                overallErrors.push('Auto Game Pieces');
-                autoErrors++;
-            }
-            if (scoreBreakdown.teleopGamePiecePoints !== scoutedTelePoints) {
-                overallErrors.push('Tele Game Pieces');
-                teleErrors++;
-            }
-            let actualScore =
-                scoreBreakdown.totalPoints -
-                scoreBreakdown.endGameParkPoints -
-                scoreBreakdown.foulPoints -
-                scoreBreakdown.linkPoints;
-            let scoutedScore =
-                scoutedAutoPoints +
-                scoutedMobilityPoints +
-                scoutedAutoChargePoints +
-                scoutedTelePoints +
-                scoutedTeleChargePoints;
-            let accuarcy = (1 - Math.abs((scoutedScore - actualScore) / actualScore)) * 100;
-            if (blueStandForms.length === 3) {
-                accuracies.push(accuarcy);
-            }
-            errorsObject.other = overallErrors;
             object.blue = {
-                actualScore: actualScore,
-                scoutedScore: scoutedScore,
-                accuarcy: `${roundToHundredth(accuarcy)}%`,
                 errors: errorsObject
             };
         }
@@ -472,23 +334,6 @@ router.use('/getEventAccuracy/:eventKey', async (req, res) => {
         accuracyData.push(object);
     }
     accuracyData = sortMatches(accuracyData, 'matchKey', false);
-    let scoreDifferences = [];
-    accuracyData.forEach((data) => {
-        if (data.red) scoreDifferences.push(Math.abs(data.red.actualScore - data.red.scoutedScore));
-        if (data.blue) scoreDifferences.push(Math.abs(data.blue.actualScore - data.blue.scoutedScore));
-    });
-    let object = {
-        autoErrors: autoErrors,
-        mobilityErrors: mobilityErrors,
-        autoChargeErrors: autoChargeErrors,
-        teleErrors: teleErrors,
-        teleChargeErrors: teleChargeErrors,
-        averageAccuracy: accuracies.length > 0 ? roundToHundredth(mean(accuracies)) : 'N/A',
-        medianAccuracy: accuracies.length > 0 ? roundToHundredth(median(accuracies)) : 'N/A',
-        averageScoreDiff: scoreDifferences.length > 0 ? roundToHundredth(mean(scoreDifferences)) : 'N/A',
-        medianScoreDiff: scoreDifferences.length > 0 ? roundToHundredth(median(scoreDifferences)) : 'N/A'
-    };
-    accuracyData.push(object);
     res.send(accuracyData);
 });
 

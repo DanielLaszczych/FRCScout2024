@@ -306,7 +306,9 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
     }
 
     function getLabels(teamNumber) {
-        return getFormsToUse(teamNumber).map((matchForm) => convertMatchKeyToString(matchForm.matchNumber));
+        return getFormsToUse(teamNumber).map((matchForm) =>
+            convertMatchKeyToString(matchForm.matchNumber, false, true)
+        );
     }
 
     function getSpecialFieldValue(matchForm, field) {

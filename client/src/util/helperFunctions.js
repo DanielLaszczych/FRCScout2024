@@ -55,11 +55,17 @@ export function sortMatches(matches, field = 'matchNumber', compareStations = tr
     });
 }
 
-export function convertMatchKeyToString(matchKey, splitRoundAndMatch = false) {
+export function convertMatchKeyToString(matchKey, splitRoundAndMatch = false, short = false) {
     switch (matchKey.substring(0, 2)) {
         case 'pm':
+            if (short) {
+                return `PM ${matchKey.substring(2)}`;
+            }
             return `Practice ${matchKey.substring(2)}`;
         case 'qm':
+            if (short) {
+                return `QM ${matchKey.substring(2)}`;
+            }
             return `Quals ${matchKey.substring(2)}`;
         case 'sf':
             let matchNumber = parseInt(matchKey.substring(2, 4));
@@ -68,6 +74,9 @@ export function convertMatchKeyToString(matchKey, splitRoundAndMatch = false) {
                 roundNumber = Math.floor((parseInt(matchKey.substring(2, 4)) + 3) / 4);
             } else {
                 roundNumber = Math.floor((parseInt(matchKey.substring(2, 4)) - 3) / 2);
+            }
+            if (short) {
+                return `R ${roundNumber}${splitRoundAndMatch ? '\n' : ' '}M ${matchNumber}`;
             }
             return `Round ${roundNumber}${splitRoundAndMatch ? '\n' : ' '}Match ${matchNumber}`;
         default:

@@ -6,7 +6,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 
 router.use('/getEventsCustom/:year', (req, res) => {
     if (req.isUnauthenticated()) {
-        res.send('Not signed in');
+        res.sendStatus(401);
         return;
     }
     fetch(
@@ -36,7 +36,7 @@ router.use('/getEventsCustom/:year', (req, res) => {
 
 router.use('/isFutureAlly/:eventKey/:teamNumber/:currentMatch/:allowPlayed', async (req, res) => {
     if (req.isUnauthenticated()) {
-        res.send('Not signed in');
+        res.sendStatus(401);
         return;
     }
     try {
@@ -53,9 +53,24 @@ router.use('/isFutureAlly/:eventKey/:teamNumber/:currentMatch/:allowPlayed', asy
     }
 });
 
+router.use('/playoffBracket/:eventKey', async (req, res) => {
+    if (req.isUnauthenticated()) {
+        res.sendStatus(401);
+        return;
+    }
+    fetch(`https://www.thebluealliance.com/event/${req.params.eventKey}`)
+        .then((response) => response.text())
+        .then((html) => {
+            res.send(html);
+        })
+        .catch((error) => {
+            res.send(error);
+        });
+});
+
 router.use('/:apiCall(*)', (req, res) => {
     if (req.isUnauthenticated()) {
-        res.send('Not signed in');
+        res.sendStatus(401);
         return;
     }
     fetch(

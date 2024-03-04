@@ -165,7 +165,7 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
 
     if (eventInfo.inEvent === null) {
         return (
-            <Center marginTop={'50px'}>
+            <Center marginTop={'40px'}>
                 <Spinner />
             </Center>
         );
@@ -173,7 +173,7 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
         return null;
     } else if (eventInfo.matchTable === null || eventInfo.teamStatus === null || matchTable === null) {
         return (
-            <Center marginTop={'50px'}>
+            <Center marginTop={'40px'}>
                 <Spinner />
             </Center>
         );

@@ -15,7 +15,8 @@ import {
     Spinner,
     Text,
     VStack,
-    useDisclosure
+    useDisclosure,
+    Flex
 } from '@chakra-ui/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
@@ -37,6 +38,7 @@ function HomePage() {
     const [pitFormDialog, setPitFormDialog] = useState(false);
     const [pitTeamNumber, setPitTeamNumber] = useState('');
     const [pitPopoverError, setPitPopoverError] = useState(null);
+    const [showSchedule, setShowSchedule] = useState(true);
 
     useEffect(() => {
         if (user !== 'NoUser') {
@@ -98,7 +100,7 @@ function HomePage() {
                     <GoogleButton />
                 </a>
             ) : (
-                <Box width={'100vw'}>
+                <Box>
                     {currentEvent.pitMapImage && (
                         <React.Fragment>
                             <IconButton
@@ -206,13 +208,32 @@ function HomePage() {
                             Super Scout
                         </Button>
                     </VStack>
-                    <MatchScheduleTable
-                        teamNumber={teamNumber}
-                        event={currentEvent}
-                        teamPage={false}
-                        initialCollapse={false}
-                    />
-                    {/* <PlayoffBracket event={currentEvent}></PlayoffBracket> */}
+                    <Flex justifyContent={'center'} marginTop={'20px'} columnGap={'15px'}>
+                        <Button
+                            minWidth={'144px'}
+                            colorScheme={showSchedule ? 'green' : 'gray'}
+                            onClick={() => setShowSchedule(true)}
+                        >
+                            Schedule
+                        </Button>
+                        <Button
+                            minWidth={'144px'}
+                            colorScheme={!showSchedule ? 'green' : 'gray'}
+                            onClick={() => setShowSchedule(false)}
+                        >
+                            Playoff Bracket
+                        </Button>
+                    </Flex>
+                    {showSchedule ? (
+                        <MatchScheduleTable
+                            teamNumber={teamNumber}
+                            event={currentEvent}
+                            teamPage={false}
+                            initialCollapse={false}
+                        />
+                    ) : (
+                        <PlayoffBracket event={currentEvent}></PlayoffBracket>
+                    )}
                 </Box>
             )}
         </Center>

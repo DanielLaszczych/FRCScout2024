@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import {
     AlertDialog,
@@ -1980,8 +1980,26 @@ function StandForm() {
                                     <ModalBody margin={'0 auto'} height={'75dvh'}>
                                         <QRCode
                                             value={getQRValue()}
-                                            style={{ height: 'calc(75dvh - 64px)', width: '100%' }}
+                                            style={{
+                                                height: 'calc(75dvh)',
+                                                width: '90%',
+                                                position: 'absolute',
+                                                top: '-20px',
+                                                left: '50%',
+                                                transform: 'translate(-50%, 0%)'
+                                            }}
                                         />
+                                        <Button
+                                            position={'absolute'}
+                                            bottom={'10px'}
+                                            left={'50%'}
+                                            transform={'translate(-50%, 0%)'}
+                                            colorScheme='blue'
+                                            as={Link}
+                                            to={'/'}
+                                        >
+                                            Go Home
+                                        </Button>
                                     </ModalBody>
                                 </ModalContent>
                             </Modal>

@@ -50,7 +50,6 @@ function MatchesMemo({ noMatches, matches, currentEvent, filter, hasSecondaryFil
                                         {capitalizeFirstLetter(key)
                                             .match(/[A-Z][a-z]+|[0-9]+/g)
                                             .join(' ')}
-                                        :
                                     </Text>
                                     <Box>
                                         <Text fontSize={'sm'}>

@@ -257,40 +257,39 @@ function MatchesPage() {
     ]);
 
     function getAccuracy(currentEvent) {
-        // setLoadingAccuracy(true);
-        // fetch(`matchData/getEventAccuracy/${currentEvent.key}`)
-        //     .then((response) => response.json())
-        //     .then((data) => {
-        //         setAccuarcyData(data);
-        //         setLoadingAccuracy(false);
-        //         setMatchListVersion((prevVersion) => prevVersion + 1);
-        //     })
-        //     .catch((error) => {
-        //         setError(error);
-        //         setLoadingAccuracy(false);
-        //     });
+        setLoadingAccuracy(true);
+        fetch(`matchData/getEventAccuracy/${currentEvent.key}`)
+            .then((response) => response.json())
+            .then((data) => {
+                setAccuarcyData(data);
+                setLoadingAccuracy(false);
+                setMatchListVersion((prevVersion) => prevVersion + 1);
+            })
+            .catch((error) => {
+                setError(error);
+                setLoadingAccuracy(false);
+            });
     }
 
     function getMatchAccuarcy(match, accuarcyData) {
-        return null;
-        // if (!accuarcyData) {
-        //     return null;
-        // }
-        // let matchData = accuarcyData.find((accuarcy) => accuarcy.matchKey === match.matchNumber);
-        // if (matchData) {
-        //     let stationData;
-        //     if (match.station.charAt(0) === 'r') {
-        //         stationData = matchData.red?.errors[match.teamNumber];
-        //     } else {
-        //         stationData = matchData.blue?.errors[match.teamNumber];
-        //     }
-        //     if (stationData) {
-        //         stationData = Object.keys(stationData).length === 0 ? null : stationData;
-        //     }
-        //     return stationData;
-        // } else {
-        //     return null;
-        // }
+        if (!accuarcyData) {
+            return null;
+        }
+        let matchData = accuarcyData.find((accuarcy) => accuarcy.matchKey === match.matchNumber);
+        if (matchData) {
+            let stationData;
+            if (match.station.charAt(0) === 'r') {
+                stationData = matchData.red?.errors[match.teamNumber];
+            } else {
+                stationData = matchData.blue?.errors[match.teamNumber];
+            }
+            if (stationData) {
+                stationData = Object.keys(stationData).length === 0 ? null : stationData;
+            }
+            return stationData;
+        } else {
+            return null;
+        }
     }
 
     function getIcon(filter) {

@@ -1,10 +1,5 @@
-#double-elim-bracket-wrapper {
-    overflow-x: auto;
-    width: 100%;
-}
-
 #double-elim-bracket-table {
-    width: calc(75%);
+    width: 75%;
     margin: 0 auto;
 }
 
@@ -171,14 +166,6 @@ table.match-table td.blue {
     background-color: #eef;
 }
 
-table.match-table td.red-favorite {
-    border: 2px solid red;
-}
-
-table.match-table td.blue-favorite {
-    border: 2px solid #00f;
-}
-
 table.match-table td.redScore {
     background-color: #fdd;
 }
@@ -191,97 +178,8 @@ table.match-table .winner {
     font-weight: 700;
 }
 
-table.match-table td.current-team {
-    text-decoration: underline;
-}
-
-table.match-table .compact-row {
-    border-top: 1px double #000;
-}
-
-table.match-table td.icon,
-table.match-table th.icon {
-    font-size: 0.5em;
-    margin: 0;
-    padding: 3px 0 0;
-}
-
-table.match-table td.win {
-    background-color: #90ee90;
-}
-
-table.match-table td.lose {
-    background-color: #f08080;
-}
-
-table.match-table td.tie {
-    background-color: #d3d3d3;
-}
-
-table.match-table div.match-name-container {
-    position: relative;
-}
-
-table.match-table div.match-name-container .match-name {
-    padding-left: 15px;
-    padding-right: 15px;
-}
-
-table.match-table div.match-name-container .favorite-match-icon {
-    display: none;
-    height: 100%;
-    left: 0;
-    margin-top: -2px;
-    position: absolute;
-}
-
-table.match-table div.match-name-container .favorite-match-icon .favorite-match-icon-spacer {
-    display: inline-block;
-    height: 100%;
-    vertical-align: middle;
-}
-
-table.match-table div.match-name-container .favorite-match-icon .glyphicon {
-    color: #ffc107;
-    display: inline-block;
-    vertical-align: middle;
-}
-
 table td {
     position: relative;
-}
-
-table.match-table .favorite-team-dot {
-    display: none;
-    height: 5px;
-    position: absolute;
-    right: 3px;
-    top: 3px;
-    width: 5px;
-}
-
-table.match-table .favorite-team-dot circle {
-    fill: #ffc107;
-}
-
-table.match-table .top-left-dot {
-    height: 4px;
-    left: 3px;
-    position: absolute;
-    top: 3px;
-    width: 4px;
-}
-
-table.match-table .top-left-dot-2 {
-    height: 4px;
-    left: 10px;
-    position: absolute;
-    top: 3px;
-    width: 4px;
-}
-
-table.match-table .tooltip-inner {
-    width: 130px;
 }
 
 table.match-table .surrogate {
