@@ -422,8 +422,8 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
             return null;
         }
         let iconSize = 20;
-        let iconsPerRow = 3;
-        let yTickWidth = getSuggestedMax() + 2 >= 10 ? 28 : 19;
+        let iconsPerRow = 1;
+        let yTickWidth = getSuggestedMax() + 2 >= 10 ? 19 : 18;
         let firstPoint = (graphWidth - yTickWidth) / (formsToUse.length * 2) + yTickWidth;
         let offset = (graphWidth - yTickWidth) / formsToUse.length;
         let offsetAdjustment = 2;
@@ -439,11 +439,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                             base: 'max(calc(50vh), 280px)',
                             lg: `max(calc(100vh / ${teamNumbers.length > 3 ? 2.5 : 2}), 280px)`
                         }}
-                        left={`${
-                            firstPoint -
-                            (Math.min(getNumberOfIcons(matchForm), 3) * iconSize) / 2 +
-                            index * (offset - offsetAdjustment)
-                        }px`}
+                        left={`${firstPoint + index * (offset - offsetAdjustment)}px`}
                     >
                         {Object.values(fields).map((mainField) =>
                             Object.values(mainField.fields).map((subField) =>
@@ -478,7 +474,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
         if (maxIcons === 0) {
             return 0;
         } else {
-            return Math.ceil((maxIcons * 20) / 60) * 25;
+            return Math.ceil((maxIcons * 20) / 20) * 23;
         }
     }
 

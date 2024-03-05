@@ -4,7 +4,7 @@ const TED = require('../models/TED');
 const { MatchForm, PracticeForm } = require('../models/MatchForm');
 const PitForm = require('../models/PitForm');
 const { matchFormStatus, gamePieceFields, climbFields } = require('../util/helperConstants');
-const { leafGet, leafSet } = require('../util/helperFunctions');
+const { leafGet, leafSet, convertMatchKeyToString } = require('../util/helperFunctions');
 const { internalBlueCall } = require('./blueAlliance');
 
 router.get('/getTEDs', async (req, res) => {
@@ -129,7 +129,8 @@ class HelperFunctions {
                     startingPosition: matchForm.startingPosition,
                     leftStart: 0,
                     path: {},
-                    totalPoints: 0
+                    totalPoints: 0,
+                    matches: []
                 };
                 let order = 1;
                 for (const action of matchForm.autoTimeline) {
@@ -146,6 +147,7 @@ class HelperFunctions {
             }
 
             pathData.runs += 1;
+            pathData.matches.push(convertMatchKeyToString(matchForm.matchNumber));
             pathData.leftStart += matchForm.leftStart ? 1 : 0;
             pathData.totalPoints += matchForm.leftStart ? 2 : 0;
             let order = 1;

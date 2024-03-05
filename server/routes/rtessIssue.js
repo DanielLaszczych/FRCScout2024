@@ -81,6 +81,8 @@ router.post('/postRTESSIssue', async (req, res) => {
                     .catch((err) => {
                         console.log(err);
                     });
+            } else {
+                internalSendMessage(`*SSA*\nTeam: ${rtessIssueInput.teamNumber}\nIssue: ${rtessIssueInput.issue}`);
             }
         }
         res.sendStatus(200);

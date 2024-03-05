@@ -8,6 +8,7 @@ import { convertMatchKeyToString, sortMatches } from '../util/helperFunctions';
 function DataExtractPage() {
     const [currentEvent, setCurrentEvent] = useState(null);
     const [error, setError] = useState(null);
+    const [excelType, setExcelType] = useState(true);
 
     useEffect(() => {
         fetch('/event/getCurrentEvent')
@@ -22,7 +23,6 @@ function DataExtractPage() {
                 if (!data) {
                     throw new Error('There is no event to scout 😔');
                 } else {
-                    console.log(data);
                     setCurrentEvent(data);
                 }
             })
@@ -108,6 +108,14 @@ function DataExtractPage() {
             margin={'0 auto'}
             rowGap={'20px'}
         >
+            <Flex columnGap={'20px'}>
+                <Button width={'128px'} colorScheme={excelType ? 'green' : 'gray'} onClick={() => setExcelType(true)}>
+                    Excel Format
+                </Button>
+                <Button width={'128px'} colorScheme={!excelType ? 'green' : 'gray'} onClick={() => setExcelType(false)}>
+                    CSV Format
+                </Button>
+            </Flex>
             <Button
                 width={'fit-content'}
                 onClick={() => {
@@ -124,7 +132,6 @@ function DataExtractPage() {
                             }
                         })
                         .then((data) => {
-                            console.log(data);
                             const fileType =
                                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
                             let dataArray = [];
@@ -170,11 +177,17 @@ function DataExtractPage() {
                                     'No Shows': ted.noShows
                                 });
                             });
+
                             const dataJSON = XLSX.utils.json_to_sheet(dataArray);
-                            const wb = { Sheets: { 'Team Raw Data': dataJSON }, SheetNames: ['Team Raw Data'] };
-                            const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-                            const sheetData = new Blob([excelBuffer], { type: fileType });
-                            FileSaver.saveAs(sheetData, `${currentEvent.name}_TeamRawData.xlsx`);
+                            if (excelType) {
+                                const wb = { Sheets: { 'Team Raw Data': dataJSON }, SheetNames: ['Team Raw Data'] };
+                                const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                                const sheetData = new Blob([excelBuffer], { type: fileType });
+                                FileSaver.saveAs(sheetData, `${currentEvent.name}_TeamRawData.xlsx`);
+                            } else {
+                                const csvData = new Blob([XLSX.utils.sheet_to_csv(dataJSON)]);
+                                FileSaver.saveAs(csvData, `${currentEvent.name}_TeamRawData.csv`);
+                            }
                         });
                 }}
             >
@@ -201,7 +214,6 @@ function DataExtractPage() {
                             }
                         })
                         .then((data) => {
-                            console.log(data);
                             data = sortMatches(data);
                             let teamMatchCount = {};
                             data.forEach((matchForm) => {
@@ -281,16 +293,74 @@ function DataExtractPage() {
                                     });
                                 }
                             });
-                            console.log(dataArray);
+
                             const dataJSON = XLSX.utils.json_to_sheet(dataArray);
-                            const wb = { Sheets: { 'TIM Raw Data': dataJSON }, SheetNames: ['TIM Raw Data'] };
-                            const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-                            const sheetData = new Blob([excelBuffer], { type: fileType });
-                            FileSaver.saveAs(sheetData, `${currentEvent.name}_TIMRawData.xlsx`);
+                            if (excelType) {
+                                const wb = { Sheets: { 'TIM Raw Data': dataJSON }, SheetNames: ['TIM Raw Data'] };
+                                const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                                const sheetData = new Blob([excelBuffer], { type: fileType });
+                                FileSaver.saveAs(sheetData, `${currentEvent.name}_TIMRawData.xlsx`);
+                            } else {
+                                const csvData = new Blob([XLSX.utils.sheet_to_csv(dataJSON)]);
+                                FileSaver.saveAs(csvData, `${currentEvent.name}_TIMRawData.csv`);
+                            }
                         });
                 }}
             >
                 Download team in match data
+            </Button>
+            <Button
+                width={'fit-content'}
+                onClick={() => {
+                    fetch('/pitForm/getPitFormsSimple', {
+                        headers: {
+                            filters: JSON.stringify({
+                                eventKey: currentEvent.key,
+                                followUp: false
+                            })
+                        }
+                    })
+                        .then((response) => {
+                            if (response.status === 200) {
+                                return response.json();
+                            } else {
+                                throw new Error(response.statusText);
+                            }
+                        })
+                        .then((data) => {
+                            data.sort((a, b) => {
+                                let diff = a.teamNumber - b.teamNumber;
+                                if (diff === 0) {
+                                    diff = a.matchIndex - b.matchIndex;
+                                }
+                                return diff;
+                            });
+
+                            const fileType =
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+                            let dataArray = [];
+                            data.forEach((pitForm) => {
+                                dataArray.push({
+                                    'Team Number': pitForm.teamNumber,
+                                    'Robot Image': pitForm.robotImage,
+                                    'Wiring Image': pitForm.wiringImage
+                                });
+                            });
+
+                            const dataJSON = XLSX.utils.json_to_sheet(dataArray);
+                            if (excelType) {
+                                const wb = { Sheets: { 'Image Raw Data': dataJSON }, SheetNames: ['Image Raw Data'] };
+                                const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                                const sheetData = new Blob([excelBuffer], { type: fileType });
+                                FileSaver.saveAs(sheetData, `${currentEvent.name}_ImageRawData.xlsx`);
+                            } else {
+                                const csvData = new Blob([XLSX.utils.sheet_to_csv(dataJSON)]);
+                                FileSaver.saveAs(csvData, `${currentEvent.name}_ImageRawData.csv`);
+                            }
+                        });
+                }}
+            >
+                Download image raw data
             </Button>
         </Flex>
     );

@@ -1,9 +1,10 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Box, Center, Flex, IconButton, Spinner, Text } from '@chakra-ui/react';
+import { Box, Center, Flex, IconButton, Spinner, Text, Tooltip } from '@chakra-ui/react';
 import AutoBlueField from '../images/AutoBlueField.png';
 import { capitalizeFirstLetter, perc2color, roundToTenth } from '../util/helperFunctions';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
+import { InfoIcon } from '@chakra-ui/icons';
 
 let startingPositions = [
     [20, 36, uuidv4()],
@@ -138,9 +139,30 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
                                     {index > 2 ? `Blue ${index - 2}: ${teamNumber}` : `Red ${index + 1}: ${teamNumber}`}
                                 </Text>
                             )}
-                            <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'start'}>
-                                Ran {autoPaths[teamNumber][pathsVisible[teamNumber]].runs} time(s)
-                            </Text>
+                            <Flex>
+                                <Text flex={1 / 2} fontSize={'md'} fontWeight={'semibold'} textAlign={'start'}>
+                                    Ran {autoPaths[teamNumber][pathsVisible[teamNumber]].runs} time(s)
+                                </Text>
+                                <Box flex={1 / 2} textAlign={'end'}>
+                                    <Tooltip
+                                        hasArrow
+                                        label={
+                                            <Box>
+                                                {autoPaths[teamNumber][pathsVisible[teamNumber]].matches.map(
+                                                    (match) => (
+                                                        <Text key={match} textAlign={'center'}>
+                                                            {match}
+                                                        </Text>
+                                                    )
+                                                )}
+                                            </Box>
+                                        }
+                                    >
+                                        <InfoIcon />
+                                    </Tooltip>
+                                </Box>
+                            </Flex>
+
                             <Flex>
                                 <Text flex={1 / 2} fontSize={'md'} fontWeight={'semibold'} textAlign={'start'}>
                                     Left Start: {autoPaths[teamNumber][pathsVisible[teamNumber]].leftStart} /{' '}

@@ -6,7 +6,6 @@ function PlayoffBracket({ event }) {
     const [error, setError] = useState(null);
     const [bracketHTML, setBracketHTML] = useState(null);
 
-    console.log(event);
     useEffect(() => {
         fetch(`/blueAlliance/playoffBracket/${event.key}`)
             .then((response) => response.text())

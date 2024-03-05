@@ -25,7 +25,17 @@ router.get('/getPitFormsSimple', async (req, res) => {
     try {
         const pitForms = await PitForm.find(JSON.parse(req.headers.filters || '{}'))
             .select(
-                ['eventKey', 'eventName', 'teamNumber', 'teamName', 'followUp', 'followUpComment', 'scouter'].join(' ')
+                [
+                    'eventKey',
+                    'eventName',
+                    'teamNumber',
+                    'teamName',
+                    'followUp',
+                    'followUpComment',
+                    'scouter',
+                    'robotImage',
+                    'wiringImage'
+                ].join(' ')
             )
             .exec();
         res.status(200).json(pitForms);
