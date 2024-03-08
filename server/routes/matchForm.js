@@ -171,7 +171,7 @@ router.post('/postStandForm/:isQR?/:apiKey?', async (req, res) => {
                             eventKey: matchFormInput.eventKey,
                             matchNumber: matchFormInput.matchNumber,
                             teamNumber: matchFormInput.teamNumber,
-                            submitter: context.req.user.displayName,
+                            submitter: req.user.displayName,
                             issue: issues.join(', '),
                             problemComment:
                                 matchFormInput.standStatus === matchFormStatus.noShow
