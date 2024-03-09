@@ -45,6 +45,20 @@ router.get('/getPitFormsSimple', async (req, res) => {
     }
 });
 
+router.get('/getPitForms', async (req, res) => {
+    if (req.isUnauthenticated()) {
+        res.sendStatus(401);
+        return;
+    }
+    try {
+        const pitForms = await PitForm.find(JSON.parse(req.headers.filters || '{}')).exec();
+        res.status(200).json(pitForms);
+    } catch (err) {
+        res.statusMessage = err.message;
+        res.sendStatus(500);
+    }
+});
+
 router.post('/postPitForm', async (req, res) => {
     if (req.isUnauthenticated()) {
         res.sendStatus(401);
