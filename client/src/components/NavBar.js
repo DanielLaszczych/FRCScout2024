@@ -91,22 +91,22 @@ function NavBar() {
             backgroundColor={'#212529'}
             className='navbar'
         >
-            <Link to={'/'}>
-                <Box h='75px'>
-                    <Image
-                        width={{ base: '80px', sm: '100px' }}
-                        minW={{ base: '80px', sm: '100px' }}
-                        src={logo}
-                        _hover={{
-                            cursor: 'pointer'
-                        }}
-                        position={'relative'}
-                        top='50%'
-                        transform='translateY(-50%)'
-                        marginLeft={'15px'}
-                    />
-                </Box>
-            </Link>
+            <Box height={'75px'}>
+                <Image
+                    width={{ base: '80px', sm: '100px' }}
+                    minW={{ base: '80px', sm: '100px' }}
+                    src={logo}
+                    _hover={{
+                        cursor: 'pointer'
+                    }}
+                    position={'relative'}
+                    top='50%'
+                    transform='translateY(-50%)'
+                    marginLeft={'15px'}
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                    onClick={() => navigate('/')}
+                />
+            </Box>
             {user !== 'NoUser' && (
                 <Box className='search' flex={1} h={'75px'}>
                     <HStack
@@ -166,6 +166,7 @@ function NavBar() {
                             as={Avatar}
                             src={user.iconImage}
                             border='2px solid white'
+                            style={{ WebkitTapHighlightColor: 'transparent' }}
                         />
                     </Box>
                     <MenuList

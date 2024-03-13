@@ -187,8 +187,8 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
                     : { base: '95vw', sm: '90vw', md: '80vw', lg: '670px' }
             }
             margin={'0 auto'}
-            marginTop={teamPage ? '0xp' : '25px'}
-            marginBottom={teamPage ? '0xp' : '25px'}
+            marginTop={teamPage ? '15px' : '25px'}
+            marginBottom={teamPage ? '0px' : '25px'}
         >
             {Object.keys(eventInfo.teamStatus).length === 0 ? (
                 <Text

@@ -130,124 +130,127 @@ const ampPlayerGPSchema = new Schema(
     { _id: false }
 );
 
-const matchFormSchema = new Schema({
-    eventKey: {
-        type: String,
-        required: true
+const matchFormSchema = new Schema(
+    {
+        eventKey: {
+            type: String,
+            required: true
+        },
+        matchNumber: {
+            type: String,
+            required: true
+        },
+        station: {
+            type: String,
+            required: true
+        },
+        teamNumber: {
+            type: Number,
+            required: true
+        },
+        standScouter: {
+            type: String
+        },
+        startingPosition: {
+            type: Number
+        },
+        preloadedPiece: {
+            type: String
+        },
+        leftStart: {
+            type: Boolean
+        },
+        autoTimeline: {
+            type: [autoTimelineSchema]
+        },
+        // We need to defaualt in case auto timeline is empty
+        autoGP: {
+            type: autoGPSchema,
+            default: {}
+        },
+        autoPoints: {
+            type: Number
+        },
+        teleopGP: {
+            type: teleopGPSchema
+        },
+        teleopPoints: {
+            type: Number
+        },
+        climb: {
+            type: climbSchema
+        },
+        stagePoints: {
+            type: Number
+        },
+        offensivePoints: {
+            type: Number
+        },
+        wasDefended: {
+            type: Boolean
+        },
+        defenseRating: {
+            type: Number
+        },
+        defenseAllocation: {
+            type: Number
+        },
+        lostCommunication: {
+            type: Boolean
+        },
+        robotBroke: {
+            type: Boolean
+        },
+        yellowCard: {
+            type: Boolean
+        },
+        redCard: {
+            type: Boolean
+        },
+        standComment: {
+            type: String
+        },
+        standStatus: {
+            type: String,
+            required: true,
+            default: matchFormStatus.missing
+        },
+        standStatusComment: {
+            type: String
+        },
+        history: {
+            type: historySchema
+        },
+        superScouter: {
+            type: String
+        },
+        allianceNumbers: {
+            type: [Number],
+            default: [0, 0, 0]
+        },
+        agility: {
+            type: Number
+        },
+        fieldAwareness: {
+            type: Number
+        },
+        ampPlayer: {
+            type: Boolean
+        },
+        ampPlayerGP: {
+            type: ampPlayerGPSchema
+        },
+        superStatus: {
+            type: String,
+            required: true,
+            default: matchFormStatus.missing
+        },
+        superStatusComment: {
+            type: String
+        }
     },
-    matchNumber: {
-        type: String,
-        required: true
-    },
-    station: {
-        type: String,
-        required: true
-    },
-    teamNumber: {
-        type: Number,
-        required: true
-    },
-    standScouter: {
-        type: String
-    },
-    startingPosition: {
-        type: Number
-    },
-    preloadedPiece: {
-        type: String
-    },
-    leftStart: {
-        type: Boolean
-    },
-    autoTimeline: {
-        type: [autoTimelineSchema]
-    },
-    // We need to defaualt in case auto timeline is empty
-    autoGP: {
-        type: autoGPSchema,
-        default: {}
-    },
-    autoPoints: {
-        type: Number
-    },
-    teleopGP: {
-        type: teleopGPSchema
-    },
-    teleopPoints: {
-        type: Number
-    },
-    climb: {
-        type: climbSchema
-    },
-    stagePoints: {
-        type: Number
-    },
-    offensivePoints: {
-        type: Number
-    },
-    wasDefended: {
-        type: Boolean
-    },
-    defenseRating: {
-        type: Number
-    },
-    defenseAllocation: {
-        type: Number
-    },
-    lostCommunication: {
-        type: Boolean
-    },
-    robotBroke: {
-        type: Boolean
-    },
-    yellowCard: {
-        type: Boolean
-    },
-    redCard: {
-        type: Boolean
-    },
-    standComment: {
-        type: String
-    },
-    standStatus: {
-        type: String,
-        required: true,
-        default: matchFormStatus.missing
-    },
-    standStatusComment: {
-        type: String
-    },
-    history: {
-        type: historySchema
-    },
-    superScouter: {
-        type: String
-    },
-    allianceNumbers: {
-        type: [Number],
-        default: [0, 0, 0]
-    },
-    agility: {
-        type: Number
-    },
-    fieldAwareness: {
-        type: Number
-    },
-    ampPlayer: {
-        type: Boolean
-    },
-    ampPlayerGP: {
-        type: ampPlayerGPSchema
-    },
-    superStatus: {
-        type: String,
-        required: true,
-        default: matchFormStatus.missing
-    },
-    superStatusComment: {
-        type: String
-    }
-});
+    { timestamps: true }
+);
 
 const MatchForm = model('MatchForm', matchFormSchema);
 const PracticeForm = model('PracticeForm', matchFormSchema);

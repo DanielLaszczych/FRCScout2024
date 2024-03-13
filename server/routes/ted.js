@@ -6,6 +6,7 @@ const PitForm = require('../models/PitForm');
 const { matchFormStatus, gamePieceFields, climbFields } = require('../util/helperConstants');
 const { leafGet, leafSet, convertMatchKeyToString } = require('../util/helperFunctions');
 const { internalBlueCall } = require('./blueAlliance');
+const RTESSIssue = require('../models/RTESSIssue');
 
 router.get('/getTEDs', async (req, res) => {
     if (req.isUnauthenticated()) {
@@ -28,13 +29,15 @@ router.get('/getAllTeamEventData', async (req, res) => {
             PitForm.findOne(filters).exec(),
             MatchForm.find(filters).exec(),
             PracticeForm.find(filters).exec(),
-            TED.findOne(filters).lean().exec()
+            TED.findOne(filters).lean().exec(),
+            RTESSIssue.find(filters).exec()
         ]).then(async (responses) => {
             let data = {
                 pitForm: responses[0],
                 matchForms: responses[1],
                 practiceForms: responses[2],
-                teamEventData: responses[3]
+                teamEventData: responses[3],
+                rtessIssues: responses[4]
             };
             if (data.teamEventData) {
                 data.teamEventData.autoPaths = HelperFunctions.getAutoPaths(data.matchForms);
