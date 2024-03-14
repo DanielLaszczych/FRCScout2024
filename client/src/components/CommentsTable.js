@@ -208,7 +208,7 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                         comments[teamNumber].length === 0
                             ? 'fit-content'
                             : {
-                                  base: `max(60vh, 280px + ${!onTeamPage ? 27 : 0}px)`,
+                                  base: `min(fit-content, max(60vh, 280px + ${!onTeamPage ? 27 : 0}px))`,
                                   lg: `max(calc(120vh / ${teamNumbers.length > 3 ? 3 : 2}), 280px + ${
                                       !onTeamPage ? 27 : 0
                                   }px)`
@@ -229,7 +229,7 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                             )}
                             <Box
                                 height={{
-                                    base: `max(calc(60vh - ${!onTeamPage ? 27 : 0}px), 280px)`,
+                                    base: `min(fit-content, max(calc(60vh - ${!onTeamPage ? 27 : 0}px), 280px))`,
                                     lg: `max(calc(120vh / ${teamNumbers.length > 3 ? 3 : 2} - ${
                                         !onTeamPage ? 27 : 0
                                     }px), 280px)`
