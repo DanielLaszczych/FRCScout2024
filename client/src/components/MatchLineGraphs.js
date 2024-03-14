@@ -16,7 +16,11 @@ import {
     Spinner,
     Text,
     useDisclosure,
-    Tooltip as ChakraTooltip
+    Popover,
+    PopoverTrigger,
+    PopoverContent,
+    PopoverArrow,
+    PopoverBody
 } from '@chakra-ui/react';
 import {
     Chart as ChartJS,
@@ -446,16 +450,34 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                                 (subField.icon || subField.icons) &&
                                 subField.value &&
                                 getIconValue(matchForm, subField) ? (
-                                    <ChakraTooltip key={subField.field} label={subField.label}>
-                                        <span>
-                                            <Icon
-                                                boxSize={5}
-                                                as={subField.icons ? getOneIcon(matchForm, subField) : subField.icon}
-                                                color={subField.color}
-                                                background={subField.background}
-                                            ></Icon>
-                                        </span>
-                                    </ChakraTooltip>
+                                    <Popover key={subField.field} trigger={'hover'}>
+                                        <PopoverTrigger>
+                                            <span>
+                                                <Icon
+                                                    boxSize={5}
+                                                    as={
+                                                        subField.icons ? getOneIcon(matchForm, subField) : subField.icon
+                                                    }
+                                                    color={subField.color}
+                                                    background={subField.background}
+                                                ></Icon>
+                                            </span>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            width={'fit-content'}
+                                            padding={'0px'}
+                                            backgroundColor={'gray.700'}
+                                            textColor={'white'}
+                                            fontSize={'0.9rem'}
+                                            border={'none'}
+                                            textAlign={'center'}
+                                        >
+                                            <PopoverArrow backgroundColor={'gray.700'} />
+                                            <PopoverBody padding={'5px'}>
+                                                <Box>{subField.label}</Box>
+                                            </PopoverBody>
+                                        </PopoverContent>
+                                    </Popover>
                                 ) : null
                             )
                         )}

@@ -1,6 +1,18 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Box, Center, Flex, IconButton, Spinner, Text, Tooltip } from '@chakra-ui/react';
+import {
+    Box,
+    Center,
+    Flex,
+    IconButton,
+    Popover,
+    PopoverArrow,
+    PopoverBody,
+    PopoverContent,
+    PopoverTrigger,
+    Spinner,
+    Text
+} from '@chakra-ui/react';
 import AutoBlueField from '../images/AutoBlueField.png';
 import { capitalizeFirstLetter, perc2color, roundToTenth } from '../util/helperFunctions';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
@@ -144,25 +156,33 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
                                     Ran {autoPaths[teamNumber][pathsVisible[teamNumber]].runs} time(s)
                                 </Text>
                                 <Box flex={1 / 2} textAlign={'end'}>
-                                    <Tooltip
-                                        hasArrow
-                                        label={
-                                            <Box>
-                                                {autoPaths[teamNumber][pathsVisible[teamNumber]].matches.map(
-                                                    (match) => (
-                                                        <Text key={match} textAlign={'center'}>
-                                                            {match}
-                                                        </Text>
-                                                    )
-                                                )}
-                                            </Box>
-                                        }
-                                    >
-                                        <InfoIcon />
-                                    </Tooltip>
+                                    <Popover trigger={'hover'}>
+                                        <PopoverTrigger>
+                                            <IconButton icon={<InfoIcon />} minWidth={'16px'} height={'fit-content'} />
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            width={'fit-content'}
+                                            backgroundColor={'gray.700'}
+                                            textColor={'white'}
+                                            fontSize={'0.9rem'}
+                                            border={'none'}
+                                        >
+                                            <PopoverArrow backgroundColor={'gray.700'} />
+                                            <PopoverBody>
+                                                <Box>
+                                                    {autoPaths[teamNumber][pathsVisible[teamNumber]].matches.map(
+                                                        (match) => (
+                                                            <Text key={match} textAlign={'center'}>
+                                                                {match}
+                                                            </Text>
+                                                        )
+                                                    )}
+                                                </Box>
+                                            </PopoverBody>
+                                        </PopoverContent>
+                                    </Popover>
                                 </Box>
                             </Flex>
-
                             <Flex>
                                 <Text flex={1 / 2} fontSize={'md'} fontWeight={'semibold'} textAlign={'start'}>
                                     Left Start: {autoPaths[teamNumber][pathsVisible[teamNumber]].leftStart} /{' '}
