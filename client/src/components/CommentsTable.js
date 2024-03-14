@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useState } from 'react';
 import { matchFormStatus } from '../util/helperConstants';
-import { sortMatches } from '../util/helperFunctions';
+import { convertMatchKeyToString, sortMatches } from '../util/helperFunctions';
 import { Box, Center, Flex, Grid, GridItem, Spinner, Text } from '@chakra-ui/react';
 
 function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, onTeamPage }) {
@@ -10,15 +10,14 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
         let comments = {};
         for (const teamNumber of teamNumbers) {
             let matchForms = sortMatches(multiTeamMatchForms[teamNumber]);
-            let rtessIssues = multiTeamRTESSForms[teamNumber];
-            console.log(rtessIssues);
+            let rtessIssues = [...multiTeamRTESSForms[teamNumber]];
             comments[teamNumber] = [];
             for (const matchForm of matchForms) {
                 let obj = {
                     matchForm: true,
                     rtessIssue: false,
                     matchNumber: matchForm.matchNumber,
-                    issues: [],
+                    issues: '',
                     problemComment: '',
                     status: '',
                     solutionComment: '',
@@ -32,7 +31,6 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                     let rtessIssueIndex = rtessIssues.findIndex(
                         (rtessIssue) => rtessIssue.matchNumber === matchForm.matchNumber
                     );
-                    console.log(rtessIssueIndex);
                     if (rtessIssueIndex !== -1) {
                         let rtessIssue = rtessIssues.splice(rtessIssueIndex, 1)[0];
                         obj.rtessIssue = true;
@@ -40,6 +38,7 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                         obj.solutionComment = rtessIssue.solutionComment;
                     }
                     if (matchForm.standStatus === matchFormStatus.complete) {
+                        obj.issues = [];
                         if (matchForm.lostCommunication) obj.issues.push('Lost Communication');
                         if (matchForm.robotBroke) obj.issues.push('Robot Broke');
                         obj.issues = obj.issues.join(', ');
@@ -73,7 +72,6 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                 return new Date(parseInt(b.createdAt)) - new Date(parseInt(a.createdAt));
             });
         }
-        console.log(comments);
         setComments(comments);
     }, [teamNumbers, multiTeamMatchForms, multiTeamRTESSForms]);
 
@@ -83,6 +81,8 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                 <React.Fragment>
                     <GridItem
                         display={'flex'}
+                        flexDirection={'column'}
+                        rowGap={'10px'}
                         justifyContent={'center'}
                         alignItems={'center'}
                         backgroundColor={'gray.100'}
@@ -94,26 +94,91 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                             {`Issue(s): ${comment.issues}`}
                         </Text>
                         <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                            {`Comment: ${comment.problemComment}`}
+                            {`Comment: ${comment.problemComment || 'N/A'}`}
                         </Text>
-                        <GridItem
-                            display={'flex'}
-                            justifyContent={'center'}
-                            alignItems={'center'}
-                            backgroundColor={'gray.100'}
-                            borderBottom={'1px solid black'}
-                            borderRight={'1px solid black'}
-                            padding={'10px 5px'}
-                        >
-                            <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                                {comment.matchForm ? comment.matchNumber : 'RTESS Issue'}
-                            </Text>
-                        </GridItem>
+                    </GridItem>
+                    <GridItem
+                        display={'flex'}
+                        flexDirection={'column'}
+                        rowGap={'10px'}
+                        justifyContent={'center'}
+                        alignItems={'center'}
+                        backgroundColor={'gray.100'}
+                        borderBottom={'1px solid black'}
+                        padding={'10px 5px'}
+                    >
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            {`Status: ${comment.status}`}
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            {`Solution: ${comment.solutionComment || 'N/A'}`}
+                        </Text>
                     </GridItem>
                 </React.Fragment>
             );
         } else if (comment.matchForm && !comment.rtessIssue) {
+            return (
+                <GridItem
+                    display={'flex'}
+                    flexDirection={'column'}
+                    rowGap={'10px'}
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                    backgroundColor={'gray.100'}
+                    borderBottom={'1px solid black'}
+                    padding={'10px 5px'}
+                    colSpan={2}
+                >
+                    {comment.issues && (
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            {`Issue(s): ${comment.issues}`}
+                        </Text>
+                    )}
+                    <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                        {`Comment: ${comment.problemComment || 'N/A'}`}
+                    </Text>
+                </GridItem>
+            );
         } else if (!comment.matchForm && comment.rtessIssue) {
+            return (
+                <React.Fragment>
+                    <GridItem
+                        display={'flex'}
+                        flexDirection={'column'}
+                        rowGap={'10px'}
+                        justifyContent={'center'}
+                        alignItems={'center'}
+                        backgroundColor={'gray.100'}
+                        borderBottom={'1px solid black'}
+                        borderRight={'1px solid black'}
+                        padding={'10px 5px'}
+                    >
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            {`Issue(s): ${comment.issues}`}
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            {`Comment: ${comment.problemComment || 'N/A'}`}
+                        </Text>
+                    </GridItem>
+                    <GridItem
+                        display={'flex'}
+                        flexDirection={'column'}
+                        rowGap={'10px'}
+                        justifyContent={'center'}
+                        alignItems={'center'}
+                        backgroundColor={'gray.100'}
+                        borderBottom={'1px solid black'}
+                        padding={'10px 5px'}
+                    >
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            {`Status: ${comment.status}`}
+                        </Text>
+                        <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
+                            {`Solution: ${comment.solutionComment || 'N/A'}`}
+                        </Text>
+                    </GridItem>
+                </React.Fragment>
+            );
         }
     }
 
@@ -143,9 +208,9 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                         comments[teamNumber].length === 0
                             ? 'fit-content'
                             : {
-                                  base: `max(60vh, 280px + ${50 + (!onTeamPage ? 27 : 0)}px)`,
+                                  base: `max(60vh, 280px + ${!onTeamPage ? 27 : 0}px)`,
                                   lg: `max(calc(120vh / ${teamNumbers.length > 3 ? 3 : 2}), 280px + ${
-                                      50 + (!onTeamPage ? 27 : 0)
+                                      !onTeamPage ? 27 : 0
                                   }px)`
                               }
                     }
@@ -164,9 +229,9 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                             )}
                             <Box
                                 height={{
-                                    base: `max(calc(60vh - ${50 + (!onTeamPage ? 27 : 0)}px), 280px)`,
+                                    base: `max(calc(60vh - ${!onTeamPage ? 27 : 0}px), 280px)`,
                                     lg: `max(calc(120vh / ${teamNumbers.length > 3 ? 3 : 2} - ${
-                                        50 + (!onTeamPage ? 27 : 0)
+                                        !onTeamPage ? 27 : 0
                                     }px), 280px)`
                                 }}
                                 overflowY={'auto'}
@@ -185,7 +250,9 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                                                 padding={'10px 5px'}
                                             >
                                                 <Text fontSize={'md'} fontWeight={'semibold'} textAlign={'center'}>
-                                                    {comment.matchForm ? comment.matchNumber : 'RTESS Issue'}
+                                                    {comment.matchForm
+                                                        ? convertMatchKeyToString(comment.matchNumber)
+                                                        : 'RTESS Issue'}
                                                 </Text>
                                             </GridItem>
                                             {getGridComponent(comment)}

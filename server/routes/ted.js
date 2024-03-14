@@ -3,10 +3,10 @@ const router = express.Router();
 const TED = require('../models/TED');
 const { MatchForm, PracticeForm } = require('../models/MatchForm');
 const PitForm = require('../models/PitForm');
+const RTESSIssue = require('../models/RTESSIssue');
 const { matchFormStatus, gamePieceFields, climbFields } = require('../util/helperConstants');
 const { leafGet, leafSet, convertMatchKeyToString } = require('../util/helperFunctions');
 const { internalBlueCall } = require('./blueAlliance');
-const RTESSIssue = require('../models/RTESSIssue');
 
 router.get('/getTEDs', async (req, res) => {
     if (req.isUnauthenticated()) {
