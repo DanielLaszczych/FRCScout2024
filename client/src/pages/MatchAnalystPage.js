@@ -785,7 +785,7 @@ function MatchAnalystPage() {
                             margin={'0 auto'}
                             justifyContent={'center'}
                             columnGap={'10px'}
-                            rowGap={'5px'}
+                            rowGap={'10px'}
                             marginTop={'30px'}
                             marginBottom={'15px'}
                             flexWrap={'wrap'}

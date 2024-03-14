@@ -204,16 +204,17 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                     key={teamNumber}
                     justifyContent={'center'}
                     width={{ base: '90%', lg: `calc(90% / ${Math.min(teamNumbers.length, 3)})` }}
-                    height={
+                    maxHeight={
                         comments[teamNumber].length === 0
                             ? 'fit-content'
                             : {
-                                  base: `min(fit-content, max(60vh, 280px + ${!onTeamPage ? 27 : 0}px))`,
+                                  base: `max(60vh, 280px + ${!onTeamPage ? 27 : 0}px)`,
                                   lg: `max(calc(120vh / ${teamNumbers.length > 3 ? 3 : 2}), 280px + ${
                                       !onTeamPage ? 27 : 0
                                   }px)`
                               }
                     }
+                    minHeight={'fit-content'}
                 >
                     {comments[teamNumber].length > 0 ? (
                         <Box width={{ base: '100%', lg: onTeamPage ? '50%' : '100%' }}>
@@ -228,16 +229,17 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
                                 </Text>
                             )}
                             <Box
-                                height={{
-                                    base: `min(fit-content, max(calc(60vh - ${!onTeamPage ? 27 : 0}px), 280px))`,
+                                maxHeight={{
+                                    base: `max(calc(60vh - ${!onTeamPage ? 27 : 0}px), 280px)`,
                                     lg: `max(calc(120vh / ${teamNumbers.length > 3 ? 3 : 2} - ${
                                         !onTeamPage ? 27 : 0
                                     }px), 280px)`
                                 }}
                                 overflowY={'auto'}
                                 borderRadius={'5px'}
+                                minHeight={'fit-content'}
                             >
-                                <Grid templateColumns={'1fr 3fr 3fr'}>
+                                <Grid templateColumns={'1fr 3fr 3fr'} borderTop={'1px solid black'}>
                                     {comments[teamNumber].map((comment, index) => (
                                         <React.Fragment key={index}>
                                             <GridItem
