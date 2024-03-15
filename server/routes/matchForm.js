@@ -315,37 +315,41 @@ class HelperFunctions {
                 ampMiss: parseInt(data[13]),
                 speakerMiss: parseInt(data[14]),
                 ferry: parseInt(data[15]),
-                trap: parseInt(data[16])
+                trap: parseInt(data[16]),
+                subwooferScore: parseInt(data[17]),
+                subwooferMiss: parseInt(data[18]),
+                otherScore: parseInt(data[19]),
+                otherMiss: parseInt(data[20])
             },
-            wasDefended: map[data[17]],
-            defenseRating: parseInt(data[18]),
-            defenseAllocation: parseFloat(data[19]),
+            wasDefended: map[data[21]],
+            defenseRating: parseInt(data[22]),
+            defenseAllocation: parseFloat(data[23]),
             climb: {
-                attempt: map[data[20]],
-                location: map[data[21]],
-                harmony: data[22] === 'n' ? null : parseInt(data[22]),
-                park: map[data[23]]
+                attempt: map[data[24]],
+                location: map[data[25]],
+                harmony: data[26] === 'n' ? null : parseInt(data[26]),
+                park: map[data[27]]
             },
-            lostCommunication: map[data[24]],
-            robotBroke: map[data[25]],
-            yellowCard: map[data[26]],
-            redCard: map[data[27]],
-            standComment: data[28] === 'n' ? '' : data[28],
-            standStatus: map[data[29]],
-            standStatusComment: data[30] === 'n' ? '' : data[30],
+            lostCommunication: map[data[28]],
+            robotBroke: map[data[29]],
+            yellowCard: map[data[30]],
+            redCard: map[data[31]],
+            standComment: data[32] === 'n' ? '' : data[32],
+            standStatus: map[data[33]],
+            standStatusComment: data[34] === 'n' ? '' : data[34],
             history: {
                 auto:
-                    data[31] === 'n'
-                        ? { data: [], position: data[32] }
-                        : HelperFunctions.extractHistory(data[31], data[32]),
-                teleop:
-                    data[33] === 'n'
-                        ? { data: [], position: data[34] }
-                        : HelperFunctions.extractHistory(data[33], data[34]),
-                endGame:
                     data[35] === 'n'
                         ? { data: [], position: data[36] }
-                        : HelperFunctions.extractHistory(data[35], data[36])
+                        : HelperFunctions.extractHistory(data[35], data[36]),
+                teleop:
+                    data[37] === 'n'
+                        ? { data: [], position: data[38] }
+                        : HelperFunctions.extractHistory(data[37], data[38]),
+                endGame:
+                    data[39] === 'n'
+                        ? { data: [], position: data[40] }
+                        : HelperFunctions.extractHistory(data[39], data[40])
             }
         };
         return standFormInput;

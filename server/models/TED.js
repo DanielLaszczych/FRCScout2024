@@ -84,6 +84,22 @@ const teleopGPSchema = new Schema(
         trap: {
             type: metricsSchema,
             default: {}
+        },
+        subwooferScore: {
+            type: metricsSchema,
+            default: {}
+        },
+        subwooferMiss: {
+            type: metricsSchema,
+            default: {}
+        },
+        otherScore: {
+            type: metricsSchema,
+            default: {}
+        },
+        otherMiss: {
+            type: metricsSchema,
+            default: {}
         }
     },
     { _id: false }

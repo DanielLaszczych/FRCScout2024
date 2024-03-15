@@ -33,7 +33,11 @@ export const gamePieceFields = {
     ampMiss: { field: 'ampMiss', label: 'Amp Miss', short: 'am', auto: true, teleop: true },
     speakerMiss: { field: 'speakerMiss', label: 'Speaker Miss', short: 'sm', auto: true, teleop: true },
     ferry: { field: 'ferry', label: 'Ferry', short: 'f', auto: false, teleop: true },
-    trap: { field: 'trap', label: 'Trap', short: 't', auto: false, teleop: true }
+    trap: { field: 'trap', label: 'Trap', short: 't', auto: false, teleop: true },
+    subwooferScore: { field: 'subwooferScore', label: 'Subwoofer Score', short: 'sws', auto: false, teleop: true },
+    subwooferMiss: { field: 'subwooferMiss', label: 'Subwoofer Miss', short: 'swm', auto: false, teleop: true },
+    otherScore: { field: 'otherScore', label: 'Other Score', short: 'os', auto: false, teleop: true },
+    otherMiss: { field: 'otherMiss', label: 'Other Miss', short: 'om', auto: false, teleop: true }
 };
 
 export const climbFields = {

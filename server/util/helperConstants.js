@@ -20,28 +20,10 @@ class HelperConstants {
 
     // Try to combine these two next year maybe into an all encompasing fields object
     static gamePieceFields = {
-        intakeSource: {
-            field: 'intakeSource',
-            label: 'Source',
-            short: 'is',
-            auto: false,
-            teleop: true
-        },
-        intakeGround: {
-            field: 'intakeGround',
-            label: 'Ground',
-            short: 'ig',
-            auto: false,
-            teleop: true
-        },
+        intakeSource: { field: 'intakeSource', label: 'Source', short: 'is', auto: false, teleop: true },
+        intakeGround: { field: 'intakeGround', label: 'Ground', short: 'ig', auto: false, teleop: true },
         intakePreloaded: { field: 'intakePreloaded', label: 'Preloaded', short: 'pl', auto: false, teleop: false },
-        intakeMiss: {
-            field: 'intakeMiss',
-            label: 'Intake Miss',
-            short: 'im',
-            auto: true,
-            teleop: false
-        },
+        intakeMiss: { field: 'intakeMiss', label: 'Intake Miss', short: 'im', auto: true, teleop: false },
         ampScore: {
             field: 'ampScore',
             label: 'Amp',
@@ -60,35 +42,14 @@ class HelperConstants {
             autoValue: 5,
             teleopValue: 2
         },
-        ampMiss: {
-            field: 'ampMiss',
-            label: 'Amp Miss',
-            short: 'am',
-            auto: true,
-            teleop: true
-        },
-        speakerMiss: {
-            field: 'speakerMiss',
-            label: 'Speaker Miss',
-            short: 'sm',
-            auto: true,
-            teleop: true
-        },
-        ferry: {
-            field: 'ferry',
-            label: 'Ferry',
-            short: 'f',
-            auto: false,
-            teleop: true
-        },
-        trap: {
-            field: 'trap',
-            label: 'Trap',
-            short: 't',
-            auto: false,
-            teleop: true,
-            teleopValue: 5
-        }
+        ampMiss: { field: 'ampMiss', label: 'Amp Miss', short: 'am', auto: true, teleop: true },
+        speakerMiss: { field: 'speakerMiss', label: 'Speaker Miss', short: 'sm', auto: true, teleop: true },
+        ferry: { field: 'ferry', label: 'Ferry', short: 'f', auto: false, teleop: true },
+        trap: { field: 'trap', label: 'Trap', short: 't', auto: false, teleop: true, teleopValue: 5 },
+        subwooferScore: { field: 'subwooferScore', label: 'Subwoofer Score', short: 'sws', auto: false, teleop: true },
+        subwooferMiss: { field: 'subwooferMiss', label: 'Subwoofer Miss', short: 'swm', auto: false, teleop: true },
+        otherScore: { field: 'otherScore', label: 'Other Score', short: 'os', auto: false, teleop: true },
+        otherMiss: { field: 'otherMiss', label: 'Other Miss', short: 'om', auto: false, teleop: true }
     };
 
     // The keys are named after the label in the standform maybe next year change how this is done

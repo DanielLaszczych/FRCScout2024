@@ -177,7 +177,11 @@ function StandForm() {
             ampMiss: 0,
             speakerMiss: 0,
             ferry: 0,
-            trap: 0
+            trap: 0,
+            subwooferScore: 0,
+            subwooferMiss: 0,
+            otherScore: 0,
+            otherMiss: 0
         },
         wasDefended: null,
         defenseRating: 0,
@@ -541,6 +545,10 @@ function StandForm() {
             standFormData.teleopGP.speakerMiss,
             standFormData.teleopGP.ferry,
             standFormData.teleopGP.trap,
+            standFormData.teleopGP.subwooferScore,
+            standFormData.teleopGP.subwooferMiss,
+            standFormData.teleopGP.otherScore,
+            standFormData.teleopGP.otherMiss,
             map[standFormData.wasDefended],
             standFormData.defenseRating,
             standFormData.defenseAllocation,
@@ -1229,33 +1237,101 @@ function StandForm() {
                             }
                         >
                             {activeSection.label}:{' '}
-                            {[
-                                standFormData.teleopGP.intakeSource,
-                                standFormData.teleopGP.intakeGround,
-                                standFormData.teleopGP.intakePreloaded
-                            ].reduce((partialSum, a) => partialSum + a, 0) ===
+                            {standFormData.teleopGP.speakerScore + standFormData.teleopGP.speakerMiss !==
                             [
-                                standFormData.teleopGP.ampScore,
-                                standFormData.teleopGP.speakerScore,
-                                standFormData.teleopGP.ampMiss,
-                                standFormData.teleopGP.speakerMiss,
-                                standFormData.teleopGP.ferry
+                                standFormData.teleopGP.subwooferScore,
+                                standFormData.teleopGP.subwooferMiss,
+                                standFormData.teleopGP.otherScore,
+                                standFormData.teleopGP.otherMiss
                             ].reduce((partialSum, a) => partialSum + a, 0)
+                                ? 'Scoring'
+                                : [
+                                      standFormData.teleopGP.intakeSource,
+                                      standFormData.teleopGP.intakeGround,
+                                      standFormData.teleopGP.intakePreloaded
+                                  ].reduce((partialSum, a) => partialSum + a, 0) ===
+                                  [
+                                      standFormData.teleopGP.ampScore,
+                                      standFormData.teleopGP.speakerScore,
+                                      standFormData.teleopGP.ampMiss,
+                                      standFormData.teleopGP.speakerMiss,
+                                      standFormData.teleopGP.ferry
+                                  ].reduce((partialSum, a) => partialSum + a, 0)
                                 ? 'Intake'
                                 : 'Scoring'}
                         </Text>
-                        {[
-                            standFormData.teleopGP.intakeSource,
-                            standFormData.teleopGP.intakeGround,
-                            standFormData.teleopGP.intakePreloaded
-                        ].reduce((partialSum, a) => partialSum + a, 0) ===
+                        {standFormData.teleopGP.speakerScore + standFormData.teleopGP.speakerMiss !==
                         [
-                            standFormData.teleopGP.ampScore,
-                            standFormData.teleopGP.speakerScore,
-                            standFormData.teleopGP.ampMiss,
-                            standFormData.teleopGP.speakerMiss,
-                            standFormData.teleopGP.ferry
+                            standFormData.teleopGP.subwooferScore,
+                            standFormData.teleopGP.subwooferMiss,
+                            standFormData.teleopGP.otherScore,
+                            standFormData.teleopGP.otherMiss
                         ].reduce((partialSum, a) => partialSum + a, 0) ? (
+                            <Flex height={`${heightDimensions.availableScoringSpace}px`} margin={'0 auto'} gap={'15px'}>
+                                <Button
+                                    colorScheme={'orange'}
+                                    fontSize={'xl'}
+                                    fontWeight={'bold'}
+                                    flex={1 / 2}
+                                    height={'100%'}
+                                    onClick={() => {
+                                        if (
+                                            standFormData.history.teleop.data[standFormData.history.teleop.position] ===
+                                            gamePieceFields.speakerScore.field
+                                        ) {
+                                            standFormManagers.teleop.doCommand(
+                                                standFormData,
+                                                gamePieceFields.subwooferScore.field
+                                            );
+                                        } else {
+                                            standFormManagers.teleop.doCommand(
+                                                standFormData,
+                                                gamePieceFields.subwooferMiss.field
+                                            );
+                                        }
+                                    }}
+                                >
+                                    Subwoofer:{' '}
+                                    {standFormData.teleopGP.subwooferScore + standFormData.teleopGP.subwooferMiss}
+                                </Button>
+                                <Button
+                                    colorScheme={'telegram'}
+                                    fontSize={'xl'}
+                                    fontWeight={'bold'}
+                                    flex={1 / 2}
+                                    height={'100%'}
+                                    onClick={() => {
+                                        if (
+                                            standFormData.history.teleop.data[standFormData.history.teleop.position] ===
+                                            gamePieceFields.speakerScore.field
+                                        ) {
+                                            standFormManagers.teleop.doCommand(
+                                                standFormData,
+                                                gamePieceFields.otherScore.field
+                                            );
+                                        } else {
+                                            standFormManagers.teleop.doCommand(
+                                                standFormData,
+                                                gamePieceFields.otherMiss.field
+                                            );
+                                        }
+                                    }}
+                                >
+                                    Other: {standFormData.teleopGP.otherScore + standFormData.teleopGP.otherMiss}
+                                </Button>
+                            </Flex>
+                        ) : [
+                              standFormData.teleopGP.intakeSource,
+                              standFormData.teleopGP.intakeGround,
+                              standFormData.teleopGP.intakePreloaded
+                          ].reduce((partialSum, a) => partialSum + a, 0) ===
+                          [
+                              standFormData.teleopGP.ampScore,
+                              standFormData.teleopGP.speakerScore,
+                              standFormData.teleopGP.ampMiss,
+                              standFormData.teleopGP.speakerMiss,
+                              standFormData.teleopGP.ferry
+                          ].reduce((partialSum, a) => partialSum + a, 0) ? (
                             <Flex
                                 height={`${heightDimensions.availableScoringSpace}px`}
                                 margin={'0 auto'}

@@ -114,7 +114,7 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                                     borderBottom={'1px solid black'}
                                                     borderRight={'1px solid black'}
                                                     backgroundColor={'gray.100'}
-                                                    minHeight={'100px'}
+                                                    minHeight={'120px'}
                                                     position={'sticky'}
                                                     left={0}
                                                     zIndex={1}
@@ -196,7 +196,7 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                             borderBottom={'1px solid black'}
                                             borderRight={'1px solid black'}
                                             backgroundColor={'gray.100'}
-                                            minHeight={'100px'}
+                                            minHeight={'120px'}
                                             position={'sticky'}
                                             left={0}
                                             zIndex={1}
@@ -547,6 +547,48 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                                         </Text>
                                                     )}
                                                 </Text>
+                                                <Flex columnGap={'10px'}>
+                                                    <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                                                        {`Sub: `}
+                                                        <Text
+                                                            fontSize={'sm'}
+                                                            fontWeight={'medium'}
+                                                            textColor={'green'}
+                                                            as={'span'}
+                                                        >
+                                                            {matchForm.teleopGP.subwooferScore}
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'sm'}
+                                                            fontWeight={'medium'}
+                                                            textColor={'crimson'}
+                                                            as={'span'}
+                                                        >
+                                                            {' '}
+                                                            ({matchForm.teleopGP.subwooferMiss})
+                                                        </Text>
+                                                    </Text>
+                                                    <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                                                        {`Other: `}
+                                                        <Text
+                                                            fontSize={'sm'}
+                                                            fontWeight={'medium'}
+                                                            textColor={'green'}
+                                                            as={'span'}
+                                                        >
+                                                            {matchForm.teleopGP.otherScore}
+                                                        </Text>
+                                                        <Text
+                                                            fontSize={'sm'}
+                                                            fontWeight={'medium'}
+                                                            textColor={'crimson'}
+                                                            as={'span'}
+                                                        >
+                                                            {' '}
+                                                            ({matchForm.teleopGP.otherMiss})
+                                                        </Text>
+                                                    </Text>
+                                                </Flex>
                                                 <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
                                                     {`Ferry: ${matchForm.teleopGP.ferry}`}
                                                 </Text>
