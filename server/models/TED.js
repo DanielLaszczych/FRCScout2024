@@ -81,6 +81,10 @@ const teleopGPSchema = new Schema(
             type: metricsSchema,
             default: {}
         },
+        centerFerry: {
+            type: metricsSchema,
+            default: {}
+        },
         trap: {
             type: metricsSchema,
             default: {}

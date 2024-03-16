@@ -17,9 +17,11 @@ import {
     useDisclosure,
     Modal,
     ModalOverlay,
-    ModalContent
+    ModalContent,
+    Icon,
+    Tooltip as ChakraToolTip
 } from '@chakra-ui/react';
-import { getValueByRange, roundToTenth } from '../util/helperFunctions';
+import { getValueByRange, roundToTenth, roundToWhole } from '../util/helperFunctions';
 import { v4 as uuidv4 } from 'uuid';
 import { matchFormStatus, teamPageTabs } from '../util/helperConstants';
 import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend } from 'chart.js';
@@ -30,6 +32,8 @@ import AutoPaths from '../components/AutoPaths';
 import TeamStatsList from '../components/TeamStatsList';
 import MatchScheduleTable from '../components/MatchScheduleTable';
 import MatchFormsTable from '../components/MatchFormsTable';
+import { RiSpeaker2Fill } from 'react-icons/ri';
+import { GiHighShot } from 'react-icons/gi';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -598,14 +602,46 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                             >
                                                 {roundToTenth(teamEventData.teleopGP.ampScore.avg)}
                                             </Text>
-                                            <Text
+                                            <Flex
                                                 flex={1 / 4}
-                                                fontSize={'lg'}
-                                                fontWeight={'medium'}
-                                                textAlign={'center'}
+                                                justifyContent={'center'}
+                                                alignItems={'center'}
+                                                columnGap={'3px'}
                                             >
-                                                {roundToTenth(teamEventData.teleopGP.speakerScore.avg)}
-                                            </Text>
+                                                <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
+                                                    {roundToTenth(teamEventData.teleopGP.speakerScore.avg)}
+                                                </Text>
+                                                {teamEventData.teleopGP.subwooferScore.avg +
+                                                    teamEventData.teleopGP.subwooferMiss.avg >
+                                                teamEventData.teleopGP.otherScore.avg +
+                                                    teamEventData.teleopGP.otherMiss.avg ? (
+                                                    <ChakraToolTip label={'Primary Subwoofer w/Allocation %'} hasArrow>
+                                                        <Center>
+                                                            <Icon boxSize={5} as={RiSpeaker2Fill} />
+                                                            <Text fontSize={'sm'}>{`${roundToWhole(
+                                                                ((teamEventData.teleopGP.subwooferScore.avg +
+                                                                    teamEventData.teleopGP.subwooferMiss.avg) /
+                                                                    (teamEventData.teleopGP.speakerScore.avg +
+                                                                        teamEventData.teleopGP.speakerMiss.avg)) *
+                                                                    100
+                                                            )}%`}</Text>
+                                                        </Center>
+                                                    </ChakraToolTip>
+                                                ) : (
+                                                    <ChakraToolTip label={'Primary Ranged w/Allocation %'} hasArrow>
+                                                        <Center>
+                                                            <Icon boxSize={4} as={GiHighShot} />
+                                                            <Text fontSize={'sm'}>{`${roundToWhole(
+                                                                ((teamEventData.teleopGP.otherScore.avg +
+                                                                    teamEventData.teleopGP.otherMiss.avg) /
+                                                                    (teamEventData.teleopGP.speakerScore.avg +
+                                                                        teamEventData.teleopGP.speakerMiss.avg)) *
+                                                                    100
+                                                            )}%`}</Text>
+                                                        </Center>
+                                                    </ChakraToolTip>
+                                                )}
+                                            </Flex>
                                         </Flex>
                                     </Flex>
                                     <Flex

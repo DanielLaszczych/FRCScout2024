@@ -177,6 +177,7 @@ function StandForm() {
             ampMiss: 0,
             speakerMiss: 0,
             ferry: 0,
+            centerFerry: 0,
             trap: 0,
             subwooferScore: 0,
             subwooferMiss: 0,
@@ -544,6 +545,7 @@ function StandForm() {
             standFormData.teleopGP.ampMiss,
             standFormData.teleopGP.speakerMiss,
             standFormData.teleopGP.ferry,
+            standFormData.teleopGP.centerFerry,
             standFormData.teleopGP.trap,
             standFormData.teleopGP.subwooferScore,
             standFormData.teleopGP.subwooferMiss,
@@ -1255,7 +1257,8 @@ function StandForm() {
                                       standFormData.teleopGP.speakerScore,
                                       standFormData.teleopGP.ampMiss,
                                       standFormData.teleopGP.speakerMiss,
-                                      standFormData.teleopGP.ferry
+                                      standFormData.teleopGP.ferry,
+                                      standFormData.teleopGP.centerFerry
                                   ].reduce((partialSum, a) => partialSum + a, 0)
                                 ? 'Intake'
                                 : 'Scoring'}
@@ -1317,7 +1320,7 @@ function StandForm() {
                                         }
                                     }}
                                 >
-                                    Other: {standFormData.teleopGP.otherScore + standFormData.teleopGP.otherMiss}
+                                    Ranged: {standFormData.teleopGP.otherScore + standFormData.teleopGP.otherMiss}
                                 </Button>
                             </Flex>
                         ) : [
@@ -1330,7 +1333,8 @@ function StandForm() {
                               standFormData.teleopGP.speakerScore,
                               standFormData.teleopGP.ampMiss,
                               standFormData.teleopGP.speakerMiss,
-                              standFormData.teleopGP.ferry
+                              standFormData.teleopGP.ferry,
+                              standFormData.teleopGP.centerFerry
                           ].reduce((partialSum, a) => partialSum + a, 0) ? (
                             <Flex
                                 height={`${heightDimensions.availableScoringSpace}px`}
@@ -1459,17 +1463,40 @@ function StandForm() {
                                         Speaker Miss: {standFormData.teleopGP.speakerMiss}
                                     </Button>
                                 </Flex>
-                                <Button
-                                    colorScheme={'yellow'}
-                                    fontSize={'xl'}
-                                    fontWeight={'bold'}
-                                    flex={0.2}
-                                    onClick={() => {
-                                        standFormManagers.teleop.doCommand(standFormData, gamePieceFields.ferry.field);
-                                    }}
-                                >
-                                    Ferry: {standFormData.teleopGP.ferry}
-                                </Button>
+                                <Flex flex={0.2} gap={'15px'}>
+                                    <Button
+                                        colorScheme={'yellow'}
+                                        fontSize={'xl'}
+                                        fontWeight={'bold'}
+                                        flex={1 / 2}
+                                        height={'100%'}
+                                        whiteSpace={'normal'}
+                                        onClick={() => {
+                                            standFormManagers.teleop.doCommand(
+                                                standFormData,
+                                                gamePieceFields.ferry.field
+                                            );
+                                        }}
+                                    >
+                                        Deposit Ferry: {standFormData.teleopGP.ferry}
+                                    </Button>
+                                    <Button
+                                        colorScheme={'orange'}
+                                        fontSize={'xl'}
+                                        fontWeight={'bold'}
+                                        flex={1 / 2}
+                                        height={'100%'}
+                                        whiteSpace={'normal'}
+                                        onClick={() => {
+                                            standFormManagers.teleop.doCommand(
+                                                standFormData,
+                                                gamePieceFields.centerFerry.field
+                                            );
+                                        }}
+                                    >
+                                        Shot Ferry: {standFormData.teleopGP.centerFerry}
+                                    </Button>
+                                </Flex>
                             </Flex>
                         )}
                         <Flex flexDir={'column'} rowGap={'15px'} marginTop={'15px'}>

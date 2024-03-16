@@ -66,6 +66,10 @@ const teleopGPSchema = new Schema(
         ferry: {
             type: Number
         },
+        centerFerry: {
+            type: Number,
+            default: 0
+        },
         trap: {
             type: Number
         },

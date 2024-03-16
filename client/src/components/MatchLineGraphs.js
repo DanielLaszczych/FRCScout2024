@@ -80,7 +80,27 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                 speakerScore: { label: 'Speaker', field: 'teleopGP.speakerScore', value: false, mainLabel: true },
                 ampMiss: { label: 'Amp Miss', field: 'teleopGP.ampMiss', value: false, mainLabel: true },
                 speakerMiss: { label: 'Speaker Miss', field: 'teleopGP.speakerMiss', value: false, mainLabel: true },
-                ferry: { label: 'Ferry', field: 'teleopGP.ferry', value: false, mainLabel: true },
+                subwooferScore: {
+                    label: 'Subwoofer Speaker',
+                    field: 'teleopGP.subwooferScore',
+                    value: false,
+                    mainLabel: true
+                },
+                subwooferMiss: {
+                    label: 'Subwoofer Speaker Miss',
+                    field: 'teleopGP.subwooferMiss',
+                    value: false,
+                    mainLabel: true
+                },
+                otherScore: {
+                    label: 'Range Speaker',
+                    field: 'teleopGP.otherScore',
+                    value: false,
+                    mainLabel: true
+                },
+                otherMiss: { label: 'Range Speaker Miss', field: 'teleopGP.otherMiss', value: false, mainLabel: true },
+                ferry: { label: 'Deposit Ferry', field: 'teleopGP.ferry', value: false },
+                centerFerry: { label: 'Shot Ferry', field: 'teleopGP.centerFerry', value: false },
                 defenseRating: { label: 'Defense Rating', field: 'defenseRating', value: false },
                 defenseAllocation: { label: 'Defense Allocation', field: 'defenseAllocation', value: false },
                 wasDefended: { label: 'Was Defended', field: 'wasDefended', value: false, icon: GiBrickWall },
@@ -162,6 +182,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
         fields.teleop.fields.ampScore.field,
         fields.teleop.fields.speakerScore.field,
         fields.teleop.fields.ferry.field,
+        fields.teleop.fields.centerFerry.field,
         fields.teleop.fields.defenseRating.field,
         fields.teleop.fields.wasDefended.field,
         fields.endGame.fields.climb.field,

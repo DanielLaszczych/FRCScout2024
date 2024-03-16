@@ -6,6 +6,7 @@ import {
     Flex,
     Grid,
     GridItem,
+    Icon,
     IconButton,
     Popover,
     PopoverArrow,
@@ -14,7 +15,8 @@ import {
     PopoverContent,
     PopoverTrigger,
     Spinner,
-    Text
+    Text,
+    Tooltip
 } from '@chakra-ui/react';
 import {
     convertMatchKeyToString,
@@ -30,6 +32,9 @@ import { GrMap } from 'react-icons/gr';
 import { v4 as uuidv4 } from 'uuid';
 import PreAutoBlueField from '../images/PreAutoBlueField.png';
 import PreAutoRedField from '../images/PreAutoRedField.png';
+import { RiSpeaker2Fill } from 'react-icons/ri';
+import { GiHighShot } from 'react-icons/gi';
+import { FaFerry } from 'react-icons/fa6';
 
 let startingPositions = [
     [28, 35, uuidv4()],
@@ -484,7 +489,7 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                                 borderBottom={'1px solid black'}
                                                 borderRight={'1px solid black'}
                                                 backgroundColor={'gray.100'}
-                                                minWidth={'180px'}
+                                                minWidth={'190px'}
                                             >
                                                 <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
                                                     {`Amp: `}
@@ -548,50 +553,84 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                                     )}
                                                 </Text>
                                                 <Flex columnGap={'10px'}>
-                                                    <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
-                                                        {`Sub: `}
-                                                        <Text
-                                                            fontSize={'sm'}
-                                                            fontWeight={'medium'}
-                                                            textColor={'green'}
-                                                            as={'span'}
-                                                        >
+                                                    <Flex
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        columnGap={'2px'}
+                                                    >
+                                                        <Tooltip label={'Subwoofer Shots'} hasArrow>
+                                                            <Center>
+                                                                <Icon boxSize={5} as={RiSpeaker2Fill} />
+                                                            </Center>
+                                                        </Tooltip>
+                                                        <Text fontSize={'sm'} fontWeight={'medium'} textColor={'green'}>
                                                             {matchForm.teleopGP.subwooferScore}
                                                         </Text>
                                                         <Text
                                                             fontSize={'sm'}
                                                             fontWeight={'medium'}
                                                             textColor={'crimson'}
-                                                            as={'span'}
                                                         >
                                                             {' '}
                                                             ({matchForm.teleopGP.subwooferMiss})
                                                         </Text>
-                                                    </Text>
-                                                    <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
-                                                        {`Other: `}
-                                                        <Text
-                                                            fontSize={'sm'}
-                                                            fontWeight={'medium'}
-                                                            textColor={'green'}
-                                                            as={'span'}
-                                                        >
+                                                        {matchForm.teleopGP.subwooferScore +
+                                                            matchForm.teleopGP.subwooferMiss >
+                                                            0 && (
+                                                            <Text fontSize={'sm'} fontWeight={'medium'}>
+                                                                {` ${roundToWhole(
+                                                                    (matchForm.teleopGP.subwooferScore /
+                                                                        (matchForm.teleopGP.subwooferScore +
+                                                                            matchForm.teleopGP.subwooferMiss)) *
+                                                                        100
+                                                                )}%`}
+                                                            </Text>
+                                                        )}
+                                                    </Flex>
+                                                    <Flex
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        columnGap={'2px'}
+                                                    >
+                                                        <Tooltip label={'Ranged Shots'} hasArrow>
+                                                            <Center>
+                                                                <Icon boxSize={4} as={GiHighShot} />
+                                                            </Center>
+                                                        </Tooltip>
+                                                        <Text fontSize={'sm'} fontWeight={'medium'} textColor={'green'}>
                                                             {matchForm.teleopGP.otherScore}
                                                         </Text>
                                                         <Text
                                                             fontSize={'sm'}
                                                             fontWeight={'medium'}
                                                             textColor={'crimson'}
-                                                            as={'span'}
                                                         >
                                                             {' '}
                                                             ({matchForm.teleopGP.otherMiss})
                                                         </Text>
+                                                        {matchForm.teleopGP.otherScore + matchForm.teleopGP.otherMiss >
+                                                            0 && (
+                                                            <Text fontSize={'sm'} fontWeight={'medium'}>
+                                                                {` ${roundToWhole(
+                                                                    (matchForm.teleopGP.otherScore /
+                                                                        (matchForm.teleopGP.otherScore +
+                                                                            matchForm.teleopGP.otherMiss)) *
+                                                                        100
+                                                                )}%`}
+                                                            </Text>
+                                                        )}
+                                                    </Flex>
+                                                </Flex>
+                                                <Flex justifyContent={'center'} alignItems={'center'}>
+                                                    <Tooltip label={'Ferry'} hasArrow>
+                                                        <Center marginRight={'5px'}>
+                                                            <Icon boxSize={5} as={FaFerry} />
+                                                        </Center>
+                                                    </Tooltip>
+                                                    <Text fontSize={'md'} fontWeight={'medium'} textAlign={'center'}>
+                                                        {`Deposit: ${matchForm.teleopGP.ferry}, Shot: ${matchForm.teleopGP.centerFerry}`}
                                                     </Text>
                                                 </Flex>
-                                                <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
-                                                    {`Ferry: ${matchForm.teleopGP.ferry}`}
-                                                </Text>
                                             </GridItem>
                                             <GridItem
                                                 display={'flex'}

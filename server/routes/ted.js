@@ -29,14 +29,14 @@ router.get('/getAllTeamEventData', async (req, res) => {
             PitForm.findOne(filters).exec(),
             MatchForm.find(filters).exec(),
             PracticeForm.find(filters).exec(),
-            TED.findOne(filters).lean().exec(),
+            TED.findOne(filters).exec(),
             RTESSIssue.find(filters).exec()
         ]).then(async (responses) => {
             let data = {
                 pitForm: responses[0],
                 matchForms: responses[1],
                 practiceForms: responses[2],
-                teamEventData: responses[3],
+                teamEventData: JSON.parse(JSON.stringify(responses[3])), //I think I needed to do this so I could add other properties like the ranks to the document
                 rtessIssues: responses[4]
             };
             if (data.teamEventData) {

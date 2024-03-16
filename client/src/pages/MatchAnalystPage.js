@@ -1,6 +1,12 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { capitalizeFirstLetter, convertMatchKeyToString, roundToTenth, sortEvents } from '../util/helperFunctions';
+import {
+    capitalizeFirstLetter,
+    convertMatchKeyToString,
+    roundToTenth,
+    roundToWhole,
+    sortEvents
+} from '../util/helperFunctions';
 import {
     Box,
     Button,
@@ -8,6 +14,7 @@ import {
     Flex,
     Grid,
     GridItem,
+    Icon,
     IconButton,
     Menu,
     MenuButton,
@@ -16,7 +23,8 @@ import {
     NumberInput,
     NumberInputField,
     Spinner,
-    Text
+    Text,
+    Tooltip
 } from '@chakra-ui/react';
 import { matchFormStatus, teamPageTabs } from '../util/helperConstants';
 import { ChevronDownIcon } from '@chakra-ui/icons';
@@ -28,6 +36,8 @@ import { RiEditBoxFill } from 'react-icons/ri';
 import { Link } from 'react-router-dom';
 import MatchCompareGraph from '../components/MatchCompareGraph';
 import CommentsTable from '../components/CommentsTable';
+import { RiSpeaker2Fill } from 'react-icons/ri';
+import { GiHighShot } from 'react-icons/gi';
 
 let matchTypes = [
     { label: 'Quals', value: 'q', id: uuidv4() },
@@ -548,16 +558,16 @@ function MatchAnalystPage() {
                             marginBottom={'15px'}
                         >
                             <Grid
-                                templateColumns={'1fr 2fr 1.5fr 1.5fr 2fr 1.75fr 1.75fr'}
+                                templateColumns={'1fr 2fr 1.5fr 2fr 1.5fr 1.5fr 1.5fr'}
                                 borderTop={'1px solid black'}
                                 minWidth={'1000px'}
                             >
                                 {[
                                     { label: 'Team #' },
-                                    { label: 'Total', subLabels: ['Avg', 'Max', 'GPCS'] },
-                                    { label: 'Auto', subLabels: ['Avg', 'Max'] },
-                                    { label: 'Teleop', subLabels: ['Avg', 'Max'] },
-                                    { label: 'Stage', subLabels: ['Avg', 'Max', 'Hangs'] },
+                                    { label: 'Total', subLabels: ['Pts', 'Max Pts', 'GP'] },
+                                    { label: 'Auto', subLabels: ['Pts', 'GP'] },
+                                    { label: 'Teleop', subLabels: ['Pts', 'Amp GP', 'Spkr. GP'] },
+                                    { label: 'Stage', subLabels: ['Pts', 'Traps', 'Hangs'] },
                                     { label: 'No Amplif.', subLabels: ['Pts', 'Max Pts'] },
                                     { label: '75% Amplif.', subLabels: ['Pts', 'Max Pts'] }
                                 ].map((element) => (
@@ -715,7 +725,10 @@ function MatchAnalystPage() {
                                                         {roundToTenth(multiTeamEventData[teamNumber].autoPoints.avg)}
                                                     </Text>
                                                     <Text flex={1 / 2}>
-                                                        {multiTeamEventData[teamNumber].autoPoints.max}
+                                                        {roundToTenth(
+                                                            multiTeamEventData[teamNumber].autoGP.ampScore.avg +
+                                                                multiTeamEventData[teamNumber].autoGP.speakerScore.avg
+                                                        )}
                                                     </Text>
                                                 </Grid>
                                                 <Grid
@@ -729,12 +742,71 @@ function MatchAnalystPage() {
                                                     borderRight={'1px solid black'}
                                                     backgroundColor={index > 2 ? 'blue.200' : 'red.200'}
                                                 >
-                                                    <Text flex={1 / 2}>
+                                                    <Text flex={1 / 3}>
                                                         {roundToTenth(multiTeamEventData[teamNumber].teleopPoints.avg)}
                                                     </Text>
-                                                    <Text flex={1 / 2}>
-                                                        {multiTeamEventData[teamNumber].teleopPoints.max}
+                                                    <Text flex={1 / 3}>
+                                                        {roundToTenth(
+                                                            multiTeamEventData[teamNumber].teleopGP.ampScore.avg
+                                                        )}
                                                     </Text>
+                                                    <Flex
+                                                        flex={1 / 3}
+                                                        justifyContent={'center'}
+                                                        alignItems={'center'}
+                                                        columnGap={'3px'}
+                                                    >
+                                                        <Text
+                                                            fontSize={'lg'}
+                                                            fontWeight={'medium'}
+                                                            textAlign={'center'}
+                                                        >
+                                                            {roundToTenth(
+                                                                multiTeamEventData[teamNumber].teleopGP.speakerScore.avg
+                                                            )}
+                                                        </Text>
+                                                        {multiTeamEventData[teamNumber].teleopGP.subwooferScore.avg +
+                                                            multiTeamEventData[teamNumber].teleopGP.subwooferMiss.avg >
+                                                        multiTeamEventData[teamNumber].teleopGP.otherScore.avg +
+                                                            multiTeamEventData[teamNumber].teleopGP.otherMiss.avg ? (
+                                                            <Tooltip
+                                                                label={'Primary Subwoofer w/Allocation %'}
+                                                                hasArrow
+                                                            >
+                                                                <Center>
+                                                                    <Icon boxSize={5} as={RiSpeaker2Fill} />
+                                                                    <Text fontSize={'sm'}>{`${roundToWhole(
+                                                                        ((multiTeamEventData[teamNumber].teleopGP
+                                                                            .subwooferScore.avg +
+                                                                            multiTeamEventData[teamNumber].teleopGP
+                                                                                .subwooferMiss.avg) /
+                                                                            (multiTeamEventData[teamNumber].teleopGP
+                                                                                .speakerScore.avg +
+                                                                                multiTeamEventData[teamNumber].teleopGP
+                                                                                    .speakerMiss.avg)) *
+                                                                            100
+                                                                    )}%`}</Text>
+                                                                </Center>
+                                                            </Tooltip>
+                                                        ) : (
+                                                            <Tooltip label={'Primary Ranged w/Allocation %'} hasArrow>
+                                                                <Center>
+                                                                    <Icon boxSize={4} as={GiHighShot} />
+                                                                    <Text fontSize={'sm'}>{`${roundToWhole(
+                                                                        ((multiTeamEventData[teamNumber].teleopGP
+                                                                            .otherScore.avg +
+                                                                            multiTeamEventData[teamNumber].teleopGP
+                                                                                .otherMiss.avg) /
+                                                                            (multiTeamEventData[teamNumber].teleopGP
+                                                                                .speakerScore.avg +
+                                                                                multiTeamEventData[teamNumber].teleopGP
+                                                                                    .speakerMiss.avg)) *
+                                                                            100
+                                                                    )}%`}</Text>
+                                                                </Center>
+                                                            </Tooltip>
+                                                        )}
+                                                    </Flex>
                                                 </Grid>
                                                 <Grid
                                                     fontSize={'lg'}
@@ -751,7 +823,7 @@ function MatchAnalystPage() {
                                                         {roundToTenth(multiTeamEventData[teamNumber].stagePoints.avg)}
                                                     </Text>
                                                     <Text flex={1 / 3}>
-                                                        {multiTeamEventData[teamNumber].stagePoints.max}
+                                                        {multiTeamEventData[teamNumber].teleopGP.trap.total}
                                                     </Text>
                                                     <Text flex={1 / 3}>
                                                         {multiTeamEventData[teamNumber].climbSuccessFraction || 'N/A'}
