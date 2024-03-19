@@ -333,6 +333,14 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
                                         display={'flex'}
                                         justifyContent={'center'}
                                         alignItems={'center'}
+                                        _hover={{ backgroundColor: index % 2 === 0 ? 'gray.200' : 'gray.50' }}
+                                        _active={{ backgroundColor: index % 2 === 0 ? 'gray.300' : 'gray.100' }}
+                                        borderRadius={matchTable.length - 1 === index && '0px 0px 10px 10px'}
+                                        as={Link}
+                                        to={`/matchAnalyst/${event.key}/${[
+                                            ...match.redAlliance.map((team) => team.substring(3)),
+                                            ...match.blueAlliance.map((team) => team.substring(3))
+                                        ].join('/')}/${match.matchNumber}`}
                                     >
                                         {convertMatchKeyToString(match.matchNumber)}
                                     </GridItem>
@@ -393,9 +401,7 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
                                                         to={`/team/${team.substring(3)}/${teamPageTabs.overview}`}
                                                         backgroundColor={'blue.200'}
                                                         _hover={{ backgroundColor: 'blue.300' }}
-                                                        _active={{
-                                                            backgroundColor: 'blue.400'
-                                                        }}
+                                                        _active={{ backgroundColor: 'blue.400' }}
                                                     >
                                                         {team.substring(3)}
                                                     </Flex>

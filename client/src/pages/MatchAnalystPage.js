@@ -169,9 +169,9 @@ function MatchAnalystPage() {
             )}
             <Box width={{ base: '100%', lg: '85%' }} overflowX={'auto'} margin={'0 auto'} marginBottom={'15px'}>
                 <Grid
-                    templateColumns={'1fr 2fr 1.5fr 2fr 1.5fr 1.5fr 1.5fr'}
+                    templateColumns={'1fr 1.65fr 1.3fr 2fr 1.65fr 1.3fr 1.3fr'}
                     borderTop={'1px solid black'}
-                    minWidth={'1000px'}
+                    minWidth={'1200px'}
                 >
                     {[
                         { label: 'Team #' },
@@ -356,42 +356,48 @@ function MatchAnalystPage() {
                                             <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
                                                 {roundToTenth(multiTeamEventData[teamNumber].teleopGP.speakerScore.avg)}
                                             </Text>
-                                            {multiTeamEventData[teamNumber].teleopGP.subwooferScore.avg +
-                                                multiTeamEventData[teamNumber].teleopGP.subwooferMiss.avg >
-                                            multiTeamEventData[teamNumber].teleopGP.otherScore.avg +
-                                                multiTeamEventData[teamNumber].teleopGP.otherMiss.avg ? (
-                                                <Tooltip label={'Primary Subwoofer w/Allocation %'} hasArrow>
-                                                    <Center>
-                                                        <Icon boxSize={5} as={RiSpeaker2Fill} />
-                                                        <Text fontSize={'sm'}>{`${roundToWhole(
-                                                            ((multiTeamEventData[teamNumber].teleopGP.subwooferScore
-                                                                .avg +
-                                                                multiTeamEventData[teamNumber].teleopGP.subwooferMiss
-                                                                    .avg) /
-                                                                (multiTeamEventData[teamNumber].teleopGP.speakerScore
+                                            {multiTeamEventData[teamNumber].teleopGP.speakerScore.total +
+                                                multiTeamEventData[teamNumber].teleopGP.speakerMiss.total >
+                                            0 ? (
+                                                multiTeamEventData[teamNumber].teleopGP.subwooferScore.avg +
+                                                    multiTeamEventData[teamNumber].teleopGP.subwooferMiss.avg >
+                                                multiTeamEventData[teamNumber].teleopGP.otherScore.avg +
+                                                    multiTeamEventData[teamNumber].teleopGP.otherMiss.avg ? (
+                                                    <Tooltip label={'Primary Subwoofer w/Allocation %'} hasArrow>
+                                                        <Center>
+                                                            <Icon boxSize={5} as={RiSpeaker2Fill} />
+                                                            <Text fontSize={'sm'}>{`${roundToWhole(
+                                                                ((multiTeamEventData[teamNumber].teleopGP.subwooferScore
                                                                     .avg +
-                                                                    multiTeamEventData[teamNumber].teleopGP.speakerMiss
-                                                                        .avg)) *
-                                                                100
-                                                        )}%`}</Text>
-                                                    </Center>
-                                                </Tooltip>
-                                            ) : (
-                                                <Tooltip label={'Primary Ranged w/Allocation %'} hasArrow>
-                                                    <Center>
-                                                        <Icon boxSize={4} as={GiHighShot} />
-                                                        <Text fontSize={'sm'}>{`${roundToWhole(
-                                                            ((multiTeamEventData[teamNumber].teleopGP.otherScore.avg +
-                                                                multiTeamEventData[teamNumber].teleopGP.otherMiss.avg) /
-                                                                (multiTeamEventData[teamNumber].teleopGP.speakerScore
+                                                                    multiTeamEventData[teamNumber].teleopGP
+                                                                        .subwooferMiss.avg) /
+                                                                    (multiTeamEventData[teamNumber].teleopGP
+                                                                        .speakerScore.avg +
+                                                                        multiTeamEventData[teamNumber].teleopGP
+                                                                            .speakerMiss.avg)) *
+                                                                    100
+                                                            )}%`}</Text>
+                                                        </Center>
+                                                    </Tooltip>
+                                                ) : (
+                                                    <Tooltip label={'Primary Ranged w/Allocation %'} hasArrow>
+                                                        <Center>
+                                                            <Icon boxSize={4} as={GiHighShot} />
+                                                            <Text fontSize={'sm'}>{`${roundToWhole(
+                                                                ((multiTeamEventData[teamNumber].teleopGP.otherScore
                                                                     .avg +
-                                                                    multiTeamEventData[teamNumber].teleopGP.speakerMiss
-                                                                        .avg)) *
-                                                                100
-                                                        )}%`}</Text>
-                                                    </Center>
-                                                </Tooltip>
-                                            )}
+                                                                    multiTeamEventData[teamNumber].teleopGP.otherMiss
+                                                                        .avg) /
+                                                                    (multiTeamEventData[teamNumber].teleopGP
+                                                                        .speakerScore.avg +
+                                                                        multiTeamEventData[teamNumber].teleopGP
+                                                                            .speakerMiss.avg)) *
+                                                                    100
+                                                            )}%`}</Text>
+                                                        </Center>
+                                                    </Tooltip>
+                                                )
+                                            ) : null}
                                         </Flex>
                                     </Grid>
                                     <Grid

@@ -471,7 +471,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                                 (subField.icon || subField.icons) &&
                                 subField.value &&
                                 getIconValue(matchForm, subField) ? (
-                                    <Popover key={subField.field} trigger={'hover'}>
+                                    <Popover key={subField.field} trigger={'hover'} isLazy={true}>
                                         <PopoverTrigger>
                                             <span>
                                                 <Icon

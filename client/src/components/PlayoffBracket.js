@@ -13,8 +13,24 @@ function PlayoffBracket({ event }) {
                 let searchString = /team\/(\d+)/g;
                 let replacementString = 'team/$1/overview';
                 html = html.replace(searchString, replacementString);
+
                 let htmlElement = document.createElement('div');
                 htmlElement.innerHTML = html;
+
+                let matchElements = htmlElement.querySelectorAll('.match-label');
+                for (const matchElement of matchElements) {
+                    let teamNumbers = [];
+                    let teamNumberElements = matchElement.parentElement.querySelectorAll('a');
+                    for (const teamElement of teamNumberElements) {
+                        teamNumbers.push(teamElement.innerHTML);
+                    }
+                    let matchNumber =
+                        matchElement.innerHTML === 'Finals' ? '' : `sf${matchElement.innerHTML.split(' ')[1]}m1`;
+                    let url = `matchAnalyst/${event.key}/${teamNumbers.join('/')}/${matchNumber}`;
+                    matchElement.innerHTML = `<a href=${url}>${matchElement.innerHTML}</a>`;
+                    matchElement.style.textDecoration = 'underline';
+                }
+
                 let bracketHTML = htmlElement.querySelector('#double-elim-bracket-table');
                 setBracketHTML(bracketHTML?.innerHTML);
             })

@@ -382,7 +382,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                Avg
+                                                Pts
                                             </Text>
                                             <Text
                                                 flex={1 / 3}
@@ -398,7 +398,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                Avg GP
+                                                GP
                                             </Text>
                                         </Flex>
                                         <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
@@ -460,7 +460,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                Avg
+                                                Pts
                                             </Text>
                                             <Text
                                                 flex={1 / 3}
@@ -476,7 +476,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                Avg GP
+                                                GP
                                             </Text>
                                         </Flex>
                                         <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
@@ -512,7 +512,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                     <Flex
                                         flexDirection={'column'}
                                         flex={1}
-                                        minWidth={'220px'}
+                                        minWidth={'250px'}
                                         borderLeft={
                                             childrenOffsetTop.auto === childrenOffsetTop.teleop && '1px solid black'
                                         }
@@ -540,7 +540,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                                 textAlign={'center'}
                                                 height={'27px'}
                                             >
-                                                Avg GP
+                                                GP
                                             </Text>
                                         </Flex>
                                         <Flex borderBottom={'1px solid black'} height={'27px'}>
@@ -550,7 +550,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                Avg
+                                                Pts
                                             </Text>
                                             <Text
                                                 flex={1 / 4}
@@ -574,7 +574,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                Spea.
+                                                Spkr.
                                             </Text>
                                         </Flex>
                                         <Flex padding={'2px 0px'} backgroundColor={'red.200'}>
@@ -673,7 +673,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                                 fontWeight={'medium'}
                                                 textAlign={'center'}
                                             >
-                                                Avg
+                                                Pts
                                             </Text>
                                             <Text
                                                 flex={1 / 4}
