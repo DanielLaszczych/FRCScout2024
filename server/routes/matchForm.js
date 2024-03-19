@@ -311,6 +311,7 @@ class HelperFunctions {
             teleopGP: {
                 intakeSource: parseInt(data[i++]),
                 intakeGround: parseInt(data[i++]),
+                intakePreloaded: parseInt(data[i++]),
                 ampScore: parseInt(data[i++]),
                 speakerScore: parseInt(data[i++]),
                 ampMiss: parseInt(data[i++]),

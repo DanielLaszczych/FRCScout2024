@@ -540,6 +540,7 @@ function StandForm() {
                       .join('#'),
             standFormData.teleopGP.intakeSource,
             standFormData.teleopGP.intakeGround,
+            standFormData.teleopGP.intakePreloaded,
             standFormData.teleopGP.ampScore,
             standFormData.teleopGP.speakerScore,
             standFormData.teleopGP.ampMiss,

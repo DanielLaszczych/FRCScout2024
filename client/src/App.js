@@ -18,6 +18,7 @@ const PreStandForm = lazy(() => import('./pages/PreStandForm'));
 const AdminErrorPage = lazy(() => import('./pages/AdminErrorPage'));
 const FailedLoginPage = lazy(() => import('./pages/FailedLoginPage'));
 const StandForm = lazy(() => import('./pages/StandForm'));
+const PreMatchAnalystPage = lazy(() => import('./pages/PreMatchAnalystPage'));
 const MatchAnalystPage = lazy(() => import('./pages/MatchAnalystPage'));
 const PitMapPage = lazy(() => import('./pages/PitMapPage'));
 const TeamPageHelper = lazy(() => import('./pages/TeamPageHelper'));
@@ -103,7 +104,12 @@ function App() {
                         {Object.values(teamPageTabs).map((path) => (
                             <Route path={`/team/:teamNumber/${path}`} key={path} element={<TeamPageHelper />} />
                         ))}
-                        <Route exact path='/matchAnalyst' element={<MatchAnalystPage />} />
+                        <Route exact path='/preMatchAnalyst' element={<PreMatchAnalystPage />} />
+                        <Route
+                            exact
+                            path='/matchAnalyst/:eventKey/:redTeamNumber1/:redTeamNumber2/:redTeamNumber3/:blueTeamNumber1/:blueTeamNumber2/:blueTeamNumber3/:matchNumber?'
+                            element={<MatchAnalystPage />}
+                        />
                         <Route exact path='/pitMap' element={<PitMapPage />} />
                         <Route
                             exact

@@ -36,6 +36,8 @@ let titleMap = [
     { path: '/superForm', title: 'Super Form' },
     { path: '/team', title: 'Team' },
     { path: '/admin', title: 'Admin' },
+    { path: '/preMatchAnalyst', title: 'Pre Match Analyst' },
+    { path: '/matchAnalyst', title: 'Match Analyst' },
     { path: '/dataextract', title: 'Data Extract' }
 ];
 
@@ -217,7 +219,7 @@ function NavBar() {
                             <MenuItem
                                 backgroundColor={'#2D3339'}
                                 as={Link}
-                                to={'/matchAnalyst'}
+                                to={'/preMatchAnalyst'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                                 fontSize={'md'}
