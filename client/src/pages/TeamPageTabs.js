@@ -301,6 +301,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                 closeOnEsc={true}
                                 closeOnOverlayClick={true}
                                 allowPinchZoom={true}
+                                scrollBehavior={'inside'}
                             >
                                 <ModalOverlay>
                                     <ModalContent
