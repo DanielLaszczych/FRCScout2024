@@ -178,7 +178,7 @@ function MatchAnalystPage() {
                         { label: 'Total', subLabels: ['Pts', 'Max Pts', 'GP'] },
                         { label: 'Auto', subLabels: ['Pts', 'GP'] },
                         { label: 'Teleop', subLabels: ['Pts', 'Amp GP', 'Spkr. GP'] },
-                        { label: 'Stage', subLabels: ['Pts', 'Traps', 'Hangs'] },
+                        { label: 'Stage', subLabels: ['Pts', 'Hangs', 'Traps'] },
                         { label: 'No Amplif.', subLabels: ['Pts', 'Max Pts'] },
                         { label: '75% Amplif.', subLabels: ['Pts', 'Max Pts'] }
                     ].map((element) => (
@@ -412,10 +412,10 @@ function MatchAnalystPage() {
                                         <Text flex={1 / 3}>
                                             {roundToTenth(multiTeamEventData[teamNumber].stagePoints.avg)}
                                         </Text>
-                                        <Text flex={1 / 3}>{multiTeamEventData[teamNumber].teleopGP.trap.total}</Text>
                                         <Text flex={1 / 3}>
                                             {multiTeamEventData[teamNumber].climbSuccessFraction || 'N/A'}
                                         </Text>
+                                        <Text flex={1 / 3}>{multiTeamEventData[teamNumber].teleopGP.trap.total}</Text>
                                     </Grid>
                                 </React.Fragment>
                             )}
