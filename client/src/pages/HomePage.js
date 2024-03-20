@@ -117,7 +117,7 @@ function HomePage() {
                                 closeOnEsc={true}
                                 closeOnOverlayClick={true}
                                 allowPinchZoom={true}
-                                scrollBehavior={'inside'}
+                                blockScrollOnMount={false}
                             >
                                 <ModalOverlay>
                                     <ModalContent
