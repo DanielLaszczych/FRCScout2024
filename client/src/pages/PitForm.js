@@ -170,7 +170,8 @@ function PitForm() {
                 abilities: [
                     { label: 'Speaker', id: uuidv4() },
                     { label: 'Amp', id: uuidv4() },
-                    { label: 'Ferry', id: uuidv4() }
+                    { label: 'Deposit Ferry', id: uuidv4() },
+                    { label: 'Shot Ferry', id: uuidv4() }
                 ],
                 checked: [],
                 id: uuidv4()

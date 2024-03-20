@@ -241,13 +241,13 @@ function NavBar() {
                             <MenuItem
                                 backgroundColor={'#2D3339'}
                                 as={Link}
-                                to={'/pickList'}
+                                to={'/eventRankings'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                                 fontSize={'md'}
                                 color={'white'}
                             >
-                                Pick List
+                                Event Rankings
                             </MenuItem>
                             <MenuItem
                                 backgroundColor={'#2D3339'}
@@ -274,7 +274,7 @@ function NavBar() {
                             <MenuItem
                                 backgroundColor={'#2D3339'}
                                 as={Link}
-                                to={'/dataextract'}
+                                to={'/dataExtract'}
                                 _focus={{ backgroundColor: 'none' }}
                                 _hover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', textColor: 'white' }}
                                 fontSize={'md'}

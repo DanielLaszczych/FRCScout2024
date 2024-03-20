@@ -28,6 +28,7 @@ const PreSuperForm = lazy(() => import('./pages/PreSuperForm'));
 const SuperForm = lazy(() => import('./pages/SuperForm'));
 const OfflinePage = lazy(() => import('./pages/OfflinePage'));
 const DataExtractPage = lazy(() => import('./pages/DataExtractPage'));
+const EventRankingsPage = lazy(() => import('./pages/EventRankingsPage'));
 
 // import { createBreakpoints } from '@chakra-ui/theme-tools';
 
@@ -116,7 +117,8 @@ function App() {
                             path='/admin'
                             element={offline ? <OfflinePage /> : user.admin ? <AdminPage /> : <AdminErrorPage />}
                         />
-                        <Route exact path='/dataextract' element={<DataExtractPage />} />
+                        <Route exact path='/dataExtract' element={<DataExtractPage />} />
+                        <Route exact path='/eventRankings' element={<EventRankingsPage />} />
                         <Route path='*' element={<NotFoundPage />} />
                     </Routes>
                 </Suspense>

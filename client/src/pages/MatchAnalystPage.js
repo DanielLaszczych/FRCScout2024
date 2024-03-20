@@ -257,7 +257,6 @@ function MatchAnalystPage() {
                             </GridItem>
                         </React.Fragment>
                     ))}
-
                     {[...teams.red, ...teams.blue].map((teamNumber, index) => (
                         <React.Fragment key={teamNumber}>
                             <GridItem
@@ -282,7 +281,6 @@ function MatchAnalystPage() {
                             >
                                 {teamNumber}
                             </GridItem>
-
                             {multiTeamEventData[teamNumber] && (
                                 <React.Fragment>
                                     <Grid

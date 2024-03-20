@@ -221,7 +221,12 @@ function DataExtractPage() {
                                         'Teleop Speaker Scored': ted.teleopGP.speakerScore.avg,
                                         'Teleop Amp Miss': ted.teleopGP.ampMiss.avg,
                                         'Teleop Speaker Miss': ted.teleopGP.speakerMiss.avg,
-                                        'Teleop Ferry': ted.teleopGP.ferry.avg,
+                                        'Teleop Subwoofer Scored': ted.teleopGP.subwooferScore.avg,
+                                        'Teleop Subwoofer Miss': ted.teleopGP.subwooferMiss.avg,
+                                        'Teleop Ranged Scored': ted.teleopGP.otherScore.avg,
+                                        'Teleop Ranged Miss': ted.teleopGP.otherMiss.avg,
+                                        'Teleop Deposit Ferry': ted.teleopGP.ferry.avg,
+                                        'Teleop Shot Ferry': ted.teleopGP.centerFerry.avg,
                                         'Teleop Points': ted.teleopPoints.avg,
                                         'Climb Percentage':
                                             ted.climbSuccessPercentage === null ? 'N/A' : ted.climbSuccessPercentage,
@@ -261,177 +266,6 @@ function DataExtractPage() {
                     Download team data
                 </Button>
 
-                <Button
-                    width={'fit-content'}
-                    onClick={() => {
-                        fetch('/matchForm/getMatchForms', {
-                            headers: {
-                                filters: JSON.stringify({
-                                    eventKey: currentEvent.key,
-                                    standStatus: [matchFormStatus.complete, matchFormStatus.noShow],
-                                    superStatus: [matchFormStatus.complete, matchFormStatus.noShow]
-                                })
-                            }
-                        })
-                            .then((response) => {
-                                if (response.status === 200) {
-                                    return response.json();
-                                } else {
-                                    throw new Error(response.statusText);
-                                }
-                            })
-                            .then((data) => {
-                                data = sortMatches(data);
-                                let teamMatchCount = {};
-                                data.forEach((matchForm) => {
-                                    if (!Object.hasOwn(teamMatchCount, matchForm.teamNumber)) {
-                                        matchForm.matchIndex = 1;
-                                        teamMatchCount[matchForm.teamNumber] = 1;
-                                    } else {
-                                        teamMatchCount[matchForm.teamNumber] += 1;
-                                        matchForm.matchIndex = teamMatchCount[matchForm.teamNumber];
-                                    }
-                                });
-
-                                data.sort((a, b) => {
-                                    let diff = a.teamNumber - b.teamNumber;
-                                    if (diff === 0) {
-                                        diff = a.matchIndex - b.matchIndex;
-                                    }
-                                    return diff;
-                                });
-
-                                const fileType =
-                                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
-                                let dataArray = [];
-                                data.forEach((matchForm) => {
-                                    if (matchForm.standStatus === matchFormStatus.noShow) {
-                                        dataArray.push(getNoShowMatchValues(matchForm));
-                                    } else {
-                                        dataArray.push({
-                                            'Team Number': matchForm.teamNumber,
-                                            'Team Name':
-                                                currentEvent.teams.find((team) => matchForm.teamNumber === team.number)
-                                                    ?.name || 'N/A',
-                                            'Match Number': matchForm.matchIndex,
-                                            'Match Name': convertMatchKeyToString(matchForm.matchNumber),
-                                            Station: matchForm.station,
-                                            'Stand Scouter': matchForm.standScouter,
-                                            'Super Scouter': matchForm.superScouter,
-                                            'Starting Position': matchForm.startingPosition,
-                                            'Preloaded Piece': matchForm.preloadedPiece,
-                                            'Left Start': matchForm.leftStart ? 1 : 0,
-                                            'Auto Intake Miss': matchForm.autoGP.intakeMiss,
-                                            'Auto Amp Scored': matchForm.autoGP.ampScore,
-                                            'Auto Speaker Scored': matchForm.autoGP.speakerScore,
-                                            'Auto Amp Miss': matchForm.autoGP.ampMiss,
-                                            'Auto Speaker Miss': matchForm.autoGP.speakerMiss,
-                                            'Auto Points': matchForm.autoPoints,
-                                            'Teleop Intake Source': matchForm.teleopGP.intakeSource,
-                                            'Teleop Intake Ground': matchForm.teleopGP.intakeGround,
-                                            'Teleop Amp Scored': matchForm.teleopGP.ampScore,
-                                            'Teleop Speaker Scored': matchForm.teleopGP.speakerScore,
-                                            'Teleop Amp Miss': matchForm.teleopGP.ampMiss,
-                                            'Teleop Speaker Miss': matchForm.teleopGP.speakerMiss,
-                                            'Teleop Ferry': matchForm.teleopGP.ferry,
-                                            'Teleop Points': matchForm.teleopPoints,
-                                            'Climb Attempt': matchForm.climb.attempt,
-                                            'Climb Boolean': matchForm.climb.attempt === 'Success' ? 1 : 0,
-                                            'Climb Location': matchForm.climb.location || 'N/A',
-                                            Harmony: matchForm.climb.harmony === null ? 'N/A' : matchForm.climb.harmony,
-                                            Park: matchForm.climb.park ? 1 : matchForm.park === null ? 'N/A' : 0,
-                                            Trap: matchForm.teleopGP.trap,
-                                            'Stage Points': matchForm.stagePoints,
-                                            'Offensive Points': matchForm.offensivePoints,
-                                            'Was Defended': matchForm.wasDefended ? 1 : 0,
-                                            'Defense Rating': matchForm.defenseRating,
-                                            'Defense Allocation': matchForm.defenseAllocation,
-                                            Agility: matchForm.agility,
-                                            'Field Awareness': matchForm.fieldAwareness,
-                                            'Amp Player': matchForm.ampPlayer ? 1 : 0,
-                                            'High Note Score': matchForm.ampPlayerGP.highNoteScore,
-                                            'High Note Miss': matchForm.ampPlayerGP.highNoteMiss,
-                                            'Lost Communication': matchForm.lostCommunication ? 1 : 0,
-                                            'Robot Broke': matchForm.robotBroke ? 1 : 0,
-                                            'Yellow Card': matchForm.yellowCard ? 1 : 0,
-                                            'Red Card': matchForm.redCard ? 1 : 0,
-                                            'Stand Status': matchForm.standStatus,
-                                            'Super Status': matchForm.superStatus
-                                        });
-                                    }
-                                });
-
-                                const dataJSON = XLSX.utils.json_to_sheet(dataArray);
-                                if (excelType) {
-                                    const wb = { Sheets: { 'TIM Raw Data': dataJSON }, SheetNames: ['TIM Raw Data'] };
-                                    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-                                    const sheetData = new Blob([excelBuffer], { type: fileType });
-                                    FileSaver.saveAs(sheetData, `${currentEvent.name}_TIMRawData.xlsx`);
-                                } else {
-                                    const csvData = new Blob([XLSX.utils.sheet_to_csv(dataJSON)]);
-                                    FileSaver.saveAs(csvData, `${currentEvent.name}_TIMRawData.csv`);
-                                }
-                            });
-                    }}
-                >
-                    Download team in match data
-                </Button>
-                <Button
-                    width={'fit-content'}
-                    onClick={() => {
-                        fetch('/pitForm/getPitFormsSimple', {
-                            headers: {
-                                filters: JSON.stringify({
-                                    eventKey: currentEvent.key,
-                                    followUp: false
-                                })
-                            }
-                        })
-                            .then((response) => {
-                                if (response.status === 200) {
-                                    return response.json();
-                                } else {
-                                    throw new Error(response.statusText);
-                                }
-                            })
-                            .then((data) => {
-                                data.sort((a, b) => {
-                                    let diff = a.teamNumber - b.teamNumber;
-                                    if (diff === 0) {
-                                        diff = a.matchIndex - b.matchIndex;
-                                    }
-                                    return diff;
-                                });
-
-                                const fileType =
-                                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
-                                let dataArray = [];
-                                data.forEach((pitForm) => {
-                                    dataArray.push({
-                                        'Team Number': pitForm.teamNumber,
-                                        'Robot Image': pitForm.robotImage,
-                                        'Wiring Image': pitForm.wiringImage
-                                    });
-                                });
-
-                                const dataJSON = XLSX.utils.json_to_sheet(dataArray);
-                                if (excelType) {
-                                    const wb = {
-                                        Sheets: { 'Image Raw Data': dataJSON },
-                                        SheetNames: ['Image Raw Data']
-                                    };
-                                    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-                                    const sheetData = new Blob([excelBuffer], { type: fileType });
-                                    FileSaver.saveAs(sheetData, `${currentEvent.name}_ImageRawData.xlsx`);
-                                } else {
-                                    const csvData = new Blob([XLSX.utils.sheet_to_csv(dataJSON)]);
-                                    FileSaver.saveAs(csvData, `${currentEvent.name}_ImageRawData.csv`);
-                                }
-                            });
-                    }}
-                >
-                    Download image raw data
-                </Button>
                 <Button
                     width={'fit-content'}
                     onClick={() => {
@@ -521,7 +355,12 @@ function DataExtractPage() {
                                             'Teleop Speaker Scored': matchForm.teleopGP.speakerScore,
                                             'Teleop Amp Miss': matchForm.teleopGP.ampMiss,
                                             'Teleop Speaker Miss': matchForm.teleopGP.speakerMiss,
-                                            'Teleop Ferry': matchForm.teleopGP.ferry,
+                                            'Teleop Subwoofer Scored': matchForm.teleopGP.subwooferScore,
+                                            'Teleop Subwoofer Miss': matchForm.teleopGP.subwooferMiss,
+                                            'Teleop Ranged Scored': matchForm.teleopGP.otherScore,
+                                            'Teleop Ranged Miss': matchForm.teleopGP.otherMiss,
+                                            'Teleop Deposit Ferry': matchForm.teleopGP.ferry,
+                                            'Teleop Shot Ferry': matchForm.teleopGP.centerFerry,
                                             'Teleop Points': matchForm.teleopPoints,
                                             'Climb Attempt': matchForm.climb.attempt,
                                             'Climb Boolean': matchForm.climb.attempt === 'Success' ? 1 : 0,
@@ -559,21 +398,74 @@ function DataExtractPage() {
 
                                 const dataJSON = XLSX.utils.json_to_sheet(dataArray);
                                 if (excelType) {
-                                    const wb = {
-                                        Sheets: { 'Tableau Raw Data': dataJSON },
-                                        SheetNames: ['Tableau Raw Data']
-                                    };
+                                    const wb = { Sheets: { 'TIM Raw Data': dataJSON }, SheetNames: ['TIM Raw Data'] };
                                     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
                                     const sheetData = new Blob([excelBuffer], { type: fileType });
-                                    FileSaver.saveAs(sheetData, `${currentEvent.name}_TableauRawData.xlsx`);
+                                    FileSaver.saveAs(sheetData, `${currentEvent.name}_TIMRawData.xlsx`);
                                 } else {
                                     const csvData = new Blob([XLSX.utils.sheet_to_csv(dataJSON)]);
-                                    FileSaver.saveAs(csvData, `${currentEvent.name}_TableauRawData.csv`);
+                                    FileSaver.saveAs(csvData, `${currentEvent.name}_TIMRawData.csv`);
                                 }
                             });
                     }}
                 >
-                    Download tableau data
+                    Download team in match data
+                </Button>
+                <Button
+                    width={'fit-content'}
+                    onClick={() => {
+                        fetch('/pitForm/getPitFormsSimple', {
+                            headers: {
+                                filters: JSON.stringify({
+                                    eventKey: currentEvent.key,
+                                    followUp: false
+                                })
+                            }
+                        })
+                            .then((response) => {
+                                if (response.status === 200) {
+                                    return response.json();
+                                } else {
+                                    throw new Error(response.statusText);
+                                }
+                            })
+                            .then((data) => {
+                                data.sort((a, b) => {
+                                    let diff = a.teamNumber - b.teamNumber;
+                                    if (diff === 0) {
+                                        diff = a.matchIndex - b.matchIndex;
+                                    }
+                                    return diff;
+                                });
+
+                                const fileType =
+                                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+                                let dataArray = [];
+                                data.forEach((pitForm) => {
+                                    dataArray.push({
+                                        'Team Number': pitForm.teamNumber,
+                                        'Robot Image': pitForm.robotImage,
+                                        'Wiring Image': pitForm.wiringImage
+                                    });
+                                });
+
+                                const dataJSON = XLSX.utils.json_to_sheet(dataArray);
+                                if (excelType) {
+                                    const wb = {
+                                        Sheets: { 'Image Raw Data': dataJSON },
+                                        SheetNames: ['Image Raw Data']
+                                    };
+                                    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                                    const sheetData = new Blob([excelBuffer], { type: fileType });
+                                    FileSaver.saveAs(sheetData, `${currentEvent.name}_ImageRawData.xlsx`);
+                                } else {
+                                    const csvData = new Blob([XLSX.utils.sheet_to_csv(dataJSON)]);
+                                    FileSaver.saveAs(csvData, `${currentEvent.name}_ImageRawData.csv`);
+                                }
+                            });
+                    }}
+                >
+                    Download image raw data
                 </Button>
             </Flex>
         </Box>
