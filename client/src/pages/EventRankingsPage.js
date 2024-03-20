@@ -153,42 +153,42 @@ function EventRankingsPage() {
                     </MenuList>
                 </Menu>
             </Center>
-            <Box width={{ base: '100%', lg: '100%' }} overflowX={'auto'} margin={'0 auto'} marginBottom={'25px'}>
-                <Grid
-                    templateColumns={`0.5fr 0.8fr repeat(${fields.length - 2}, 0.8fr)`}
-                    borderTop={'1px solid black'}
-                    minWidth={'1400px'}
-                >
-                    {fields.map((element) => (
-                        <React.Fragment key={element.label}>
-                            <GridItem
-                                fontSize={'lg'}
-                                fontWeight={'semibold'}
-                                textAlign={'center'}
-                                display={'flex'}
-                                flexDirection={'column'}
-                                justifyContent={'center'}
-                                alignItems={'center'}
-                                borderBottom={'1px solid black'}
-                                borderRight={'1px solid black'}
-                                backgroundColor={'gray.300'}
-                                padding={'0px 0px'}
-                                position={element.label === 'Team #' && 'sticky'}
-                                left={element.label === 'Team #' && 0}
-                                zIndex={element.label === 'Team #' && 1}
-                                borderLeft={element.label === 'Team #' && '1px solid black'}
-                            >
-                                <Flex
-                                    height={'40px'}
-                                    width={'100%'}
+            {multiTeamEventData.length === 0 ? (
+                <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
+                    No event data
+                </Text>
+            ) : (
+                <Box width={{ base: '100%', lg: '100%' }} overflowX={'auto'} margin={'0 auto'} marginBottom={'25px'}>
+                    <Grid
+                        templateColumns={`0.5fr 0.8fr repeat(${fields.length - 2}, 0.8fr)`}
+                        borderTop={'1px solid black'}
+                        minWidth={'1400px'}
+                    >
+                        {fields.map((element) => (
+                            <React.Fragment key={element.label}>
+                                <GridItem
+                                    fontSize={'lg'}
+                                    fontWeight={'semibold'}
+                                    textAlign={'center'}
+                                    display={'flex'}
+                                    flexDirection={'column'}
                                     justifyContent={'center'}
                                     alignItems={'center'}
-                                    columnGap={'10px'}
+                                    borderBottom={'1px solid black'}
+                                    borderRight={'1px solid black'}
+                                    backgroundColor={'gray.300'}
+                                    padding={'0px 0px'}
+                                    position={element.label === 'Team #' && 'sticky'}
+                                    left={element.label === 'Team #' && 0}
+                                    zIndex={element.label === 'Team #' && 1}
+                                    borderLeft={element.label === 'Team #' && '1px solid black'}
                                 >
-                                    <Text userSelect={'none'}>{element.label}</Text>
                                     <Flex
+                                        height={'40px'}
+                                        width={'100%'}
                                         justifyContent={'center'}
                                         alignItems={'center'}
+                                        columnGap={'10px'}
                                         cursor={'pointer'}
                                         onClick={() => {
                                             if (sorting.field === element.sortField) {
@@ -197,76 +197,84 @@ function EventRankingsPage() {
                                                 setSorting({ field: element.sortField, descending: true });
                                             }
                                         }}
+                                        userSelect={'none'}
                                     >
-                                        <TriangleUpIcon
-                                            boxSize={4}
-                                            color={
-                                                sorting.field === element.sortField && !sorting.descending
-                                                    ? 'black'
-                                                    : 'gray.400'
-                                            }
-                                        />
-                                        <TriangleDownIcon
-                                            boxSize={4}
-                                            color={
-                                                sorting.field === element.sortField && sorting.descending
-                                                    ? 'black'
-                                                    : 'gray.400'
-                                            }
-                                        />
+                                        <Text>{element.label}</Text>
+                                        <Flex justifyContent={'center'} alignItems={'center'}>
+                                            <TriangleUpIcon
+                                                boxSize={4}
+                                                color={
+                                                    sorting.field === element.sortField && !sorting.descending
+                                                        ? 'black'
+                                                        : 'gray.400'
+                                                }
+                                            />
+                                            <TriangleDownIcon
+                                                boxSize={4}
+                                                color={
+                                                    sorting.field === element.sortField && sorting.descending
+                                                        ? 'black'
+                                                        : 'gray.400'
+                                                }
+                                            />
+                                        </Flex>
                                     </Flex>
-                                </Flex>
-                            </GridItem>
-                        </React.Fragment>
-                    ))}
-                    {multiTeamEventData
-                        .sort((a, b) => {
-                            if (sorting.descending) {
-                                return leafGet(b, sorting.field) - leafGet(a, sorting.field);
-                            } else {
-                                return leafGet(a, sorting.field) - leafGet(b, sorting.field);
-                            }
-                        })
-                        .map((teamData, index) => (
-                            <React.Fragment key={teamData.teamNumber}>
-                                {fields.map((element) => (
-                                    <GridItem
-                                        key={element.label}
-                                        fontSize={'lg'}
-                                        fontWeight={'semibold'}
-                                        textAlign={'center'}
-                                        display={'flex'}
-                                        flexDirection={'column'}
-                                        justifyContent={'center'}
-                                        alignItems={'center'}
-                                        borderBottom={'1px solid black'}
-                                        borderRight={'1px solid black'}
-                                        backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
-                                        padding={'5px 0px'}
-                                        position={element.label === 'Team #' && 'sticky'}
-                                        left={element.label === 'Team #' && 0}
-                                        zIndex={element.label === 'Team #' && 1}
-                                        borderLeft={element.label === 'Team #' && '1px solid black'}
-                                        as={element.label === 'Team #' && Link}
-                                        to={element.label === 'Team #' ? `/team/${teamData.teamNumber}/overview` : null}
-                                        _hover={
-                                            element.label === 'Team #' && {
-                                                backgroundColor: index % 2 === 0 ? 'gray.200' : 'gray.100'
-                                            }
-                                        }
-                                        _focus={
-                                            element.label === 'Team #' && {
-                                                backgroundColor: index % 2 === 0 ? 'gray.300' : 'gray.200'
-                                            }
-                                        }
-                                    >
-                                        {roundToTenth(leafGet(teamData, element.sortField))}
-                                    </GridItem>
-                                ))}
+                                </GridItem>
                             </React.Fragment>
                         ))}
-                </Grid>
-            </Box>
+                        {multiTeamEventData
+                            .sort((a, b) => {
+                                if (sorting.descending) {
+                                    return leafGet(b, sorting.field) - leafGet(a, sorting.field);
+                                } else {
+                                    return leafGet(a, sorting.field) - leafGet(b, sorting.field);
+                                }
+                            })
+                            .map((teamData, index) => (
+                                <React.Fragment key={teamData.teamNumber}>
+                                    {fields.map((element) => (
+                                        <GridItem
+                                            key={element.label}
+                                            fontSize={'lg'}
+                                            fontWeight={'semibold'}
+                                            textAlign={'center'}
+                                            display={'flex'}
+                                            flexDirection={'column'}
+                                            justifyContent={'center'}
+                                            alignItems={'center'}
+                                            borderBottom={'1px solid black'}
+                                            borderRight={'1px solid black'}
+                                            backgroundColor={index % 2 === 0 ? 'gray.100' : 'white'}
+                                            padding={'5px 0px'}
+                                            position={element.label === 'Team #' && 'sticky'}
+                                            left={element.label === 'Team #' && 0}
+                                            zIndex={element.label === 'Team #' && 1}
+                                            borderLeft={element.label === 'Team #' && '1px solid black'}
+                                            as={element.label === 'Team #' && Link}
+                                            to={
+                                                element.label === 'Team #'
+                                                    ? `/team/${teamData.teamNumber}/overview`
+                                                    : null
+                                            }
+                                            _hover={
+                                                element.label === 'Team #' && {
+                                                    backgroundColor: index % 2 === 0 ? 'gray.200' : 'gray.100'
+                                                }
+                                            }
+                                            _focus={
+                                                element.label === 'Team #' && {
+                                                    backgroundColor: index % 2 === 0 ? 'gray.300' : 'gray.200'
+                                                }
+                                            }
+                                        >
+                                            {roundToTenth(leafGet(teamData, element.sortField))}
+                                        </GridItem>
+                                    ))}
+                                </React.Fragment>
+                            ))}
+                    </Grid>
+                </Box>
+            )}
         </Box>
     );
 }

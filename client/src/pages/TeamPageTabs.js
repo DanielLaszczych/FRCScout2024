@@ -295,7 +295,13 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                     />
                                 )}
                             </Flex>
-                            <Modal isOpen={isOpen} onClose={onClose} closeOnEsc={true} closeOnOverlayClick={true}>
+                            <Modal
+                                isOpen={isOpen}
+                                onClose={onClose}
+                                closeOnEsc={true}
+                                closeOnOverlayClick={true}
+                                allowPinchZoom={true}
+                            >
                                 <ModalOverlay>
                                     <ModalContent
                                         margin={'auto'}

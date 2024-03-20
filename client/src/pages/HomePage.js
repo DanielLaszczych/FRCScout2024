@@ -111,7 +111,13 @@ function HomePage() {
                                 icon={<GrMapLocation />}
                                 size='sm'
                             />
-                            <Modal isOpen={isOpen} onClose={onClose} closeOnEsc={true} closeOnOverlayClick={true}>
+                            <Modal
+                                isOpen={isOpen}
+                                onClose={onClose}
+                                closeOnEsc={true}
+                                closeOnOverlayClick={true}
+                                allowPinchZoom={true}
+                            >
                                 <ModalOverlay>
                                     <ModalContent
                                         margin={'auto'}
