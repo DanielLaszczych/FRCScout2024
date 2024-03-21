@@ -1381,6 +1381,7 @@ function StandForm() {
                                     fontWeight={'bold'}
                                     height={'100%'}
                                     flex={0.2}
+                                    key={'preloaded'}
                                     onClick={() => {
                                         standFormManagers.teleop.doCommand(
                                             standFormData,

@@ -232,8 +232,10 @@ function MatchesPage() {
                             let allianceNumbers = allMatches.find(
                                 (match) =>
                                     match.matchNumber === matchForm.matchNumber && match.station === matchForm.station
-                            ).allianceNumbers;
-                            matchForm.allianceNumbers = allianceNumbers;
+                            )?.allianceNumbers;
+                            if (allianceNumbers) {
+                                matchForm.allianceNumbers = allianceNumbers;
+                            }
                         }
                         newMatches.push(matchForm);
                     }
