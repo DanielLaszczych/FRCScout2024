@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { leafGet, roundToTenth, sortEvents } from '../util/helperFunctions';
+import { arraysEqual, leafGet, roundToTenth, sortEvents } from '../util/helperFunctions';
 import {
     Box,
     Button,
@@ -18,14 +18,15 @@ import { ChevronDownIcon, TriangleDownIcon, TriangleUpIcon } from '@chakra-ui/ic
 import { Link } from 'react-router-dom';
 
 let fields = [
-    { label: 'Team #', sortField: 'teamNumber' },
-    { label: 'Offensive Pts', sortField: 'offensivePoints.avg' },
-    { label: 'Auto Pts', sortField: 'autoPoints.avg' },
-    { label: 'Teleop Pts', sortField: 'teleopPoints.avg' },
-    { label: 'Stage Pts', sortField: 'stagePoints.avg' },
-    { label: 'Amp Tele GP', sortField: 'teleopGP.ampScore.avg' },
-    { label: 'Spkr. Tele GP', sortField: 'teleopGP.speakerScore.avg' },
-    { label: 'Defense', sortField: 'defenseRating.avg' }
+    { label: 'Team #', sortFields: ['teamNumber'] },
+    { label: 'Offensive Pts', sortFields: ['offensivePoints.avg'] },
+    { label: 'Auto Pts', sortFields: ['autoPoints.avg'] },
+    { label: 'Teleop Pts', sortFields: ['teleopPoints.avg'] },
+    { label: 'Stage Pts', sortFields: ['stagePoints.avg'] },
+    { label: 'Auto GP', sortFields: ['autoGP.ampScore.avg', 'autoGP.speakerScore.avg'] },
+    { label: 'Amp Tele GP', sortFields: ['teleopGP.ampScore.avg'] },
+    { label: 'Spkr. Tele GP', sortFields: ['teleopGP.speakerScore.avg'] },
+    { label: 'Defense', sortFields: ['defenseRating.avg'] }
 ];
 
 function EventRankingsPage() {
@@ -33,7 +34,7 @@ function EventRankingsPage() {
     const [currentEvent, setCurrentEvent] = useState(null);
     const [focusedEvent, setFocusedEvent] = useState(null);
     const [multiTeamEventData, setMultiTeamEventData] = useState(null);
-    const [sorting, setSorting] = useState({ field: 'offensivePoints.avg', descending: true });
+    const [sorting, setSorting] = useState({ fields: ['offensivePoints.avg'], descending: true });
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -86,6 +87,14 @@ function EventRankingsPage() {
                 .catch((error) => setError(error.message));
         }
     }, [currentEvent]);
+
+    function getValue(teamData, sortFields) {
+        let total = 0;
+        for (const field of sortFields) {
+            total += leafGet(teamData, field);
+        }
+        return total;
+    }
 
     if (error) {
         return (
@@ -160,9 +169,9 @@ function EventRankingsPage() {
             ) : (
                 <Box width={{ base: '100%', lg: '100%' }} overflowX={'auto'} margin={'0 auto'} marginBottom={'25px'}>
                     <Grid
-                        templateColumns={`0.5fr 0.8fr repeat(${fields.length - 2}, 0.8fr)`}
+                        templateColumns={`0.6fr repeat(${fields.length - 1}, 0.8fr)`}
                         borderTop={'1px solid black'}
-                        minWidth={'1400px'}
+                        minWidth={'1500px'}
                     >
                         {fields.map((element) => (
                             <React.Fragment key={element.label}>
@@ -191,10 +200,10 @@ function EventRankingsPage() {
                                         columnGap={'10px'}
                                         cursor={'pointer'}
                                         onClick={() => {
-                                            if (sorting.field === element.sortField) {
+                                            if (arraysEqual(sorting.fields, element.sortFields)) {
                                                 setSorting({ ...sorting, descending: !sorting.descending });
                                             } else {
-                                                setSorting({ field: element.sortField, descending: true });
+                                                setSorting({ fields: element.sortFields, descending: true });
                                             }
                                         }}
                                         userSelect={'none'}
@@ -204,7 +213,8 @@ function EventRankingsPage() {
                                             <TriangleUpIcon
                                                 boxSize={4}
                                                 color={
-                                                    sorting.field === element.sortField && !sorting.descending
+                                                    arraysEqual(sorting.fields, element.sortFields) &&
+                                                    !sorting.descending
                                                         ? 'black'
                                                         : 'gray.400'
                                                 }
@@ -212,7 +222,8 @@ function EventRankingsPage() {
                                             <TriangleDownIcon
                                                 boxSize={4}
                                                 color={
-                                                    sorting.field === element.sortField && sorting.descending
+                                                    arraysEqual(sorting.fields, element.sortFields) &&
+                                                    sorting.descending
                                                         ? 'black'
                                                         : 'gray.400'
                                                 }
@@ -224,10 +235,16 @@ function EventRankingsPage() {
                         ))}
                         {multiTeamEventData
                             .sort((a, b) => {
+                                let totalA = 0;
+                                let totalB = 0;
+                                for (const field of sorting.fields) {
+                                    totalA += leafGet(a, field);
+                                    totalB += leafGet(b, field);
+                                }
                                 if (sorting.descending) {
-                                    return leafGet(b, sorting.field) - leafGet(a, sorting.field);
+                                    return totalB - totalA;
                                 } else {
-                                    return leafGet(a, sorting.field) - leafGet(b, sorting.field);
+                                    return totalA - totalB;
                                 }
                             })
                             .map((teamData, index) => (
@@ -267,7 +284,7 @@ function EventRankingsPage() {
                                                 }
                                             }
                                         >
-                                            {roundToTenth(leafGet(teamData, element.sortField))}
+                                            {roundToTenth(getValue(teamData, element.sortFields))}
                                         </GridItem>
                                     ))}
                                 </React.Fragment>
