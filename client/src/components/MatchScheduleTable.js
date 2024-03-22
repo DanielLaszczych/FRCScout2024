@@ -335,7 +335,7 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
                                         alignItems={'center'}
                                         _hover={{ backgroundColor: index % 2 === 0 ? 'gray.200' : 'gray.50' }}
                                         _active={{ backgroundColor: index % 2 === 0 ? 'gray.300' : 'gray.100' }}
-                                        borderRadius={matchTable.length - 1 === index && '0px 0px 10px 10px'}
+                                        borderRadius={matchTable.length - 1 === index && '0px 0px 0px 10px'}
                                         as={Link}
                                         to={`/matchAnalyst/${event.key}/${[
                                             ...match.redAlliance.map((team) => team.substring(3)),
