@@ -100,6 +100,10 @@ function registerValidSW(swUrl, config) {
                             if (config && config.onUpdate) {
                                 config.onUpdate(registration);
                             }
+                            window.location.reload();
+                            if (registration && registration.waiting) {
+                                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                            }
                         } else {
                             // At this point, everything has been precached.
                             // It's the perfect time to display a
