@@ -100,10 +100,6 @@ function registerValidSW(swUrl, config) {
                             if (config && config.onUpdate) {
                                 config.onUpdate(registration);
                             }
-                            if (registration && registration.waiting) {
-                                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                            }
-                            window.location.reload();
                         } else {
                             // At this point, everything has been precached.
                             // It's the perfect time to display a
@@ -122,6 +118,15 @@ function registerValidSW(swUrl, config) {
         .catch((error) => {
             console.error('Error during service worker registration:', error);
         });
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) {
+            return;
+        }
+
+        refreshing = true;
+        window.location.reload();
+    });
 }
 
 function checkValidServiceWorker(swUrl, config) {
