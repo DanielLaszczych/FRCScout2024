@@ -190,7 +190,7 @@ function NavBar() {
                                 fontWeight={'bold'}
                                 color={'white'}
                             >
-                                Role: {user.role}
+                                Roles: {user.role}
                             </Text>
                         </Box>
                         <Box borderBottom={'1px solid rgba(255, 255, 255, 0.5)'}>
