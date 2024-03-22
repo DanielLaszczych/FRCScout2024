@@ -35,7 +35,7 @@ function AuthProvider(props) {
     useEffect(() => {
         async function fetchData() {
             try {
-                let response = await fetchAndCache('/getuser');
+                let response = await fetchAndCache('/getUser');
                 let data = await response.json();
                 login(data);
             } catch {
@@ -58,10 +58,10 @@ function AuthProvider(props) {
     }
 
     function refreshUserData() {
-        fetch('/getuser')
+        fetch('/getUser')
             .then((res) => res.json())
             .then((data) => login(data))
-            .catch((data) => login('NoUser'));
+            .catch(() => login('NoUser'));
     }
 
     return <AuthContext.Provider value={{ user: state.user, login, logout, refreshUserData }} {...props} />;

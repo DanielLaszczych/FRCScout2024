@@ -70,32 +70,6 @@ function registerValidSW(swUrl, config) {
                                 'New content is available and will be used when all tabs for this page are closed. See https://cra.link/PWA.'
                             );
 
-                            // Create a new div element
-                            let newDiv = document.createElement('div');
-
-                            // Set some attributes for the div (optional)
-                            newDiv.textContent =
-                                'New content is available and will be used when all tabs from this website are closed. Do not scout until you have done this!!!';
-                            newDiv.style.position = 'fixed';
-                            newDiv.style.bottom = '0';
-                            newDiv.style.left = '0';
-                            newDiv.style.width = '100%';
-                            newDiv.style.backgroundColor = '#ffc300';
-                            newDiv.style.padding = '10px';
-                            newDiv.style.textAlign = 'center';
-                            newDiv.style.transition = 'opacity 1s ease-in-out'; // Add transition for opacity
-
-                            // Append the div to the body
-                            document.body.appendChild(newDiv);
-
-                            // Set timeout to fade out and remove the div after 10 seconds
-                            // setTimeout(function () {
-                            //     newDiv.style.opacity = '0'; // Fade out
-                            //     setTimeout(function () {
-                            //         newDiv.remove(); // Remove from DOM after fading out
-                            //     }, 1000); // Wait for the transition duration before removing
-                            // }, 9000); // 9000 milliseconds = 9 seconds, leaving 1 second for the fade out effect
-
                             // Execute callback
                             if (config && config.onUpdate) {
                                 config.onUpdate(registration);

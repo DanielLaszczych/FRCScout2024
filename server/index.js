@@ -82,7 +82,10 @@ app.use('/checkTableauPass/:password', async (req, res) => {
             res.send('Invalid');
         });
 });
-app.use('/getuser', (req, res) => {
+app.use('/getVersion', (req, res) => {
+    res.send({ version: process.env.VERSION });
+});
+app.use('/getUser', (req, res) => {
     res.send(req.user);
 });
 
