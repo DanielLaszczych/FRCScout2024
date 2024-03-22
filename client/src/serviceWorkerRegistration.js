@@ -119,6 +119,7 @@ function registerValidSW(swUrl, config) {
             console.error('Error during service worker registration:', error);
         });
 
+    let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshing) {
             return;
