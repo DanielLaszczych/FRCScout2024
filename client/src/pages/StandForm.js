@@ -160,7 +160,7 @@ function StandForm() {
     const [activeSection, setActiveSection] = useState(sections.preAuto);
     const [submitAttempted, setSubmitAttempted] = useState(false);
     const [standFormDialog, setStandFormDialog] = useState(false);
-    const [fieldRotation, setFieldRotation] = useState(0);
+    const [fieldRotation, setFieldRotation] = useState(null);
     const [loadResponse, setLoadResponse] = useState(null);
     const prevStandFormData = useRef(null);
     const [standFormData, setStandFormData] = useState({
@@ -247,7 +247,7 @@ function StandForm() {
         }
     }, [eventKeyParam, matchNumberParam, stationParam, teamNumberParam, offline]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (localStorage.getItem('StandFormData')) {
             let standForm = JSON.parse(localStorage.getItem('StandFormData'));
             if (
@@ -267,8 +267,10 @@ function StandForm() {
             let obj = JSON.parse(localStorage.getItem('Field Rotation'));
             if (stationParam.charAt(0) === 'r' && obj.red) {
                 setFieldRotation(obj.red);
-            } else if (obj.blue) {
+            } else if (stationParam.charAt(0) === 'b' && obj.blue) {
                 setFieldRotation(obj.blue);
+            } else {
+                setFieldRotation(0);
             }
         }
     }, [eventKeyParam, matchNumberParam, stationParam]);
@@ -311,19 +313,21 @@ function StandForm() {
     }, [loadResponse, eventKeyParam, matchNumberParam, stationParam, standFormData, offline]);
 
     useEffect(() => {
-        if (localStorage.getItem('Field Rotation')) {
-            let oldObj = JSON.parse(localStorage.getItem('Field Rotation'));
-            let obj = {
-                red: stationParam.charAt(0) === 'r' ? fieldRotation : oldObj.red,
-                blue: stationParam.charAt(0) === 'b' ? fieldRotation : oldObj.blue
-            };
-            localStorage.setItem('Field Rotation', JSON.stringify(obj));
-        } else {
-            let obj = {
-                red: stationParam.charAt(0) === 'r' ? fieldRotation : null,
-                blue: stationParam.charAt(0) === 'b' ? fieldRotation : null
-            };
-            localStorage.setItem('Field Rotation', JSON.stringify(obj));
+        if (fieldRotation !== null) {
+            if (localStorage.getItem('Field Rotation')) {
+                let oldObj = JSON.parse(localStorage.getItem('Field Rotation'));
+                let obj = {
+                    red: stationParam.charAt(0) === 'r' ? fieldRotation : oldObj.red,
+                    blue: stationParam.charAt(0) === 'b' ? fieldRotation : oldObj.blue
+                };
+                localStorage.setItem('Field Rotation', JSON.stringify(obj));
+            } else {
+                let obj = {
+                    red: stationParam.charAt(0) === 'r' ? fieldRotation : null,
+                    blue: stationParam.charAt(0) === 'b' ? fieldRotation : null
+                };
+                localStorage.setItem('Field Rotation', JSON.stringify(obj));
+            }
         }
     }, [stationParam, fieldRotation]);
 
@@ -969,6 +973,9 @@ function StandForm() {
                                         justifyContent={'center'}
                                         alignItems={'center'}
                                         borderRadius={'5px'}
+                                        style={{
+                                            transform: `rotate(${-fieldRotation}deg)`
+                                        }}
                                     >
                                         Start
                                     </Flex>
