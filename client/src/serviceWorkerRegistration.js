@@ -108,7 +108,7 @@ function registerValidSW(swUrl, config) {
                                 pushState.apply(window.history, arguments);
 
                                 // makes the new service worker active
-                                installingWorker.postMessage('SKIP_WAITING');
+                                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
                             };
                         } else {
                             // At this point, everything has been precached.
