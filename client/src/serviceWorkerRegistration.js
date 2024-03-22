@@ -75,7 +75,7 @@ function registerValidSW(swUrl, config) {
 
                             // Set some attributes for the div (optional)
                             newDiv.textContent =
-                                'New content is available and will be used when all tabs from this website are closed. Do not scout until you have done this!!!';
+                                'New content is available and will be used when all tabs from this website are closed. Do not scout until you have done this!';
                             newDiv.style.position = 'fixed';
                             newDiv.style.bottom = '0';
                             newDiv.style.left = '0';
