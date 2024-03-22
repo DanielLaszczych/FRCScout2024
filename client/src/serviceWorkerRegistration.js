@@ -75,7 +75,7 @@ function registerValidSW(swUrl, config) {
 
                             // Set some attributes for the div (optional)
                             newDiv.textContent =
-                                'New content is available and will be used when all tabs from this website are closed. Do not scout until you have done this!';
+                                'New content is available and will be used when all tabs from this website are closed. Do not scout until you have done this!!!';
                             newDiv.style.position = 'fixed';
                             newDiv.style.bottom = '0';
                             newDiv.style.left = '0';
@@ -100,16 +100,6 @@ function registerValidSW(swUrl, config) {
                             if (config && config.onUpdate) {
                                 config.onUpdate(registration);
                             }
-
-                            const pushState = window.history.pushState;
-
-                            window.history.pushState = function () {
-                                // make sure that the user lands on the "next" page
-                                pushState.apply(window.history, arguments);
-
-                                // makes the new service worker active
-                                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                            };
                         } else {
                             // At this point, everything has been precached.
                             // It's the perfect time to display a
@@ -128,16 +118,6 @@ function registerValidSW(swUrl, config) {
         .catch((error) => {
             console.error('Error during service worker registration:', error);
         });
-
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) {
-            return;
-        }
-
-        refreshing = true;
-        window.location.reload();
-    });
 }
 
 function checkValidServiceWorker(swUrl, config) {
