@@ -112,13 +112,14 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
 
         // Calculate image dimensions based on screen size
         // We subtract by 50 in this one to account for the 25px of padding on all sides
+        const popoverImage = [teamPageTabs.forms, teamPageTabs.other].includes(tab);
         const maxWidth =
             viewportWidth *
-                (tab !== teamPageTabs.forms
+                (!popoverImage
                     ? getValueByRange(breakPointWidth)
                     : getValueByRange(breakPointWidth, [0.75, 0.6, 0.35, 0.2])) -
-            (tab !== teamPageTabs.forms ? 0 : 50); // Adjust the multiplier as needed
-        const maxHeight = imageHeight - (tab !== teamPageTabs.forms ? 0 : 50);
+            (!popoverImage ? 0 : 50); // Adjust the multiplier as needed
+        const maxHeight = imageHeight - (!popoverImage ? 0 : 50);
 
         const screenAspectRatio = maxWidth / maxHeight;
         const imageAspectRatio = imageWidth / imageHeight;

@@ -567,12 +567,12 @@ function StandForm() {
                 ? 'n'
                 : standFormData.standComment.trim() === ''
                 ? 'n'
-                : standFormData.standComment.trim(),
+                : standFormData.standComment.trim().replace(/\r?\n|\r/g, '. '),
             map[standFormData.standStatus || matchFormStatus.complete],
             isFollowOrNoShow()
                 ? standFormData.standStatusComment.trim() === ''
                     ? 'n'
-                    : standFormData.standStatusComment.trim()
+                    : standFormData.standStatusComment.trim().replace(/\r?\n|\r/g, '. ')
                 : 'n',
             standFormData.history.auto.data.length === 0
                 ? 'n'
@@ -651,9 +651,13 @@ function StandForm() {
                 station: stationParam,
                 teamNumber: parseInt(teamNumberParam),
                 standComment:
-                    standFormData.standStatus === matchFormStatus.noShow ? '' : standFormData.standComment.trim(),
+                    standFormData.standStatus === matchFormStatus.noShow
+                        ? ''
+                        : standFormData.standComment.trim().replace(/\r?\n|\r/g, '. '),
                 standStatus: standFormData.standStatus || matchFormStatus.complete,
-                standStatusComment: isFollowOrNoShow() ? standFormData.standStatusComment.trim() : ''
+                standStatusComment: isFollowOrNoShow()
+                    ? standFormData.standStatusComment.trim().replace(/\r?\n|\r/g, '. ')
+                    : ''
             })
         })
             .then((response) => {
