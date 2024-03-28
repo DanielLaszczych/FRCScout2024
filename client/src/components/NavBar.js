@@ -29,6 +29,7 @@ let titleMap = [
     { path: '/pits', title: 'Pits' },
     { path: '/matches', title: 'Matches' },
     { path: '/rtessIssues', title: 'RTESS Issues' },
+    { path: '/rtessIssue', title: 'RTESS Issue' },
     { path: '/pitForm', title: 'Pit Form' },
     { path: '/preStandForm', title: 'Pre Stand Form' },
     { path: '/standForm', title: 'Stand Form' },
@@ -38,7 +39,9 @@ let titleMap = [
     { path: '/admin', title: 'Admin' },
     { path: '/preMatchAnalyst', title: 'Pre Match Analyst' },
     { path: '/matchAnalyst', title: 'Match Analyst' },
-    { path: '/dataextract', title: 'Data Extract' }
+    { path: '/dataExtract', title: 'Data Extract' },
+    { path: '/pitMap', title: 'Pit Map' },
+    { path: '/eventRankings', title: 'Event Rankings' }
 ];
 
 function NavBar() {

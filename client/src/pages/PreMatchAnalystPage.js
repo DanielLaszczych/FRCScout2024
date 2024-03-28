@@ -16,7 +16,7 @@ import {
     Text
 } from '@chakra-ui/react';
 import { RiEditBoxFill } from 'react-icons/ri';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { capitalizeFirstLetter, sortEvents } from '../util/helperFunctions';
 
@@ -28,6 +28,7 @@ let matchTypes = [
 
 function MatchAnalystPage() {
     const navigate = useNavigate();
+    const { state } = useLocation();
 
     const [error, setError] = useState(null);
     const [events, setEvents] = useState(null);
@@ -37,7 +38,7 @@ function MatchAnalystPage() {
     const [focusedMatchType, setFocusedMatchType] = useState('');
     const [matchNumber, setMatchNumber] = useState('');
     const [manualMode, setManualMode] = useState(null);
-    const [teams, setTeams] = useState({ red: ['', '', ''], blue: ['', '', ''] });
+    const [teams, setTeams] = useState(state ? state.teams : { red: ['', '', ''], blue: ['', '', ''] });
     const [matchNumberError, setMatchNumberError] = useState('');
 
     const abort = useRef(new AbortController());
@@ -46,17 +47,21 @@ function MatchAnalystPage() {
         if (localStorage.getItem('PreMatchAnalystData')) {
             let data = JSON.parse(localStorage.getItem('PreMatchAnalystData'));
             setMatchType(data.matchType);
-            setManualMode(data.manualMode);
+            if (state) {
+                setManualMode(true);
+            } else {
+                setManualMode(data.manualMode);
+            }
         } else {
             setManualMode(false);
         }
-    }, []);
+    }, [state]);
 
     useEffect(() => {
-        if (manualMode !== null) {
+        if (manualMode !== null && !state) {
             localStorage.setItem('PreMatchAnalystData', JSON.stringify({ matchType, manualMode }));
         }
-    }, [matchType, manualMode]);
+    }, [matchType, manualMode, state]);
 
     useEffect(() => {
         fetch('/event/getEventsSimple')
@@ -109,6 +114,7 @@ function MatchAnalystPage() {
     }, [matchNumber, matchType.value]);
 
     useLayoutEffect(() => {
+        if (manualMode === null) return;
         function getTeamNumbers() {
             abort.current = new AbortController();
             if (matchType === '') return;

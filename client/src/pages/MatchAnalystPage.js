@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Center, Flex, Grid, GridItem, Icon, Spinner, Text, Tooltip } from '@chakra-ui/react';
+import { Box, Button, Center, Flex, Grid, GridItem, Icon, IconButton, Spinner, Text, Tooltip } from '@chakra-ui/react';
 import { GiHighShot } from 'react-icons/gi';
-import { RiSpeaker2Fill } from 'react-icons/ri';
-import { Link, useParams } from 'react-router-dom';
+import { RiEditBoxFill, RiSpeaker2Fill } from 'react-icons/ri';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import AutoPaths from '../components/AutoPaths';
 import CommentsTable from '../components/CommentsTable';
 import MatchCompareGraph from '../components/MatchCompareGraph';
@@ -30,6 +30,7 @@ function MatchAnalystPage() {
         blueTeamNumber3: blueTeamNumber3Param,
         matchNumber: matchNumberParam
     } = useParams();
+    const navigate = useNavigate();
 
     const [error, setError] = useState(null);
     const [eventName, setEventName] = useState(null);
@@ -159,6 +160,14 @@ function MatchAnalystPage() {
 
     return (
         <Box marginBottom={'25px'} position={'relative'}>
+            <IconButton
+                position={'absolute'}
+                right={'15px'}
+                onClick={() => {
+                    navigate('/preMatchAnalyst', { state: { teams } });
+                }}
+                icon={<RiEditBoxFill />}
+            />
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
                 {eventName}
             </Text>

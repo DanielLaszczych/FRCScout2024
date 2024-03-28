@@ -20,9 +20,12 @@ function PlayoffBracket({ event }) {
                 let matchElements = htmlElement.querySelectorAll('.match-label');
                 for (const matchElement of matchElements) {
                     let teamNumbers = [];
-                    let teamNumberElements = matchElement.parentElement.querySelectorAll('a');
-                    for (const teamElement of teamNumberElements) {
-                        teamNumbers.push(teamElement.innerHTML);
+                    let trElements = matchElement.parentElement.getElementsByTagName('tr');
+                    for (const trElement of trElements) {
+                        let teamNumberElements = trElement.querySelectorAll('a');
+                        for (let i = 0; i < 3 && i < teamNumberElements.length; i++) {
+                            teamNumbers.push(teamNumberElements[i].innerHTML);
+                        }
                     }
                     let matchNumber =
                         matchElement.innerHTML === 'Finals' ? '' : `sf${matchElement.innerHTML.split(' ')[1]}m1`;

@@ -612,36 +612,43 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                                 <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
                                                     {roundToTenth(teamEventData.teleopGP.speakerScore.avg)}
                                                 </Text>
-                                                {teamEventData.teleopGP.subwooferScore.avg +
-                                                    teamEventData.teleopGP.subwooferMiss.avg >
-                                                teamEventData.teleopGP.otherScore.avg +
-                                                    teamEventData.teleopGP.otherMiss.avg ? (
-                                                    <ChakraToolTip label={'Primary Subwoofer w/Allocation %'} hasArrow>
-                                                        <Center>
-                                                            <Icon boxSize={5} as={RiSpeaker2Fill} />
-                                                            <Text fontSize={'sm'}>{`${roundToWhole(
-                                                                ((teamEventData.teleopGP.subwooferScore.avg +
-                                                                    teamEventData.teleopGP.subwooferMiss.avg) /
-                                                                    (teamEventData.teleopGP.speakerScore.avg +
-                                                                        teamEventData.teleopGP.speakerMiss.avg)) *
-                                                                    100
-                                                            )}%`}</Text>
-                                                        </Center>
-                                                    </ChakraToolTip>
-                                                ) : (
-                                                    <ChakraToolTip label={'Primary Ranged w/Allocation %'} hasArrow>
-                                                        <Center>
-                                                            <Icon boxSize={4} as={GiHighShot} />
-                                                            <Text fontSize={'sm'}>{`${roundToWhole(
-                                                                ((teamEventData.teleopGP.otherScore.avg +
-                                                                    teamEventData.teleopGP.otherMiss.avg) /
-                                                                    (teamEventData.teleopGP.speakerScore.avg +
-                                                                        teamEventData.teleopGP.speakerMiss.avg)) *
-                                                                    100
-                                                            )}%`}</Text>
-                                                        </Center>
-                                                    </ChakraToolTip>
-                                                )}
+                                                {teamEventData.teleopGP.speakerScore.total +
+                                                    teamEventData.teleopGP.speakerMiss.total >
+                                                0 ? (
+                                                    teamEventData.teleopGP.subwooferScore.avg +
+                                                        teamEventData.teleopGP.subwooferMiss.avg >
+                                                    teamEventData.teleopGP.otherScore.avg +
+                                                        teamEventData.teleopGP.otherMiss.avg ? (
+                                                        <ChakraToolTip
+                                                            label={'Primary Subwoofer w/Allocation %'}
+                                                            hasArrow
+                                                        >
+                                                            <Center>
+                                                                <Icon boxSize={5} as={RiSpeaker2Fill} />
+                                                                <Text fontSize={'sm'}>{`${roundToWhole(
+                                                                    ((teamEventData.teleopGP.subwooferScore.avg +
+                                                                        teamEventData.teleopGP.subwooferMiss.avg) /
+                                                                        (teamEventData.teleopGP.speakerScore.avg +
+                                                                            teamEventData.teleopGP.speakerMiss.avg)) *
+                                                                        100
+                                                                )}%`}</Text>
+                                                            </Center>
+                                                        </ChakraToolTip>
+                                                    ) : (
+                                                        <ChakraToolTip label={'Primary Ranged w/Allocation %'} hasArrow>
+                                                            <Center>
+                                                                <Icon boxSize={4} as={GiHighShot} />
+                                                                <Text fontSize={'sm'}>{`${roundToWhole(
+                                                                    ((teamEventData.teleopGP.otherScore.avg +
+                                                                        teamEventData.teleopGP.otherMiss.avg) /
+                                                                        (teamEventData.teleopGP.speakerScore.avg +
+                                                                            teamEventData.teleopGP.speakerMiss.avg)) *
+                                                                        100
+                                                                )}%`}</Text>
+                                                            </Center>
+                                                        </ChakraToolTip>
+                                                    )
+                                                ) : null}
                                             </Flex>
                                         </Flex>
                                     </Flex>

@@ -24,6 +24,16 @@ let fields = [
     { label: 'Teleop Pts', sortFields: ['teleopPoints.avg'] },
     { label: 'Stage Pts', sortFields: ['stagePoints.avg'] },
     { label: 'Auto GP', sortFields: ['autoGP.ampScore.avg', 'autoGP.speakerScore.avg'] },
+    {
+        label: 'Tele GP',
+        sortFields: [
+            'teleopGP.ampScore.avg',
+            'teleopGP.speakerScore.avg',
+            'teleopGP.ferry.avg',
+            'teleopGP.centerFerry.avg'
+        ],
+        tooltip: '*Includes ferrying'
+    },
     { label: 'Amp Tele GP', sortFields: ['teleopGP.ampScore.avg'] },
     { label: 'Spkr. Tele GP', sortFields: ['teleopGP.speakerScore.avg'] },
     { label: 'Defense', sortFields: ['defenseRating.avg'] }
@@ -110,7 +120,7 @@ function EventRankingsPage() {
         );
     }
 
-    if (events === null || multiTeamEventData === null) {
+    if (events === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -162,7 +172,11 @@ function EventRankingsPage() {
                     </MenuList>
                 </Menu>
             </Center>
-            {multiTeamEventData.length === 0 ? (
+            {multiTeamEventData === null ? (
+                <Center>
+                    <Spinner></Spinner>
+                </Center>
+            ) : multiTeamEventData.length === 0 ? (
                 <Text fontSize={'xl'} fontWeight={'semibold'} textAlign={'center'}>
                     No event data
                 </Text>
@@ -171,7 +185,7 @@ function EventRankingsPage() {
                     <Grid
                         templateColumns={`0.6fr repeat(${fields.length - 1}, 0.8fr)`}
                         borderTop={'1px solid black'}
-                        minWidth={'1500px'}
+                        minWidth={'1600px'}
                     >
                         {fields.map((element) => (
                             <React.Fragment key={element.label}>
@@ -191,6 +205,15 @@ function EventRankingsPage() {
                                     left={element.label === 'Team #' && 0}
                                     zIndex={element.label === 'Team #' && 1}
                                     borderLeft={element.label === 'Team #' && '1px solid black'}
+                                    cursor={'pointer'}
+                                    userSelect={'none'}
+                                    onClick={() => {
+                                        if (arraysEqual(sorting.fields, element.sortFields)) {
+                                            setSorting({ ...sorting, descending: !sorting.descending });
+                                        } else {
+                                            setSorting({ fields: element.sortFields, descending: true });
+                                        }
+                                    }}
                                 >
                                     <Flex
                                         height={'40px'}
@@ -198,15 +221,6 @@ function EventRankingsPage() {
                                         justifyContent={'center'}
                                         alignItems={'center'}
                                         columnGap={'10px'}
-                                        cursor={'pointer'}
-                                        onClick={() => {
-                                            if (arraysEqual(sorting.fields, element.sortFields)) {
-                                                setSorting({ ...sorting, descending: !sorting.descending });
-                                            } else {
-                                                setSorting({ fields: element.sortFields, descending: true });
-                                            }
-                                        }}
-                                        userSelect={'none'}
                                     >
                                         <Text>{element.label}</Text>
                                         <Flex justifyContent={'center'} alignItems={'center'}>
@@ -230,6 +244,7 @@ function EventRankingsPage() {
                                             />
                                         </Flex>
                                     </Flex>
+                                    {element.tooltip && <Text fontSize={'xs'}>{element.tooltip}</Text>}
                                 </GridItem>
                             </React.Fragment>
                         ))}

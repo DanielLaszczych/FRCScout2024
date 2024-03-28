@@ -69,7 +69,7 @@ function CommentsTable({ teamNumbers, multiTeamMatchForms, multiTeamRTESSForms, 
             }
 
             comments[teamNumber] = comments[teamNumber].sort((a, b) => {
-                return new Date(parseInt(b.createdAt)) - new Date(parseInt(a.createdAt));
+                return new Date(a.createdAt) - new Date(b.createdAt);
             });
         }
         setComments(comments);

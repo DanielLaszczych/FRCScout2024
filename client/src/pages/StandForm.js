@@ -1008,6 +1008,27 @@ function StandForm() {
                                             cursor: 'default'
                                         }}
                                     >
+                                        {standFormData.autoTimeline.some(
+                                            (element) => element.piece === (index + 1).toString()
+                                        ) && (
+                                            <Text
+                                                lineHeight={'normal'}
+                                                position={'absolute'}
+                                                top={'0px'}
+                                                left={'-8px'}
+                                                backgroundColor={'white'}
+                                                borderRadius={'2px'}
+                                                padding={'0px 2px'}
+                                                textColor={'black'}
+                                            >
+                                                {`${
+                                                    standFormData.autoTimeline
+                                                        .map((element) => element.piece)
+                                                        .indexOf((index + 1).toString()) +
+                                                    (standFormData.autoTimeline[0].piece === '0' ? 0 : 1)
+                                                }`}
+                                            </Text>
+                                        )}
                                         <Icon as={LuDonut} boxSize={6} color={'orange'} />
                                     </Button>
                                 ))}

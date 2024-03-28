@@ -43,7 +43,9 @@ router.post('/postStandForm/:isQR?/:apiKey?', async (req, res) => {
         if (req.params.isQR === 'true') {
             matchFormInputs = req.body.map((QRString) => convertQRToStandFormInput(QRString));
         } else {
-            req.body.standScouter = req.user.displayName;
+            if (req.body.standScouter === undefined) {
+                req.body.standScouter = req.user.displayName;
+            }
             matchFormInputs = [req.body];
         }
 
