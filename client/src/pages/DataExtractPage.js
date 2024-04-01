@@ -3,7 +3,7 @@ import { Box, Button, Center, Flex, Menu, MenuButton, MenuItem, MenuList, Spinne
 import FileSaver from 'file-saver';
 import XLSX from 'sheetjs-style';
 import { matchFormStatus } from '../util/helperConstants';
-import { convertMatchKeyToString, sortEvents, sortMatches } from '../util/helperFunctions';
+import { convertMatchKeyToString, roundToTenth, roundToWhole, sortEvents, sortMatches } from '../util/helperFunctions';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 
 function DataExtractPage() {
@@ -186,67 +186,139 @@ function DataExtractPage() {
                 <Button
                     width={'fit-content'}
                     onClick={() => {
-                        fetch('/ted/getTEDs', {
+                        let tedsPromise = fetch('/ted/getTEDs', {
                             headers: {
                                 filters: JSON.stringify({ eventKey: currentEvent.key })
                             }
-                        })
-                            .then((response) => {
-                                if (response.status === 200) {
-                                    return response.json();
-                                } else {
-                                    throw new Error(response.statusText);
-                                }
-                            })
+                        });
+
+                        let pitFormsPromise = fetch('/pitForm/getPitForms', {
+                            headers: {
+                                filters: JSON.stringify({
+                                    eventKey: currentEvent.key,
+                                    followUp: false
+                                })
+                            }
+                        });
+
+                        Promise.all([tedsPromise, pitFormsPromise])
+                            .then((responses) =>
+                                Promise.all(
+                                    responses.map((response) => {
+                                        if (response.status === 200) {
+                                            return response.json();
+                                        } else {
+                                            throw new Error(response.statusText);
+                                        }
+                                    })
+                                )
+                            )
                             .then((data) => {
                                 const fileType =
                                     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
                                 let dataArray = [];
-                                data.forEach((ted) => {
+
+                                let teds = data[0];
+                                let pitForms = data[1];
+
+                                teds.forEach((ted) => {
+                                    let pitForm = pitForms.find((pitForm) => pitForm.teamNumber === ted.teamNumber);
+
                                     dataArray.push({
                                         'Team Number': ted.teamNumber,
                                         'Team Name':
                                             currentEvent.teams.find((team) => ted.teamNumber === team.number)?.name ||
                                             'N/A',
-                                        'Left Start': ted.leftStart,
-                                        'Auto Intake Miss': ted.autoGP.intakeMiss.avg,
-                                        'Auto Amp Scored': ted.autoGP.ampScore.avg,
-                                        'Auto Speaker Scored': ted.autoGP.speakerScore.avg,
-                                        'Auto Amp Miss': ted.autoGP.ampMiss.avg,
-                                        'Auto Speaker Miss': ted.autoGP.speakerMiss.avg,
-                                        'Auto Points': ted.autoPoints.avg,
-                                        'Teleop Intake Source': ted.teleopGP.intakeSource.avg,
-                                        'Teleop Intake Ground': ted.teleopGP.intakeGround.avg,
-                                        'Teleop Amp Scored': ted.teleopGP.ampScore.avg,
-                                        'Teleop Speaker Scored': ted.teleopGP.speakerScore.avg,
-                                        'Teleop Amp Miss': ted.teleopGP.ampMiss.avg,
-                                        'Teleop Speaker Miss': ted.teleopGP.speakerMiss.avg,
-                                        'Teleop Subwoofer Scored': ted.teleopGP.subwooferScore.avg,
-                                        'Teleop Subwoofer Miss': ted.teleopGP.subwooferMiss.avg,
-                                        'Teleop Ranged Scored': ted.teleopGP.otherScore.avg,
-                                        'Teleop Ranged Miss': ted.teleopGP.otherMiss.avg,
-                                        'Teleop Deposit Ferry': ted.teleopGP.ferry.avg,
-                                        'Teleop Shot Ferry': ted.teleopGP.centerFerry.avg,
-                                        'Teleop Points': ted.teleopPoints.avg,
-                                        'Climb Percentage':
-                                            ted.climbSuccessPercentage === null ? 'N/A' : ted.climbSuccessPercentage,
-                                        'Park Percentage':
-                                            ted.parkSuccessPercentage === null ? 'N/A' : ted.parkSuccessPercentage,
-                                        Trap: ted.teleopGP.trap.avg,
-                                        'Stage Points': ted.stagePoints.avg,
-                                        'Offensive Points': ted.offensivePoints.avg,
-                                        'Was Defended': ted.wasDefended,
-                                        'Defense Rating': ted.defenseRating.avg,
-                                        'Defense Allocation': ted.defenseAllocation.avg,
-                                        Agility: ted.agility.avg,
-                                        'Field Awareness': ted.fieldAwareness.avg,
-                                        'High Note Percentage':
-                                            ted.highNoteScorePercentage === null ? 'N/A' : ted.highNoteScorePercentage,
+                                        'Offensive Points': roundToTenth(ted.offensivePoints.avg),
+                                        'Auto Points': roundToTenth(ted.autoPoints.avg),
+                                        'Teleop Points': roundToTenth(ted.teleopPoints.avg),
+                                        'Teleop Amp GP': roundToTenth(ted.teleopGP.ampScore.avg),
+                                        'Teleop Speaker GP': roundToTenth(ted.teleopGP.speakerScore.avg),
+                                        'Teleop Shot Ferry GP': roundToTenth(ted.teleopGP.centerFerry.avg),
                                         'Lost Communication': ted.lostCommunication,
                                         'Robot Broke': ted.robotBroke,
+                                        Agility: roundToTenth(ted.agility.avg),
+                                        'Field Awareness': roundToTenth(ted.fieldAwareness.avg),
+                                        'Drive Train': pitForm ? pitForm.driveTrain : 'N/A',
+                                        Weight: pitForm ? pitForm.weight : 'N/A',
                                         'Yellow Card': ted.yellowCard,
                                         'Red Card': ted.redCard,
-                                        'No Shows': ted.noShows
+                                        'No Shows': ted.noShows,
+                                        'Stage Points': roundToTenth(ted.stagePoints.avg),
+                                        'Climb Percentage':
+                                            ted.climbSuccessPercentage === null
+                                                ? 'N/A'
+                                                : `${roundToWhole(ted.climbSuccessPercentage * 100)}%`,
+                                        'Climb Count': ted.climb.success,
+                                        'Trap Count': ted.teleopGP.trap.total,
+                                        'Park Percentage':
+                                            ted.parkSuccessPercentage === null
+                                                ? 'N/A'
+                                                : `${roundToWhole(ted.parkSuccessPercentage * 100)}%`,
+                                        'Left Start Percentage':
+                                            ted.standForms === 0
+                                                ? 'N/A'
+                                                : `${roundToWhole((ted.leftStart / ted.standForms) * 100)}%`,
+                                        'Auto Speaker GP': roundToTenth(ted.autoGP.speakerScore.avg),
+                                        'Auto Speaker Accuracy':
+                                            ted.autoGP.speakerScore.total + ted.autoGP.speakerMiss.total === 0
+                                                ? 'N/A'
+                                                : `${roundToWhole(
+                                                      (ted.autoGP.speakerScore.total /
+                                                          (ted.autoGP.speakerScore.total +
+                                                              ted.autoGP.speakerMiss.total)) *
+                                                          100
+                                                  )}%`,
+                                        'Teleop Intake Source': roundToTenth(ted.teleopGP.intakeSource.avg),
+                                        'Teleop Intake Ground': roundToTenth(ted.teleopGP.intakeGround.avg),
+                                        'Teleop Amp Accuracy':
+                                            ted.teleopGP.ampScore.total + ted.teleopGP.ampMiss.total === 0
+                                                ? 'N/A'
+                                                : `${roundToWhole(
+                                                      (ted.teleopGP.ampScore.total /
+                                                          (ted.teleopGP.ampScore.total + ted.teleopGP.ampMiss.total)) *
+                                                          100
+                                                  )}%`,
+                                        'Teleop Speaker Accuracy':
+                                            ted.teleopGP.speakerScore.total + ted.teleopGP.speakerMiss.total === 0
+                                                ? 'N/A'
+                                                : `${roundToWhole(
+                                                      (ted.teleopGP.speakerScore.total /
+                                                          (ted.teleopGP.speakerScore.total +
+                                                              ted.teleopGP.speakerMiss.total)) *
+                                                          100
+                                                  )}%`,
+                                        'Teleop Subwoofer GP': roundToTenth(ted.teleopGP.subwooferScore.avg),
+                                        'Teleop Subwoofer Accuracy':
+                                            ted.teleopGP.subwooferScore.total + ted.teleopGP.subwooferMiss.total === 0
+                                                ? 'N/A'
+                                                : `${roundToWhole(
+                                                      (ted.teleopGP.subwooferScore.total /
+                                                          (ted.teleopGP.subwooferScore.total +
+                                                              ted.teleopGP.subwooferMiss.total)) *
+                                                          100
+                                                  )}%`,
+                                        'Teleop Ranged GP': roundToTenth(ted.teleopGP.otherScore.avg),
+                                        'Teleop Ranged Accuracy':
+                                            ted.teleopGP.otherScore.total + ted.teleopGP.otherMiss.total === 0
+                                                ? 'N/A'
+                                                : `${roundToWhole(
+                                                      (ted.teleopGP.otherScore.total /
+                                                          (ted.teleopGP.otherScore.total +
+                                                              ted.teleopGP.otherMiss.total)) *
+                                                          100
+                                                  )}%`,
+                                        'Was Defended': ted.wasDefended,
+                                        'Defense Rating':
+                                            ted.playedDefense === 0 ? 'N/A' : roundToTenth(ted.defenseRating.avg),
+                                        'Defense Allocation':
+                                            ted.playedDefense === 0
+                                                ? 'N/A'
+                                                : `${roundToWhole(ted.defenseAllocation.avg * 100)}%`,
+                                        'High Note Percentage':
+                                            ted.highNoteScorePercentage === null
+                                                ? 'N/A'
+                                                : `${roundToWhole(ted.highNoteScorePercentage * 100)}%`
                                     });
                                 });
 
