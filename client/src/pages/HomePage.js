@@ -26,6 +26,13 @@ import { GrMapLocation } from 'react-icons/gr';
 import GoogleButton from '../components/GoogleButton';
 import MatchScheduleTable from '../components/MatchScheduleTable';
 import PlayoffBracket from '../components/PlayoffBracket';
+import MatchAnalystScheduleTable from '../components/MatchAnalystScheduleTable';
+
+const scheduleTypes = {
+    mainSchedule: 'Schedule',
+    playoffBracket: 'Playoff Bracket',
+    matchAnalystSchedule: 'Match Analyst'
+};
 
 function HomePage() {
     let navigate = useNavigate();
@@ -38,7 +45,7 @@ function HomePage() {
     const [pitFormDialog, setPitFormDialog] = useState(false);
     const [pitTeamNumber, setPitTeamNumber] = useState('');
     const [pitPopoverError, setPitPopoverError] = useState(null);
-    const [showSchedule, setShowSchedule] = useState(true);
+    const [scheduleType, setScheduleType] = useState(scheduleTypes.mainSchedule);
 
     useEffect(() => {
         if (user !== 'NoUser') {
@@ -209,31 +216,29 @@ function HomePage() {
                         </Button>
                     </VStack>
                     <Flex justifyContent={'center'} marginTop={'20px'} columnGap={'15px'}>
-                        <Button
-                            minWidth={'144px'}
-                            colorScheme={showSchedule ? 'green' : 'gray'}
-                            onClick={() => setShowSchedule(true)}
-                        >
-                            Schedule
-                        </Button>
-                        <Button
-                            minWidth={'144px'}
-                            colorScheme={!showSchedule ? 'green' : 'gray'}
-                            onClick={() => setShowSchedule(false)}
-                        >
-                            Playoff Bracket
-                        </Button>
+                        {Object.values(scheduleTypes).map((type) => (
+                            <Button
+                                key={type}
+                                minWidth={'144px'}
+                                colorScheme={scheduleType === type ? 'green' : 'gray'}
+                                onClick={() => setScheduleType(type)}
+                            >
+                                {type}
+                            </Button>
+                        ))}
                     </Flex>
-                    {showSchedule ? (
+                    {scheduleType === scheduleTypes.mainSchedule ? (
                         <MatchScheduleTable
                             teamNumber={teamNumber}
                             event={currentEvent}
                             teamPage={false}
                             initialCollapse={false}
                         />
-                    ) : (
-                        <PlayoffBracket event={currentEvent}></PlayoffBracket>
-                    )}
+                    ) : scheduleType === scheduleTypes.playoffBracket ? (
+                        <PlayoffBracket event={currentEvent} />
+                    ) : scheduleType === scheduleTypes.matchAnalystSchedule ? (
+                        <MatchAnalystScheduleTable teamNumber={teamNumber} event={currentEvent} />
+                    ) : null}
                 </Box>
             )}
         </Center>

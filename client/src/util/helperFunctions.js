@@ -55,6 +55,22 @@ export function sortMatches(matches, field = 'matchNumber', compareStations = tr
     });
 }
 
+export function getMatchDifference(matchOne, matchTwo) {
+    let matchTypes = { q: 0, s: 1, f: 2 };
+    let matchTypeA = matchTypes[matchOne.charAt(0)];
+    let matchTypeB = matchTypes[matchTwo.charAt(0)];
+    let typeDifference = matchTypeA - matchTypeB;
+    if (typeDifference === 0) {
+        let endIndex = matchTypeA === 0 ? 5 : 4;
+        return (
+            matchOne.substring(2, endIndex).replace(/[^0-9]/g, '') -
+            matchTwo.substring(2, endIndex).replace(/[^0-9]/g, '')
+        );
+    } else {
+        return typeDifference;
+    }
+}
+
 export function convertMatchKeyToString(matchKey, splitRoundAndMatch = false, short = false) {
     switch (matchKey.substring(0, 2)) {
         case 'pm':
