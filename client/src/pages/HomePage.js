@@ -148,7 +148,7 @@ function HomePage() {
                     >
                         Current Event: {currentEvent.name}
                     </Text>
-                    <VStack spacing={'25px'} marginTop={'25px'}>
+                    <VStack spacing={'25px'} marginTop={'25px'} marginBottom={'20px'}>
                         <Button minWidth={'120px'} onClick={() => setPitFormDialog(true)}>
                             Pit Scout
                         </Button>
@@ -215,7 +215,22 @@ function HomePage() {
                             Super Scout
                         </Button>
                     </VStack>
-                    <Flex justifyContent={'center'} marginTop={'20px'} columnGap={'15px'}>
+                    <Text
+                        textAlign={'center'}
+                        fontSize={'xl'}
+                        fontWeight={'semibold'}
+                        margin={'0 auto'}
+                        width={{ base: '75%', md: '75%', lg: '100%' }}
+                    >
+                        Schedule Info
+                    </Text>
+                    <Flex
+                        flexWrap={'wrap'}
+                        justifyContent={'center'}
+                        marginTop={'10px'}
+                        columnGap={'15px'}
+                        rowGap={'10px'}
+                    >
                         {Object.values(scheduleTypes).map((type) => (
                             <Button
                                 key={type}
