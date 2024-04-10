@@ -170,7 +170,7 @@ function HomePage() {
                                 icon={<GrMapLocation />}
                                 size='sm'
                             />
-                            <Modal isOpen={isOpen} allowPinchZoom={true} blockScrollOnMount={false}>
+                            <Modal isOpen={isOpen} allowPinchZoom={true} blockScrollOnMount={false} autoFocus={false}>
                                 <ModalOverlay>
                                     <ModalContent
                                         margin={'auto'}
@@ -223,10 +223,11 @@ function HomePage() {
                                                             borderRadius={'25px'}
                                                             width={`${
                                                                 (ocrInfo.width / pitImageRef.current.naturalWidth) *
-                                                                getImageVariables(
-                                                                    pitImageRef.current.naturalWidth,
-                                                                    pitImageRef.current.naturalHeight
-                                                                ).width
+                                                                    getImageVariables(
+                                                                        pitImageRef.current.naturalWidth,
+                                                                        pitImageRef.current.naturalHeight
+                                                                    ).width +
+                                                                10
                                                             }px`}
                                                             height={`${
                                                                 (ocrInfo.height / pitImageRef.current.naturalHeight) *
@@ -245,7 +246,8 @@ function HomePage() {
                                                                 getImageVariables(
                                                                     pitImageRef.current.naturalWidth,
                                                                     pitImageRef.current.naturalHeight
-                                                                ).left
+                                                                ).left -
+                                                                5
                                                             }px`}
                                                             top={`${
                                                                 (ocrInfo.top / pitImageRef.current.naturalHeight) *
