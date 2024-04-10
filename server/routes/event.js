@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Event = require('../models/Event');
 const cloudinary = require('cloudinary').v2;
+const { ocrSpace } = require('ocr-space-api-wrapper');
 
 router.get('/getEvents', async (req, res) => {
     if (req.isUnauthenticated()) {
@@ -144,14 +145,40 @@ router.post('/setEventPitMap', async (req, res) => {
         if (!event) {
             throw new Error('This event is not registered inside the databse');
         } else {
-            let imageUrl;
+            let imageUrl = '';
             await cloudinary.uploader.upload(req.body.image, (error, result) => {
                 if (error) {
                     throw new Error('Could not upload image');
                 }
                 imageUrl = result.secure_url;
             });
-            event.pitMapImage = imageUrl;
+
+            if (imageUrl !== '') {
+                event.pitMapImage = imageUrl;
+
+                let ocrInfo = await ocrSpace(imageUrl, {
+                    isOverlayRequired: true,
+                    detectOrientation: true,
+                    scale: true,
+                    OCREngine: 2
+                });
+
+                let pitImageOCRInfo = [];
+                for (let info of ocrInfo.ParsedResults[0].TextOverlay.Lines) {
+                    for (let wordInfo of info.Words) {
+                        if (!isNaN(wordInfo.WordText)) {
+                            pitImageOCRInfo.push({
+                                number: parseInt(wordInfo.WordText),
+                                left: wordInfo.Left,
+                                top: wordInfo.Top,
+                                height: wordInfo.Height,
+                                width: wordInfo.Width
+                            });
+                        }
+                    }
+                }
+                event.pitImageOCRInfo = pitImageOCRInfo;
+            }
             await event.save();
             res.status(200).send(event);
         }

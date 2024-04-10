@@ -18,6 +18,29 @@ const teamSchema = new Schema(
     { _id: false }
 );
 
+const pitImageOCRInfoSchema = new Schema({
+    number: {
+        type: Number,
+        required: true
+    },
+    left: {
+        type: Number,
+        required: true
+    },
+    top: {
+        type: Number,
+        required: true
+    },
+    height: {
+        type: Number,
+        required: true
+    },
+    width: {
+        type: Number,
+        required: true
+    }
+});
+
 const eventSchema = new Schema({
     name: {
         type: String,
@@ -55,6 +78,10 @@ const eventSchema = new Schema({
     },
     pitMapImage: {
         type: String,
+        required: false
+    },
+    pitImageOCRInfo: {
+        type: [pitImageOCRInfoSchema],
         required: false
     },
     custom: {

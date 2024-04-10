@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
     Box,
     Button,
@@ -21,7 +21,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
 import { config, teamNumber } from '../util/helperConstants';
-import { fetchAndCache } from '../util/helperFunctions';
+import { containsSubsequence, fetchAndCache } from '../util/helperFunctions';
 import { GrMapLocation } from 'react-icons/gr';
 import GoogleButton from '../components/GoogleButton';
 import MatchScheduleTable from '../components/MatchScheduleTable';
@@ -37,6 +37,8 @@ const scheduleTypes = {
 function HomePage() {
     let navigate = useNavigate();
     const { user } = useContext(AuthContext);
+
+    const pitImageRef = useRef();
 
     const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -75,6 +77,56 @@ function HomePage() {
             navigate(`/pitForm/${currentEvent.key}/${pitTeamNumber}`);
         } else {
             setPitPopoverError('This team is not competing at this event');
+        }
+    }
+
+    function getImageVariables(imageWidth, imageHeight) {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        let maxWidth = viewportWidth * 0.9;
+        let maxHeight = viewportHeight * 0.9;
+
+        let screenAspectRatio = maxWidth / maxHeight;
+        let imageAspectRatio = imageWidth / imageHeight;
+
+        let scaledWidth, scaledHeight;
+        if (imageAspectRatio > screenAspectRatio) {
+            // Original image has a wider aspect ratio, so add horizontal whitespace
+            scaledWidth = maxWidth;
+            scaledHeight = maxWidth / imageAspectRatio;
+
+            // Commenting this because we will never white space because we
+            // position inside the image
+            const extraHorizontalSpace = maxHeight - scaledHeight;
+            const whitespaceTop = extraHorizontalSpace / 2;
+            const whitespaceBottom = extraHorizontalSpace / 2;
+            return {
+                width: scaledWidth,
+                height: scaledHeight,
+                top: whitespaceTop,
+                bottom: whitespaceBottom,
+                left: 0,
+                right: 0
+            };
+        } else {
+            // Original image has a taller aspect ratio, so add vertical whitespace
+            scaledHeight = maxHeight;
+            scaledWidth = maxHeight * imageAspectRatio;
+
+            // Commenting this because we will never white space because we
+            // position inside the image
+            const extraVerticalSpace = maxWidth - scaledWidth;
+            const whitespaceLeft = extraVerticalSpace / 2;
+            const whitespaceRight = extraVerticalSpace / 2;
+            return {
+                width: scaledWidth,
+                height: scaledHeight,
+                top: 0,
+                bottom: 0,
+                left: whitespaceLeft,
+                right: whitespaceRight
+            };
         }
     }
 
@@ -118,7 +170,7 @@ function HomePage() {
                                 icon={<GrMapLocation />}
                                 size='sm'
                             />
-                            <Modal isOpen={isOpen} onClose={onClose} allowPinchZoom={true} blockScrollOnMount={false}>
+                            <Modal isOpen={isOpen} allowPinchZoom={true} blockScrollOnMount={false}>
                                 <ModalOverlay>
                                     <ModalContent
                                         margin={'auto'}
@@ -126,14 +178,90 @@ function HomePage() {
                                         backgroundColor={'transparent'}
                                         boxShadow={'none'}
                                         width={'fit-content'}
-                                        onClick={onClose}
+                                        position={'relative'}
                                     >
-                                        <ChakraImage
-                                            width={'90vw'}
-                                            height={'90dvh'}
-                                            fit={'contain'}
-                                            src={currentEvent.pitMapImage}
-                                        />
+                                        <ModalHeader position={'sticky'} top={'5px'}>
+                                            <Center>
+                                                <Input
+                                                    placeholder='Team Number'
+                                                    type={'number'}
+                                                    borderColor={'gray.300'}
+                                                    backgroundColor={'white'}
+                                                    width={'50vw'}
+                                                    textAlign={'center'}
+                                                    value={pitTeamNumber}
+                                                    onChange={(e) => setPitTeamNumber(e.target.value)}
+                                                />
+                                            </Center>
+                                        </ModalHeader>
+                                        <ModalBody
+                                            onClick={() => {
+                                                onClose();
+                                                setPitTeamNumber('');
+                                            }}
+                                            padding={'0px'}
+                                            position={'relative'}
+                                        >
+                                            <ChakraImage
+                                                width={'90vw'}
+                                                height={'90dvh'}
+                                                fit={'contain'}
+                                                src={currentEvent.pitMapImage}
+                                                ref={pitImageRef}
+                                            />
+                                            {pitImageRef.current &&
+                                                currentEvent.pitImageOCRInfo &&
+                                                currentEvent.pitImageOCRInfo
+                                                    .filter((ocrInfo) =>
+                                                        containsSubsequence(ocrInfo.number, parseInt(pitTeamNumber))
+                                                    )
+                                                    .map((ocrInfo) => (
+                                                        <Box
+                                                            key={ocrInfo.number.toString() + ocrInfo.left.toString()}
+                                                            position={'absolute'}
+                                                            border={'3px solid red'}
+                                                            borderRadius={'25px'}
+                                                            width={`${
+                                                                (ocrInfo.width / pitImageRef.current.naturalWidth) *
+                                                                getImageVariables(
+                                                                    pitImageRef.current.naturalWidth,
+                                                                    pitImageRef.current.naturalHeight
+                                                                ).width
+                                                            }px`}
+                                                            height={`${
+                                                                (ocrInfo.height / pitImageRef.current.naturalHeight) *
+                                                                    getImageVariables(
+                                                                        pitImageRef.current.naturalWidth,
+                                                                        pitImageRef.current.naturalHeight
+                                                                    ).height +
+                                                                10
+                                                            }px`}
+                                                            left={`${
+                                                                (ocrInfo.left / pitImageRef.current.naturalWidth) *
+                                                                    getImageVariables(
+                                                                        pitImageRef.current.naturalWidth,
+                                                                        pitImageRef.current.naturalHeight
+                                                                    ).width +
+                                                                getImageVariables(
+                                                                    pitImageRef.current.naturalWidth,
+                                                                    pitImageRef.current.naturalHeight
+                                                                ).left
+                                                            }px`}
+                                                            top={`${
+                                                                (ocrInfo.top / pitImageRef.current.naturalHeight) *
+                                                                    getImageVariables(
+                                                                        pitImageRef.current.naturalWidth,
+                                                                        pitImageRef.current.naturalHeight
+                                                                    ).height +
+                                                                getImageVariables(
+                                                                    pitImageRef.current.naturalWidth,
+                                                                    pitImageRef.current.naturalHeight
+                                                                ).top -
+                                                                5
+                                                            }px`}
+                                                        />
+                                                    ))}
+                                        </ModalBody>
                                     </ModalContent>
                                 </ModalOverlay>
                             </Modal>
