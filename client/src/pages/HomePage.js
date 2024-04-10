@@ -191,6 +191,11 @@ function HomePage() {
                                                     textAlign={'center'}
                                                     value={pitTeamNumber}
                                                     onChange={(e) => setPitTeamNumber(e.target.value)}
+                                                    onKeyDown={(event) => {
+                                                        if (event.key === 'Enter') {
+                                                            event.target.blur();
+                                                        }
+                                                    }}
                                                 />
                                             </Center>
                                         </ModalHeader>
