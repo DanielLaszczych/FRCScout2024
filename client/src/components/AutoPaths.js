@@ -11,7 +11,8 @@ import {
     PopoverContent,
     PopoverTrigger,
     Spinner,
-    Text
+    Text,
+    Button
 } from '@chakra-ui/react';
 import AutoBlueField from '../images/AutoBlueField.png';
 import { capitalizeFirstLetter, perc2color, roundToTenth } from '../util/helperFunctions';
@@ -37,13 +38,19 @@ let notePositions = [
 let imageWidth = 503;
 let imageHeight = 436;
 
-function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
+function AutoPaths({ teamNumbers, autoPaths, allAutoPaths, onTeamPage = true }) {
     const [imagesLoaded, setImagesLoaded] = useState(
         Object.fromEntries(teamNumbers.map((teamNumber) => [teamNumber, false]))
     );
     const [dimensionRatios, setDimensionRatios] = useState(null);
     const [pathsVisible, setPathsVisible] = useState(
         Object.fromEntries(teamNumbers.map((teamNumber) => [teamNumber, 0]))
+    );
+    const [autoPathsToUse, setAutoPathsToUse] = useState(
+        teamNumbers.reduce(
+            (obj, teamNumber) => ({ ...obj, [teamNumber]: { usingAll: false, autoPath: autoPaths[teamNumber] } }),
+            {}
+        )
     );
 
     const getImageVariables = useCallback(() => {
@@ -139,8 +146,8 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
                     justifyContent={'center'}
                     width={{ base: '90%', lg: `calc(90% / ${Math.min(teamNumbers.length, 3)})` }}
                 >
-                    {autoPaths[teamNumber] && autoPaths[teamNumber].length > 0 ? (
-                        <Box>
+                    {autoPathsToUse[teamNumber].autoPath && autoPathsToUse[teamNumber].autoPath.length > 0 ? (
+                        <Box position={'relative'}>
                             {!onTeamPage && (
                                 <Text
                                     fontSize={'xl'}
@@ -151,9 +158,39 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
                                     {index > 2 ? `Blue ${index - 2}: ${teamNumber}` : `Red ${index + 1}: ${teamNumber}`}
                                 </Text>
                             )}
+                            <Button
+                                size={'sm'}
+                                position={'absolute'}
+                                left={'50%'}
+                                top={onTeamPage ? '8px' : '38px'}
+                                transform={'translate(-50%, 0%)'}
+                                onClick={() => {
+                                    if (autoPathsToUse[teamNumber].usingAll) {
+                                        setPathsVisible({
+                                            ...pathsVisible,
+                                            [teamNumber]: 0
+                                        });
+                                        setAutoPathsToUse({
+                                            ...autoPathsToUse,
+                                            [teamNumber]: { usingAll: false, autoPath: autoPaths[teamNumber] }
+                                        });
+                                    } else {
+                                        setPathsVisible({
+                                            ...pathsVisible,
+                                            [teamNumber]: 0
+                                        });
+                                        setAutoPathsToUse({
+                                            ...autoPathsToUse,
+                                            [teamNumber]: { usingAll: true, autoPath: allAutoPaths[teamNumber] }
+                                        });
+                                    }
+                                }}
+                            >
+                                {autoPathsToUse[teamNumber].usingAll ? 'All' : 'Current'}
+                            </Button>
                             <Flex>
                                 <Text flex={1 / 2} fontSize={'md'} fontWeight={'semibold'} textAlign={'start'}>
-                                    Ran {autoPaths[teamNumber][pathsVisible[teamNumber]].runs} time(s)
+                                    Ran {autoPathsToUse[teamNumber].autoPath[pathsVisible[teamNumber]].runs} time(s)
                                 </Text>
                                 <Box flex={1 / 2} textAlign={'end'}>
                                     <Popover trigger={'hover'}>
@@ -170,13 +207,13 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
                                             <PopoverArrow backgroundColor={'gray.700'} />
                                             <PopoverBody>
                                                 <Box>
-                                                    {autoPaths[teamNumber][pathsVisible[teamNumber]].matches.map(
-                                                        (match) => (
-                                                            <Text key={match} textAlign={'center'}>
-                                                                {match}
-                                                            </Text>
-                                                        )
-                                                    )}
+                                                    {autoPathsToUse[teamNumber].autoPath[
+                                                        pathsVisible[teamNumber]
+                                                    ].matches.map((match) => (
+                                                        <Text key={match} textAlign={'center'}>
+                                                            {match}
+                                                        </Text>
+                                                    ))}
                                                 </Box>
                                             </PopoverBody>
                                         </PopoverContent>
@@ -185,13 +222,14 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
                             </Flex>
                             <Flex>
                                 <Text flex={1 / 2} fontSize={'md'} fontWeight={'semibold'} textAlign={'start'}>
-                                    Left Start: {autoPaths[teamNumber][pathsVisible[teamNumber]].leftStart} /{' '}
-                                    {autoPaths[teamNumber][pathsVisible[teamNumber]].runs}
+                                    Left Start:{' '}
+                                    {autoPathsToUse[teamNumber].autoPath[pathsVisible[teamNumber]].leftStart} /{' '}
+                                    {autoPathsToUse[teamNumber].autoPath[pathsVisible[teamNumber]].runs}
                                 </Text>
                                 <Text flex={1 / 2} fontSize={'md'} fontWeight={'semibold'} textAlign={'end'}>
                                     {roundToTenth(
-                                        autoPaths[teamNumber][pathsVisible[teamNumber]].totalPoints /
-                                            autoPaths[teamNumber][pathsVisible[teamNumber]].runs
+                                        autoPathsToUse[teamNumber].autoPath[pathsVisible[teamNumber]].totalPoints /
+                                            autoPathsToUse[teamNumber].autoPath[pathsVisible[teamNumber]].runs
                                     )}
                                     : Avg Points
                                 </Text>
@@ -215,7 +253,7 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
                                         setImagesLoaded((prevValue) => ({ ...prevValue, [teamNumber]: true }))
                                     }
                                 />
-                                {autoPaths[teamNumber]
+                                {autoPathsToUse[teamNumber].autoPath
                                     .slice(pathsVisible[teamNumber], pathsVisible[teamNumber] + 1)
                                     .map((autoPath, index) => (
                                         <React.Fragment key={index}>
@@ -324,7 +362,9 @@ function AutoPaths({ teamNumbers, autoPaths, onTeamPage = true }) {
                                 </Text>
                                 <IconButton
                                     icon={<IoChevronForward />}
-                                    isDisabled={pathsVisible[teamNumber] === autoPaths[teamNumber].length - 1}
+                                    isDisabled={
+                                        pathsVisible[teamNumber] === autoPathsToUse[teamNumber].autoPath.length - 1
+                                    }
                                     onClick={() =>
                                         setPathsVisible({
                                             ...pathsVisible,

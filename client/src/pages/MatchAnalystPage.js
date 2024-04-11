@@ -491,6 +491,12 @@ function MatchAnalystPage() {
                             multiTeamEventData[teamNumber]?.autoPaths
                         ])
                     )}
+                    allAutoPaths={Object.fromEntries(
+                        [...teams.red, ...teams.blue].map((teamNumber) => [
+                            teamNumber,
+                            multiTeamEventData[teamNumber]?.allAutoPaths
+                        ])
+                    )}
                     onTeamPage={false}
                 />
             </Box>

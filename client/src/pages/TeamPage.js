@@ -55,11 +55,21 @@ function TeamPage({ keyProp }) {
                 }
                 let currentEvent = events.find((event) => event.currentEvent);
                 if (currentEvent) {
-                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setCurrentEvent({
+                        name: currentEvent.name,
+                        key: currentEvent.key,
+                        pitMapImage: currentEvent.pitMapImage,
+                        pitImageOCRInfo: currentEvent.pitImageOCRInfo
+                    });
                     setFocusedEvent(currentEvent.name);
                 } else {
                     currentEvent = events[events.length - 1];
-                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setCurrentEvent({
+                        name: currentEvent.name,
+                        key: currentEvent.key,
+                        pitMapImage: currentEvent.pitMapImage,
+                        pitImageOCRInfo: currentEvent.pitImageOCRInfo
+                    });
                     setFocusedEvent(currentEvent.name);
                 }
             })
@@ -201,7 +211,12 @@ function TeamPage({ keyProp }) {
                                 key={eventItem.key}
                                 onClick={() => {
                                     if (eventItem.key !== currentEvent.key) {
-                                        setCurrentEvent({ name: eventItem.name, key: eventItem.key });
+                                        setCurrentEvent({
+                                            name: eventItem.name,
+                                            key: eventItem.key,
+                                            pitMapImage: eventItem.pitMapImage,
+                                            pitImageOCRInfo: eventItem.pitImageOCRInfo
+                                        });
                                     }
                                 }}
                             >

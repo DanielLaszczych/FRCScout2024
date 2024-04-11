@@ -302,12 +302,9 @@ export function containsSubsequence(number, subsequence) {
     number = number.toString();
     subsequence = subsequence.toString();
 
-    // Iterate through the digits of the number
-    for (let i = 0; i <= number.length - subsequence.length; i++) {
-        // Check if the subsequence exists starting from the current position
-        if (number.substring(i, i + subsequence.length) === subsequence) {
-            return true; // Subsequence found
-        }
+    if (number.substring(0, subsequence.length) === subsequence) {
+        return true; // Subsequence found
     }
+
     return false; // Subsequence not found
 }

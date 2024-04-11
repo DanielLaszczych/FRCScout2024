@@ -19,9 +19,11 @@ import {
     ModalOverlay,
     ModalContent,
     Icon,
-    Tooltip as ChakraToolTip
+    Tooltip as ChakraToolTip,
+    IconButton,
+    ModalBody
 } from '@chakra-ui/react';
-import { getValueByRange, roundToTenth, roundToWhole } from '../util/helperFunctions';
+import { containsSubsequence, getValueByRange, roundToTenth, roundToWhole } from '../util/helperFunctions';
 import { v4 as uuidv4 } from 'uuid';
 import { matchFormStatus, teamPageTabs } from '../util/helperConstants';
 import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend } from 'chart.js';
@@ -34,6 +36,7 @@ import MatchScheduleTable from '../components/MatchScheduleTable';
 import MatchFormsTable from '../components/MatchFormsTable';
 import { RiSpeaker2Fill } from 'react-icons/ri';
 import { GiHighShot } from 'react-icons/gi';
+import { GrMapLocation } from 'react-icons/gr';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -56,7 +59,8 @@ let imageWidth = 435;
 let imageHeight = 435;
 
 function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, teamNumber, teamName, currentEvent }) {
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const { isOpen: isOpenRobotImage, onOpen: onOpenRobotImage, onClose: onCloseRobotImage } = useDisclosure();
+    const { isOpen: isOpenPitImage, onOpen: onOpenPitImage, onClose: onClosePitImage } = useDisclosure();
     const teamRef = useRef();
     const totalRef = useRef();
     const autoRef = useRef();
@@ -75,6 +79,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
         teleop: null,
         stage: null
     });
+    const [pitImageVariables, setPitImageVariables] = useState(null);
 
     useEffect(() => {
         if (matchForms) {
@@ -162,15 +167,90 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
         setChildrenOffsetTop(newChildrenOffsetTop);
     }, []);
 
+    const getPitImageVariables = useCallback(() => {
+        if (currentEvent?.pitMapImage) {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            let maxWidth = viewportWidth * 0.9;
+            let maxHeight = viewportHeight * 0.9;
+
+            let img = new Image();
+            img.src = currentEvent.pitMapImage;
+
+            img.onload = () => {
+                let screenAspectRatio = maxWidth / maxHeight;
+                let imageAspectRatio = img.naturalWidth / img.naturalHeight;
+
+                let scaledWidth, scaledHeight;
+                if (imageAspectRatio > screenAspectRatio) {
+                    // Original image has a wider aspect ratio, so add horizontal whitespace
+                    scaledWidth = maxWidth;
+                    scaledHeight = maxWidth / imageAspectRatio;
+
+                    // Commenting this because we will never white space because we
+                    // position inside the image
+                    const extraHorizontalSpace = maxHeight - scaledHeight;
+                    const whitespaceTop = extraHorizontalSpace / 2;
+                    const whitespaceBottom = extraHorizontalSpace / 2;
+                    setPitImageVariables({
+                        naturalWidth: img.naturalWidth,
+                        naturalHeight: img.naturalHeight,
+                        width: scaledWidth,
+                        height: scaledHeight,
+                        top: whitespaceTop,
+                        bottom: whitespaceBottom,
+                        left: 0,
+                        right: 0
+                    });
+                } else {
+                    // Original image has a taller aspect ratio, so add vertical whitespace
+                    scaledHeight = maxHeight;
+                    scaledWidth = maxHeight * imageAspectRatio;
+
+                    // Commenting this because we will never white space because we
+                    // position inside the image
+                    const extraVerticalSpace = maxWidth - scaledWidth;
+                    const whitespaceLeft = extraVerticalSpace / 2;
+                    const whitespaceRight = extraVerticalSpace / 2;
+                    setPitImageVariables({
+                        naturalWidth: img.naturalWidth,
+                        naturalHeight: img.naturalHeight,
+                        width: scaledWidth,
+                        height: scaledHeight,
+                        top: 0,
+                        bottom: 0,
+                        left: whitespaceLeft,
+                        right: whitespaceRight
+                    });
+                }
+            };
+        }
+    }, [currentEvent]);
+
     useLayoutEffect(() => {
         if (tab === teamPageTabs.overview) {
             getChildrenOffsetTop();
+            getPitImageVariables();
 
             window.addEventListener('resize', getChildrenOffsetTop);
+            window.addEventListener('resize', getPitImageVariables);
 
-            return () => window.removeEventListener('resize', getChildrenOffsetTop);
+            return () => {
+                window.removeEventListener('resize', getChildrenOffsetTop);
+                window.removeEventListener('resize', getPitImageVariables);
+            };
         }
-    }, [pitForm, matchForms, oneValidMatchForms, oneValidPracticeForms, teamEventData, getChildrenOffsetTop, tab]);
+    }, [
+        pitForm,
+        matchForms,
+        oneValidMatchForms,
+        oneValidPracticeForms,
+        teamEventData,
+        getChildrenOffsetTop,
+        getPitImageVariables,
+        tab
+    ]);
 
     useLayoutEffect(() => {
         if ([teamPageTabs.pit, teamPageTabs.forms, teamPageTabs.other].includes(tab)) {
@@ -256,6 +336,82 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
             case teamPageTabs.overview:
                 return (
                     <Flex flexWrap={'wrap'} justifyContent={'center'} rowGap={'15px'}>
+                        {currentEvent.pitMapImage && (
+                            <React.Fragment>
+                                <IconButton
+                                    position={'absolute'}
+                                    left={'10px'}
+                                    top={'155px'}
+                                    onClick={onOpenPitImage}
+                                    icon={<GrMapLocation />}
+                                    size='sm'
+                                />
+                                <Modal
+                                    isOpen={isOpenPitImage}
+                                    onClose={onClosePitImage}
+                                    allowPinchZoom={true}
+                                    blockScrollOnMount={false}
+                                >
+                                    <ModalOverlay>
+                                        <ModalContent
+                                            margin={'auto'}
+                                            maxWidth={'none'}
+                                            backgroundColor={'transparent'}
+                                            boxShadow={'none'}
+                                            width={'fit-content'}
+                                            position={'relative'}
+                                        >
+                                            <ModalBody onClick={onClosePitImage} padding={'0px'} position={'relative'}>
+                                                <ChakraImage
+                                                    width={'90vw'}
+                                                    height={'90dvh'}
+                                                    fit={'contain'}
+                                                    src={currentEvent.pitMapImage}
+                                                />
+                                                {pitImageVariables !== null &&
+                                                    currentEvent.pitImageOCRInfo &&
+                                                    currentEvent.pitImageOCRInfo
+                                                        .filter((ocrInfo) =>
+                                                            containsSubsequence(ocrInfo.number, parseInt(teamNumber))
+                                                        )
+                                                        .map((ocrInfo) => (
+                                                            <Box
+                                                                key={
+                                                                    ocrInfo.number.toString() + ocrInfo.left.toString()
+                                                                }
+                                                                position={'absolute'}
+                                                                border={'3px solid red'}
+                                                                borderRadius={'25px'}
+                                                                width={`${
+                                                                    (ocrInfo.width / pitImageVariables.naturalWidth) *
+                                                                        pitImageVariables.width +
+                                                                    10
+                                                                }px`}
+                                                                height={`${
+                                                                    (ocrInfo.height / pitImageVariables.naturalHeight) *
+                                                                        pitImageVariables.height +
+                                                                    10
+                                                                }px`}
+                                                                left={`${
+                                                                    (ocrInfo.left / pitImageVariables.naturalWidth) *
+                                                                        pitImageVariables.width +
+                                                                    pitImageVariables.left -
+                                                                    5
+                                                                }px`}
+                                                                top={`${
+                                                                    (ocrInfo.top / pitImageVariables.naturalHeight) *
+                                                                        pitImageVariables.height +
+                                                                    pitImageVariables.top -
+                                                                    5
+                                                                }px`}
+                                                            />
+                                                        ))}
+                                            </ModalBody>
+                                        </ModalContent>
+                                    </ModalOverlay>
+                                </Modal>
+                            </React.Fragment>
+                        )}
                         <Flex width={{ base: '100%', lg: '40%' }} flexDirection={'column'} alignItems={'center'}>
                             <Text fontSize={'2xl'} fontWeight={'semibold'} textAlign={'center'}>
                                 Team Number: {teamNumber}
@@ -279,7 +435,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                         cursor={'pointer'}
                                         onClick={() => {
                                             setModalImage(pitForm.robotImage);
-                                            onOpen();
+                                            onOpenRobotImage();
                                         }}
                                     />
                                 )}
@@ -291,12 +447,17 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                         cursor={'pointer'}
                                         onClick={() => {
                                             setModalImage(pitForm.wiringImage);
-                                            onOpen();
+                                            onOpenRobotImage();
                                         }}
                                     />
                                 )}
                             </Flex>
-                            <Modal isOpen={isOpen} onClose={onClose} allowPinchZoom={true} blockScrollOnMount={false}>
+                            <Modal
+                                isOpen={isOpenRobotImage}
+                                onClose={onCloseRobotImage}
+                                allowPinchZoom={true}
+                                blockScrollOnMount={false}
+                            >
                                 <ModalOverlay>
                                     <ModalContent
                                         margin={'auto'}
@@ -304,7 +465,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                         backgroundColor={'transparent'}
                                         boxShadow={'none'}
                                         width={'fit-content'}
-                                        onClick={onClose}
+                                        onClick={onCloseRobotImage}
                                     >
                                         <ChakraImage width={'90vw'} height={'90dvh'} fit={'contain'} src={modalImage} />
                                     </ModalContent>
@@ -1261,6 +1422,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                         <AutoPaths
                             teamNumbers={[teamNumber]}
                             autoPaths={{ [teamNumber]: teamEventData?.autoPaths }}
+                            allAutoPaths={{ [teamNumber]: teamEventData?.allAutoPaths }}
                             showTeamNumber={false}
                         />
                         <TeamStatsList

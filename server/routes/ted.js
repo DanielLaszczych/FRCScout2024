@@ -30,7 +30,8 @@ router.get('/getAllTeamEventData', async (req, res) => {
             MatchForm.find(filters).exec(),
             PracticeForm.find(filters).exec(),
             TED.findOne(filters).exec(),
-            RTESSIssue.find(filters).exec()
+            RTESSIssue.find(filters).exec(),
+            MatchForm.find(filters.teamNumber ? { teamNumber: filters.teamNumber } : {}).exec()
         ]).then(async (responses) => {
             let data = {
                 pitForm: responses[0],
@@ -41,6 +42,7 @@ router.get('/getAllTeamEventData', async (req, res) => {
             };
             if (data.teamEventData) {
                 data.teamEventData.autoPaths = HelperFunctions.getAutoPaths(data.matchForms);
+                data.teamEventData.allAutoPaths = HelperFunctions.getAutoPaths(responses[5], true);
             }
             if (!data.teamEventData) {
                 res.status(200).json(data);
@@ -91,7 +93,7 @@ class HelperFunctions {
         );
     }
 
-    static getAutoPaths(matchForms) {
+    static getAutoPaths(matchForms, withEventName = false) {
         let map = {
             ampScore: 'amp',
             ampMiss: 'amp',
@@ -150,7 +152,9 @@ class HelperFunctions {
             }
 
             pathData.runs += 1;
-            pathData.matches.push(convertMatchKeyToString(matchForm.matchNumber));
+            pathData.matches.push(
+                (withEventName ? matchForm.eventKey + ': ' : '') + convertMatchKeyToString(matchForm.matchNumber)
+            );
             pathData.leftStart += matchForm.leftStart ? 1 : 0;
             pathData.totalPoints += matchForm.leftStart ? 2 : 0;
             let order = 1;

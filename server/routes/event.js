@@ -39,7 +39,18 @@ router.get('/getEventsSimple', async (req, res) => {
     }
     try {
         const events = await Event.find(JSON.parse(req.headers.filters || '{}'))
-            .select(['key', 'name', 'currentEvent', 'startDate', 'endDate', 'custom', 'pitMapImage'].join(' '))
+            .select(
+                [
+                    'key',
+                    'name',
+                    'currentEvent',
+                    'startDate',
+                    'endDate',
+                    'custom',
+                    'pitMapImage',
+                    'pitImageOCRInfo'
+                ].join(' ')
+            )
             .exec();
         res.status(200).send(events);
     } catch (err) {

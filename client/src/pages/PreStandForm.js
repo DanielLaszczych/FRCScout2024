@@ -17,7 +17,7 @@ import {
 import { React, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { fetchAndCache } from '../util/helperFunctions';
+import { fetchAndCache, sortEvents } from '../util/helperFunctions';
 import { MdOutlineWifi, MdOutlineWifiOff } from 'react-icons/md';
 import { GlobalContext } from '../context/globalState';
 
@@ -35,6 +35,7 @@ let matchTypes = [
     { label: 'Playoffs', value: 'sf', id: uuidv4() },
     { label: 'Finals', value: 'f', id: uuidv4() }
 ];
+let enableEventDropdown = true;
 
 function PreStandForm() {
     let navigate = useNavigate();
@@ -42,7 +43,9 @@ function PreStandForm() {
     const { offline } = useContext(GlobalContext);
 
     const [error, setError] = useState(null);
+    const [events, setEvents] = useState(null);
     const [currentEvent, setCurrentEvent] = useState(null);
+    const [focusedEvent, setFocusedEvent] = useState(null);
     const [station, setStation] = useState('');
     const [focusedStation, setFocusedStation] = useState('');
     const [matchType, setMatchType] = useState('');
@@ -68,18 +71,32 @@ function PreStandForm() {
     }, []);
 
     useEffect(() => {
-        fetchAndCache('/event/getCurrentEvent')
-            .then((response) => response.json())
-            .then((data) => {
-                if (!data) {
-                    throw new Error('There is no event to scout 😔');
+        fetchAndCache('/event/getEventsSimple')
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
                 } else {
-                    setCurrentEvent(data);
+                    throw new Error(response.statusText);
                 }
             })
-            .catch((error) => {
-                setError(error.message);
-            });
+            .then((data) => {
+                let events = data;
+                setEvents(sortEvents(events));
+                if (events.length === 0) {
+                    setError('No events are registered in the database');
+                    return;
+                }
+                let currentEvent = events.find((event) => event.currentEvent);
+                if (currentEvent) {
+                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setFocusedEvent(currentEvent.name);
+                } else {
+                    currentEvent = events[events.length - 1];
+                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setFocusedEvent(currentEvent.name);
+                }
+            })
+            .catch((error) => setError(error.message));
     }, []);
 
     const getMatchKey = useCallback(() => {
@@ -230,6 +247,46 @@ function PreStandForm() {
                 onClick={() => setManualMode(!manualMode)}
                 icon={enableManualMode() ? <MdOutlineWifiOff /> : <MdOutlineWifi />}
             />
+            {enableEventDropdown && (
+                <Center marginBottom={'15px'}>
+                    <Menu placement={'bottom'}>
+                        <MenuButton
+                            maxW={'65vw'}
+                            onClick={() => setFocusedEvent('')}
+                            _focus={{ outline: 'none' }}
+                            as={Button}
+                            rightIcon={<ChevronDownIcon />}
+                        >
+                            <Box overflow={'hidden'} textOverflow={'ellipsis'}>
+                                {currentEvent.name}
+                            </Box>
+                        </MenuButton>
+                        <MenuList zIndex={2}>
+                            {events.map((eventItem) => (
+                                <MenuItem
+                                    textAlign={'center'}
+                                    justifyContent={'center'}
+                                    _focus={{ backgroundColor: 'none' }}
+                                    onMouseEnter={() => setFocusedEvent(eventItem.name)}
+                                    backgroundColor={
+                                        (currentEvent.name === eventItem.name && focusedEvent === '') ||
+                                        focusedEvent === eventItem.name
+                                            ? 'gray.100'
+                                            : 'none'
+                                    }
+                                    maxW={'65vw'}
+                                    key={eventItem.key}
+                                    onClick={() => {
+                                        setCurrentEvent({ name: eventItem.name, key: eventItem.key });
+                                    }}
+                                >
+                                    {eventItem.name}
+                                </MenuItem>
+                            ))}
+                        </MenuList>
+                    </Menu>
+                </Center>
+            )}
             <Text
                 fontSize={'xl'}
                 fontWeight={'semibold'}
