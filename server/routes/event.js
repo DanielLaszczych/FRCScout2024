@@ -179,7 +179,7 @@ router.post('/setEventPitMap', async (req, res) => {
                     for (let wordInfo of info.Words) {
                         if (!isNaN(wordInfo.WordText)) {
                             pitImageOCRInfo.push({
-                                number: parseInt(wordInfo.WordText),
+                                teamNumber: parseInt(wordInfo.WordText),
                                 left: wordInfo.Left,
                                 top: wordInfo.Top,
                                 height: wordInfo.Height,

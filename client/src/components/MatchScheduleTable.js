@@ -1,9 +1,10 @@
+import { Box, Button, Center, Divider, Flex, Grid, GridItem, Image, Spinner, Text, Tooltip } from '@chakra-ui/react';
 import React, { useCallback, useEffect, useState } from 'react';
-import { year, timeZone, teamPageTabs } from '../util/helperConstants';
-import { convertMatchKeyToString, sortMatches } from '../util/helperFunctions';
-import { Box, Button, Center, Divider, Flex, Grid, GridItem, Spinner, Text, Tooltip } from '@chakra-ui/react';
-import { ConditionalWrapper } from './ConditionalWrapper';
 import { Link } from 'react-router-dom';
+import BlueAllianceIcon from '../images/BlueAllianceIcon.png';
+import { teamPageTabs, timeZone, year } from '../util/helperConstants';
+import { convertMatchKeyToString, sortMatches } from '../util/helperFunctions';
+import { ConditionalWrapper } from './ConditionalWrapper';
 
 const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -327,7 +328,7 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
                                 >
                                     <GridItem
                                         minH={isMobile && '70px'}
-                                        padding={'7px 0px 7px 0px'}
+                                        // padding={'7px 0px 7px 0px'}
                                         textAlign={'center'}
                                         borderRight={'1px solid gray'}
                                         display={'flex'}
@@ -336,13 +337,38 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
                                         _hover={{ backgroundColor: index % 2 === 0 ? 'gray.200' : 'gray.50' }}
                                         _active={{ backgroundColor: index % 2 === 0 ? 'gray.300' : 'gray.100' }}
                                         borderRadius={matchTable.length - 1 === index && '0px 0px 0px 10px'}
-                                        as={Link}
-                                        to={`/matchAnalyst/${event.key}/${[
-                                            ...match.redAlliance.map((team) => team.substring(3)),
-                                            ...match.blueAlliance.map((team) => team.substring(3))
-                                        ].join('/')}/${match.matchNumber}`}
+                                        position={'relative'}
                                     >
-                                        {convertMatchKeyToString(match.matchNumber)}
+                                        <Flex
+                                            // border={'1px solid red'}
+                                            width={'100%'}
+                                            justifyContent={'center'}
+                                            alignItems={'center'}
+                                            padding={'7px 0px 7px 0px'}
+                                            marginLeft={'15%'}
+                                            paddingRight={'15%'}
+                                            as={Link}
+                                            to={`/matchAnalyst/${event.key}/${[
+                                                ...match.redAlliance.map((team) => team.substring(3)),
+                                                ...match.blueAlliance.map((team) => team.substring(3))
+                                            ].join('/')}/${match.matchNumber}`}
+                                        >
+                                            {convertMatchKeyToString(match.matchNumber)}
+                                        </Flex>
+                                        <a
+                                            href={`https://www.thebluealliance.com/match/${event.key}_${match.matchNumber}`}
+                                        >
+                                            <Image
+                                                top={'50%'}
+                                                left={'5%'}
+                                                transform={'translate(0%, -50%)'}
+                                                position={'absolute'}
+                                                src={BlueAllianceIcon}
+                                                width={'20px'}
+                                                height={'20px'}
+                                                zIndex={2}
+                                            />
+                                        </a>
                                     </GridItem>
                                     <ConditionalWrapper
                                         condition={isMobile}

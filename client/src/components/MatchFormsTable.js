@@ -16,7 +16,8 @@ import {
     PopoverTrigger,
     Spinner,
     Text,
-    Tooltip
+    Tooltip,
+    Image
 } from '@chakra-ui/react';
 import {
     convertMatchKeyToString,
@@ -32,6 +33,7 @@ import { GrMap } from 'react-icons/gr';
 import { v4 as uuidv4 } from 'uuid';
 import PreAutoBlueField from '../images/PreAutoBlueField.png';
 import PreAutoRedField from '../images/PreAutoRedField.png';
+import BlueAllianceIcon from '../images/BlueAllianceIcon.png';
 import { RiSpeaker2Fill } from 'react-icons/ri';
 import { GiHighShot } from 'react-icons/gi';
 import { FaFerry } from 'react-icons/fa6';
@@ -113,89 +115,119 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                             {sortMatches(oneValidMatchForms).map((matchForm) => (
                                 <React.Fragment key={matchForm.matchNumber}>
                                     {user.admin ? (
-                                        <Popover isLazy={true}>
-                                            <PopoverTrigger>
-                                                <GridItem
-                                                    borderBottom={'1px solid black'}
-                                                    borderRight={'1px solid black'}
-                                                    backgroundColor={'gray.100'}
-                                                    minHeight={'120px'}
-                                                    position={'sticky'}
-                                                    left={0}
-                                                    zIndex={1}
-                                                    borderLeft={'1px solid black'}
-                                                >
+                                        <GridItem
+                                            borderBottom={'1px solid black'}
+                                            borderRight={'1px solid black'}
+                                            backgroundColor={'gray.100'}
+                                            minHeight={'120px'}
+                                            position={'sticky'}
+                                            display={'flex'}
+                                            flexDirection={'column'}
+                                            rowGap={'5px'}
+                                            justifyContent={'center'}
+                                            alignItems={'center'}
+                                            left={0}
+                                            zIndex={1}
+                                            borderLeft={'1px solid black'}
+                                        >
+                                            <Popover isLazy={true} placement={'end'}>
+                                                <PopoverTrigger>
                                                     <Button
                                                         fontSize={'lg'}
                                                         fontWeight={'medium'}
                                                         textAlign={'center'}
                                                         whiteSpace={'pre-line'}
-                                                        height={'100%'}
-                                                        width={'100%'}
-                                                        backgroundColor={'transparent'}
-                                                        borderRadius={'0px'}
                                                         lineHeight={'unset'}
-                                                        _hover={{ backgroundColor: 'gray.200' }}
+                                                        padding={'0px'}
+                                                        width={'90%'}
+                                                        height={'max-content'}
+                                                        border={'1px solid black'}
+                                                        backgroundColor={'gray.200'}
+                                                        borderRadius={'5px'}
+                                                        _hover={{ backgroundColor: 'gray.300' }}
                                                         _active={{
-                                                            backgroundColor: 'gray.300'
+                                                            backgroundColor: 'gray.400'
                                                         }}
                                                     >
                                                         {convertMatchKeyToString(matchForm.matchNumber, true)}
                                                         {'\n'}
                                                         {convertStationKeyToString(matchForm.station)}
                                                     </Button>
-                                                </GridItem>
-                                            </PopoverTrigger>
-                                            <PopoverContent width={'fit-content'}>
-                                                <PopoverArrow />
-                                                <PopoverCloseButton />
-                                                <PopoverBody display={'flex'} flexDirection={'column'} rowGap={'10px'}>
-                                                    <Button
-                                                        as={matchForm.standStatus !== matchFormStatus.missing && Link}
-                                                        to={
-                                                            matchForm.standStatus !== matchFormStatus.missing
-                                                                ? `/standForm/${matchForm.eventKey}/${matchForm.matchNumber}/${matchForm.station}/${matchForm.teamNumber}`
-                                                                : null
-                                                        }
-                                                        state={{ previousRoute: 'team' }}
-                                                        isDisabled={matchForm.standStatus === matchFormStatus.missing}
+                                                </PopoverTrigger>
+                                                <PopoverContent width={'fit-content'}>
+                                                    <PopoverArrow />
+                                                    <PopoverCloseButton />
+                                                    <PopoverBody
+                                                        display={'flex'}
+                                                        flexDirection={'column'}
+                                                        rowGap={'10px'}
                                                     >
-                                                        {matchForm.standStatus !== matchFormStatus.missing
-                                                            ? 'Stand Form'
-                                                            : 'No Stand Form'}
-                                                    </Button>
-                                                    <Button
-                                                        as={matchForm.superStatus !== matchFormStatus.missing && Link}
-                                                        to={
-                                                            matchForm.superStatus !== matchFormStatus.missing
-                                                                ? `/superForm/${matchForm.eventKey}/${
-                                                                      matchForm.matchNumber
-                                                                  }/${matchForm.station.charAt(0)}/${
-                                                                      matchForm.allianceNumbers[0]
-                                                                  }/${matchForm.allianceNumbers[1]}/${
-                                                                      matchForm.allianceNumbers[2]
-                                                                  }`
-                                                                : null
-                                                        }
-                                                        state={{
-                                                            previousRoute: 'team',
-                                                            teamNumber: matchForm.teamNumber
-                                                        }}
-                                                        isDisabled={matchForm.superStatus === matchFormStatus.missing}
-                                                    >
-                                                        {matchForm.superStatus !== matchFormStatus.missing
-                                                            ? 'Super Form'
-                                                            : 'No Super Form'}
-                                                    </Button>
-                                                </PopoverBody>
-                                            </PopoverContent>
-                                        </Popover>
+                                                        <Button
+                                                            as={
+                                                                matchForm.standStatus !== matchFormStatus.missing &&
+                                                                Link
+                                                            }
+                                                            to={
+                                                                matchForm.standStatus !== matchFormStatus.missing
+                                                                    ? `/standForm/${matchForm.eventKey}/${matchForm.matchNumber}/${matchForm.station}/${matchForm.teamNumber}`
+                                                                    : null
+                                                            }
+                                                            state={{ previousRoute: 'team' }}
+                                                            isDisabled={
+                                                                matchForm.standStatus === matchFormStatus.missing
+                                                            }
+                                                        >
+                                                            {matchForm.standStatus !== matchFormStatus.missing
+                                                                ? 'Stand Form'
+                                                                : 'No Stand Form'}
+                                                        </Button>
+                                                        <Button
+                                                            as={
+                                                                matchForm.superStatus !== matchFormStatus.missing &&
+                                                                Link
+                                                            }
+                                                            to={
+                                                                matchForm.superStatus !== matchFormStatus.missing
+                                                                    ? `/superForm/${matchForm.eventKey}/${
+                                                                          matchForm.matchNumber
+                                                                      }/${matchForm.station.charAt(0)}/${
+                                                                          matchForm.allianceNumbers[0]
+                                                                      }/${matchForm.allianceNumbers[1]}/${
+                                                                          matchForm.allianceNumbers[2]
+                                                                      }`
+                                                                    : null
+                                                            }
+                                                            state={{
+                                                                previousRoute: 'team',
+                                                                teamNumber: matchForm.teamNumber
+                                                            }}
+                                                            isDisabled={
+                                                                matchForm.superStatus === matchFormStatus.missing
+                                                            }
+                                                        >
+                                                            {matchForm.superStatus !== matchFormStatus.missing
+                                                                ? 'Super Form'
+                                                                : 'No Super Form'}
+                                                        </Button>
+                                                    </PopoverBody>
+                                                </PopoverContent>
+                                            </Popover>
+                                            {!practiceForms && (
+                                                <a
+                                                    href={`https://www.thebluealliance.com/match/${matchForm.eventKey}_${matchForm.matchNumber}`}
+                                                >
+                                                    <Image src={BlueAllianceIcon} width={'24px'} height={'24px'} />
+                                                </a>
+                                            )}
+                                        </GridItem>
                                     ) : (
                                         <GridItem
                                             fontSize={'lg'}
                                             fontWeight={'medium'}
                                             textAlign={'center'}
                                             display={'flex'}
+                                            flexDirection={'column'}
+                                            rowGap={'5px'}
                                             justifyContent={'center'}
                                             alignItems={'center'}
                                             borderBottom={'1px solid black'}
@@ -211,6 +243,13 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                             {convertMatchKeyToString(matchForm.matchNumber, true)}
                                             {'\n'}
                                             {convertStationKeyToString(matchForm.station)}
+                                            {!practiceForms && (
+                                                <a
+                                                    href={`https://www.thebluealliance.com/match/${matchForm.eventKey}_${matchForm.matchNumber}`}
+                                                >
+                                                    <Image src={BlueAllianceIcon} width={'24px'} height={'24px'} />
+                                                </a>
+                                            )}
                                         </GridItem>
                                     )}
                                     <GridItem

@@ -1,10 +1,8 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
     Box,
     Button,
     Center,
-    IconButton,
-    Image as ChakraImage,
+    Flex,
     Input,
     Modal,
     ModalBody,
@@ -14,19 +12,18 @@ import {
     ModalOverlay,
     Spinner,
     Text,
-    VStack,
-    useDisclosure,
-    Flex
+    VStack
 } from '@chakra-ui/react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import GoogleButton from '../components/GoogleButton';
+import MatchAnalystScheduleTable from '../components/MatchAnalystScheduleTable';
+import MatchScheduleTable from '../components/MatchScheduleTable';
+import PitMap from '../components/PitMap';
+import PlayoffBracket from '../components/PlayoffBracket';
 import { AuthContext } from '../context/auth';
 import { config, teamNumber } from '../util/helperConstants';
-import { containsSubsequence, fetchAndCache } from '../util/helperFunctions';
-import { GrMapLocation } from 'react-icons/gr';
-import GoogleButton from '../components/GoogleButton';
-import MatchScheduleTable from '../components/MatchScheduleTable';
-import PlayoffBracket from '../components/PlayoffBracket';
-import MatchAnalystScheduleTable from '../components/MatchAnalystScheduleTable';
+import { fetchAndCache } from '../util/helperFunctions';
 
 const scheduleTypes = {
     mainSchedule: 'Schedule',
@@ -38,15 +35,12 @@ function HomePage() {
     let navigate = useNavigate();
     const { user } = useContext(AuthContext);
 
-    const { isOpen, onOpen, onClose } = useDisclosure();
-
     const [error, setError] = useState(null);
     const [currentEvent, setCurrentEvent] = useState(null);
     const [pitFormDialog, setPitFormDialog] = useState(false);
     const [pitTeamNumber, setPitTeamNumber] = useState('');
     const [pitPopoverError, setPitPopoverError] = useState(null);
     const [scheduleType, setScheduleType] = useState(scheduleTypes.mainSchedule);
-    const [pitImageVariables, setPitImageVariables] = useState(null);
 
     useEffect(() => {
         if (user !== 'NoUser') {
@@ -70,75 +64,6 @@ function HomePage() {
                 });
         }
     }, [user]);
-
-    const getPitImageVariables = useCallback(() => {
-        if (currentEvent?.pitMapImage) {
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-
-            let maxWidth = viewportWidth * 0.9;
-            let maxHeight = viewportHeight * 0.9;
-
-            let img = new Image();
-            img.src = currentEvent.pitMapImage;
-
-            img.onload = () => {
-                let screenAspectRatio = maxWidth / maxHeight;
-                let imageAspectRatio = img.naturalWidth / img.naturalHeight;
-
-                let scaledWidth, scaledHeight;
-                if (imageAspectRatio > screenAspectRatio) {
-                    // Original image has a wider aspect ratio, so add horizontal whitespace
-                    scaledWidth = maxWidth;
-                    scaledHeight = maxWidth / imageAspectRatio;
-
-                    // Commenting this because we will never white space because we
-                    // position inside the image
-                    const extraHorizontalSpace = maxHeight - scaledHeight;
-                    const whitespaceTop = extraHorizontalSpace / 2;
-                    const whitespaceBottom = extraHorizontalSpace / 2;
-                    setPitImageVariables({
-                        naturalWidth: img.naturalWidth,
-                        naturalHeight: img.naturalHeight,
-                        width: scaledWidth,
-                        height: scaledHeight,
-                        top: whitespaceTop,
-                        bottom: whitespaceBottom,
-                        left: 0,
-                        right: 0
-                    });
-                } else {
-                    // Original image has a taller aspect ratio, so add vertical whitespace
-                    scaledHeight = maxHeight;
-                    scaledWidth = maxHeight * imageAspectRatio;
-
-                    // Commenting this because we will never white space because we
-                    // position inside the image
-                    const extraVerticalSpace = maxWidth - scaledWidth;
-                    const whitespaceLeft = extraVerticalSpace / 2;
-                    const whitespaceRight = extraVerticalSpace / 2;
-                    setPitImageVariables({
-                        naturalWidth: img.naturalWidth,
-                        naturalHeight: img.naturalHeight,
-                        width: scaledWidth,
-                        height: scaledHeight,
-                        top: 0,
-                        bottom: 0,
-                        left: whitespaceLeft,
-                        right: whitespaceRight
-                    });
-                }
-            };
-        }
-    }, [currentEvent]);
-
-    useEffect(() => {
-        getPitImageVariables();
-
-        window.addEventListener('resize', getPitImageVariables);
-
-        return () => window.removeEventListener('resize', getPitImageVariables);
-    }, [getPitImageVariables]);
 
     function handlePitFormConfirm() {
         if (currentEvent.teams.some((team) => team.number === parseInt(pitTeamNumber))) {
@@ -178,107 +103,7 @@ function HomePage() {
                 </a>
             ) : (
                 <Box>
-                    {currentEvent.pitMapImage && (
-                        <React.Fragment>
-                            <IconButton
-                                position={'absolute'}
-                                left={'10px'}
-                                top={'95px'}
-                                onClick={onOpen}
-                                icon={<GrMapLocation />}
-                                size='sm'
-                            />
-                            <Modal
-                                isOpen={isOpen}
-                                onClose={onClose}
-                                allowPinchZoom={true}
-                                blockScrollOnMount={false}
-                                autoFocus={false}
-                            >
-                                <ModalOverlay>
-                                    <ModalContent
-                                        margin={'auto'}
-                                        maxWidth={'none'}
-                                        backgroundColor={'transparent'}
-                                        boxShadow={'none'}
-                                        width={'fit-content'}
-                                        position={'relative'}
-                                    >
-                                        <ModalHeader position={'sticky'} top={'5px'}>
-                                            <Center>
-                                                <Input
-                                                    placeholder='Team Number'
-                                                    type={'number'}
-                                                    borderColor={'gray.300'}
-                                                    backgroundColor={'white'}
-                                                    width={'50vw'}
-                                                    textAlign={'center'}
-                                                    value={pitTeamNumber}
-                                                    onChange={(e) => setPitTeamNumber(e.target.value)}
-                                                    onKeyDown={(event) => {
-                                                        if (event.key === 'Enter') {
-                                                            event.target.blur();
-                                                        }
-                                                    }}
-                                                />
-                                            </Center>
-                                        </ModalHeader>
-                                        <ModalBody
-                                            onClick={() => {
-                                                onClose();
-                                                setPitTeamNumber('');
-                                            }}
-                                            padding={'0px'}
-                                            position={'relative'}
-                                        >
-                                            <ChakraImage
-                                                width={'90vw'}
-                                                height={'90dvh'}
-                                                fit={'contain'}
-                                                src={currentEvent.pitMapImage}
-                                            />
-                                            {pitImageVariables !== null &&
-                                                currentEvent.pitImageOCRInfo &&
-                                                currentEvent.pitImageOCRInfo
-                                                    .filter((ocrInfo) =>
-                                                        containsSubsequence(ocrInfo.number, parseInt(pitTeamNumber))
-                                                    )
-                                                    .map((ocrInfo) => (
-                                                        <Box
-                                                            key={ocrInfo.number.toString() + ocrInfo.left.toString()}
-                                                            position={'absolute'}
-                                                            border={'3px solid red'}
-                                                            borderRadius={'25px'}
-                                                            width={`${
-                                                                (ocrInfo.width / pitImageVariables.naturalWidth) *
-                                                                    pitImageVariables.width +
-                                                                10
-                                                            }px`}
-                                                            height={`${
-                                                                (ocrInfo.height / pitImageVariables.naturalHeight) *
-                                                                    pitImageVariables.height +
-                                                                10
-                                                            }px`}
-                                                            left={`${
-                                                                (ocrInfo.left / pitImageVariables.naturalWidth) *
-                                                                    pitImageVariables.width +
-                                                                pitImageVariables.left -
-                                                                5
-                                                            }px`}
-                                                            top={`${
-                                                                (ocrInfo.top / pitImageVariables.naturalHeight) *
-                                                                    pitImageVariables.height +
-                                                                pitImageVariables.top -
-                                                                5
-                                                            }px`}
-                                                        />
-                                                    ))}
-                                        </ModalBody>
-                                    </ModalContent>
-                                </ModalOverlay>
-                            </Modal>
-                        </React.Fragment>
-                    )}
+                    <PitMap event={currentEvent} iconTop={100} iconLeft={10} searchBar={true}></PitMap>
                     <Text
                         textAlign={'center'}
                         fontSize={'2xl'}

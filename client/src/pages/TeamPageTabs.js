@@ -1,42 +1,40 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
     Box,
+    Card,
+    CardBody,
+    CardHeader,
     Center,
-    Flex,
     Image as ChakraImage,
+    Tooltip as ChakraToolTip,
+    Flex,
+    Icon,
     ListItem,
+    Modal,
+    ModalContent,
+    ModalOverlay,
     OrderedList,
     Spinner,
-    Tag,
-    Text,
-    Card,
-    CardHeader,
-    CardBody,
     Stack,
     StackDivider,
-    useDisclosure,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    Icon,
-    Tooltip as ChakraToolTip,
-    IconButton,
-    ModalBody
+    Tag,
+    Text,
+    useDisclosure
 } from '@chakra-ui/react';
-import { containsSubsequence, getValueByRange, roundToTenth, roundToWhole } from '../util/helperFunctions';
-import { v4 as uuidv4 } from 'uuid';
-import { matchFormStatus, teamPageTabs } from '../util/helperConstants';
-import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, Filler, Legend, LineElement, PointElement, RadialLinearScale, Tooltip } from 'chart.js';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Radar } from 'react-chartjs-2';
-import PreAutoBlueField from '../images/PreAutoBlueField.png';
-import MatchLineGraphs from '../components/MatchLineGraphs';
-import AutoPaths from '../components/AutoPaths';
-import TeamStatsList from '../components/TeamStatsList';
-import MatchScheduleTable from '../components/MatchScheduleTable';
-import MatchFormsTable from '../components/MatchFormsTable';
-import { RiSpeaker2Fill } from 'react-icons/ri';
 import { GiHighShot } from 'react-icons/gi';
-import { GrMapLocation } from 'react-icons/gr';
+import { RiSpeaker2Fill } from 'react-icons/ri';
+import { v4 as uuidv4 } from 'uuid';
+import AutoPaths from '../components/AutoPaths';
+import MatchFormsTable from '../components/MatchFormsTable';
+import MatchLineGraphs from '../components/MatchLineGraphs';
+import MatchScheduleTable from '../components/MatchScheduleTable';
+import PitMap from '../components/PitMap';
+import TeamStatsList from '../components/TeamStatsList';
+import PreAutoBlueField from '../images/PreAutoBlueField.png';
+import { matchFormStatus, teamPageTabs } from '../util/helperConstants';
+import { getValueByRange, roundToTenth } from '../util/helperFunctions';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -60,7 +58,6 @@ let imageHeight = 435;
 
 function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, teamNumber, teamName, currentEvent }) {
     const { isOpen: isOpenRobotImage, onOpen: onOpenRobotImage, onClose: onCloseRobotImage } = useDisclosure();
-    const { isOpen: isOpenPitImage, onOpen: onOpenPitImage, onClose: onClosePitImage } = useDisclosure();
     const teamRef = useRef();
     const totalRef = useRef();
     const autoRef = useRef();
@@ -79,7 +76,6 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
         teleop: null,
         stage: null
     });
-    const [pitImageVariables, setPitImageVariables] = useState(null);
 
     useEffect(() => {
         if (matchForms) {
@@ -167,90 +163,15 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
         setChildrenOffsetTop(newChildrenOffsetTop);
     }, []);
 
-    const getPitImageVariables = useCallback(() => {
-        if (currentEvent?.pitMapImage) {
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-
-            let maxWidth = viewportWidth * 0.9;
-            let maxHeight = viewportHeight * 0.9;
-
-            let img = new Image();
-            img.src = currentEvent.pitMapImage;
-
-            img.onload = () => {
-                let screenAspectRatio = maxWidth / maxHeight;
-                let imageAspectRatio = img.naturalWidth / img.naturalHeight;
-
-                let scaledWidth, scaledHeight;
-                if (imageAspectRatio > screenAspectRatio) {
-                    // Original image has a wider aspect ratio, so add horizontal whitespace
-                    scaledWidth = maxWidth;
-                    scaledHeight = maxWidth / imageAspectRatio;
-
-                    // Commenting this because we will never white space because we
-                    // position inside the image
-                    const extraHorizontalSpace = maxHeight - scaledHeight;
-                    const whitespaceTop = extraHorizontalSpace / 2;
-                    const whitespaceBottom = extraHorizontalSpace / 2;
-                    setPitImageVariables({
-                        naturalWidth: img.naturalWidth,
-                        naturalHeight: img.naturalHeight,
-                        width: scaledWidth,
-                        height: scaledHeight,
-                        top: whitespaceTop,
-                        bottom: whitespaceBottom,
-                        left: 0,
-                        right: 0
-                    });
-                } else {
-                    // Original image has a taller aspect ratio, so add vertical whitespace
-                    scaledHeight = maxHeight;
-                    scaledWidth = maxHeight * imageAspectRatio;
-
-                    // Commenting this because we will never white space because we
-                    // position inside the image
-                    const extraVerticalSpace = maxWidth - scaledWidth;
-                    const whitespaceLeft = extraVerticalSpace / 2;
-                    const whitespaceRight = extraVerticalSpace / 2;
-                    setPitImageVariables({
-                        naturalWidth: img.naturalWidth,
-                        naturalHeight: img.naturalHeight,
-                        width: scaledWidth,
-                        height: scaledHeight,
-                        top: 0,
-                        bottom: 0,
-                        left: whitespaceLeft,
-                        right: whitespaceRight
-                    });
-                }
-            };
-        }
-    }, [currentEvent]);
-
     useLayoutEffect(() => {
         if (tab === teamPageTabs.overview) {
             getChildrenOffsetTop();
-            getPitImageVariables();
 
             window.addEventListener('resize', getChildrenOffsetTop);
-            window.addEventListener('resize', getPitImageVariables);
 
-            return () => {
-                window.removeEventListener('resize', getChildrenOffsetTop);
-                window.removeEventListener('resize', getPitImageVariables);
-            };
+            return () => window.removeEventListener('resize', getChildrenOffsetTop);
         }
-    }, [
-        pitForm,
-        matchForms,
-        oneValidMatchForms,
-        oneValidPracticeForms,
-        teamEventData,
-        getChildrenOffsetTop,
-        getPitImageVariables,
-        tab
-    ]);
+    }, [pitForm, matchForms, oneValidMatchForms, oneValidPracticeForms, teamEventData, getChildrenOffsetTop, tab]);
 
     useLayoutEffect(() => {
         if ([teamPageTabs.pit, teamPageTabs.forms, teamPageTabs.other].includes(tab)) {
@@ -336,82 +257,7 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
             case teamPageTabs.overview:
                 return (
                     <Flex flexWrap={'wrap'} justifyContent={'center'} rowGap={'15px'}>
-                        {currentEvent.pitMapImage && (
-                            <React.Fragment>
-                                <IconButton
-                                    position={'absolute'}
-                                    left={'10px'}
-                                    top={'155px'}
-                                    onClick={onOpenPitImage}
-                                    icon={<GrMapLocation />}
-                                    size='sm'
-                                />
-                                <Modal
-                                    isOpen={isOpenPitImage}
-                                    onClose={onClosePitImage}
-                                    allowPinchZoom={true}
-                                    blockScrollOnMount={false}
-                                >
-                                    <ModalOverlay>
-                                        <ModalContent
-                                            margin={'auto'}
-                                            maxWidth={'none'}
-                                            backgroundColor={'transparent'}
-                                            boxShadow={'none'}
-                                            width={'fit-content'}
-                                            position={'relative'}
-                                        >
-                                            <ModalBody onClick={onClosePitImage} padding={'0px'} position={'relative'}>
-                                                <ChakraImage
-                                                    width={'90vw'}
-                                                    height={'90dvh'}
-                                                    fit={'contain'}
-                                                    src={currentEvent.pitMapImage}
-                                                />
-                                                {pitImageVariables !== null &&
-                                                    currentEvent.pitImageOCRInfo &&
-                                                    currentEvent.pitImageOCRInfo
-                                                        .filter((ocrInfo) =>
-                                                            containsSubsequence(ocrInfo.number, parseInt(teamNumber))
-                                                        )
-                                                        .map((ocrInfo) => (
-                                                            <Box
-                                                                key={
-                                                                    ocrInfo.number.toString() + ocrInfo.left.toString()
-                                                                }
-                                                                position={'absolute'}
-                                                                border={'3px solid red'}
-                                                                borderRadius={'25px'}
-                                                                width={`${
-                                                                    (ocrInfo.width / pitImageVariables.naturalWidth) *
-                                                                        pitImageVariables.width +
-                                                                    10
-                                                                }px`}
-                                                                height={`${
-                                                                    (ocrInfo.height / pitImageVariables.naturalHeight) *
-                                                                        pitImageVariables.height +
-                                                                    10
-                                                                }px`}
-                                                                left={`${
-                                                                    (ocrInfo.left / pitImageVariables.naturalWidth) *
-                                                                        pitImageVariables.width +
-                                                                    pitImageVariables.left -
-                                                                    5
-                                                                }px`}
-                                                                top={`${
-                                                                    (ocrInfo.top / pitImageVariables.naturalHeight) *
-                                                                        pitImageVariables.height +
-                                                                    pitImageVariables.top -
-                                                                    5
-                                                                }px`}
-                                                            />
-                                                        ))}
-                                            </ModalBody>
-                                        </ModalContent>
-                                    </ModalOverlay>
-                                </Modal>
-                            </React.Fragment>
-                        )}
+                        <PitMap event={currentEvent} iconTop={155} iconLeft={10} redTeams={[teamNumber]}></PitMap>
                         <Flex width={{ base: '100%', lg: '40%' }} flexDirection={'column'} alignItems={'center'}>
                             <Text fontSize={'2xl'} fontWeight={'semibold'} textAlign={'center'}>
                                 Team Number: {teamNumber}
@@ -781,31 +627,36 @@ function TeamPageTabs({ tab, pitForm, matchForms, practiceForms, teamEventData, 
                                                     teamEventData.teleopGP.otherScore.avg +
                                                         teamEventData.teleopGP.otherMiss.avg ? (
                                                         <ChakraToolTip
-                                                            label={'Primary Subwoofer w/Allocation %'}
+                                                            // label={'Primary Subwoofer w/Allocation %'}
+                                                            label={'Primary Subwoofer'}
                                                             hasArrow
                                                         >
                                                             <Center>
                                                                 <Icon boxSize={5} as={RiSpeaker2Fill} />
-                                                                <Text fontSize={'sm'}>{`${roundToWhole(
+                                                                {/* <Text fontSize={'sm'}>{`${roundToWhole(
                                                                     ((teamEventData.teleopGP.subwooferScore.avg +
                                                                         teamEventData.teleopGP.subwooferMiss.avg) /
                                                                         (teamEventData.teleopGP.speakerScore.avg +
                                                                             teamEventData.teleopGP.speakerMiss.avg)) *
                                                                         100
-                                                                )}%`}</Text>
+                                                                )}%`}</Text> */}
                                                             </Center>
                                                         </ChakraToolTip>
                                                     ) : (
-                                                        <ChakraToolTip label={'Primary Ranged w/Allocation %'} hasArrow>
+                                                        <ChakraToolTip
+                                                            // label={'Primary Ranged w/Allocation %'}
+                                                            label={'Primary Ranged'}
+                                                            hasArrow
+                                                        >
                                                             <Center>
                                                                 <Icon boxSize={4} as={GiHighShot} />
-                                                                <Text fontSize={'sm'}>{`${roundToWhole(
+                                                                {/* <Text fontSize={'sm'}>{`${roundToWhole(
                                                                     ((teamEventData.teleopGP.otherScore.avg +
                                                                         teamEventData.teleopGP.otherMiss.avg) /
                                                                         (teamEventData.teleopGP.speakerScore.avg +
                                                                             teamEventData.teleopGP.speakerMiss.avg)) *
                                                                         100
-                                                                )}%`}</Text>
+                                                                )}%`}</Text> */}
                                                             </Center>
                                                         </ChakraToolTip>
                                                     )

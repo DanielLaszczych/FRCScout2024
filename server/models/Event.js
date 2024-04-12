@@ -19,7 +19,7 @@ const teamSchema = new Schema(
 );
 
 const pitImageOCRInfoSchema = new Schema({
-    number: {
+    teamNumber: {
         type: Number,
         required: true
     },

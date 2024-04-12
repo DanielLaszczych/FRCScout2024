@@ -9,7 +9,8 @@ import MatchCompareGraph from '../components/MatchCompareGraph';
 import MatchLineGraphs from '../components/MatchLineGraphs';
 import TeamStatsList from '../components/TeamStatsList';
 import { matchFormStatus, teamPageTabs } from '../util/helperConstants';
-import { convertMatchKeyToString, roundToTenth, roundToWhole } from '../util/helperFunctions';
+import { convertMatchKeyToString, roundToTenth } from '../util/helperFunctions';
+import PitMap from '../components/PitMap';
 
 let tabs = {
     graphs: 'Graphs',
@@ -34,6 +35,7 @@ function MatchAnalystPage() {
 
     const [error, setError] = useState(null);
     const [eventName, setEventName] = useState(null);
+    const [eventData, setEventData] = useState(null);
     const [teams] = useState({
         red: [redTeamNumber1Param, redTeamNumber2Param, redTeamNumber3Param],
         blue: [blueTeamNumber1Param, blueTeamNumber2Param, blueTeamNumber3Param]
@@ -57,6 +59,23 @@ function MatchAnalystPage() {
                 console.log(error);
                 setError(error.message);
             });
+
+        fetch('/event/getEvent', { headers: { filters: JSON.stringify({ key: eventKeyParam }) } })
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    throw new Error(response.statusText);
+                }
+            })
+            .then((data) => {
+                if (data === null) {
+                    setEventData({});
+                } else {
+                    setEventData(data);
+                }
+            })
+            .catch((error) => setError(error.message));
 
         Promise.all(
             teams.red.concat(teams.blue).map((teamNumber) =>
@@ -147,6 +166,7 @@ function MatchAnalystPage() {
 
     if (
         eventName === null ||
+        eventData === null ||
         multiTeamEventData === null ||
         multiOneValidMatchForms === null ||
         multiTeamRTESSData === null
@@ -168,6 +188,7 @@ function MatchAnalystPage() {
                 }}
                 icon={<RiEditBoxFill />}
             />
+            <PitMap event={eventData} iconTop={0} iconLeft={10} redTeams={teams.red} blueTeams={teams.blue}></PitMap>
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
                 {eventName}
             </Text>
@@ -370,10 +391,14 @@ function MatchAnalystPage() {
                                                     multiTeamEventData[teamNumber].teleopGP.subwooferMiss.avg >
                                                 multiTeamEventData[teamNumber].teleopGP.otherScore.avg +
                                                     multiTeamEventData[teamNumber].teleopGP.otherMiss.avg ? (
-                                                    <Tooltip label={'Primary Subwoofer w/Allocation %'} hasArrow>
+                                                    <Tooltip
+                                                        // label={'Primary Subwoofer w/Allocation %'}
+                                                        label={'Primary Subwoofer'}
+                                                        hasArrow
+                                                    >
                                                         <Center>
                                                             <Icon boxSize={5} as={RiSpeaker2Fill} />
-                                                            <Text fontSize={'sm'}>{`${roundToWhole(
+                                                            {/* <Text fontSize={'sm'}>{`${roundToWhole(
                                                                 ((multiTeamEventData[teamNumber].teleopGP.subwooferScore
                                                                     .avg +
                                                                     multiTeamEventData[teamNumber].teleopGP
@@ -383,14 +408,18 @@ function MatchAnalystPage() {
                                                                         multiTeamEventData[teamNumber].teleopGP
                                                                             .speakerMiss.avg)) *
                                                                     100
-                                                            )}%`}</Text>
+                                                            )}%`}</Text> */}
                                                         </Center>
                                                     </Tooltip>
                                                 ) : (
-                                                    <Tooltip label={'Primary Ranged w/Allocation %'} hasArrow>
+                                                    <Tooltip
+                                                        // label={'Primary Ranged w/Allocation %'}
+                                                        label={'Primary Ranged'}
+                                                        hasArrow
+                                                    >
                                                         <Center>
                                                             <Icon boxSize={4} as={GiHighShot} />
-                                                            <Text fontSize={'sm'}>{`${roundToWhole(
+                                                            {/* <Text fontSize={'sm'}>{`${roundToWhole(
                                                                 ((multiTeamEventData[teamNumber].teleopGP.otherScore
                                                                     .avg +
                                                                     multiTeamEventData[teamNumber].teleopGP.otherMiss
@@ -400,7 +429,7 @@ function MatchAnalystPage() {
                                                                         multiTeamEventData[teamNumber].teleopGP
                                                                             .speakerMiss.avg)) *
                                                                     100
-                                                            )}%`}</Text>
+                                                            )}%`}</Text> */}
                                                         </Center>
                                                     </Tooltip>
                                                 )
