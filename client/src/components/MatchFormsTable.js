@@ -123,7 +123,6 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                             position={'sticky'}
                                             display={'flex'}
                                             flexDirection={'column'}
-                                            rowGap={'5px'}
                                             justifyContent={'center'}
                                             alignItems={'center'}
                                             left={0}
@@ -139,14 +138,13 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                                         whiteSpace={'pre-line'}
                                                         lineHeight={'unset'}
                                                         padding={'0px'}
-                                                        width={'90%'}
-                                                        height={'max-content'}
-                                                        border={'1px solid black'}
-                                                        backgroundColor={'gray.200'}
-                                                        borderRadius={'5px'}
-                                                        _hover={{ backgroundColor: 'gray.300' }}
+                                                        width={'100%'}
+                                                        height={'100%'}
+                                                        backgroundColor={'transparent'}
+                                                        borderRadius={'0px'}
+                                                        _hover={{ backgroundColor: 'gray.200' }}
                                                         _active={{
-                                                            backgroundColor: 'gray.400'
+                                                            backgroundColor: 'gray.300'
                                                         }}
                                                     >
                                                         {convertMatchKeyToString(matchForm.matchNumber, true)}
@@ -216,7 +214,13 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                                 <a
                                                     href={`https://www.thebluealliance.com/match/${matchForm.eventKey}_${matchForm.matchNumber}`}
                                                 >
-                                                    <Image src={BlueAllianceIcon} width={'24px'} height={'24px'} />
+                                                    <Image
+                                                        position={'relative'}
+                                                        bottom={'5px'}
+                                                        src={BlueAllianceIcon}
+                                                        width={'24px'}
+                                                        height={'24px'}
+                                                    />
                                                 </a>
                                             )}
                                         </GridItem>
@@ -227,7 +231,6 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                             textAlign={'center'}
                                             display={'flex'}
                                             flexDirection={'column'}
-                                            rowGap={'5px'}
                                             justifyContent={'center'}
                                             alignItems={'center'}
                                             borderBottom={'1px solid black'}
@@ -240,14 +243,22 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                             whiteSpace={'pre-line'}
                                             borderLeft={'1px solid black'}
                                         >
-                                            {convertMatchKeyToString(matchForm.matchNumber, true)}
-                                            {'\n'}
-                                            {convertStationKeyToString(matchForm.station)}
+                                            <Center height={'100%'}>
+                                                {convertMatchKeyToString(matchForm.matchNumber, true)}
+                                                {'\n'}
+                                                {convertStationKeyToString(matchForm.station)}
+                                            </Center>
                                             {!practiceForms && (
                                                 <a
                                                     href={`https://www.thebluealliance.com/match/${matchForm.eventKey}_${matchForm.matchNumber}`}
                                                 >
-                                                    <Image src={BlueAllianceIcon} width={'24px'} height={'24px'} />
+                                                    <Image
+                                                        position={'relative'}
+                                                        bottom={'5px'}
+                                                        src={BlueAllianceIcon}
+                                                        width={'24px'}
+                                                        height={'24px'}
+                                                    />
                                                 </a>
                                             )}
                                         </GridItem>

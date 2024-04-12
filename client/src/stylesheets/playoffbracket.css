@@ -52,7 +52,7 @@
     font-style: italic;
     left: 5px;
     position: absolute;
-    top: -22px;
+    top: -18px;
 }
 
 #double-elim-bracket-table .match-table {
@@ -129,7 +129,7 @@ table.match-table > thead > tr > th {
 table.match-table,
 table.oprTable {
     background-color: #fff;
-    margin: 0 0 1em auto;
+    margin: 4px 0 1em auto;
     padding: 3px 0;
     width: 100%;
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Center, Spinner } from '@chakra-ui/react';
 import '../stylesheets/playoffbracket.css';
+import BlueAllianceIcon from '../images/BlueAllianceIcon.png';
 
 function PlayoffBracket({ event }) {
     const [error, setError] = useState(null);
@@ -30,8 +31,16 @@ function PlayoffBracket({ event }) {
                     let matchNumber =
                         matchElement.innerHTML === 'Finals' ? '' : `sf${matchElement.innerHTML.split(' ')[1]}m1`;
                     let url = `matchAnalyst/${event.key}/${teamNumbers.join('/')}/${matchNumber}`;
-                    matchElement.innerHTML = `<a href=${url}>${matchElement.innerHTML}</a>`;
+                    matchElement.innerHTML = `<div><a href=${url}>${
+                        matchElement.innerHTML
+                    }</a><a href=${`https://www.thebluealliance.com/match/${event.key}_${
+                        matchNumber === '' ? 'f1m1' : matchNumber
+                    }`}><img src=${BlueAllianceIcon} height='20px' width='20px' /></a></div>`;
                     matchElement.style.textDecoration = 'underline';
+                    matchElement.childNodes[0].style.display = 'flex';
+                    matchElement.childNodes[0].style.columnGap = '10px';
+                    matchElement.childNodes[0].style.justifyContent = 'center';
+                    matchElement.childNodes[0].style.alignItems = 'center';
                 }
 
                 let bracketHTML = htmlElement.querySelector('#double-elim-bracket-table');
