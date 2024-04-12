@@ -86,7 +86,12 @@ function PreStandForm() {
                     setError('No events are registered in the database');
                     return;
                 }
+
                 let currentEvent = events.find((event) => event.currentEvent);
+                if (enableEventDropdown) {
+                    let data = JSON.parse(localStorage.getItem('PreStandFormData'));
+                    currentEvent = events.find((event) => event.key === data.event);
+                }
                 if (currentEvent) {
                     setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
                     setFocusedEvent(currentEvent.name);
@@ -477,7 +482,10 @@ function PreStandForm() {
                 marginBottom={'15px'}
                 marginTop={'20px'}
                 onClick={() => {
-                    localStorage.setItem('PreStandFormData', JSON.stringify({ station, matchType, manualMode }));
+                    localStorage.setItem(
+                        'PreStandFormData',
+                        JSON.stringify({ station, matchType, manualMode, event: currentEvent.key })
+                    );
                     navigate(`/standForm/${currentEvent.key}/${getMatchKey()}/${station.value}/${teamNumber}`);
                 }}
             >
