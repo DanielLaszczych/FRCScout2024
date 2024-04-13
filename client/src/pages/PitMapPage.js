@@ -196,7 +196,7 @@ function PitMapPage() {
                     localStorage.setItem('PitMapRotation', newRotation);
                 }}
                 icon={<AiOutlineRotateRight />}
-                size='sm'
+                size={'sm'}
             />
             {user.admin && (
                 <HStack
@@ -220,7 +220,7 @@ function PitMapPage() {
                             isDisabled={uploadingPitMap}
                             onClick={() => hiddenImageInput.current.click()}
                             icon={<FiUpload />}
-                            size='sm'
+                            size={'sm'}
                         />
                     )}
                     {tempImage && (
@@ -233,7 +233,7 @@ function PitMapPage() {
                             }}
                             icon={<GiCancel />}
                             color='red'
-                            size='sm'
+                            size={'sm'}
                         />
                     )}
                     {tempImage && (
@@ -241,7 +241,7 @@ function PitMapPage() {
                             isDisabled={uploadingPitMap}
                             onClick={() => handleUpdatePitMap()}
                             icon={<FiSave />}
-                            size='sm'
+                            size={'sm'}
                             isLoading={uploadingPitMap}
                         />
                     )}

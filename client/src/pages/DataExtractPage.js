@@ -169,16 +169,18 @@ function DataExtractPage() {
             >
                 <Flex columnGap={'20px'}>
                     <Button
-                        width={'128px'}
+                        width={'110px'}
                         colorScheme={excelType ? 'green' : 'gray'}
                         onClick={() => setExcelType(true)}
+                        size={'sm'}
                     >
                         Excel Format
                     </Button>
                     <Button
-                        width={'128px'}
+                        width={'110px'}
                         colorScheme={!excelType ? 'green' : 'gray'}
                         onClick={() => setExcelType(false)}
+                        size={'sm'}
                     >
                         CSV Format
                     </Button>

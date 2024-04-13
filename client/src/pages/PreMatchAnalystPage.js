@@ -197,6 +197,7 @@ function MatchAnalystPage() {
                 onClick={() => {
                     setManualMode(!manualMode);
                 }}
+                size={'sm'}
                 color={manualMode ? 'green' : 'black'}
                 icon={<RiEditBoxFill />}
             />

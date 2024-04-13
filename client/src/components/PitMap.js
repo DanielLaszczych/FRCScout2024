@@ -99,8 +99,8 @@ function PitMap({ event, iconTop, iconLeft, searchBar = false, redTeams = [], bl
                     left={`${iconLeft}px`}
                     top={`${iconTop}px`}
                     onClick={onOpen}
+                    size={'sm'}
                     icon={<GrMapLocation />}
-                    size='sm'
                 />
                 <Modal
                     isOpen={isOpen}

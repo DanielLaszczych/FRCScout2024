@@ -186,6 +186,7 @@ function MatchAnalystPage() {
                 onClick={() => {
                     navigate('/preMatchAnalyst', { state: { teams } });
                 }}
+                size={'sm'}
                 icon={<RiEditBoxFill />}
             />
             <PitMap event={eventData} iconTop={0} iconLeft={10} redTeams={teams.red} blueTeams={teams.blue}></PitMap>
