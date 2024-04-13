@@ -257,7 +257,7 @@ function SuperForm() {
                     superFormData[station].superStatus === matchFormStatus.followUp
                         ? superFormData[station].superStatusComment.trim() === ''
                             ? 'n'
-                            : superFormData[station].superStatusComment.trim()
+                            : superFormData[station].superStatusComment.trim().replace(/\r?\n|\r/g, '. ')
                         : 'n'
                 ].join('#')
             )

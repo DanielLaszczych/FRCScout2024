@@ -251,7 +251,7 @@ router.post('/postSuperForm/:isQR?/:apiKey?', async (req, res) => {
     let matchFormInputs;
     try {
         if (req.params.isQR === 'true') {
-            matchFormInputs = req.body.map((QRString) => HelperFunctions.convertQRToSuperFormInputs(QRString));
+            matchFormInputs = req.body.flatMap((QRString) => HelperFunctions.convertQRToSuperFormInputs(QRString));
         } else {
             req.body.forEach((matchFormInput) => (matchFormInput.superScouter = req.user.displayName));
             matchFormInputs = req.body;
