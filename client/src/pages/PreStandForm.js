@@ -88,7 +88,7 @@ function PreStandForm() {
                 }
 
                 let currentEvent = events.find((event) => event.currentEvent);
-                if (enableEventDropdown) {
+                if (enableEventDropdown && localStorage.getItem('PreStandFormData')) {
                     let data = JSON.parse(localStorage.getItem('PreStandFormData'));
                     currentEvent = events.find((event) => event.key === data.event);
                 }
