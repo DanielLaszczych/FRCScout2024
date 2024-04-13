@@ -103,7 +103,7 @@ function HomePage() {
                 </a>
             ) : (
                 <Box>
-                    <PitMap event={currentEvent} iconTop={100} iconLeft={10} searchBar={true}></PitMap>
+                    <PitMap event={currentEvent} iconTop={95} iconLeft={10} searchBar={true}></PitMap>
                     <Text
                         textAlign={'center'}
                         fontSize={'2xl'}

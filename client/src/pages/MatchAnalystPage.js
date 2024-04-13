@@ -179,9 +179,10 @@ function MatchAnalystPage() {
     }
 
     return (
-        <Box marginBottom={'25px'} position={'relative'}>
+        <Box marginBottom={'25px'}>
             <IconButton
                 position={'absolute'}
+                top={'95px'}
                 right={'15px'}
                 onClick={() => {
                     navigate('/preMatchAnalyst', { state: { teams } });
@@ -189,7 +190,7 @@ function MatchAnalystPage() {
                 size={'sm'}
                 icon={<RiEditBoxFill />}
             />
-            <PitMap event={eventData} iconTop={0} iconLeft={10} redTeams={teams.red} blueTeams={teams.blue}></PitMap>
+            <PitMap event={eventData} iconTop={95} iconLeft={10} redTeams={teams.red} blueTeams={teams.blue}></PitMap>
             <Text fontSize={'lg'} fontWeight={'semibold'} textAlign={'center'} marginBottom={'5px'}>
                 {eventName}
             </Text>
