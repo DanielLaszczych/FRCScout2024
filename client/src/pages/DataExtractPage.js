@@ -234,9 +234,16 @@ function DataExtractPage() {
                                         'Offensive Points': roundToTenth(ted.offensivePoints.avg),
                                         'Auto Points': roundToTenth(ted.autoPoints.avg),
                                         'Teleop Points': roundToTenth(ted.teleopPoints.avg),
+                                        'Teleop GP': roundToTenth(
+                                            ted.teleopGP.ampScore.avg +
+                                                ted.teleopGP.speakerScore.avg +
+                                                ted.teleopGP.centerFerry.avg +
+                                                ted.teleopGP.ferry.avg
+                                        ),
                                         'Teleop Amp GP': roundToTenth(ted.teleopGP.ampScore.avg),
                                         'Teleop Speaker GP': roundToTenth(ted.teleopGP.speakerScore.avg),
                                         'Teleop Shot Ferry GP': roundToTenth(ted.teleopGP.centerFerry.avg),
+                                        'Teleop Deposit Ferry GP': roundToTenth(ted.teleopGP.ferry.avg),
                                         'Lost Communication': ted.lostCommunication,
                                         'Robot Broke': ted.robotBroke,
                                         Agility: roundToTenth(ted.agility.avg),
