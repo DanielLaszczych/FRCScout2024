@@ -35,6 +35,10 @@ const autoGPSchema = new Schema(
         speakerMiss: {
             type: Number,
             default: 0
+        },
+        autoFerry: {
+            type: Number,
+            default: 0
         }
     },
     { _id: false }

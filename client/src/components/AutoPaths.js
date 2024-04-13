@@ -105,7 +105,11 @@ function AutoPaths({ teamNumbers, autoPaths, allAutoPaths, onTeamPage = true }) 
 
     function getPathPieceValue(pathPiece) {
         if (pathPiece.score + pathPiece.miss === 0) {
-            return `Hold`;
+            if (pathPiece.label === 'ferry') {
+                return 'Ferry';
+            } else {
+                return `Hold`;
+            }
         } else {
             let label = pathPiece.label.length > 5 ? `${pathPiece.label.slice(0, 4)}.` : pathPiece.label;
             return `${pathPiece.score}/${pathPiece.score + pathPiece.miss}\n${capitalizeFirstLetter(label)}`;

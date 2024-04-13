@@ -46,6 +46,10 @@ const autoGPSchema = new Schema(
         speakerMiss: {
             type: metricsSchema,
             default: {}
+        },
+        autoFerry: {
+            type: metricsSchema,
+            default: {}
         }
     },
     { _id: false }

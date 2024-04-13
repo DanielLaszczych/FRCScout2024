@@ -6,7 +6,7 @@ const dev = {
 };
 
 export const config = process.env.NODE_ENV === 'development' ? dev : prod;
-export const version = '2024.12';
+export const version = '2024.13';
 export const year = 2024;
 export const teamNumber = 1796;
 export const cacheName = 'scouting';
@@ -33,6 +33,7 @@ export const gamePieceFields = {
     speakerScore: { field: 'speakerScore', label: 'Speaker', short: 'ss', auto: true, teleop: true },
     ampMiss: { field: 'ampMiss', label: 'Amp Miss', short: 'am', auto: true, teleop: true },
     speakerMiss: { field: 'speakerMiss', label: 'Speaker Miss', short: 'sm', auto: true, teleop: true },
+    autoFerry: { field: 'autoFerry', label: 'Ferry', short: 'af', auto: true, teleop: false },
     ferry: { field: 'ferry', label: 'Deposit Ferry', short: 'f', auto: false, teleop: true },
     centerFerry: { field: 'centerFerry', label: 'Shot Ferry', short: 'cf', auto: false, teleop: true },
     trap: { field: 'trap', label: 'Trap', short: 't', auto: false, teleop: true },

@@ -503,6 +503,17 @@ function MatchFormsTable({ oneValidMatchForms, dimensionRatios, practiceForms = 
                                                     )}
                                                 </Text>
                                                 <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
+                                                    {`Ferry: `}
+                                                    <Text
+                                                        fontSize={'lg'}
+                                                        fontWeight={'medium'}
+                                                        textColor={'green'}
+                                                        as={'span'}
+                                                    >
+                                                        {matchForm.autoGP.autoFerry}
+                                                    </Text>
+                                                </Text>
+                                                <Text fontSize={'lg'} fontWeight={'medium'} textAlign={'center'}>
                                                     {`Intake Miss: `}
                                                     <Text
                                                         fontSize={'lg'}

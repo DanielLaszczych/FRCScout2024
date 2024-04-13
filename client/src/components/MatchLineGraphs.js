@@ -68,6 +68,7 @@ function MatchLineGraphs({ teamNumbers, multiTeamMatchForms, onTeamPage = true }
                 speakerScore: { label: 'Speaker', field: 'autoGP.speakerScore', value: false, mainLabel: true },
                 ampMiss: { label: 'Amp Miss', field: 'autoGP.ampMiss', value: false, mainLabel: true },
                 speakerMiss: { label: 'Speaker Miss', field: 'autoGP.speakerMiss', value: false, mainLabel: true },
+                autoFerry: { label: 'Ferry', field: 'autoGP.autoFerry', value: false },
                 autoPoints: { label: 'Auto Points', field: 'autoPoints', value: false }
             }
         },

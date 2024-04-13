@@ -14,6 +14,7 @@ const fields = [
             { label: 'Speaker', field: 'autoGP.speakerScore' },
             { label: 'Amp Miss', field: 'autoGP.ampMiss' },
             { label: 'Speaker Miss', field: 'autoGP.speakerMiss' },
+            { label: 'Ferry', field: 'autoGP.autoFerry' },
             { label: 'Auto Points', field: 'autoPoints' }
         ]
     },

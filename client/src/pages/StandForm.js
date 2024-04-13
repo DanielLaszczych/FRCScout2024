@@ -1125,30 +1125,53 @@ function StandForm() {
                                         )}
                                     </Button>
                                 </Flex>
-                                <Button
-                                    colorScheme={'yellow'}
-                                    fontSize={'xl'}
-                                    fontWeight={'bold'}
-                                    flex={0.2}
-                                    onClick={() => {
-                                        standFormManagers.auto.doCommand(
-                                            standFormData,
-                                            gamePieceFields.intakeMiss.field
-                                        );
-                                    }}
-                                    isDisabled={
-                                        standFormData.autoTimeline.length > 0 &&
-                                        standFormData.autoTimeline[0].piece === '0' &&
-                                        standFormData.autoTimeline[0].scored === null
-                                    }
-                                >
-                                    Intake Miss:{' '}
-                                    {standFormData.autoTimeline.reduce(
-                                        (acc, element) =>
-                                            element.scored === gamePieceFields.intakeMiss.field ? ++acc : acc,
-                                        0
-                                    )}
-                                </Button>
+                                <Flex flex={0.3} gap={'15px'}>
+                                    <Button
+                                        colorScheme={'orange'}
+                                        fontSize={'xl'}
+                                        fontWeight={'bold'}
+                                        height={'100%'}
+                                        flex={1 / 2}
+                                        onClick={() => {
+                                            standFormManagers.auto.doCommand(
+                                                standFormData,
+                                                gamePieceFields.autoFerry.field
+                                            );
+                                        }}
+                                    >
+                                        Ferry:{' '}
+                                        {standFormData.autoTimeline.reduce(
+                                            (acc, element) =>
+                                                element.scored === gamePieceFields.autoFerry.field ? ++acc : acc,
+                                            0
+                                        )}
+                                    </Button>
+                                    <Button
+                                        colorScheme={'yellow'}
+                                        fontSize={'xl'}
+                                        fontWeight={'bold'}
+                                        height={'100%'}
+                                        flex={1 / 2}
+                                        onClick={() => {
+                                            standFormManagers.auto.doCommand(
+                                                standFormData,
+                                                gamePieceFields.intakeMiss.field
+                                            );
+                                        }}
+                                        isDisabled={
+                                            standFormData.autoTimeline.length > 0 &&
+                                            standFormData.autoTimeline[0].piece === '0' &&
+                                            standFormData.autoTimeline[0].scored === null
+                                        }
+                                    >
+                                        Intake Miss:{' '}
+                                        {standFormData.autoTimeline.reduce(
+                                            (acc, element) =>
+                                                element.scored === gamePieceFields.intakeMiss.field ? ++acc : acc,
+                                            0
+                                        )}
+                                    </Button>
+                                </Flex>
                             </Flex>
                         )}
                         <Flex flexDir={'column'} marginTop={'15px'}>

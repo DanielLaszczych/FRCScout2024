@@ -100,6 +100,7 @@ class HelperFunctions {
             speakerScore: 'speaker',
             speakerMiss: 'speaker',
             intakeMiss: 'intake',
+            autoFerry: 'ferry',
             null: 'n'
         };
 
@@ -110,7 +111,7 @@ class HelperFunctions {
             }
 
             let timeline = matchForm.startingPosition.toString();
-            let count = { speaker: 0, amp: 0, intake: 0, null: 0 };
+            let count = { speaker: 0, amp: 0, intake: 0, ferry: 0, null: 0 };
             for (const action of matchForm.autoTimeline) {
                 timeline += action.piece + map[action.scored];
                 count[map[action.scored]] += 1;
@@ -122,12 +123,16 @@ class HelperFunctions {
                 pathData = paths[timeline.replaceAll('intake', 'speaker')];
             } else if (Object.hasOwn(paths, timeline.replaceAll('intake', 'amp'))) {
                 pathData = paths[timeline.replaceAll('intake', 'amp')];
+            } else if (Object.hasOwn(paths, timeline.replaceAll('intake', 'ferry'))) {
+                pathData = paths[timeline.replaceAll('intake', 'ferry')];
             } else {
                 newPath = true;
-                if (count.amp > count.speaker) {
+                if (count.amp > count.speaker && count.amp > count.ferry) {
                     timeline = timeline.replaceAll('intake', 'amp');
-                } else {
+                } else if (count.speaker > count.amp && count.speaker > count.ferry) {
                     timeline = timeline.replaceAll('intake', 'speaker');
+                } else {
+                    timeline = timeline.replaceAll('intake', 'ferry');
                 }
                 pathData = {
                     runs: 0,
@@ -141,10 +146,12 @@ class HelperFunctions {
                 for (const action of matchForm.autoTimeline) {
                     let label = map[action.scored];
                     if (label === 'intake') {
-                        if (count.amp > count.speaker) {
+                        if (count.amp > count.speaker && count.amp > count.ferry) {
                             label = 'amp';
-                        } else {
+                        } else if (count.speaker > count.amp && count.speaker > count.ferry) {
                             label = 'speaker';
+                        } else {
+                            label = 'ferry';
                         }
                     }
                     pathData.path[order++] = { piece: action.piece, label: label, score: 0, miss: 0 };

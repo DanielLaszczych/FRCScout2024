@@ -44,6 +44,7 @@ class HelperConstants {
         },
         ampMiss: { field: 'ampMiss', label: 'Amp Miss', short: 'am', auto: true, teleop: true },
         speakerMiss: { field: 'speakerMiss', label: 'Speaker Miss', short: 'sm', auto: true, teleop: true },
+        autoFerry: { field: 'autoFerry', label: 'Ferry', short: 'af', auto: true, teleop: false },
         ferry: { field: 'ferry', label: 'Deposit Ferry', short: 'f', auto: false, teleop: true },
         centerFerry: { field: 'centerFerry', label: 'Shot Ferry', short: 'cf', auto: false, teleop: true },
         trap: { field: 'trap', label: 'Trap', short: 't', auto: false, teleop: true, teleopValue: 5 },
