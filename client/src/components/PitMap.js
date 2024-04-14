@@ -153,7 +153,6 @@ function PitMap({ event, iconTop, iconLeft, searchBar = false, redTeams = [], bl
                                 </ModalHeader>
                             )}
                             <ModalBody
-                                border={'1px solid red'}
                                 onClick={() => {
                                     onClose();
                                     setPitTeamNumber('');
