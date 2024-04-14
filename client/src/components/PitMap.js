@@ -123,7 +123,16 @@ function PitMap({ event, iconTop, iconLeft, searchBar = false, redTeams = [], bl
                             {searchBar && (
                                 <ModalHeader position={'sticky'} top={'5px'}>
                                     {/* So we can use esacpe to close modal */}
-                                    <Button disabled={true} position={'absolute'} left={'-1000px'} />
+                                    <Button
+                                        disabled={true}
+                                        position={'absolute'}
+                                        background={'transparent'}
+                                        top={'0px'}
+                                        left={'0px'}
+                                        _focus={{ boxShadow: 'none' }}
+                                        _hover={{ background: 'transparent' }}
+                                        cursor={'default'}
+                                    />
                                     <Center>
                                         <Input
                                             placeholder='Team Number'
@@ -144,6 +153,7 @@ function PitMap({ event, iconTop, iconLeft, searchBar = false, redTeams = [], bl
                                 </ModalHeader>
                             )}
                             <ModalBody
+                                border={'1px solid red'}
                                 onClick={() => {
                                     onClose();
                                     setPitTeamNumber('');
