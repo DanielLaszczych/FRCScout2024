@@ -53,6 +53,7 @@ import { v4 as uuidv4 } from 'uuid';
 import PreAutoBlueField from '../images/PreAutoBlueField.png';
 import { deepEqual, getValueByRange } from '../util/helperFunctions';
 import { GlobalContext } from '../context/globalState';
+import PitMap from '../components/PitMap';
 
 let driveTrainsList = [
     { label: 'Swerve', id: uuidv4() },
@@ -119,6 +120,7 @@ function PitForm() {
     const hiddenWiringImageInput = useRef(null);
     const cancelRef = useRef();
 
+    const [eventData, setEventData] = useState(null);
     const [error, setError] = useState(null);
     const [pitFormDialog, setPitFormDialog] = useState(false);
     const [loadResponse, setLoadResponse] = useState(null);
@@ -224,6 +226,25 @@ function PitForm() {
             setLoadResponse(false);
         }
     }, [eventKeyParam, teamNumberParam]);
+
+    useEffect(() => {
+        fetch('/event/getEvent', { headers: { filters: JSON.stringify({ key: eventKeyParam }) } })
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    throw new Error(response.statusText);
+                }
+            })
+            .then((data) => {
+                if (data === null) {
+                    setEventData({});
+                } else {
+                    setEventData(data);
+                }
+            })
+            .catch((error) => setError(error.message));
+    }, [eventKeyParam]);
 
     useEffect(() => {
         if (loadResponse === false && pitFormData.loading) {
@@ -1293,7 +1314,7 @@ function PitForm() {
         );
     }
 
-    if (pitFormData.loading || dimensionRatios === null) {
+    if (pitFormData.loading || dimensionRatios === null || eventData === null) {
         return (
             <Center>
                 <Spinner></Spinner>
@@ -1317,6 +1338,7 @@ function PitForm() {
             >
                 <AddIcon textColor={'black'} fontSize={'xl'} />
             </Circle>
+            <PitMap event={eventData} iconTop={95} iconLeft={10} redTeams={[teamNumberParam]}></PitMap>
             <Modal closeOnEsc={true} isOpen={isModalOpen} onClose={onModalClose}>
                 <ModalOverlay>
                     <ModalContent w={{ base: '75%', md: '40%', lg: '30%' }}>

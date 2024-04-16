@@ -98,9 +98,7 @@ function AutoPaths({ teamNumbers, autoPaths, allAutoPaths, onTeamPage = true }) 
         getImageVariables();
         window.addEventListener('resize', getImageVariables);
 
-        return () => {
-            window.removeEventListener('resize', getImageVariables);
-        };
+        return () => window.removeEventListener('resize', getImageVariables);
     }, [getImageVariables]);
 
     function getPathPieceValue(pathPiece) {

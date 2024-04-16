@@ -51,6 +51,7 @@ function NavBar() {
     const { offline, switchModes } = useContext(GlobalContext);
 
     const [teamNumber, setTeamNumber] = useState('');
+    const [serverVersion, setServerVersion] = useState(null);
 
     useLayoutEffect(() => {
         const curTitle = titleMap.find((item) => item.path === `/${curLoc.pathname.split('/')[1]}`);
@@ -89,34 +90,7 @@ function NavBar() {
         fetch('/getVersion')
             .then((res) => res.json())
             .then((data) => {
-                if (data.version !== version) {
-                    // Create a new div element
-                    let newDiv = document.createElement('div');
-
-                    // Set some attributes for the div (optional)
-                    newDiv.textContent =
-                        'New content is available and will be used when all tabs from this website are closed. Do not scout until you have done this!!!';
-                    newDiv.style.position = 'fixed';
-                    newDiv.style.bottom = '0';
-                    newDiv.style.left = '0';
-                    newDiv.style.width = '100%';
-                    newDiv.style.backgroundColor = '#ffc300';
-                    newDiv.style.padding = '10px';
-                    newDiv.style.textAlign = 'center';
-                    newDiv.style.transition = 'opacity 1s ease-in-out'; // Add transition for opacity
-                    newDiv.style.zIndex = 999;
-
-                    // Append the div to the body
-                    document.body.appendChild(newDiv);
-
-                    // Set timeout to fade out and remove the div after 10 seconds
-                    // setTimeout(function () {
-                    //     newDiv.style.opacity = '0'; // Fade out
-                    //     setTimeout(function () {
-                    //         newDiv.remove(); // Remove from DOM after fading out
-                    //     }, 1000); // Wait for the transition duration before removing
-                    // }, 9000); // 9000 milliseconds = 9 seconds, leaving 1 second for the fade out effect
-                }
+                setServerVersion(data.version);
             })
             .catch((error) => console.log(error));
     }, []);
@@ -132,6 +106,22 @@ function NavBar() {
             backgroundColor={'#212529'}
             className='navbar'
         >
+            {serverVersion !== null && serverVersion !== version && (
+                <Box
+                    position={'fixed'}
+                    bottom={'0px'}
+                    left={'0px'}
+                    width={'100%'}
+                    backgroundColor={'#ffc300'}
+                    padding={'10px'}
+                    textAlign={'center'}
+                    transition={'opacity 1s ease-in-out'}
+                    zIndex={999}
+                >
+                    New content is available and will be used when all tabs from this website are closed. Do not scout
+                    until you have done this!!!
+                </Box>
+            )}
             <Box height={'75px'}>
                 <Image
                     width={{ base: '80px', sm: '100px' }}

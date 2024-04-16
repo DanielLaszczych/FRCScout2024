@@ -265,7 +265,7 @@ function PitMapPage() {
                             {currentEvent.name}
                         </Box>
                     </MenuButton>
-                    <MenuList>
+                    <MenuList overflowY={'auto'} maxHeight={'400px'}>
                         {sortRegisteredEvents(events).map((eventItem) => (
                             <MenuItem
                                 textAlign={'center'}

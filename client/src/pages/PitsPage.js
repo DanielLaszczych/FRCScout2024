@@ -173,7 +173,7 @@ function PitPage() {
                             {currentEvent.name}
                         </Box>
                     </MenuButton>
-                    <MenuList>
+                    <MenuList overflowY={'auto'} maxHeight={'400px'}>
                         {events.map((eventItem) => (
                             <MenuItem
                                 textAlign={'center'}

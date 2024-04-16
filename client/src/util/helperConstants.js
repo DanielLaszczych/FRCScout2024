@@ -6,7 +6,7 @@ const dev = {
 };
 
 export const config = process.env.NODE_ENV === 'development' ? dev : prod;
-export const version = '2024.20';
+export const version = '2024.21';
 export const year = 2024;
 export const teamNumber = 1796;
 export const cacheName = 'scouting';

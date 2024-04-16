@@ -266,7 +266,7 @@ function PreStandForm() {
                                 {currentEvent.name}
                             </Box>
                         </MenuButton>
-                        <MenuList zIndex={2}>
+                        <MenuList overflowY={'auto'} maxHeight={'400px'} zIndex={2}>
                             {events.map((eventItem) => (
                                 <MenuItem
                                     textAlign={'center'}
