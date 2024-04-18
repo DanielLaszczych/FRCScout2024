@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { year, timeZone, teamPageTabs } from '../util/helperConstants';
+import { year, teamPageTabs } from '../util/helperConstants';
 import { convertMatchKeyToString, getMatchDifference, sortMatches } from '../util/helperFunctions';
 import { Box, Button, Center, Divider, Flex, Grid, GridItem, Spinner, Text, Tooltip } from '@chakra-ui/react';
 import { ConditionalWrapper } from './ConditionalWrapper';
@@ -155,8 +155,7 @@ function MatchAnalystScheduleTable({ teamNumber, event, initialCollapse = true }
                                           ).toLocaleString('en-US', {
                                               hour: 'numeric',
                                               minute: 'numeric',
-                                              hour12: true,
-                                              timeZone: timeZone
+                                              hour12: true
                                           })}`
                                         : match.scheduledTime
                                         ? `${weekday[new Date(match.scheduledTime * 1000).getDay()]} ${new Date(
@@ -164,8 +163,7 @@ function MatchAnalystScheduleTable({ teamNumber, event, initialCollapse = true }
                                           ).toLocaleString('en-US', {
                                               hour: 'numeric',
                                               minute: 'numeric',
-                                              hour12: true,
-                                              timeZone: timeZone
+                                              hour12: true
                                           })}`
                                         : 'No time available'
                                 }`;
@@ -483,8 +481,7 @@ function MatchAnalystScheduleTable({ teamNumber, event, initialCollapse = true }
                                                       } ${new Date(match.scheduledTime * 1000).toLocaleString('en-US', {
                                                           hour: 'numeric',
                                                           minute: 'numeric',
-                                                          hour12: true,
-                                                          timeZone: timeZone
+                                                          hour12: true
                                                       })}`
                                             }
                                         >
@@ -500,8 +497,7 @@ function MatchAnalystScheduleTable({ teamNumber, event, initialCollapse = true }
                                                       } ${new Date(match.predictedTime * 1000).toLocaleString('en-US', {
                                                           hour: 'numeric',
                                                           minute: 'numeric',
-                                                          hour12: true,
-                                                          timeZone: timeZone
+                                                          hour12: true
                                                       })}*`
                                                     : match.scheduledTime
                                                     ? `${
@@ -509,8 +505,7 @@ function MatchAnalystScheduleTable({ teamNumber, event, initialCollapse = true }
                                                       } ${new Date(match.scheduledTime * 1000).toLocaleString('en-US', {
                                                           hour: 'numeric',
                                                           minute: 'numeric',
-                                                          hour12: true,
-                                                          timeZone: timeZone
+                                                          hour12: true
                                                       })}`
                                                     : '?'}
                                             </Text>

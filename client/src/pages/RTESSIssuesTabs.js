@@ -25,7 +25,7 @@ import {
     Tooltip,
     useToast
 } from '@chakra-ui/react';
-import { rtessIssuesStatus, teamNumber, timeZone, year } from '../util/helperConstants';
+import { rtessIssuesStatus, teamNumber, year } from '../util/helperConstants';
 import { convertMatchKeyToString, roundToWhole } from '../util/helperFunctions';
 import { circularLinkedList } from '../util/circularlinkedlist';
 import { AiFillFilter, AiOutlinePlus } from 'react-icons/ai';
@@ -371,8 +371,7 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, eventInfo, setError, 
                                                                       ).toLocaleString('en-US', {
                                                                           hour: 'numeric',
                                                                           minute: 'numeric',
-                                                                          hour12: true,
-                                                                          timeZone: timeZone
+                                                                          hour12: true
                                                                       })}`
                                                             }
                                                         >
@@ -397,8 +396,7 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, eventInfo, setError, 
                                                                           ).toLocaleString('en-US', {
                                                                               hour: 'numeric',
                                                                               minute: 'numeric',
-                                                                              hour12: true,
-                                                                              timeZone: timeZone
+                                                                              hour12: true
                                                                           })}*`
                                                                         : match.scheduledTime
                                                                         ? `${
@@ -412,8 +410,7 @@ function RTESSIssuesTabs({ tab, currentEvent, rtessIssues, eventInfo, setError, 
                                                                           ).toLocaleString('en-US', {
                                                                               hour: 'numeric',
                                                                               minute: 'numeric',
-                                                                              hour12: true,
-                                                                              timeZone: timeZone
+                                                                              hour12: true
                                                                           })}`
                                                                         : '?'}
                                                                 </Text>

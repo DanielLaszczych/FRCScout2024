@@ -9,7 +9,6 @@ const {
     matchFormStatus,
     weekday,
     rtessIssuesStatus,
-    timeZone,
     gamePieceFields,
     climbFields
 } = require('../util/helperConstants');
@@ -215,8 +214,7 @@ router.post('/postStandForm/:isQR?/:apiKey?', async (req, res) => {
                                           ).toLocaleString('en-US', {
                                               hour: 'numeric',
                                               minute: 'numeric',
-                                              hour12: true,
-                                              timeZone: timeZone
+                                              hour12: true
                                           })})`
                                         : '';
                                     internalSendMessage(

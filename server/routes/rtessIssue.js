@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const RTESSIssue = require('../models/RTESSIssue');
-const { weekday, rtessIssuesStatus, timeZone } = require('../util/helperConstants');
+const { weekday, rtessIssuesStatus } = require('../util/helperConstants');
 const { internalBlueCall, isFutureAlly } = require('./blueAlliance');
 const { internalSendMessage } = require('./groupMeBot');
 const { convertMatchKeyToString } = require('../util/helperFunctions');
@@ -67,8 +67,7 @@ router.post('/postRTESSIssue', async (req, res) => {
                                   {
                                       hour: 'numeric',
                                       minute: 'numeric',
-                                      hour12: true,
-                                      timeZone: timeZone
+                                      hour12: true
                                   }
                               )})`
                             : '';

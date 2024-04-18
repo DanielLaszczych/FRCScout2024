@@ -16,8 +16,6 @@ class HelperConstants {
 
     static weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    static timeZone = 'US/Eastern';
-
     // Try to combine these two next year maybe into an all encompasing fields object
     static gamePieceFields = {
         intakeSource: { field: 'intakeSource', label: 'Source', short: 'is', auto: false, teleop: true },

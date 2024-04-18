@@ -2,7 +2,7 @@ import { Box, Button, Center, Divider, Flex, Grid, GridItem, Image, Spinner, Tex
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BlueAllianceIcon from '../images/BlueAllianceIcon.png';
-import { teamPageTabs, timeZone, year } from '../util/helperConstants';
+import { teamPageTabs, year } from '../util/helperConstants';
 import { convertMatchKeyToString, sortMatches } from '../util/helperFunctions';
 import { ConditionalWrapper } from './ConditionalWrapper';
 
@@ -125,8 +125,7 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
                                           ).toLocaleString('en-US', {
                                               hour: 'numeric',
                                               minute: 'numeric',
-                                              hour12: true,
-                                              timeZone: timeZone
+                                              hour12: true
                                           })}`
                                         : match.scheduledTime
                                         ? `${weekday[new Date(match.scheduledTime * 1000).getDay()]} ${new Date(
@@ -134,8 +133,7 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
                                           ).toLocaleString('en-US', {
                                               hour: 'numeric',
                                               minute: 'numeric',
-                                              hour12: true,
-                                              timeZone: timeZone
+                                              hour12: true
                                           })}`
                                         : 'No time available'
                                 }`;
@@ -546,8 +544,7 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
                                                               {
                                                                   hour: 'numeric',
                                                                   minute: 'numeric',
-                                                                  hour12: true,
-                                                                  timeZone: timeZone
+                                                                  hour12: true
                                                               }
                                                           )}`
                                                 }
@@ -566,8 +563,7 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
                                                               {
                                                                   hour: 'numeric',
                                                                   minute: 'numeric',
-                                                                  hour12: true,
-                                                                  timeZone: timeZone
+                                                                  hour12: true
                                                               }
                                                           )}*`
                                                         : match.scheduledTime
@@ -578,8 +574,7 @@ function MatchScheduleTable({ teamNumber, event, teamPage = true, initialCollaps
                                                               {
                                                                   hour: 'numeric',
                                                                   minute: 'numeric',
-                                                                  hour12: true,
-                                                                  timeZone: timeZone
+                                                                  hour12: true
                                                               }
                                                           )}`
                                                         : '?'}
