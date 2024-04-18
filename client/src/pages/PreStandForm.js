@@ -35,7 +35,7 @@ let matchTypes = [
     { label: 'Playoffs', value: 'sf', id: uuidv4() },
     { label: 'Finals', value: 'f', id: uuidv4() }
 ];
-let enableEventDropdown = true;
+let enableEventDropdown = false;
 
 function PreStandForm() {
     let navigate = useNavigate();
