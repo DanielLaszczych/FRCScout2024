@@ -46,20 +46,6 @@ function MatchAnalystPage() {
     const [tab, setTab] = useState(tabs.graphs);
 
     useEffect(() => {
-        fetch(`/blueAlliance/event/${eventKeyParam}/simple`)
-            .then((response) => response.json())
-            .then((data) => {
-                if (!data.Error) {
-                    setEventName(data.name);
-                } else {
-                    setError(data.Error);
-                }
-            })
-            .catch((error) => {
-                console.log(error);
-                setError(error.message);
-            });
-
         fetch('/event/getEvent', { headers: { filters: JSON.stringify({ key: eventKeyParam }) } })
             .then((response) => {
                 if (response.status === 200) {
@@ -70,8 +56,10 @@ function MatchAnalystPage() {
             })
             .then((data) => {
                 if (data === null) {
+                    setEventName('N/A');
                     setEventData({});
                 } else {
+                    setEventName(data.name);
                     setEventData(data);
                 }
             })

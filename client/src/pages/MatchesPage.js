@@ -75,11 +75,11 @@ function MatchesPage() {
                 }
                 let currentEvent = events.find((event) => event.currentEvent);
                 if (currentEvent) {
-                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key, custom: currentEvent.custom });
                     setFocusedEvent(currentEvent.name);
                 } else {
                     currentEvent = events[events.length - 1];
-                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key });
+                    setCurrentEvent({ name: currentEvent.name, key: currentEvent.key, custom: currentEvent.custom });
                     setFocusedEvent(currentEvent.name);
                 }
             })
@@ -146,7 +146,6 @@ function MatchesPage() {
                     setMatchForms(data);
                 })
                 .catch((error) => setError(error.message));
-
             if (currentEvent.custom) {
                 setAllMatches([]);
             } else {
