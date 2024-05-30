@@ -21,7 +21,7 @@ accessible. This page contains our team schedule for the event which is pulled f
 we are always aware of our current standing and future matches. As mentioned previously, scouters can easily access any relevant pages
 from the home page: pit scouting, stand scouting, and super scouting.
 
-<img src="home_page.png">
+<img src="images/home_page.png">
 
 ### [Pit Scouting]
 Pit scouting primarily collects preliminary information on teams before matches have started. This gives us a general
