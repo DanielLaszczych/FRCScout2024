@@ -15,7 +15,7 @@ even when connectivity is limited.
 	
 ## Features
 
-### [Home Page]
+### Home Page
 The home page serves as the hub for scouters with key information being easily visible and any links to relevant pages being 
 accessible. This page contains our team schedule for the event which is pulled from TBA API meaning it is always up-to-date ensuring 
 we are always aware of our current standing and future matches. As mentioned previously, scouters can easily access any relevant pages
@@ -23,7 +23,7 @@ from the home page: pit scouting, stand scouting, and super scouting.
 
 <img src="images/home_page.png">
 
-### [Pit Scouting]
+### Pit Scouting
 Pit scouting primarily collects preliminary information on teams before matches have started. This gives us a general
 estimate of a team's abilities so that we are still able to form strategies without having to wait for matches to start. In that sense, 
 we collect more general information on a team such as the mechanisms of the robot or what their most reliable autonomous consists of. 
@@ -31,7 +31,7 @@ Of course, we also collect information one cannot obtain from a match such as we
 
 <img src="images/pit_scouting_page.png">
 
-### [Match Scouting]
+### Match Scouting
 Match scouting is the key focus when it comes to any scouting application for FRC. Our match scouting page is broken into multiple sections 
 to try to match the different parts of the match (Pre-Auto, Auto, Teleop, Endgame, and Closing). Each section contains the relevant data points
 that we want to record during the portion of the match. The UI and UX are designed in such a way that a user can easily focus on watching their 
@@ -40,7 +40,7 @@ they are missing responses for something.
 
 <img src="images/match_scouting_page.png">
 
-### [Team Page]
+### Team Page
 The team page contains an overall breakdown of a team including information from both pit scouting and match scouting. Additional information such
 as upcoming matches, relevant performance compared to other teams, and a robot image is also included on this page. From this page, a user can also
 access more specific information on a team such as all the data from pit scouting or match scouting, and even an analysis page where data is visualized
@@ -49,7 +49,7 @@ in the form of graphs and tables.
 <img src="images/team_page.png">
 <img src="images/team_analysis_page.png">
 
-### [Other Features]
+### Other Features
 Match Analyst Page: Giev a breakdown for each team in a match with predicted scores for each alliance
 RTESS Page: A page with useful features for the RTESS subgroup of our team which assists other teams
 Admin Page: A hub for admins to make any needed changes
