@@ -50,10 +50,10 @@ in the form of graphs and tables.
 <img src="images/team_analysis_page.png">
 
 ### Other Features
-Match Analyst Page: Giev a breakdown for each team in a match with predicted scores for each alliance
-RTESS Page: A page with useful features for the RTESS subgroup of our team which assists other teams
-Admin Page: A hub for admins to make any needed changes
-Data Extract: Allows data to be extracted to a CSV or Excel sheet
+Match Analyst Page: Provides a general breakdown for each team in a match with predicted scores for each alliance <br />
+RTESS Page: A page with useful features for the RTESS subgroup of our team which assists other teams <br />
+Admin Page: A hub for admins to make any needed changes <br />
+Data Extract: Allows data to be extracted to a CSV or Excel sheet <br />
 
 ## Technology Stack
 	[React] - front-end library to create our user interface using functional components and hooks to 
