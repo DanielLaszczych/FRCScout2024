@@ -29,7 +29,7 @@ estimate of a team's abilities so that we are still able to form strategies with
 we collect more general information on a team such as the mechanisms of the robot or what their most reliable autonomous consists of. 
 Of course, we also collect information one cannot obtain from a match such as weight, height, programming language, etc.
 
-<img src="pit_scouting_page.png">
+<img src="images/pit_scouting_page.png">
 
 ### [Match Scouting]
 Match scouting is the key focus when it comes to any scouting application for FRC. Our match scouting page is broken into multiple sections 
@@ -38,7 +38,7 @@ that we want to record during the portion of the match. The UI and UX are design
 robot while still accurately collecting data. In that regard, users can also easily undo or redo changes and are always notified if
 they are missing responses for something.
 
-<img src="match_scouting_page.png">
+<img src="images/match_scouting_page.png">
 
 ### [Team Page]
 The team page contains an overall breakdown of a team including information from both pit scouting and match scouting. Additional information such
@@ -46,8 +46,8 @@ as upcoming matches, relevant performance compared to other teams, and a robot i
 access more specific information on a team such as all the data from pit scouting or match scouting, and even an analysis page where data is visualized
 in the form of graphs and tables.
 
-<img src="team_page.png">
-<img src="team_analysis_page.png">
+<img src="images/team_page.png">
+<img src="images/team_analysis_page.png">
 
 ### [Other Features]
 Match Analyst Page: Giev a breakdown for each team in a match with predicted scores for each alliance
